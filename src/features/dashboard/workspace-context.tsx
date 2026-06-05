@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect } from 'react'
 import type { ReactNode } from 'react'
 import { useDashboardPreview } from './useDashboardPreview'
 
-type WorkspaceState = ReturnType<typeof useDashboardPreview>
+export type WorkspaceState = ReturnType<typeof useDashboardPreview>
 
 const WorkspaceContext = createContext<WorkspaceState | null>(null)
 

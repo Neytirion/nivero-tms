@@ -59,7 +59,6 @@ export function TaskCard({
       }
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadCommentsCount()
   }, [task.id])
 
@@ -75,6 +74,7 @@ export function TaskCard({
       <p className="mt-1 text-xs text-slate-500">{task.description || 'No description'}</p>
       <div className="mt-2 flex flex-wrap items-center gap-1">
         <span
+          data-priority={task.priority ?? 'medium'}
           className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${getPriorityBadgeClass(
             task.priority,
           )}`}

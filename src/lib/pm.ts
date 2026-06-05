@@ -520,6 +520,11 @@ export async function completeProject(projectId: string) {
 export async function createTask(input: CreateTaskInput) {
   await assertProjectEditable(input.projectId, 'create task')
 
+  const hasEstimateVersion = await hasProjectEstimateVersion(input.projectId)
+  if (!hasEstimateVersion) {
+    throw new Error('Cannot create task: create estimate version v1 first')
+  }
+
   if (input.estimateHours === undefined || input.estimateHours === null) {
     throw new Error('Estimated hours is required')
   }
@@ -955,6 +960,19 @@ export async function getProjectEstimates(projectId: string) {
     ...estimate,
     work_packages: packagesByEstimateId[estimate.id] ?? [],
   }))
+}
+
+export async function hasProjectEstimateVersion(projectId: string) {
+  const { count, error } = await supabase
+    .from('estimates')
+    .select('id', { head: true, count: 'exact' })
+    .eq('project_id', projectId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return (count ?? 0) > 0
 }
 
 export async function getProjectTaskWorkPackages(projectId: string) {

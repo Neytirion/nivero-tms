@@ -73,7 +73,10 @@ export type EstimatePreview = Pick<
   Estimate,
   'id' | 'project_id' | 'version_number' | 'status' | 'created_by' | 'approved_at' | 'created_at' | 'updated_at'
 >
-export type WorkPackagePreview = Pick<WorkPackage, 'id' | 'estimate_id' | 'name' | 'estimated_hours' | 'sort_order' | 'created_at'>
+export type WorkPackagePreview = Pick<
+  WorkPackage,
+  'id' | 'estimate_id' | 'name' | 'estimated_hours' | 'sort_order' | 'is_active' | 'created_at'
+>
 export type EstimateWithPackages = EstimatePreview & {
   work_packages: WorkPackagePreview[]
 }
@@ -203,6 +206,44 @@ async function assertTaskDueDateWithinProjectRange(projectId: string, dueDate: s
 
   if (endDate && normalizedDueDate > endDate) {
     throw new Error('Due date must be within project dates')
+  }
+}
+
+async function assertTaskWorkPackageValid(projectId: string, workPackageId: string | null | undefined) {
+  if (!workPackageId || workPackageId.trim().length === 0) {
+    throw new Error('Work package is required')
+  }
+
+  const { data: workPackage, error: workPackageError } = await supabase
+    .from('work_packages')
+    .select('id,estimate_id,is_active')
+    .eq('id', workPackageId)
+    .maybeSingle()
+
+  if (workPackageError) {
+    throw new Error(workPackageError.message)
+  }
+
+  if (!workPackage) {
+    throw new Error('Selected work package was not found')
+  }
+
+  if (!workPackage.is_active) {
+    throw new Error('Selected work package is archived and cannot be used for new tasks')
+  }
+
+  const { data: estimate, error: estimateError } = await supabase
+    .from('estimates')
+    .select('project_id')
+    .eq('id', workPackage.estimate_id)
+    .maybeSingle()
+
+  if (estimateError) {
+    throw new Error(estimateError.message)
+  }
+
+  if (!estimate || estimate.project_id !== projectId) {
+    throw new Error('Selected work package does not belong to this project')
   }
 }
 
@@ -567,6 +608,7 @@ export async function createTask(input: CreateTaskInput) {
     throw new Error('Estimated hours must be a number greater than or equal to 0')
   }
 
+  await assertTaskWorkPackageValid(input.projectId, input.workPackageId)
   await assertTaskDueDateWithinProjectRange(input.projectId, input.dueDate)
 
   const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -596,7 +638,7 @@ export async function createTask(input: CreateTaskInput) {
     .from('tasks')
     .insert({
       project_id: input.projectId,
-      work_package_id: input.workPackageId ?? null,
+      work_package_id: input.workPackageId,
       title: input.title,
       description: input.description ?? null,
       status: input.status ?? 'todo',
@@ -977,7 +1019,7 @@ export async function getProjectEstimates(projectId: string) {
   const estimateIds = estimates.map((estimate) => estimate.id)
   const { data: packagesData, error: packagesError } = await supabase
     .from('work_packages')
-    .select('id,estimate_id,name,estimated_hours,sort_order,created_at')
+    .select('id,estimate_id,name,estimated_hours,sort_order,is_active,created_at')
     .in('estimate_id', estimateIds)
     .order('sort_order', { ascending: true })
 
@@ -1024,11 +1066,13 @@ export async function getProjectTaskWorkPackages(projectId: string) {
     return [] as Array<Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours'>>
   }
 
-  return preferredEstimate.work_packages.map((item) => ({
+  return preferredEstimate.work_packages
+    .filter((item) => item.is_active)
+    .map((item) => ({
     id: item.id,
     name: item.name,
     estimated_hours: item.estimated_hours,
-  }))
+    }))
 }
 
 export async function createEstimateVersion(projectId: string) {
@@ -1070,6 +1114,7 @@ export async function createEstimateVersion(projectId: string) {
       estimate_id: createdEstimate.id,
       name: item.name,
       estimated_hours: item.estimated_hours,
+      is_active: item.is_active,
       sort_order: index,
     }))
 
@@ -1133,27 +1178,76 @@ export async function saveEstimateDraft(input: SaveEstimateDraftInput) {
     }))
     .filter((item) => item.name.length > 0)
 
-  const { error: deleteError } = await supabase
+  const { data: existingPackagesData, error: existingPackagesError } = await supabase
     .from('work_packages')
-    .delete()
+    .select('id,name,is_active')
     .eq('estimate_id', input.estimateId)
 
-  if (deleteError) {
-    throw new Error(deleteError.message)
+  if (existingPackagesError) {
+    throw new Error(existingPackagesError.message)
   }
 
-  if (sanitizedPackages.length > 0) {
-    const payload = sanitizedPackages.map((item, index) => ({
+  const existingPackages = existingPackagesData satisfies Array<Pick<WorkPackage, 'id' | 'name' | 'is_active'>>
+  const usedPackageIds = new Set<string>()
+
+  const findPackageByName = (name: string) => {
+    const normalized = name.trim().toLowerCase()
+    return (
+      existingPackages.find(
+        (item) => !usedPackageIds.has(item.id) && item.name.trim().toLowerCase() === normalized,
+      ) ?? null
+    )
+  }
+
+  for (const [index, item] of sanitizedPackages.entries()) {
+    const existingPackage = findPackageByName(item.name)
+
+    if (existingPackage) {
+      usedPackageIds.add(existingPackage.id)
+
+      const { error: updatePackageError } = await supabase
+        .from('work_packages')
+        .update({
+          name: item.name,
+          estimated_hours: item.estimatedHours,
+          sort_order: index,
+          is_active: true,
+        })
+        .eq('id', existingPackage.id)
+
+      if (updatePackageError) {
+        throw new Error(updatePackageError.message)
+      }
+
+      continue
+    }
+
+    const { error: insertPackageError } = await supabase.from('work_packages').insert({
       estimate_id: input.estimateId,
       name: item.name,
       estimated_hours: item.estimatedHours,
       sort_order: index,
-    }))
+      is_active: true,
+    })
 
-    const { error: insertError } = await supabase.from('work_packages').insert(payload)
+    if (insertPackageError) {
+      throw new Error(insertPackageError.message)
+    }
+  }
 
-    if (insertError) {
-      throw new Error(insertError.message)
+  const packagesToArchive = existingPackages.filter((item) => !usedPackageIds.has(item.id))
+
+  if (packagesToArchive.length > 0) {
+    const { error: archivePackagesError } = await supabase
+      .from('work_packages')
+      .update({ is_active: false })
+      .in(
+        'id',
+        packagesToArchive.map((item) => item.id),
+      )
+
+    if (archivePackagesError) {
+      throw new Error(archivePackagesError.message)
     }
   }
 

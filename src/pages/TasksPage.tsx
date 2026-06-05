@@ -72,6 +72,33 @@ export function TasksPage() {
   const isMemberInSelectedProject = myRoleInSelectedProject === 'member'
   const projectStartDate = selectedProject?.start_date ?? ''
   const projectEndDate = selectedProject?.end_date ?? ''
+  const parsedEstimateHours = Number.parseFloat(taskEstimateHours)
+  const isProjectMissing = !selectedProjectId
+  const isTaskTitleMissing = taskTitle.trim().length === 0
+  const isEstimateHoursMissingOrInvalid =
+    taskEstimateHours.trim().length === 0 || !Number.isFinite(parsedEstimateHours) || parsedEstimateHours < 0
+  const isWorkPackageMissing = taskWorkPackageId.trim().length === 0
+  const missingRequiredFields = useMemo(() => {
+    const fields: string[] = []
+
+    if (isProjectMissing) {
+      fields.push('Project')
+    }
+
+    if (isTaskTitleMissing) {
+      fields.push('Task title')
+    }
+
+    if (isEstimateHoursMissingOrInvalid) {
+      fields.push('Estimated hours')
+    }
+
+    if (isWorkPackageMissing) {
+      fields.push('Work package')
+    }
+
+    return fields
+  }, [isEstimateHoursMissingOrInvalid, isProjectMissing, isTaskTitleMissing, isWorkPackageMissing])
 
   useEffect(() => {
     const loadWorkPackages = async () => {
@@ -123,7 +150,12 @@ export function TasksPage() {
     }
 
     if (!canSubmit) {
-      setStatus('Task title and estimate hours are required')
+      setStatus('Task title, estimated hours, and work package are required')
+      return
+    }
+
+    if (isWorkPackageMissing) {
+      setStatus('Work package is required')
       return
     }
 
@@ -150,7 +182,7 @@ export function TasksPage() {
       status: 'backlog',
       priority: taskPriority,
       estimateHours,
-      workPackageId: taskWorkPackageId || undefined,
+      workPackageId: taskWorkPackageId,
       assignedTo: canAssignAssignee ? taskAssigneeId || undefined : undefined,
       blockedByTaskId: taskBlockedByTaskId || undefined,
       dueDate: taskDueDate || undefined,
@@ -315,13 +347,23 @@ export function TasksPage() {
           </p>
         ) : null}
 
+        {missingRequiredFields.length > 0 ? (
+          <p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+            Required fields: {missingRequiredFields.join(', ')}.
+          </p>
+        ) : (
+          <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+            All required fields are filled.
+          </p>
+        )}
+
         <div className="mt-3 grid gap-3 lg:grid-cols-3">
           <div className="rounded-lg border border-slate-200 bg-white p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Core</p>
             <div className="mt-2 space-y-2.5">
               <div>
                 <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  Project
+                  Project *
                 </label>
                 <select
                   value={selectedProjectId ?? ''}
@@ -330,7 +372,9 @@ export function TasksPage() {
                       void selectProject(event.target.value)
                     }
                   }}
-                  className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
+                  className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 ${
+                    isProjectMissing ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
+                  }`}
                 >
                   <option value="">Select project</option>
                   {projects.map((project) => (
@@ -343,14 +387,16 @@ export function TasksPage() {
 
               <div>
                 <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  Task title
+                  Task title *
                 </label>
                 <input
                   type="text"
                   value={taskTitle}
                   onChange={(event) => setTaskTitle(event.target.value)}
                   placeholder="Short task name"
-                  className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
+                  className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 ${
+                    isTaskTitleMissing ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
+                  }`}
                 />
               </div>
 
@@ -383,7 +429,9 @@ export function TasksPage() {
                   value={taskEstimateHours}
                   onChange={(event) => setTaskEstimateHours(event.target.value)}
                   placeholder="e.g. 6"
-                  className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
+                  className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 ${
+                    isEstimateHoursMissingOrInvalid ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
+                  }`}
                 />
               </div>
 
@@ -428,20 +476,27 @@ export function TasksPage() {
             <div className="mt-2 space-y-2.5">
               <div>
                 <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  Work Package
+                  Work Package *
                 </label>
                 <select
                   value={taskWorkPackageId}
                   onChange={(event) => setTaskWorkPackageId(event.target.value)}
-                  className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
+                  className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 ${
+                    isWorkPackageMissing ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
+                  }`}
                 >
-                  <option value="">Unlinked</option>
+                  <option value="">Select work package</option>
                   {workPackages.map((workPackage) => (
                     <option key={workPackage.id} value={workPackage.id}>
                       {workPackage.name}
                     </option>
                   ))}
                 </select>
+                {workPackages.length === 0 && selectedProjectId && hasEstimateVersion === true ? (
+                  <p className="mt-1 text-[11px] text-rose-600">
+                    No active work packages found. Add packages in Project Details → Estimates.
+                  </p>
+                ) : null}
               </div>
 
               <div>
@@ -496,7 +551,7 @@ export function TasksPage() {
           <button
             type="button"
             onClick={createTaskHandler}
-            disabled={!selectedProjectId || hasEstimateVersion !== true || !canSubmit || isLoading}
+            disabled={!selectedProjectId || hasEstimateVersion !== true || !canSubmit || missingRequiredFields.length > 0 || isLoading}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Create task

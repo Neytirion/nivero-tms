@@ -132,6 +132,7 @@ export interface Database {
           name: string
           estimated_hours: number
           sort_order: number
+          is_active: boolean
           created_at: string
         }
         Insert: {
@@ -140,6 +141,7 @@ export interface Database {
           name: string
           estimated_hours: number
           sort_order?: number
+          is_active?: boolean
           created_at?: string
         }
         Update: {
@@ -148,6 +150,7 @@ export interface Database {
           name?: string
           estimated_hours?: number
           sort_order?: number
+          is_active?: boolean
           created_at?: string
         }
         Relationships: [

@@ -14,6 +14,7 @@ export function useTaskForm() {
   const canSubmit =
     taskTitle.trim().length > 0 &&
     taskEstimateHours.trim().length > 0 &&
+    taskWorkPackageId.trim().length > 0 &&
     Number.isFinite(parsedEstimateHours) &&
     parsedEstimateHours >= 0
 

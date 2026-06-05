@@ -184,6 +184,65 @@ export function useDashboardPreview() {
     )
   }
 
+  const mergeProjectMetrics = (project: ProjectPreview, projectTasks: TaskPreview[]) => {
+    const totalTasks = projectTasks.length
+    const doneTasks = projectTasks.filter((task) => isTaskClosedStatus(task.status)).length
+
+    const totalEstimatedHoursFromTasks = projectTasks.reduce((sum, task) => {
+      const estimate = task.estimate_hours ?? 0
+      return sum + (estimate > 0 ? estimate : 0)
+    }, 0)
+
+    const doneEstimatedHoursFromTasks = projectTasks.reduce((sum, task) => {
+      if (!isTaskClosedStatus(task.status)) {
+        return sum
+      }
+
+      const estimate = task.estimate_hours ?? 0
+      return sum + (estimate > 0 ? estimate : 0)
+    }, 0)
+
+    const nextProgress =
+      totalEstimatedHoursFromTasks > 0
+        ? Math.round((doneEstimatedHoursFromTasks / totalEstimatedHoursFromTasks) * 100)
+        : totalTasks === 0
+          ? 0
+          : Math.round((doneTasks / totalTasks) * 100)
+
+    const rolledActualHours = projectTasks.reduce((sum, task) => {
+      const actual = task.actual_hours ?? 0
+      const estimate = task.estimate_hours ?? 0
+      return sum + (actual > 0 ? actual : estimate)
+    }, 0)
+
+    const estimatedHours = project.estimated_hours ?? 0
+    let nextRisk: 'green' | 'yellow' | 'red' = 'green'
+
+    if (estimatedHours > 0 && rolledActualHours > estimatedHours) {
+      nextRisk = 'red'
+    } else if (estimatedHours > 0 && rolledActualHours >= estimatedHours * 0.85) {
+      nextRisk = 'yellow'
+    }
+
+    return {
+      ...project,
+      progress_percent: nextProgress,
+      actual_hours: Number(rolledActualHours.toFixed(2)),
+      risk_status: nextRisk,
+    }
+  }
+
+  const hydrateProjectsWithTaskMetrics = async (projectList: ProjectPreview[]) => {
+    const projectsWithMetrics = await Promise.all(
+      projectList.map(async (project) => {
+        const projectTasks = await getProjectTasks(project.id)
+        return mergeProjectMetrics(project, projectTasks)
+      }),
+    )
+
+    return projectsWithMetrics
+  }
+
   const loadTasksByProject = async (projectId: string) => {
     const [nextTasks, nextMembers] = await Promise.all([
       getProjectTasks(projectId),
@@ -198,8 +257,9 @@ export function useDashboardPreview() {
 
   const reloadProjectsOnly = async () => {
     const nextProjects = await getMyProjects()
-    setProjects(nextProjects)
-    return nextProjects
+    const nextProjectsWithMetrics = await hydrateProjectsWithTaskMetrics(nextProjects)
+    setProjects(nextProjectsWithMetrics)
+    return nextProjectsWithMetrics
   }
 
   const refreshProjectSnapshot = async (projectId: string) => {
@@ -232,9 +292,10 @@ export function useDashboardPreview() {
       )
 
       const nextProjects = await getMyProjects()
-      setProjects(nextProjects)
+      const nextProjectsWithMetrics = await hydrateProjectsWithTaskMetrics(nextProjects)
+      setProjects(nextProjectsWithMetrics)
 
-      if (nextProjects.length === 0) {
+      if (nextProjectsWithMetrics.length === 0) {
         setTasks([])
         setProjectMembers([])
         setSelectedProjectId(null)
@@ -244,14 +305,14 @@ export function useDashboardPreview() {
       }
 
       const targetProjectId =
-        selectedProjectId && nextProjects.some((project) => project.id === selectedProjectId)
+        selectedProjectId && nextProjectsWithMetrics.some((project) => project.id === selectedProjectId)
           ? selectedProjectId
-          : nextProjects[0].id
+          : nextProjectsWithMetrics[0].id
 
       const nextTasks = await loadTasksByProject(targetProjectId)
 
       setStatus(
-        `Loaded: ${nextProjects.length} project(s), ${nextTasks.length} task(s) in selected project`,
+        `Loaded: ${nextProjectsWithMetrics.length} project(s), ${nextTasks.length} task(s) in selected project`,
       )
     } catch (error) {
       setStatus(error instanceof Error ? `Error: ${error.message}` : 'Unknown error')

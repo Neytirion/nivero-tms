@@ -172,6 +172,40 @@ async function getProjectStatusById(projectId: string) {
   return (data?.status ?? '').toLowerCase()
 }
 
+async function getProjectDateBounds(projectId: string) {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('start_date,end_date')
+    .eq('id', projectId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return {
+    startDate: data?.start_date ?? null,
+    endDate: data?.end_date ?? null,
+  }
+}
+
+async function assertTaskDueDateWithinProjectRange(projectId: string, dueDate: string | null | undefined) {
+  if (!dueDate) {
+    return
+  }
+
+  const normalizedDueDate = dueDate.slice(0, 10)
+  const { startDate, endDate } = await getProjectDateBounds(projectId)
+
+  if (startDate && normalizedDueDate < startDate) {
+    throw new Error('Due date must be within project dates')
+  }
+
+  if (endDate && normalizedDueDate > endDate) {
+    throw new Error('Due date must be within project dates')
+  }
+}
+
 async function assertProjectEditable(projectId: string, action: string) {
   const projectStatus = await getProjectStatusById(projectId)
 
@@ -533,6 +567,8 @@ export async function createTask(input: CreateTaskInput) {
     throw new Error('Estimated hours must be a number greater than or equal to 0')
   }
 
+  await assertTaskDueDateWithinProjectRange(input.projectId, input.dueDate)
+
   const { data: userData, error: userError } = await supabase.auth.getUser()
 
   if (userError) {
@@ -628,6 +664,10 @@ export async function updateTask(
 
   if (projectId) {
     await assertProjectEditable(projectId, 'update task')
+
+    if (patch.due_date !== undefined) {
+      await assertTaskDueDateWithinProjectRange(projectId, patch.due_date)
+    }
 
     if (patch.blocked_by_task_id !== undefined) {
       const nextBlockedByTaskId = patch.blocked_by_task_id

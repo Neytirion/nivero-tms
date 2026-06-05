@@ -151,7 +151,6 @@ export function ProjectDetailsSection({
                     <div className="mt-2 space-y-1.5 text-sm text-slate-700">
                       <p><span className="font-semibold text-slate-900">Start:</span> {formatDate(selectedProject.start_date)}</p>
                       <p><span className="font-semibold text-slate-900">End:</span> {formatDate(selectedProject.end_date)}</p>
-                      <p><span className="font-semibold text-slate-900">Deadline:</span> {formatDate(selectedProject.deadline_at)}</p>
                       <p><span className="font-semibold text-slate-900">Created:</span> {formatDate(selectedProject.created_at)}</p>
                     </div>
                   </div>

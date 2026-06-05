@@ -67,6 +67,7 @@ export function ProjectsTable({
               <th className="px-3 py-2">Project</th>
               <th className="px-3 py-2">Status</th>
               <th className="px-3 py-2">Progress</th>
+              <th className="px-3 py-2">Risk</th>
               <th className="px-3 py-2">Customer</th>
               <th className="px-3 py-2">Hours</th>
               <th className="px-3 py-2">Actions</th>
@@ -75,7 +76,7 @@ export function ProjectsTable({
           <tbody>
             {projects.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={7} className="px-3 py-6 text-center text-slate-500">
                   No matching projects
                 </td>
               </tr>
@@ -109,7 +110,19 @@ export function ProjectsTable({
                     </td>
                     <td className="px-3 py-2">
                       <p className="font-medium text-slate-800">{progress}%</p>
-                      <p className="text-[11px] text-slate-500">Risk: {risk}</p>
+                    </td>
+                    <td className="px-3 py-2">
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                          risk === 'Red'
+                            ? 'bg-rose-100 text-rose-700'
+                            : risk === 'Amber'
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-emerald-100 text-emerald-700'
+                        }`}
+                      >
+                        {risk}
+                      </span>
                     </td>
                     <td className="px-3 py-2 text-slate-700">{project.customer_name ?? 'Not set'}</td>
                     <td className="px-3 py-2 text-slate-700">

@@ -42,7 +42,7 @@ export function TasksPage() {
   const [dragTaskId, setDragTaskId] = useState<string | null>(null)
   const [logTimeTask, setLogTimeTask] = useState<TaskPreview | null>(null)
   const [workPackages, setWorkPackages] = useState<Array<Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours'>>>([])
-  const [hasEstimateVersion, setHasEstimateVersion] = useState(false)
+  const [hasEstimateVersion, setHasEstimateVersion] = useState<boolean | null>(null)
   const [taskViewMode, setTaskViewMode] = useState<TaskViewMode>('board')
   const [calendarMonth, setCalendarMonth] = useState(new Date().toISOString().slice(0, 7))
 
@@ -70,15 +70,19 @@ export function TasksPage() {
   )
   const myRoleInSelectedProject = selectedProject ? getProjectRole(selectedProject.id) : null
   const isMemberInSelectedProject = myRoleInSelectedProject === 'member'
+  const projectStartDate = selectedProject?.start_date ?? ''
+  const projectEndDate = selectedProject?.end_date ?? ''
 
   useEffect(() => {
     const loadWorkPackages = async () => {
       if (!selectedProjectId) {
         setWorkPackages([])
         setTaskWorkPackageId('')
-        setHasEstimateVersion(false)
+        setHasEstimateVersion(null)
         return
       }
+
+      setHasEstimateVersion(null)
 
       try {
         const [nextWorkPackages, hasVersion] = await Promise.all([
@@ -104,6 +108,11 @@ export function TasksPage() {
       return
     }
 
+    if (hasEstimateVersion === null) {
+      setStatus('Checking estimate version...')
+      return
+    }
+
     if (!hasEstimateVersion) {
       setStatus(
         isMemberInSelectedProject
@@ -122,6 +131,17 @@ export function TasksPage() {
     if (!Number.isFinite(estimateHours) || estimateHours < 0) {
       setStatus('Estimated hours must be a number greater than or equal to 0')
       return
+    }
+
+    if (taskDueDate) {
+      if (projectStartDate && taskDueDate < projectStartDate) {
+        setStatus('Due date must be within project dates')
+        return
+      }
+      if (projectEndDate && taskDueDate > projectEndDate) {
+        setStatus('Due date must be within project dates')
+        return
+      }
     }
 
     await addTask({
@@ -287,7 +307,7 @@ export function TasksPage() {
         <h3 className="section-title">Create Task</h3>
         <p className="section-subtitle">Add task metadata before placing it on the board.</p>
 
-        {!hasEstimateVersion && selectedProjectId ? (
+        {hasEstimateVersion === false && selectedProjectId ? (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
             {isMemberInSelectedProject
               ? 'Estimate version is not created yet. Task creation is unavailable.'
@@ -390,8 +410,15 @@ export function TasksPage() {
                   type="date"
                   value={taskDueDate}
                   onChange={(event) => setTaskDueDate(event.target.value)}
+                  min={projectStartDate || undefined}
+                  max={projectEndDate || undefined}
                   className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
                 />
+                {projectStartDate || projectEndDate ? (
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Allowed range: {projectStartDate || '...'} - {projectEndDate || '...'}
+                  </p>
+                ) : null}
               </div>
             </div>
           </div>
@@ -469,7 +496,7 @@ export function TasksPage() {
           <button
             type="button"
             onClick={createTaskHandler}
-            disabled={!selectedProjectId || !hasEstimateVersion || !canSubmit || isLoading}
+            disabled={!selectedProjectId || hasEstimateVersion !== true || !canSubmit || isLoading}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Create task

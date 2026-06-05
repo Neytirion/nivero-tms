@@ -34,7 +34,7 @@ function formatHours(minutes: number) {
 }
 
 export function TimeTrackingPage() {
-  const { projects, selectedProjectId, status, setStatus, isLoading } = useWorkspace()
+  const { projects, selectedProjectId, status, setStatus, isLoading, loadDashboardPreview } = useWorkspace()
   const [entries, setEntries] = useState<TimeEntryPreview[]>([])
   const [isEntriesLoading, setIsEntriesLoading] = useState(false)
   const [activeProjectId, setActiveProjectId] = useState(selectedProjectId ?? '')
@@ -55,6 +55,13 @@ export function TimeTrackingPage() {
   const [timerElapsedSec, setTimerElapsedSec] = useState(0)
 
   const [weekAnchorDate, setWeekAnchorDate] = useState(toDateInputValue(new Date()))
+
+  const activeProject = useMemo(
+    () => projects.find((project) => project.id === activeProjectId) ?? null,
+    [projects, activeProjectId],
+  )
+  const manualDateMin = activeProject?.start_date ?? undefined
+  const manualDateMax = activeProject?.end_date ?? undefined
 
   const manualCategoryOptions = manualIsBillable ? BILLABLE_CATEGORIES : NON_BILLABLE_CATEGORIES
   const timerCategoryOptions = timerIsBillable ? BILLABLE_CATEGORIES : NON_BILLABLE_CATEGORIES
@@ -168,6 +175,24 @@ export function TimeTrackingPage() {
     }
   }, [timerCategory, timerCategoryOptions])
 
+  useEffect(() => {
+    if (!activeProjectId) {
+      return
+    }
+
+    setManualDate((prev) => {
+      if (manualDateMin && prev < manualDateMin) {
+        return manualDateMin
+      }
+
+      if (manualDateMax && prev > manualDateMax) {
+        return manualDateMax
+      }
+
+      return prev
+    })
+  }, [activeProjectId, manualDateMin, manualDateMax])
+
   const reloadCurrentWeek = async () => {
     setIsEntriesLoading(true)
 
@@ -186,6 +211,14 @@ export function TimeTrackingPage() {
     setIsEntriesLoading(false)
   }
 
+  const refreshWorkspaceMetrics = async () => {
+    try {
+      await loadDashboardPreview()
+    } catch {
+      // Keep page usable even if background refresh fails.
+    }
+  }
+
   const submitManualEntry = async () => {
     if (!activeProjectId) {
       setStatus('Select a project before logging time')
@@ -195,6 +228,16 @@ export function TimeTrackingPage() {
     const parsedHours = Number.parseFloat(manualHours)
     if (!Number.isFinite(parsedHours) || parsedHours <= 0) {
       setStatus('Hours must be greater than 0')
+      return
+    }
+
+    if (manualDateMin && manualDate < manualDateMin) {
+      setStatus('Manual entry date must be within selected project dates')
+      return
+    }
+
+    if (manualDateMax && manualDate > manualDateMax) {
+      setStatus('Manual entry date must be within selected project dates')
       return
     }
 
@@ -210,8 +253,8 @@ export function TimeTrackingPage() {
       })
 
       setManualNotes('')
+      await Promise.all([reloadCurrentWeek(), refreshWorkspaceMetrics()])
       setStatus('Time entry created')
-      await reloadCurrentWeek()
     } catch (error) {
       setStatus(error instanceof Error ? `Create time entry error: ${error.message}` : 'Create time entry error')
     }
@@ -259,8 +302,8 @@ export function TimeTrackingPage() {
       setTimerStartedAt(null)
       setTimerElapsedSec(0)
       setTimerNotes('')
+      await Promise.all([reloadCurrentWeek(), refreshWorkspaceMetrics()])
       setStatus('Timer entry saved')
-      await reloadCurrentWeek()
     } catch (error) {
       setStatus(error instanceof Error ? `Timer save error: ${error.message}` : 'Timer save error')
     }
@@ -354,8 +397,15 @@ export function TimeTrackingPage() {
                 type="date"
                 value={manualDate}
                 onChange={(event) => setManualDate(event.target.value)}
+                min={manualDateMin}
+                max={manualDateMax}
                 className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
               />
+              {activeProjectId && (manualDateMin || manualDateMax) ? (
+                <p className="mt-1 text-[11px] text-slate-500">
+                  Allowed range: {manualDateMin ?? '...'} - {manualDateMax ?? '...'}
+                </p>
+              ) : null}
             </label>
 
             <label className="block">

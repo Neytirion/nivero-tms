@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TimeTrackingPage } from './TimeTrackingPage'
 import { useWorkspace } from '../features/dashboard/workspace-context.tsx'
 import { createTimeEntry, getProjectTasks, getTimeEntries } from '../lib/pm'
-import { createProjectPreview, createWorkspaceState } from '../test/workspace-factory'
+import { createProjectPreview, createWorkspaceState } from './test-helpers.ts'
 
 vi.mock('../features/dashboard/workspace-context.tsx', () => ({
   useWorkspace: vi.fn(),

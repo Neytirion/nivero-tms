@@ -53,6 +53,7 @@ export function TimeTrackingPage() {
   const [timerNotes, setTimerNotes] = useState('')
   const [timerStartedAt, setTimerStartedAt] = useState<number | null>(null)
   const [timerElapsedSec, setTimerElapsedSec] = useState(0)
+  const [isTimerSaving, setIsTimerSaving] = useState(false)
 
   const [weekAnchorDate, setWeekAnchorDate] = useState(toDateInputValue(new Date()))
 
@@ -101,12 +102,6 @@ export function TimeTrackingPage() {
   }, [entries])
 
   useEffect(() => {
-    if (selectedProjectId && !activeProjectId) {
-      setActiveProjectId(selectedProjectId)
-    }
-  }, [selectedProjectId, activeProjectId])
-
-  useEffect(() => {
     const loadWeekEntries = async () => {
       setIsEntriesLoading(true)
 
@@ -129,14 +124,14 @@ export function TimeTrackingPage() {
   }, [activeProjectId, weekRange.endDate, weekRange.startDate, setStatus])
 
   useEffect(() => {
-    if (!activeProjectId) {
-      setProjectTasks([])
-      setManualTaskId('')
-      setTimerTaskId('')
-      return
-    }
-
     const loadProjectTasks = async () => {
+      if (!activeProjectId) {
+        setProjectTasks([])
+        setManualTaskId('')
+        setTimerTaskId('')
+        return
+      }
+
       try {
         const nextTasks = await getProjectTasks(activeProjectId)
         setProjectTasks(nextTasks)
@@ -162,36 +157,6 @@ export function TimeTrackingPage() {
 
     return () => window.clearInterval(intervalId)
   }, [timerStartedAt])
-
-  useEffect(() => {
-    if (!manualCategoryOptions.includes(manualCategory)) {
-      setManualCategory(manualCategoryOptions[0])
-    }
-  }, [manualCategory, manualCategoryOptions])
-
-  useEffect(() => {
-    if (!timerCategoryOptions.includes(timerCategory)) {
-      setTimerCategory(timerCategoryOptions[0])
-    }
-  }, [timerCategory, timerCategoryOptions])
-
-  useEffect(() => {
-    if (!activeProjectId) {
-      return
-    }
-
-    setManualDate((prev) => {
-      if (manualDateMin && prev < manualDateMin) {
-        return manualDateMin
-      }
-
-      if (manualDateMax && prev > manualDateMax) {
-        return manualDateMax
-      }
-
-      return prev
-    })
-  }, [activeProjectId, manualDateMin, manualDateMax])
 
   const reloadCurrentWeek = async () => {
     setIsEntriesLoading(true)
@@ -253,6 +218,7 @@ export function TimeTrackingPage() {
       })
 
       setManualNotes('')
+  setWeekAnchorDate(manualDate)
       await Promise.all([reloadCurrentWeek(), refreshWorkspaceMetrics()])
       setStatus('Time entry created')
     } catch (error) {
@@ -271,7 +237,7 @@ export function TimeTrackingPage() {
   }
 
   const stopAndSaveTimer = async () => {
-    if (!timerStartedAt) {
+    if (!timerStartedAt || isTimerSaving) {
       return
     }
 
@@ -280,19 +246,17 @@ export function TimeTrackingPage() {
       return
     }
 
-    const elapsedHours = Math.max(0, timerElapsedSec / 3600)
-    if (elapsedHours <= 0) {
-      setStatus('Tracked time must be greater than 0')
-      setTimerStartedAt(null)
-      setTimerElapsedSec(0)
-      return
-    }
+    const timerEntryDate = toDateInputValue(new Date())
+    const elapsedSec = Math.floor((Date.now() - timerStartedAt) / 1000)
+    const elapsedHours = Math.max(1 / 60, elapsedSec / 3600)
+
+    setIsTimerSaving(true)
 
     try {
       await createTimeEntry({
         projectId: activeProjectId,
         taskId: timerTaskId || undefined,
-        entryDate: toDateInputValue(new Date()),
+        entryDate: timerEntryDate,
         hoursSpent: elapsedHours,
         isBillable: timerIsBillable,
         category: timerCategory,
@@ -302,10 +266,13 @@ export function TimeTrackingPage() {
       setTimerStartedAt(null)
       setTimerElapsedSec(0)
       setTimerNotes('')
+      setWeekAnchorDate(timerEntryDate)
       await Promise.all([reloadCurrentWeek(), refreshWorkspaceMetrics()])
       setStatus('Timer entry saved')
     } catch (error) {
       setStatus(error instanceof Error ? `Timer save error: ${error.message}` : 'Timer save error')
+    } finally {
+      setIsTimerSaving(false)
     }
   }
 
@@ -424,7 +391,14 @@ export function TimeTrackingPage() {
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Billing Type</span>
               <select
                 value={manualIsBillable ? 'billable' : 'non-billable'}
-                onChange={(event) => setManualIsBillable(event.target.value === 'billable')}
+                onChange={(event) => {
+                  const nextIsBillable = event.target.value === 'billable'
+                  setManualIsBillable(nextIsBillable)
+                  setManualCategory((prev) => {
+                    const options = nextIsBillable ? BILLABLE_CATEGORIES : NON_BILLABLE_CATEGORIES
+                    return options.includes(prev) ? prev : options[0]
+                  })
+                }}
                 className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
               >
                 <option value="billable">Billable</option>
@@ -502,7 +476,14 @@ export function TimeTrackingPage() {
               <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Billing Type</span>
               <select
                 value={timerIsBillable ? 'billable' : 'non-billable'}
-                onChange={(event) => setTimerIsBillable(event.target.value === 'billable')}
+                onChange={(event) => {
+                  const nextIsBillable = event.target.value === 'billable'
+                  setTimerIsBillable(nextIsBillable)
+                  setTimerCategory((prev) => {
+                    const options = nextIsBillable ? BILLABLE_CATEGORIES : NON_BILLABLE_CATEGORIES
+                    return options.includes(prev) ? prev : options[0]
+                  })
+                }}
                 className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
               >
                 <option value="billable">Billable</option>
@@ -552,14 +533,16 @@ export function TimeTrackingPage() {
                 <button
                   type="button"
                   onClick={() => void stopAndSaveTimer()}
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500"
+                  disabled={isTimerSaving}
+                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Stop and save
+                  {isTimerSaving ? 'Saving...' : 'Stop and save'}
                 </button>
                 <button
                   type="button"
                   onClick={cancelTimer}
-                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                  disabled={isTimerSaving}
+                  className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Discard
                 </button>

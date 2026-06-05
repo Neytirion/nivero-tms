@@ -19,6 +19,20 @@ interface TaskCardProps {
   canDelete: boolean
 }
 
+function getPriorityBadgeClass(priority: string | null | undefined) {
+  const normalized = (priority ?? 'medium').toLowerCase()
+
+  if (normalized === 'high') {
+    return 'bg-rose-100 text-rose-800 border border-rose-200'
+  }
+
+  if (normalized === 'low') {
+    return 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+  }
+
+  return 'bg-amber-100 text-amber-800 border border-amber-200'
+}
+
 export function TaskCard({
   task,
   assigneeLabel,
@@ -60,7 +74,11 @@ export function TaskCard({
       <p className="text-sm font-semibold text-slate-900">{task.title}</p>
       <p className="mt-1 text-xs text-slate-500">{task.description || 'No description'}</p>
       <div className="mt-2 flex flex-wrap items-center gap-1">
-        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700">
+        <span
+          className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${getPriorityBadgeClass(
+            task.priority,
+          )}`}
+        >
           Priority: {task.priority ?? 'medium'}
         </span>
         <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700">

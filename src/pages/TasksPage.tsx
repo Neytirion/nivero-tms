@@ -16,6 +16,20 @@ function normalizeStatus(value: string | null | undefined): TaskStatus {
   return toCanonicalTaskStatus(value)
 }
 
+function getPriorityBadgeClass(priority: string | null | undefined) {
+  const normalized = (priority ?? 'medium').toLowerCase()
+
+  if (normalized === 'high') {
+    return 'bg-rose-100 text-rose-800 border border-rose-200'
+  }
+
+  if (normalized === 'low') {
+    return 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+  }
+
+  return 'bg-amber-100 text-amber-800 border border-amber-200'
+}
+
 type TaskViewMode = 'list' | 'board' | 'calendar'
 
 export function TasksPage() {
@@ -641,7 +655,15 @@ export function TasksPage() {
                     <tr key={task.id} className="border-t border-slate-100">
                       <td className="px-3 py-2 text-slate-800">{task.title}</td>
                       <td className="px-3 py-2 text-slate-600">{task.status ?? 'todo'}</td>
-                      <td className="px-3 py-2 text-slate-600">{task.priority ?? 'medium'}</td>
+                      <td className="px-3 py-2">
+                        <span
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${getPriorityBadgeClass(
+                            task.priority,
+                          )}`}
+                        >
+                          {task.priority ?? 'medium'}
+                        </span>
+                      </td>
                       <td className="px-3 py-2 text-slate-600">
                         {task.assigned_to
                           ? assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to
@@ -722,7 +744,7 @@ export function TasksPage() {
                         {cell.tasks.slice(0, 3).map((task) => (
                           <div
                             key={task.id}
-                            className="rounded bg-white px-1.5 py-1 text-[10px] text-slate-700 border border-slate-200"
+                            className={`rounded bg-white px-1.5 py-1 text-[10px] border ${getPriorityBadgeClass(task.priority)}`}
                             title={`${task.title}${
                               task.blocked_by_task_id
                                 ? ` | Blocked by: ${

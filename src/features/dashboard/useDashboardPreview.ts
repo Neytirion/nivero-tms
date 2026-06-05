@@ -161,8 +161,7 @@ export function useDashboardPreview() {
 
         const rolledActualHours = projectTasks.reduce((sum, task) => {
           const actual = task.actual_hours ?? 0
-          const estimate = task.estimate_hours ?? 0
-          return sum + (actual > 0 ? actual : estimate)
+          return sum + (actual > 0 ? actual : 0)
         }, 0)
 
         const estimatedHours = project.estimated_hours ?? 0
@@ -211,8 +210,7 @@ export function useDashboardPreview() {
 
     const rolledActualHours = projectTasks.reduce((sum, task) => {
       const actual = task.actual_hours ?? 0
-      const estimate = task.estimate_hours ?? 0
-      return sum + (actual > 0 ? actual : estimate)
+      return sum + (actual > 0 ? actual : 0)
     }, 0)
 
     const estimatedHours = project.estimated_hours ?? 0

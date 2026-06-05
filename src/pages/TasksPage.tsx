@@ -338,6 +338,7 @@ export function TasksPage() {
       <section className="page-section bg-slate-50/70">
         <h3 className="section-title">Create Task</h3>
         <p className="section-subtitle">Add task metadata before placing it on the board.</p>
+        <p className="mt-2 text-[11px] text-slate-500">Fields marked with * are required.</p>
 
         {hasEstimateVersion === false && selectedProjectId ? (
           <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
@@ -346,16 +347,6 @@ export function TasksPage() {
               : 'Create estimate version v1 in Project Details → Estimates before creating tasks.'}
           </p>
         ) : null}
-
-        {missingRequiredFields.length > 0 ? (
-          <p className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-            Required fields: {missingRequiredFields.join(', ')}.
-          </p>
-        ) : (
-          <p className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
-            All required fields are filled.
-          </p>
-        )}
 
         <div className="mt-3 grid gap-3 lg:grid-cols-3">
           <div className="rounded-lg border border-slate-200 bg-white p-3">
@@ -545,9 +536,13 @@ export function TasksPage() {
         </div>
 
         <div className="mt-3 flex items-center justify-between gap-3">
-          <p className="text-xs text-slate-500">
-            {selectedProject ? `Selected project: ${selectedProject.name}` : 'Select a project first.'}
-          </p>
+          {missingRequiredFields.length > 0 ? (
+            <p className="text-xs text-rose-600">Fill in: {missingRequiredFields.join(', ')}</p>
+          ) : (
+            <p className="text-xs text-slate-500">
+              {selectedProject ? `Selected project: ${selectedProject.name}` : 'Select a project first.'}
+            </p>
+          )}
           <button
             type="button"
             onClick={createTaskHandler}

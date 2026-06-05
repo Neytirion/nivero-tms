@@ -1,5 +1,6 @@
 import type { TaskPreview } from '../../../../lib/pm'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { getTaskCommentsCount } from '../../../../lib/pm'
 import { TaskCommentsPanel } from '../comments'
 
 interface TaskCardProps {
@@ -32,6 +33,21 @@ export function TaskCard({
 }: TaskCardProps) {
   const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'
   const [isCommentsOpen, setIsCommentsOpen] = useState(false)
+  const [commentsCount, setCommentsCount] = useState(0)
+
+  useEffect(() => {
+    const loadCommentsCount = async () => {
+      try {
+        const count = await getTaskCommentsCount(task.id)
+        setCommentsCount(count)
+      } catch {
+        setCommentsCount(0)
+      }
+    }
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadCommentsCount()
+  }, [task.id])
 
   return (
     <article
@@ -86,13 +102,6 @@ export function TaskCard({
           >
             Log time
           </button>
-          <button
-            type="button"
-            onClick={() => setIsCommentsOpen((prev) => !prev)}
-            className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200"
-          >
-            {isCommentsOpen ? 'Hide comments' : 'Comments'}
-          </button>
           {canDelete ? (
             <button
               type="button"
@@ -105,8 +114,23 @@ export function TaskCard({
         </div>
       ) : null}
 
-      {isCommentsOpen && task.project_id && !isLocked ? (
-        <TaskCommentsPanel projectId={task.project_id} taskId={task.id} />
+      <div className="mt-2 flex flex-wrap gap-1">
+        <button
+          type="button"
+          onClick={() => setIsCommentsOpen((prev) => !prev)}
+          className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200"
+        >
+          {isCommentsOpen ? 'Hide comments' : `Comments (${commentsCount})`}
+        </button>
+      </div>
+
+      {isCommentsOpen && task.project_id ? (
+        <TaskCommentsPanel
+          projectId={task.project_id}
+          taskId={task.id}
+          readOnly={isLocked}
+          onCommentsCountChange={setCommentsCount}
+        />
       ) : null}
     </article>
   )

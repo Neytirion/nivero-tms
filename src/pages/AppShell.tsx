@@ -6,6 +6,7 @@ const activeNavItems = [
   { to: '/app/dashboard', label: 'Dashboard', description: 'Portfolio health and priorities' },
   { to: '/app/projects', label: 'Projects', description: 'Project catalog and details' },
   { to: '/app/tasks', label: 'Tasks', description: 'Kanban board and task flow' },
+  { to: '/app/time-tracking', label: 'Time Tracking', description: 'Entries, timer, and weekly timesheet' },
 ]
 
 interface AppShellProps {

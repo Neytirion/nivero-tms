@@ -6,6 +6,7 @@ import { ProfilePage } from './pages/ProfilePage.tsx'
 import { ProjectsPage } from './pages/ProjectsPage.tsx'
 import { TasksPage } from './pages/TasksPage.tsx'
 import { TimeTrackingPage } from './pages/TimeTrackingPage.tsx'
+import { ResourcePlanningPage } from './pages/ResourcePlanningPage.tsx'
 import { useAuthSession } from './features/auth/useAuthSession.ts'
 
 function App() {
@@ -37,6 +38,7 @@ function App() {
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="time-tracking" element={<TimeTrackingPage />} />
+          <Route path="resources" element={<ResourcePlanningPage />} />
           <Route index element={<Navigate to="/app/dashboard" replace />} />
         </Route>
         <Route

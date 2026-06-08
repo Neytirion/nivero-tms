@@ -1,5 +1,6 @@
 import type { ProjectPreview, TaskPreview } from '../../../../lib/pm'
 import type { ProjectRoleName } from '../../../../shared/utils/permissions'
+import { useMemo } from 'react'
 import { deriveProgress, deriveRisk, formatDate } from '../../utils/project-metrics'
 import { EstimatesTab } from '../estimates'
 import { TeamAccessSection } from './TeamAccessSection'
@@ -81,6 +82,38 @@ export function ProjectDetailsSection({
   onOpenCompleteConfirm,
   onOpenSaveSettingsConfirm,
 }: ProjectDetailsSectionProps) {
+  const sortedTasks = useMemo(() => {
+    const statusOrder: Record<string, number> = {
+      backlog: 0,
+      todo: 1,
+      in_progress: 2,
+      review: 3,
+      done: 4,
+      completed: 4,
+    }
+
+    return [...tasks].sort((left, right) => {
+      const leftStatus = (left.status ?? 'todo').toLowerCase()
+      const rightStatus = (right.status ?? 'todo').toLowerCase()
+
+      const leftRank = statusOrder[leftStatus] ?? 2
+      const rightRank = statusOrder[rightStatus] ?? 2
+
+      if (leftRank !== rightRank) {
+        return leftRank - rightRank
+      }
+
+      const leftDue = left.due_date ?? '9999-12-31'
+      const rightDue = right.due_date ?? '9999-12-31'
+
+      if (leftDue !== rightDue) {
+        return leftDue.localeCompare(rightDue)
+      }
+
+      return left.title.localeCompare(right.title)
+    })
+  }, [tasks])
+
   return (
     <section className="page-section">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -275,10 +308,10 @@ export function ProjectDetailsSection({
             <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
               <h4 className="text-sm font-semibold text-slate-900">Tasks in Selected Project</h4>
               <div className="mt-3 space-y-2">
-                {tasks.length === 0 ? (
+                {sortedTasks.length === 0 ? (
                   <p className="text-sm text-slate-500">No tasks yet</p>
                 ) : (
-                  tasks.map((task) => (
+                  sortedTasks.map((task) => (
                     <div key={task.id} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                       <p className="text-sm font-semibold text-slate-900">{task.title}</p>
                       <p className="text-xs text-slate-500">

@@ -212,6 +212,165 @@ export interface Database {
           },
         ]
       }
+      comment_mentions: {
+        Row: {
+          id: string
+          project_id: string
+          comment_id: string
+          task_id: string | null
+          mentioned_user_id: string
+          mentioned_by_user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          comment_id: string
+          task_id?: string | null
+          mentioned_user_id: string
+          mentioned_by_user_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          comment_id?: string
+          task_id?: string | null
+          mentioned_user_id?: string
+          mentioned_by_user_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'comment_mentions_project_id_fkey'
+            columns: ['project_id']
+            isOneToOne: false
+            referencedRelation: 'projects'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'comment_mentions_comment_id_fkey'
+            columns: ['comment_id']
+            isOneToOne: false
+            referencedRelation: 'comments'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'comment_mentions_task_id_fkey'
+            columns: ['task_id']
+            isOneToOne: false
+            referencedRelation: 'tasks'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'comment_mentions_mentioned_user_id_fkey'
+            columns: ['mentioned_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'comment_mentions_mentioned_by_user_id_fkey'
+            columns: ['mentioned_by_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      activity_events: {
+        Row: {
+          id: string
+          project_id: string
+          actor_user_id: string | null
+          event_type: string
+          entity_type: string
+          entity_id: string | null
+          payload: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          actor_user_id?: string | null
+          event_type: string
+          entity_type: string
+          entity_id?: string | null
+          payload?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          actor_user_id?: string | null
+          event_type?: string
+          entity_type?: string
+          entity_id?: string | null
+          payload?: Json | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'activity_events_project_id_fkey'
+            columns: ['project_id']
+            isOneToOne: false
+            referencedRelation: 'projects'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'activity_events_actor_user_id_fkey'
+            columns: ['actor_user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      project_wiki_pages: {
+        Row: {
+          id: string
+          project_id: string
+          title: string
+          content: string
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          title?: string
+          content?: string
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          title?: string
+          content?: string
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'project_wiki_pages_project_id_fkey'
+            columns: ['project_id']
+            isOneToOne: false
+            referencedRelation: 'projects'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'project_wiki_pages_updated_by_fkey'
+            columns: ['updated_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       project_documents: {
         Row: {
           id: string

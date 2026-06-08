@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createTaskComment, getTaskComments, type CommentPreview } from '../../../../lib/pm'
+import { createTaskComment, getProjectMembers, getTaskComments, type CommentPreview } from '../../../../lib/pm'
 
 interface TaskCommentsPanelProps {
   projectId: string
@@ -16,6 +16,7 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
   const [comments, setComments] = useState<CommentPreview[]>([])
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [mentionHints, setMentionHints] = useState<string[]>([])
 
   const loadComments = async () => {
     setIsLoading(true)
@@ -35,6 +36,35 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
     // reload when task changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [taskId])
+
+  useEffect(() => {
+    const loadMentionHints = async () => {
+      try {
+        const members = await getProjectMembers(projectId)
+        const hints = members
+          .map((member) => {
+            if (member.email) {
+              return `@${member.email.split('@')[0]}`
+            }
+
+            if (member.full_name) {
+              return `@${member.full_name.toLowerCase().replace(/\s+/g, '.')}`
+            }
+
+            return null
+          })
+          .filter((item): item is string => Boolean(item))
+          .slice(0, 4)
+
+        setMentionHints(hints)
+      } catch {
+        setMentionHints([])
+      }
+    }
+
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadMentionHints()
+  }, [projectId])
 
   const addComment = async () => {
     const nextMessage = message.trim()
@@ -76,7 +106,7 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
             type="text"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
-            placeholder="Add comment"
+            placeholder={mentionHints.length > 0 ? `Add comment (mentions: ${mentionHints.join(', ')})` : 'Add comment'}
             className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
           />
           <button

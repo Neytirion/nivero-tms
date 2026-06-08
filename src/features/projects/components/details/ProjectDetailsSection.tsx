@@ -3,9 +3,10 @@ import type { ProjectRoleName } from '../../../../shared/utils/permissions'
 import { useMemo } from 'react'
 import { deriveProgress, deriveRisk, formatDate } from '../../utils/project-metrics'
 import { EstimatesTab } from '../estimates'
+import { ProjectCollaborationTab } from './ProjectCollaborationTab'
 import { TeamAccessSection } from './TeamAccessSection'
 
-export type DetailsTab = 'overview' | 'tasks' | 'estimates' | 'team' | 'settings'
+export type DetailsTab = 'overview' | 'tasks' | 'estimates' | 'collaboration' | 'team' | 'settings'
 
 interface ProjectDetailsSectionProps {
   selectedProject: ProjectPreview | null
@@ -154,6 +155,7 @@ export function ProjectDetailsSection({
           <div className="mt-4 flex flex-wrap gap-2">
             {[
               { key: 'overview', label: 'Overview' },
+              { key: 'collaboration', label: 'Collaboration' },
               { key: 'tasks', label: 'Tasks' },
               { key: 'estimates', label: 'Estimates' },
               { key: 'team', label: 'Team Access' },
@@ -326,6 +328,10 @@ export function ProjectDetailsSection({
 
           {activeTab === 'estimates' ? (
             <EstimatesTab projectId={selectedProject.id} canEdit={canEditSelectedProject} />
+          ) : null}
+
+          {activeTab === 'collaboration' ? (
+            <ProjectCollaborationTab projectId={selectedProject.id} canEdit={canEditSelectedProject} />
           ) : null}
 
         </>

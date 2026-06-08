@@ -4,6 +4,9 @@ export type Project = Database['public']['Tables']['projects']['Row']
 export type Estimate = Database['public']['Tables']['estimates']['Row']
 export type WorkPackage = Database['public']['Tables']['work_packages']['Row']
 export type Comment = Database['public']['Tables']['comments']['Row']
+export type CommentMention = Database['public']['Tables']['comment_mentions']['Row']
+export type ActivityEvent = Database['public']['Tables']['activity_events']['Row']
+export type ProjectWikiPage = Database['public']['Tables']['project_wiki_pages']['Row']
 export type ProjectDocument = Database['public']['Tables']['project_documents']['Row']
 export type Task = Database['public']['Tables']['tasks']['Row']
 export type TimeEntry = Database['public']['Tables']['time_entries']['Row']
@@ -89,6 +92,21 @@ export type EstimateWithPackages = EstimatePreview & {
 }
 
 export type CommentPreview = Pick<Comment, 'id' | 'project_id' | 'task_id' | 'user_id' | 'message' | 'created_at'>
+
+export type CommentMentionPreview = Pick<
+  CommentMention,
+  'id' | 'project_id' | 'comment_id' | 'task_id' | 'mentioned_user_id' | 'mentioned_by_user_id' | 'created_at'
+>
+
+export type ActivityEventPreview = Pick<
+  ActivityEvent,
+  'id' | 'project_id' | 'actor_user_id' | 'event_type' | 'entity_type' | 'entity_id' | 'payload' | 'created_at'
+>
+
+export type ProjectWikiPagePreview = Pick<
+  ProjectWikiPage,
+  'id' | 'project_id' | 'title' | 'content' | 'updated_by' | 'created_at' | 'updated_at'
+>
 
 export type ProjectDocumentPreview = Pick<
   ProjectDocument,
@@ -197,4 +215,10 @@ export interface SaveEstimateDraftInput {
 export interface UploadProjectDocumentInput {
   projectId: string
   file: File
+}
+
+export interface SaveProjectWikiInput {
+  projectId: string
+  title: string
+  content: string
 }

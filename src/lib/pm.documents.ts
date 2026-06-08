@@ -1,6 +1,7 @@
 import { supabase } from './supabase'
 import type { ProjectDocumentPreview, UploadProjectDocumentInput } from './pm.types'
 import { assertProjectEditable } from './pm.helpers'
+import { recordProjectActivityEvent } from './pm.collaboration'
 
 const DOCUMENT_SIGNED_URL_TTL_SECONDS = 60 * 60
 
@@ -80,6 +81,18 @@ export async function uploadProjectDocument(input: UploadProjectDocumentInput) {
   if (error) {
     throw new Error(error.message)
   }
+
+  await recordProjectActivityEvent({
+    projectId: input.projectId,
+    actorUserId: userData.user.id,
+    eventType: 'document.uploaded',
+    entityType: 'project_document',
+    entityId: data.id,
+    payload: {
+      name: data.name,
+      sizeBytes: data.size_bytes,
+    },
+  })
 
   return toDocumentPreviewWithAccessUrl(data satisfies ProjectDocumentPreview)
 }

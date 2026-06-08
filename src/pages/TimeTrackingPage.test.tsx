@@ -41,6 +41,7 @@ function createWorkspace(selectedProjectId: string | null = 'p1') {
 
 describe('TimeTrackingPage', () => {
   beforeEach(() => {
+    vi.clearAllMocks()
     mockGetTimeEntries.mockResolvedValue([])
     mockGetProjectTasks.mockResolvedValue([
       {
@@ -66,7 +67,7 @@ describe('TimeTrackingPage', () => {
     )!
     expect(dateInput.getAttribute('min')).toBe('2026-06-01')
     expect(dateInput.getAttribute('max')).toBe('2026-06-30')
-    expect(screen.getByText('Allowed range: 2026-06-01 - 2026-06-30')).toBeTruthy()
+    expect(screen.getByText('Allowed range: 2026-06-01 - 2026-06-30')).toBeInTheDocument()
   })
 
   it('creates a manual time entry and refreshes workspace metrics', async () => {
@@ -99,7 +100,7 @@ describe('TimeTrackingPage', () => {
 
     render(<TimeTrackingPage />)
 
-    expect((screen.getByText('Save manual entry') as HTMLButtonElement).disabled).toBe(true)
+    expect(screen.getByRole('button', { name: 'Save manual entry' })).toBeDisabled()
   })
 
   it('shows only current user tasks in task selectors', async () => {
@@ -123,7 +124,7 @@ describe('TimeTrackingPage', () => {
     render(<TimeTrackingPage />)
 
     expect((await screen.findAllByText('My task')).length).toBeGreaterThan(0)
-    expect(screen.queryByText('Other user task')).toBeNull()
+    expect(screen.queryByText('Other user task')).not.toBeInTheDocument()
   })
 
   it('edits and deletes own logs even when task is missing', async () => {
@@ -157,8 +158,8 @@ describe('TimeTrackingPage', () => {
         .getAllByDisplayValue('2026-06-05')
         .find((element) => element.getAttribute('min') === '2026-06-01')
 
-      expect(entryDateInput).toBeTruthy()
-      expect(screen.getByDisplayValue('500.00')).toBeTruthy()
+      expect(entryDateInput).toBeDefined()
+      expect(screen.getByDisplayValue('500.00')).toBeInTheDocument()
     })
 
     fireEvent.change(screen.getByDisplayValue('500.00'), { target: { value: '2' } })
@@ -181,6 +182,33 @@ describe('TimeTrackingPage', () => {
 
     await waitFor(() => {
       expect(mockDeleteTimeEntry).toHaveBeenCalledWith('te-1')
+    })
+  })
+
+  it('prevents manual entry with non-positive hours', async () => {
+    const workspace = createWorkspace()
+    mockUseWorkspace.mockReturnValue(workspace)
+
+    render(<TimeTrackingPage />)
+
+    fireEvent.change(screen.getByLabelText('Hours'), { target: { value: '0' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Save manual entry' }))
+
+    await waitFor(() => {
+      expect(workspace.setStatus).toHaveBeenCalledWith('Hours must be greater than 0')
+    })
+    expect(mockCreateTimeEntry).not.toHaveBeenCalled()
+  })
+
+  it('shows an error when weekly entries fail to load', async () => {
+    const workspace = createWorkspace()
+    mockUseWorkspace.mockReturnValue(workspace)
+    mockGetTimeEntries.mockRejectedValueOnce(new Error('network down'))
+
+    render(<TimeTrackingPage />)
+
+    await waitFor(() => {
+      expect(workspace.setStatus).toHaveBeenCalledWith('Time entries load error: network down')
     })
   })
 })

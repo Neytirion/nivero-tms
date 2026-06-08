@@ -35,7 +35,7 @@ const mockUseTaskForm = vi.mocked(useTaskForm)
 const mockGetProjectTaskWorkPackages = vi.mocked(getProjectTaskWorkPackages)
 const mockHasProjectEstimateVersion = vi.mocked(hasProjectEstimateVersion)
 
-function mockTaskForm() {
+function mockTaskForm(overrides: Record<string, unknown> = {}) {
   mockUseTaskForm.mockReturnValue({
     taskTitle: 'Implement API',
     setTaskTitle: vi.fn(),
@@ -55,6 +55,7 @@ function mockTaskForm() {
     setTaskDueDate: vi.fn(),
     canSubmit: true,
     reset: vi.fn(),
+    ...overrides,
   })
 }
 
@@ -95,7 +96,7 @@ describe('TasksPage', () => {
 
     const createButton = screen.getByRole('button', { name: 'Create task' })
     await waitFor(() => {
-      expect((createButton as HTMLButtonElement).disabled).toBe(false)
+      expect(createButton).toBeEnabled()
     })
 
     fireEvent.click(createButton)
@@ -129,7 +130,7 @@ describe('TasksPage', () => {
     render(<TasksPage />)
 
     await waitFor(() => {
-      expect(lastKanbanProps).toBeTruthy()
+      expect(lastKanbanProps).not.toBeNull()
     })
 
     const firstCallProps = lastKanbanProps as {
@@ -137,5 +138,42 @@ describe('TasksPage', () => {
     }
 
     expect(firstCallProps.canDeleteTask(task)).toBe(false)
+  })
+
+  it('disables task creation when estimate version is unavailable', async () => {
+    mockHasProjectEstimateVersion.mockResolvedValue(false)
+    const workspace = createWorkspaceState({
+      selectedProjectId: 'p1',
+      projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
+    })
+    mockUseWorkspace.mockReturnValue(workspace)
+
+    render(<TasksPage />)
+
+    expect(await screen.findByText(/create estimate version v1/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Create task' })).toBeDisabled()
+  })
+
+  it('blocks creating task when due date is outside project range', async () => {
+    mockTaskForm({ taskDueDate: '2026-05-25' })
+    const workspace = createWorkspaceState({
+      selectedProjectId: 'p1',
+      projects: [createProjectPreview({ id: 'p1', name: 'Apollo', start_date: '2026-06-01', end_date: '2026-06-30' })],
+    })
+    mockUseWorkspace.mockReturnValue(workspace)
+
+    render(<TasksPage />)
+
+    const createButton = screen.getByRole('button', { name: 'Create task' })
+    await waitFor(() => {
+      expect(createButton).toBeEnabled()
+    })
+
+    fireEvent.click(createButton)
+
+    await waitFor(() => {
+      expect(workspace.setStatus).toHaveBeenCalledWith('Due date must be within project dates')
+    })
+    expect(workspace.addTask).not.toHaveBeenCalled()
   })
 })

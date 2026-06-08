@@ -132,7 +132,11 @@ export function TasksPage() {
         ])
         setWorkPackages(nextWorkPackages)
         setHasEstimateVersion(hasVersion)
-        setTaskWorkPackageId((prev) => (nextWorkPackages.some((item) => item.id === prev) ? prev : ''))
+        setTaskWorkPackageId((prev) =>
+          nextWorkPackages.some((item: Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours'>) => item.id === prev)
+            ? prev
+            : '',
+        )
       } catch {
         setWorkPackages([])
         setHasEstimateVersion(false)

@@ -281,7 +281,7 @@ export function useDashboardPreview() {
 
       const memberships = await getMyProjectMemberships()
       setMembershipRoleByProjectId(
-        memberships.reduce<Record<string, ProjectRoleName>>((acc, membership) => {
+        memberships.reduce<Record<string, ProjectRoleName>>((acc: Record<string, ProjectRoleName>, membership) => {
           if (membership.project_id) {
             acc[membership.project_id] = normalizeProjectRole(membership.role)
           }
@@ -755,7 +755,7 @@ export function useDashboardPreview() {
       const latestTasks = await getProjectTasks(selectedProjectId)
       setTasks(latestTasks)
 
-      const incompleteTasksCount = latestTasks.filter((task) => !isTaskClosedStatus(task.status)).length
+      const incompleteTasksCount = latestTasks.filter((task: TaskPreview) => !isTaskClosedStatus(task.status)).length
       if (incompleteTasksCount > 0) {
         setStatus(`Cannot complete project: ${incompleteTasksCount} unfinished task(s) remain`)
         setIsLoading(false)

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useWorkspace } from '../features/dashboard/workspace-context.tsx'
-import { KANBAN_COLUMNS, type TaskStatus } from '../features/tasks/constants.ts'
-import { KanbanColumn, TaskLogTimeModal } from '../features/tasks/components'
+import type { TaskStatus } from '../features/tasks/constants.ts'
+import { TaskLogTimeModal } from '../features/tasks/components'
 import { useTaskForm } from '../features/tasks/hooks/useTaskForm.ts'
 import {
   createTimeEntry,
@@ -10,9 +10,8 @@ import {
   type TaskPreview,
   type WorkPackagePreview,
 } from '../lib/pm'
-import { buildCalendarMeta, getTaskPriorityBadgeClass, normalizeTaskStatus, shiftMonthValue } from './tasks-page.utils'
-
-type TaskViewMode = 'list' | 'board' | 'calendar'
+import { buildCalendarMeta, shiftMonthValue } from './tasks-page.utils'
+import { CreateTaskSection, TaskViewsSection, type TaskViewMode } from './tasks'
 
 export function TasksPage() {
   const {
@@ -303,432 +302,77 @@ export function TasksPage() {
         </p>
       </section>
 
-      <section className="page-section bg-slate-50/70">
-        <h3 className="section-title">Create Task</h3>
-        <p className="section-subtitle">Add task metadata before placing it on the board.</p>
-        <p className="mt-2 text-[11px] text-slate-500">Fields marked with * are required.</p>
+        <CreateTaskSection
+          hasEstimateVersion={hasEstimateVersion}
+          selectedProjectId={selectedProjectId}
+          isMemberInSelectedProject={isMemberInSelectedProject}
+          projects={projects}
+          selectedProject={selectedProject}
+          isProjectMissing={isProjectMissing}
+          isTaskTitleMissing={isTaskTitleMissing}
+          isEstimateHoursMissingOrInvalid={isEstimateHoursMissingOrInvalid}
+          isWorkPackageMissing={isWorkPackageMissing}
+          taskTitle={taskTitle}
+          taskDescription={taskDescription}
+          taskEstimateHours={taskEstimateHours}
+          taskPriority={taskPriority}
+          taskDueDate={taskDueDate}
+          taskWorkPackageId={taskWorkPackageId}
+          taskBlockedByTaskId={taskBlockedByTaskId}
+          taskAssigneeId={taskAssigneeId}
+          projectStartDate={projectStartDate}
+          projectEndDate={projectEndDate}
+          workPackages={workPackages}
+          dependencyOptions={dependencyOptions}
+          canAssignAssignee={canAssignAssignee}
+          projectMembers={projectMembers}
+          missingRequiredFields={missingRequiredFields}
+          isLoading={isLoading}
+          canSubmit={canSubmit}
+          onSelectProject={(projectId) => {
+            void selectProject(projectId)
+          }}
+          onTaskTitleChange={setTaskTitle}
+          onTaskDescriptionChange={setTaskDescription}
+          onTaskEstimateHoursChange={setTaskEstimateHours}
+          onTaskPriorityChange={setTaskPriority}
+          onTaskDueDateChange={setTaskDueDate}
+          onTaskWorkPackageIdChange={setTaskWorkPackageId}
+          onTaskBlockedByTaskIdChange={setTaskBlockedByTaskId}
+          onTaskAssigneeIdChange={setTaskAssigneeId}
+          onCreateTask={createTaskHandler}
+        />
 
-        {hasEstimateVersion === false && selectedProjectId ? (
-          <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            {isMemberInSelectedProject
-              ? 'Estimate version is not created yet. Task creation is unavailable.'
-              : 'Create estimate version v1 in Project Details → Estimates before creating tasks.'}
-          </p>
-        ) : null}
-
-        <div className="mt-3 grid gap-3 lg:grid-cols-3">
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Core</p>
-            <div className="mt-2 space-y-2.5">
-              <div>
-                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  Project *
-                </label>
-                <select
-                  value={selectedProjectId ?? ''}
-                  onChange={(event) => {
-                    if (event.target.value) {
-                      void selectProject(event.target.value)
-                    }
-                  }}
-                  className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 ${
-                    isProjectMissing ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
-                  }`}
-                >
-                  <option value="">Select project</option>
-                  {projects.map((project) => (
-                    <option key={project.id} value={project.id}>
-                      {project.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  Task title *
-                </label>
-                <input
-                  type="text"
-                  value={taskTitle}
-                  onChange={(event) => setTaskTitle(event.target.value)}
-                  placeholder="Short task name"
-                  className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 ${
-                    isTaskTitleMissing ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
-                  }`}
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  Description
-                </label>
-                <input
-                  type="text"
-                  value={taskDescription}
-                  onChange={(event) => setTaskDescription(event.target.value)}
-                  placeholder="What exactly needs to be done"
-                  className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Planning</p>
-            <div className="mt-2 space-y-2.5">
-              <div>
-                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  Estimated hours *
-                </label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  value={taskEstimateHours}
-                  onChange={(event) => setTaskEstimateHours(event.target.value)}
-                  placeholder="e.g. 6"
-                  className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 ${
-                    isEstimateHoursMissingOrInvalid ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
-                  }`}
-                />
-              </div>
-
-              <div>
-                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  Priority
-                </label>
-                <select
-                  value={taskPriority}
-                  onChange={(event) => setTaskPriority(event.target.value)}
-                  className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
-                >
-                  <option value="low">low</option>
-                  <option value="medium">medium</option>
-                  <option value="high">high</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  Due date
-                </label>
-                <input
-                  type="date"
-                  value={taskDueDate}
-                  onChange={(event) => setTaskDueDate(event.target.value)}
-                  min={projectStartDate || undefined}
-                  max={projectEndDate || undefined}
-                  className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
-                />
-                {projectStartDate || projectEndDate ? (
-                  <p className="mt-1 text-[11px] text-slate-500">
-                    Allowed range: {projectStartDate || '...'} - {projectEndDate || '...'}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Assignment & Scope</p>
-            <div className="mt-2 space-y-2.5">
-              <div>
-                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  Work Package *
-                </label>
-                <select
-                  value={taskWorkPackageId}
-                  onChange={(event) => setTaskWorkPackageId(event.target.value)}
-                  className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 ${
-                    isWorkPackageMissing ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
-                  }`}
-                >
-                  <option value="">Select work package</option>
-                  {workPackages.map((workPackage) => (
-                    <option key={workPackage.id} value={workPackage.id}>
-                      {workPackage.name}
-                    </option>
-                  ))}
-                </select>
-                {workPackages.length === 0 && selectedProjectId && hasEstimateVersion === true ? (
-                  <p className="mt-1 text-[11px] text-rose-600">
-                    No active work packages found. Add packages in Project Details → Estimates.
-                  </p>
-                ) : null}
-              </div>
-
-              <div>
-                <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                  Blocked by task
-                </label>
-                <select
-                  value={taskBlockedByTaskId}
-                  onChange={(event) => setTaskBlockedByTaskId(event.target.value)}
-                  className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
-                >
-                  <option value="">None</option>
-                  {dependencyOptions.map((task) => (
-                    <option key={task.id} value={task.id}>
-                      {task.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {canAssignAssignee ? (
-                <div>
-                  <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                    Assignee
-                  </label>
-                  <select
-                    value={taskAssigneeId}
-                    onChange={(event) => setTaskAssigneeId(event.target.value)}
-                    className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
-                  >
-                    <option value="">Unassigned</option>
-                    {projectMembers.map((member) => (
-                      <option key={member.member_id} value={member.user_id ?? ''}>
-                        {member.full_name || member.email || member.user_id}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ) : (
-                <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                  Task will be assigned automatically according to your role permissions.
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-3 flex items-center justify-between gap-3">
-          {missingRequiredFields.length > 0 ? (
-            <p className="text-xs text-rose-600">Fill in: {missingRequiredFields.join(', ')}</p>
-          ) : (
-            <p className="text-xs text-slate-500">
-              {selectedProject ? `Selected project: ${selectedProject.name}` : 'Select a project first.'}
-            </p>
-          )}
-          <button
-            type="button"
-            onClick={createTaskHandler}
-            disabled={!selectedProjectId || hasEstimateVersion !== true || !canSubmit || missingRequiredFields.length > 0 || isLoading}
-            className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Create task
-          </button>
-        </div>
-      </section>
-
-      <section className="page-section">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="section-title">Task Views</h3>
-          <div className="flex items-center gap-2">
-            {([
-              { key: 'list', label: 'List' },
-              { key: 'board', label: 'Board' },
-              { key: 'calendar', label: 'Calendar' },
-            ] as const).map((view) => (
-              <button
-                key={view.key}
-                type="button"
-                onClick={() => setTaskViewMode(view.key)}
-                className={`rounded-md border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
-                  taskViewMode === view.key
-                    ? 'border-cyan-300 bg-cyan-100 text-cyan-900'
-                    : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                {view.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {taskViewMode === 'board' ? (
-          <>
-            <p className="mb-3 text-xs text-slate-500">Drag card to change task status</p>
-            <div className="grid gap-4 xl:grid-cols-5">
-              {KANBAN_COLUMNS.map((column) => {
-                const columnTasks = tasks.filter((task) => normalizeTaskStatus(task.status) === column.key)
-
-                return (
-                  <KanbanColumn
-                    key={column.key}
-                    status={column.key}
-                    label={column.label}
-                    tasks={columnTasks}
-                    assigneeLabelByUserId={assigneeLabelByUserId}
-                    workPackageLabelById={workPackageLabelById}
-                    dependencyLabelByTaskId={dependencyLabelByTaskId}
-                    assigneeOptions={assigneeOptions}
-                    canAssignAssignee={canAssignAssignee}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDropTask={(status) => {
-                      if (dragTaskId) {
-                        void moveTaskToStatus(dragTaskId, status)
-                      }
-                      setDragTaskId(null)
-                    }}
-                    onAssignTask={assignTaskHandler}
-                    onDeleteTask={(taskId) => void removeTask(taskId)}
-                    onDragTaskStart={setDragTaskId}
-                    onLogTime={setLogTimeTask}
-                    canManageTask={canManageTask}
-                    canDeleteTask={canDeleteTaskInView}
-                  />
-                )
-              })}
-            </div>
-          </>
-        ) : null}
-
-        {taskViewMode === 'list' ? (
-          <div className="overflow-x-auto rounded-xl border border-slate-200">
-            <table className="min-w-full bg-white text-sm">
-              <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
-                <tr>
-                  <th className="px-3 py-2 text-left">Task</th>
-                  <th className="px-3 py-2 text-left">Work Package</th>
-                  <th className="px-3 py-2 text-left">Status</th>
-                  <th className="px-3 py-2 text-left">Priority</th>
-                  <th className="px-3 py-2 text-left">Assignee</th>
-                  <th className="px-3 py-2 text-left">Dependency</th>
-                  <th className="px-3 py-2 text-left">Due date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tasks.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-3 py-4 text-center text-slate-500">
-                      No tasks yet
-                    </td>
-                  </tr>
-                ) : (
-                  tasks.map((task) => (
-                    <tr key={task.id} className="border-t border-slate-100">
-                      <td className="px-3 py-2 text-slate-800">{task.title}</td>
-                      <td className="px-3 py-2 text-slate-600">
-                        {task.work_package_id
-                          ? workPackageLabelById[task.work_package_id] ?? task.work_package_id
-                          : 'Not linked'}
-                      </td>
-                      <td className="px-3 py-2 text-slate-600">{task.status ?? 'todo'}</td>
-                      <td className="px-3 py-2">
-                        <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${getTaskPriorityBadgeClass(
-                            task.priority,
-                          )}`}
-                        >
-                          {task.priority ?? 'medium'}
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 text-slate-600">
-                        {task.assigned_to
-                          ? assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to
-                          : task.created_by
-                            ? `${assigneeLabelByUserId[task.created_by] ?? task.created_by} (creator)`
-                            : 'Unassigned'}
-                      </td>
-                      <td className="px-3 py-2 text-slate-600">
-                        {task.blocked_by_task_id
-                          ? dependencyLabelByTaskId[task.blocked_by_task_id] ?? task.blocked_by_task_id
-                          : 'None'}
-                      </td>
-                      <td className="px-3 py-2 text-slate-600">
-                        {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        ) : null}
-
-        {taskViewMode === 'calendar' ? (
-          <div className="rounded-xl border border-slate-200 bg-white p-3">
-            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => shiftCalendarMonth(-1)}
-                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100"
-                  aria-label="Previous month"
-                >
-                  ←
-                </button>
-                <p className="text-sm font-semibold text-slate-900 min-w-[140px] text-center">
-                  {calendarMeta?.monthTitle ?? 'Calendar'}
-                </p>
-                <button
-                  type="button"
-                  onClick={() => shiftCalendarMonth(1)}
-                  className="rounded-md border border-slate-300 bg-white px-2 py-1 text-sm font-semibold text-slate-700 hover:bg-slate-100"
-                  aria-label="Next month"
-                >
-                  →
-                </button>
-              </div>
-              <input
-                type="month"
-                value={calendarMonth}
-                onChange={(event) => setCalendarMonth(event.target.value)}
-                className="rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-800 outline-none focus:border-slate-500"
-              />
-            </div>
-
-            <div className="grid grid-cols-7 gap-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-              <p>Sun</p>
-              <p>Mon</p>
-              <p>Tue</p>
-              <p>Wed</p>
-              <p>Thu</p>
-              <p>Fri</p>
-              <p>Sat</p>
-            </div>
-
-            <div className="mt-2 grid grid-cols-7 gap-2">
-              {calendarMeta?.cells.map((cell, index) => (
-                <div
-                  key={`${cell?.dateKey ?? 'blank'}-${index}`}
-                  className={`min-h-[96px] rounded-lg border p-2 ${
-                    cell ? 'border-slate-200 bg-slate-50' : 'border-transparent bg-transparent'
-                  }`}
-                >
-                  {cell ? (
-                    <>
-                      <p className="text-xs font-semibold text-slate-700">{cell.dayNumber}</p>
-                      <div className="mt-1 space-y-1">
-                        {cell.tasks.slice(0, 3).map((task) => (
-                          <div
-                            key={task.id}
-                            className={`rounded bg-white px-1.5 py-1 text-[10px] border ${getTaskPriorityBadgeClass(task.priority)}`}
-                            title={`${task.title}${
-                              task.blocked_by_task_id
-                                ? ` | Blocked by: ${
-                                    dependencyLabelByTaskId[task.blocked_by_task_id] ?? task.blocked_by_task_id
-                                  }`
-                                : ''
-                            }`}
-                          >
-                            {task.title}
-                          </div>
-                        ))}
-                        {cell.tasks.length > 3 ? (
-                          <p className="text-[10px] text-slate-500">+{cell.tasks.length - 3} more</p>
-                        ) : null}
-                      </div>
-                    </>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : null}
-      </section>
+        <TaskViewsSection
+          taskViewMode={taskViewMode}
+          onTaskViewModeChange={setTaskViewMode}
+          tasks={tasks}
+          assigneeLabelByUserId={assigneeLabelByUserId}
+          workPackageLabelById={workPackageLabelById}
+          dependencyLabelByTaskId={dependencyLabelByTaskId}
+          assigneeOptions={assigneeOptions}
+          canAssignAssignee={canAssignAssignee}
+          dragTaskId={dragTaskId}
+          onDragTaskIdChange={setDragTaskId}
+          onMoveTaskToStatus={(taskId, status) => {
+            void moveTaskToStatus(taskId, status)
+          }}
+          onAssignTask={(taskId, userId) => {
+            void assignTaskHandler(taskId, userId)
+          }}
+          onDeleteTask={(taskId) => {
+            void removeTask(taskId)
+          }}
+          onLogTime={(task) => {
+            setLogTimeTask(task)
+          }}
+          canManageTask={canManageTask}
+          canDeleteTask={canDeleteTaskInView}
+          calendarMonth={calendarMonth}
+          onCalendarMonthChange={setCalendarMonth}
+          onShiftCalendarMonth={shiftCalendarMonth}
+          calendarMeta={calendarMeta}
+        />
 
       <TaskLogTimeModal
         isOpen={Boolean(logTimeTask)}

@@ -170,6 +170,16 @@ export interface CreateTimeEntryInput {
   notes?: string
 }
 
+export interface UpdateTimeEntryInput {
+  projectId: string
+  taskId?: string
+  entryDate: string
+  hoursSpent: number
+  isBillable: boolean
+  category: string
+  notes?: string
+}
+
 export interface GetTimeEntriesInput {
   projectId?: string
   fromDate?: string

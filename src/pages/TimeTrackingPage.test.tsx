@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TimeTrackingPage } from './TimeTrackingPage'
 import { useWorkspace } from '../features/dashboard/workspace-context.tsx'
-import { createTimeEntry, getProjectTasks, getTimeEntries } from '../lib/pm'
+import { createTimeEntry, deleteTimeEntry, getProjectTasks, getTimeEntries, updateTimeEntry } from '../lib/pm'
 import { createProjectPreview, createWorkspaceState } from './test-helpers.ts'
 
 vi.mock('../features/dashboard/workspace-context.tsx', () => ({
@@ -11,14 +11,18 @@ vi.mock('../features/dashboard/workspace-context.tsx', () => ({
 
 vi.mock('../lib/pm', () => ({
   createTimeEntry: vi.fn(),
+  deleteTimeEntry: vi.fn(),
   getProjectTasks: vi.fn(),
   getTimeEntries: vi.fn(),
+  updateTimeEntry: vi.fn(),
 }))
 
 const mockUseWorkspace = vi.mocked(useWorkspace)
 const mockCreateTimeEntry = vi.mocked(createTimeEntry)
+const mockDeleteTimeEntry = vi.mocked(deleteTimeEntry)
 const mockGetProjectTasks = vi.mocked(getProjectTasks)
 const mockGetTimeEntries = vi.mocked(getTimeEntries)
+const mockUpdateTimeEntry = vi.mocked(updateTimeEntry)
 
 function createWorkspace(selectedProjectId: string | null = 'p1') {
   return createWorkspaceState({
@@ -47,6 +51,8 @@ describe('TimeTrackingPage', () => {
       },
     ] as never)
     mockCreateTimeEntry.mockResolvedValue({ id: 'entry-1' } as never)
+    mockUpdateTimeEntry.mockResolvedValue({ id: 'entry-1' } as never)
+    mockDeleteTimeEntry.mockResolvedValue(undefined as never)
   })
 
   it('shows project date constraints on manual entry date field', async () => {
@@ -118,5 +124,63 @@ describe('TimeTrackingPage', () => {
 
     expect((await screen.findAllByText('My task')).length).toBeGreaterThan(0)
     expect(screen.queryByText('Other user task')).toBeNull()
+  })
+
+  it('edits and deletes own logs even when task is missing', async () => {
+    const workspace = createWorkspace()
+    mockUseWorkspace.mockReturnValue(workspace)
+    mockGetTimeEntries.mockResolvedValue([
+      {
+        id: 'te-1',
+        user_id: 'u1',
+        project_id: 'p1',
+        task_id: null,
+        entry_date: '2026-06-05',
+        minutes_spent: 30000,
+        is_billable: true,
+        category: 'delivery',
+        notes: 'bad log',
+        started_at: null,
+        ended_at: null,
+        created_at: '2026-06-05T10:00:00.000Z',
+      },
+    ] as never)
+
+    render(<TimeTrackingPage />)
+
+    expect((await screen.findAllByText('bad log')).length).toBeGreaterThan(0)
+
+    fireEvent.click(screen.getByText('Edit'))
+
+    await waitFor(() => {
+      const entryDateInput = screen
+        .getAllByDisplayValue('2026-06-05')
+        .find((element) => element.getAttribute('min') === '2026-06-01')
+
+      expect(entryDateInput).toBeTruthy()
+      expect(screen.getByDisplayValue('500.00')).toBeTruthy()
+    })
+
+    fireEvent.change(screen.getByDisplayValue('500.00'), { target: { value: '2' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Update entry' }))
+
+    await waitFor(() => {
+      expect(mockUpdateTimeEntry).toHaveBeenCalledWith(
+        'te-1',
+        expect.objectContaining({
+          projectId: 'p1',
+          hoursSpent: 2,
+          taskId: undefined,
+          entryDate: '2026-06-05',
+        }),
+      )
+    })
+
+    fireEvent.click(screen.getByText('Delete'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete entry' }))
+
+    await waitFor(() => {
+      expect(mockDeleteTimeEntry).toHaveBeenCalledWith('te-1')
+    })
   })
 })

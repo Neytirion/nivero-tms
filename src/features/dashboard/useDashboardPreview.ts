@@ -650,6 +650,19 @@ export function useDashboardPreview() {
       return
     }
 
+    const normalizedNextRole = role.trim().toLowerCase()
+    const isSelfRoleUpdate = Boolean(currentUserId) && userId === currentUserId
+    const selfMember = projectMembers.find((member) => member.user_id === userId)
+    const isSelfCurrentlyAdmin = (selfMember?.role ?? '').toLowerCase() === 'admin'
+    const otherAdminsCount = projectMembers.filter(
+      (member) => member.user_id !== userId && (member.role ?? '').toLowerCase() === 'admin',
+    ).length
+
+    if (isSelfRoleUpdate && isSelfCurrentlyAdmin && normalizedNextRole !== 'admin' && otherAdminsCount === 0) {
+      setStatus('You cannot change your role: add another admin first')
+      return
+    }
+
     if (!ensureProjectEditable(selectedProjectId, 'change member roles')) {
       return
     }

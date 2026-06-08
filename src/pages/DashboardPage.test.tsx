@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DashboardPage } from './DashboardPage'
 import { useWorkspace } from '../features/dashboard/workspace-context.tsx'
 import type { WorkspaceState } from '../features/dashboard/workspace-context.tsx'
-import type { ProjectPreview, TaskPreview } from '../lib/pm'
+import { getProjectTasks, type ProjectPreview, type TaskPreview } from '../lib/pm'
 
 function createProjectPreview(overrides: Partial<ProjectPreview> = {}): ProjectPreview {
   return {
@@ -90,10 +90,17 @@ vi.mock('../features/dashboard/workspace-context.tsx', () => ({
   useWorkspace: vi.fn(),
 }))
 
+vi.mock('../lib/pm', () => ({
+  getProjectTasks: vi.fn(),
+}))
+
 const mockUseWorkspace = vi.mocked(useWorkspace)
+const mockGetProjectTasks = vi.mocked(getProjectTasks)
 
 describe('DashboardPage', () => {
   beforeEach(() => {
+    mockGetProjectTasks.mockReset()
+
     mockUseWorkspace.mockReturnValue(createWorkspaceState({
       projects: [
         createProjectPreview({
@@ -147,7 +154,7 @@ describe('DashboardPage', () => {
     expect(screen.getByText('Active Projects')).toBeTruthy()
     expect(screen.getByText('Total Tasks')).toBeTruthy()
     expect(screen.getByText('Logged Hours')).toBeTruthy()
-    expect(screen.getByText('Apollo')).toBeTruthy()
+    expect(screen.getAllByText('Apollo').length).toBeGreaterThan(0)
     expect(screen.getByText('Risk: Red')).toBeTruthy()
     expect(screen.getByText('80% · Hours: 120 / 100')).toBeTruthy()
   })
@@ -159,5 +166,55 @@ describe('DashboardPage', () => {
     expect(screen.getByText(/Implement API/)).toBeTruthy()
     expect(screen.queryByText(/Write docs/)).toBeNull()
     expect(screen.getByText('Current project: Apollo')).toBeTruthy()
+  })
+
+  it('shows member tasks from all projects with priority and due date', async () => {
+    mockUseWorkspace.mockReturnValue(createWorkspaceState({
+      projects: [
+        createProjectPreview({ id: 'p1', name: 'Apollo', status: 'active' }),
+        createProjectPreview({ id: 'p2', name: 'Hermes', status: 'active' }),
+      ],
+      tasks: [],
+      selectedProjectId: 'p1',
+      currentUserId: 'u1',
+      getProjectRole: vi.fn(() => 'member' as const),
+    }))
+
+    mockGetProjectTasks.mockImplementation(async (projectId: string) => {
+      if (projectId === 'p1') {
+        return [
+          createTaskPreview({
+            id: 'm1',
+            title: 'API integration',
+            assigned_to: 'u1',
+            status: 'todo',
+            priority: 'high',
+            due_date: '2026-06-11',
+            project_id: 'p1',
+          }),
+        ]
+      }
+
+      return [
+        createTaskPreview({
+          id: 'm2',
+          title: 'QA checklist',
+          assigned_to: 'u1',
+          status: 'in_progress',
+          priority: 'medium',
+          due_date: '2026-06-12',
+          project_id: 'p2',
+        }),
+      ]
+    })
+
+    render(<DashboardPage />)
+
+    expect(await screen.findByText(/API integration/)).toBeTruthy()
+    expect(screen.getByText(/QA checklist/)).toBeTruthy()
+    expect(screen.getByText('All projects assigned to me')).toBeTruthy()
+    expect(screen.getByText(/Priority: high/)).toBeTruthy()
+    expect(screen.getAllByText('Apollo').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Hermes').length).toBeGreaterThan(0)
   })
 })

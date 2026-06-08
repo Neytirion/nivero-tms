@@ -147,6 +147,16 @@ export function TasksPage() {
     void loadWorkPackages()
   }, [selectedProjectId, setTaskWorkPackageId])
 
+  useEffect(() => {
+    if (!selectedProjectId) {
+      return
+    }
+
+    void selectProject(selectedProjectId)
+    // Intentionally track selected project only to refresh tasks/members snapshot on page entry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId])
+
   const createTaskHandler = async () => {
     if (!selectedProjectId) {
       setStatus('Select a project before creating tasks')

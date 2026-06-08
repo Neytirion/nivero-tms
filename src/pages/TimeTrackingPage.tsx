@@ -34,7 +34,7 @@ function formatHours(minutes: number) {
 }
 
 export function TimeTrackingPage() {
-  const { projects, selectedProjectId, status, setStatus, isLoading, loadDashboardPreview } = useWorkspace()
+  const { projects, selectedProjectId, currentUserId, status, setStatus, isLoading, loadDashboardPreview } = useWorkspace()
   const [entries, setEntries] = useState<TimeEntryPreview[]>([])
   const [isEntriesLoading, setIsEntriesLoading] = useState(false)
   const [activeProjectId, setActiveProjectId] = useState(selectedProjectId ?? '')
@@ -134,9 +134,17 @@ export function TimeTrackingPage() {
 
       try {
         const nextTasks = await getProjectTasks(activeProjectId)
-        setProjectTasks(nextTasks)
-        setManualTaskId((prev) => (nextTasks.some((task) => task.id === prev) ? prev : ''))
-        setTimerTaskId((prev) => (nextTasks.some((task) => task.id === prev) ? prev : ''))
+        const visibleTasks = nextTasks.filter((task) => {
+          if (!currentUserId) {
+            return true
+          }
+
+          return task.assigned_to === currentUserId
+        })
+
+        setProjectTasks(visibleTasks)
+        setManualTaskId((prev) => (visibleTasks.some((task) => task.id === prev) ? prev : ''))
+        setTimerTaskId((prev) => (visibleTasks.some((task) => task.id === prev) ? prev : ''))
       } catch (error) {
         setStatus(error instanceof Error ? `Task load error: ${error.message}` : 'Task load error')
         setProjectTasks([])
@@ -144,7 +152,7 @@ export function TimeTrackingPage() {
     }
 
     void loadProjectTasks()
-  }, [activeProjectId, setStatus])
+  }, [activeProjectId, currentUserId, setStatus])
 
   useEffect(() => {
     if (!timerStartedAt) {

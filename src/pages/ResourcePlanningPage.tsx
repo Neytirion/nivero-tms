@@ -26,7 +26,26 @@ function startOfWeek(date: Date) {
 function endOfWeek(start: Date) {
   const value = new Date(start)
   value.setDate(value.getDate() + 6)
+  value.setHours(23, 59, 59, 999)
   return value
+}
+
+function formatWeekdayDate(date: Date) {
+  return date.toLocaleDateString(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+  })
+}
+
+function isTaskInSelectedWeek(task: TaskPreview, startDate: string, endDate: string) {
+  const dueDate = task.due_date?.slice(0, 10)
+  if (!dueDate) {
+    return false
+  }
+
+  return dueDate >= startDate && dueDate <= endDate
 }
 
 interface ConsultantRow {
@@ -35,6 +54,7 @@ interface ConsultantRow {
   email: string
   projects: string[]
   openTasksCount: number
+  unscheduledTasksCount: number
   allocatedHours: number
   loggedHoursThisWeek: number
   allocationPct: number
@@ -78,7 +98,9 @@ export function ResourcePlanningPage() {
     return {
       startDate: toDateInputValue(start),
       endDate: toDateInputValue(end),
-      label: `${start.toLocaleDateString()} – ${end.toLocaleDateString()}`,
+      startLabel: formatWeekdayDate(start),
+      endLabel: formatWeekdayDate(end),
+      isoLabel: `${toDateInputValue(start)} -> ${toDateInputValue(end)}`,
     }
   }, [weekAnchorDate])
 
@@ -146,7 +168,8 @@ export function ResourcePlanningPage() {
         name: string
         email: string
         projectNames: Set<string>
-        openTasks: TaskPreview[]
+        openTasksThisWeek: TaskPreview[]
+        unscheduledOpenTasks: TaskPreview[]
       }
     >()
 
@@ -163,7 +186,8 @@ export function ResourcePlanningPage() {
             name: member.full_name || member.email || member.user_id,
             email: member.email || '',
             projectNames: new Set(),
-            openTasks: [],
+            openTasksThisWeek: [],
+            unscheduledOpenTasks: [],
           })
         }
 
@@ -175,7 +199,14 @@ export function ResourcePlanningPage() {
             task.assigned_to === member.user_id &&
             !['done', 'completed'].includes((task.status ?? '').toLowerCase()),
         )
-        entry.openTasks.push(...openAssigned)
+
+        const openAssignedThisWeek = openAssigned.filter((task) =>
+          isTaskInSelectedWeek(task, weekRange.startDate, weekRange.endDate),
+        )
+        const unscheduledOpenAssigned = openAssigned.filter((task) => !task.due_date)
+
+        entry.openTasksThisWeek.push(...openAssignedThisWeek)
+        entry.unscheduledOpenTasks.push(...unscheduledOpenAssigned)
       }
     }
 
@@ -186,7 +217,7 @@ export function ResourcePlanningPage() {
 
     return Array.from(byUser.values())
       .map((item) => {
-        const allocatedHours = item.openTasks.reduce(
+        const allocatedHours = item.openTasksThisWeek.reduce(
           (sum, task) => sum + (task.estimate_hours ?? 0),
           0,
         )
@@ -199,7 +230,8 @@ export function ResourcePlanningPage() {
           name: item.name,
           email: item.email,
           projects: Array.from(item.projectNames),
-          openTasksCount: item.openTasks.length,
+          openTasksCount: item.openTasksThisWeek.length,
+          unscheduledTasksCount: item.unscheduledOpenTasks.length,
           allocatedHours: Math.round(allocatedHours * 10) / 10,
           loggedHoursThisWeek: Math.round(loggedHoursThisWeek * 10) / 10,
           allocationPct,
@@ -207,7 +239,7 @@ export function ResourcePlanningPage() {
         }
       })
       .sort((a, b) => b.allocationPct - a.allocationPct)
-  }, [activeProjects, membersByProject, tasksByProject, weekTimeEntries])
+  }, [activeProjects, membersByProject, tasksByProject, weekRange.endDate, weekRange.startDate, weekTimeEntries])
 
   const visibleRows =
     filterStatus === 'all' ? consultantRows : consultantRows.filter((row) => row.status === filterStatus)
@@ -246,7 +278,10 @@ export function ResourcePlanningPage() {
 
         <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Week</p>
-          <p className="text-sm font-semibold text-slate-800">{weekRange.label}</p>
+          <p className="text-sm font-semibold text-slate-800">
+            {weekRange.startLabel} - {weekRange.endLabel}
+          </p>
+          <p className="text-[11px] text-slate-500">{weekRange.isoLabel}</p>
         </div>
 
         <label className="block">
@@ -303,6 +338,7 @@ export function ResourcePlanningPage() {
                 <th className="px-4 py-3">Consultant</th>
                 <th className="px-4 py-3">Active Projects</th>
                 <th className="px-4 py-3">Open Tasks</th>
+                <th className="px-4 py-3">Unscheduled</th>
                 <th className="px-4 py-3">Allocated</th>
                 <th className="px-4 py-3">Logged this week</th>
                 <th className="px-4 py-3">Allocation %</th>
@@ -312,13 +348,13 @@ export function ResourcePlanningPage() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate-500">
+                  <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">
                     Loading allocation data...
                   </td>
                 </tr>
               ) : visibleRows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-4 py-6 text-center text-sm text-slate-500">
+                  <td colSpan={8} className="px-4 py-6 text-center text-sm text-slate-500">
                     No consultants found
                     {filterStatus !== 'all' ? ` with status "${filterStatus}"` : ' across active projects'}.
                   </td>
@@ -345,6 +381,9 @@ export function ResourcePlanningPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3 text-slate-700">{row.openTasksCount}</td>
+                    <td className="px-4 py-3 text-slate-500">
+                      {row.unscheduledTasksCount > 0 ? `+${row.unscheduledTasksCount} unscheduled` : '-'}
+                    </td>
                     <td className="px-4 py-3 font-medium text-slate-900">
                       {row.allocatedHours}h
                       <span className="ml-1 text-[11px] text-slate-400">/ {WEEKLY_CAPACITY_HOURS}h cap</span>
@@ -378,7 +417,8 @@ export function ResourcePlanningPage() {
         </div>
 
         <div className="border-t border-slate-100 px-4 py-2 text-[11px] text-slate-500">
-          Allocation = sum of open task estimates / {WEEKLY_CAPACITY_HOURS}h capacity.
+          Allocation = sum of open task estimates with due date in selected week / {WEEKLY_CAPACITY_HOURS}h capacity.
+          Tasks without due date are tracked as unscheduled.
           Logged = time_entries for selected week. Based on {activeProjects.length} active project(s).
         </div>
       </section>

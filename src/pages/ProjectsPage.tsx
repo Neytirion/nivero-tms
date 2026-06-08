@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ConfirmDialog } from '../shared/components'
 import { useWorkspace } from '../features/dashboard/workspace-context.tsx'
 import { CreateProjectModal, ProjectDetailsSection, ProjectsSummaryCards, ProjectsTable, type DetailsTab } from '../features/projects/components'
@@ -120,6 +120,16 @@ export function ProjectsPage() {
       return source.includes(query)
     })
   }, [projects, searchValue])
+
+  useEffect(() => {
+    if (!selectedProjectId) {
+      return
+    }
+
+    void selectProject(selectedProjectId)
+    // Intentionally track selected project only to refresh members/tasks snapshot on page entry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId])
 
   const updateSettingsDraft = (patch: Partial<Omit<typeof currentSettingsDraft, 'projectId'>>) => {
     if (!selectedProject) {

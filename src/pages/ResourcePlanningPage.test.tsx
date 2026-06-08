@@ -26,6 +26,18 @@ function createProjectPreview(overrides: Partial<ProjectPreview> = {}): ProjectP
   }
 }
 
+function toDateInputValue(date: Date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function startOfWeek(date: Date) {
+  const value = new Date(date)
+  const day = value.getDay()
+  value.setDate(value.getDate() - (day === 0 ? 6 : day - 1))
+  value.setHours(0, 0, 0, 0)
+  return value
+}
+
 function createWorkspaceState(overrides: Partial<WorkspaceState> = {}): WorkspaceState {
   const base: WorkspaceState = {
     status: 'Ready',
@@ -82,6 +94,16 @@ const mockGetTimeEntries = vi.mocked(getTimeEntries)
 
 describe('ResourcePlanningPage', () => {
   beforeEach(() => {
+    const weekStart = startOfWeek(new Date())
+    const weekDay2 = new Date(weekStart)
+    weekDay2.setDate(weekDay2.getDate() + 1)
+    const weekDay5 = new Date(weekStart)
+    weekDay5.setDate(weekDay5.getDate() + 4)
+    const nextWeekDay3 = new Date(weekStart)
+    nextWeekDay3.setDate(nextWeekDay3.getDate() + 9)
+    const nextWeekDay4 = new Date(weekStart)
+    nextWeekDay4.setDate(nextWeekDay4.getDate() + 10)
+
     mockUseWorkspace.mockReturnValue(createWorkspaceState({
       projects: [
         createProjectPreview({ id: 'p1', name: 'Apollo', status: 'active' }),
@@ -106,15 +128,15 @@ describe('ResourcePlanningPage', () => {
     mockGetProjectTasks.mockImplementation(async (projectId: string) => {
       if (projectId === 'p1') {
         return [
-          { id: 't1', assigned_to: 'u1', status: 'todo', estimate_hours: 25 },
-          { id: 't2', assigned_to: 'u1', status: 'in_progress', estimate_hours: 20 },
-          { id: 't4', assigned_to: 'u2', status: 'todo', estimate_hours: 8 },
+          { id: 't1', assigned_to: 'u1', status: 'todo', estimate_hours: 25, due_date: toDateInputValue(weekDay2) },
+          { id: 't2', assigned_to: 'u1', status: 'in_progress', estimate_hours: 20, due_date: toDateInputValue(weekDay5) },
+          { id: 't4', assigned_to: 'u2', status: 'todo', estimate_hours: 8, due_date: toDateInputValue(nextWeekDay3) },
         ] as never
       }
       if (projectId === 'p2') {
-        return [{ id: 't3', assigned_to: 'u1', status: 'done', estimate_hours: 10 }] as never
+        return [{ id: 't3', assigned_to: 'u1', status: 'done', estimate_hours: 10, due_date: toDateInputValue(weekDay2) }] as never
       }
-      return [{ id: 't5', assigned_to: 'u2', status: 'todo', estimate_hours: 4 }] as never
+      return [{ id: 't5', assigned_to: 'u2', status: 'todo', estimate_hours: 4, due_date: toDateInputValue(nextWeekDay4) }] as never
     })
 
     mockGetTimeEntries.mockResolvedValue([
@@ -142,5 +164,49 @@ describe('ResourcePlanningPage', () => {
 
     expect(screen.getByText('Alice Johnson')).toBeTruthy()
     expect(screen.queryByText('Bob Smith')).toBeNull()
+  })
+
+  it('sums weekly allocation across multiple active projects for the same consultant', async () => {
+    const weekStart = startOfWeek(new Date())
+    const weekDay2 = new Date(weekStart)
+    weekDay2.setDate(weekDay2.getDate() + 1)
+    const weekDay4 = new Date(weekStart)
+    weekDay4.setDate(weekDay4.getDate() + 3)
+
+    mockUseWorkspace.mockReturnValue(createWorkspaceState({
+      projects: [
+        createProjectPreview({ id: 'p1', name: 'Apollo', status: 'active' }),
+        createProjectPreview({ id: 'p2', name: 'Hermes', status: 'active' }),
+      ],
+    }))
+
+    mockGetProjectMembers.mockImplementation(async (projectId: string) => {
+      if (projectId === 'p1') {
+        return [{ user_id: 'u1', full_name: 'Alice Johnson', email: 'alice@test.dev', project_id: 'p1' }] as never
+      }
+
+      return [{ user_id: 'u1', full_name: 'Alice Johnson', email: 'alice@test.dev', project_id: 'p2' }] as never
+    })
+
+    mockGetProjectTasks.mockImplementation(async (projectId: string) => {
+      if (projectId === 'p1') {
+        return [
+          { id: 't1', assigned_to: 'u1', status: 'todo', estimate_hours: 40, due_date: toDateInputValue(weekDay2) },
+        ] as never
+      }
+
+      return [
+        { id: 't2', assigned_to: 'u1', status: 'in_progress', estimate_hours: 40, due_date: toDateInputValue(weekDay4) },
+      ] as never
+    })
+
+    mockGetTimeEntries.mockResolvedValue([] as never)
+
+    render(<ResourcePlanningPage />)
+
+    expect(await screen.findByText('Alice Johnson')).toBeTruthy()
+    expect(screen.getByText('80h')).toBeTruthy()
+    expect(screen.getByText('200%')).toBeTruthy()
+    expect(screen.getAllByText('Overbooked').length).toBeGreaterThan(0)
   })
 })

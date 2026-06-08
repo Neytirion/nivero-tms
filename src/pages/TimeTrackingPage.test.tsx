@@ -22,6 +22,7 @@ const mockGetTimeEntries = vi.mocked(getTimeEntries)
 
 function createWorkspace(selectedProjectId: string | null = 'p1') {
   return createWorkspaceState({
+    currentUserId: 'u1',
     projects: [
       createProjectPreview({
         id: 'p1',
@@ -93,5 +94,29 @@ describe('TimeTrackingPage', () => {
     render(<TimeTrackingPage />)
 
     expect((screen.getByText('Save manual entry') as HTMLButtonElement).disabled).toBe(true)
+  })
+
+  it('shows only current user tasks in task selectors', async () => {
+    const workspace = createWorkspace()
+    mockUseWorkspace.mockReturnValue(workspace)
+    mockGetProjectTasks.mockResolvedValue([
+      {
+        id: 't1',
+        title: 'My task',
+        assigned_to: 'u1',
+        status: 'todo',
+      },
+      {
+        id: 't2',
+        title: 'Other user task',
+        assigned_to: 'u2',
+        status: 'todo',
+      },
+    ] as never)
+
+    render(<TimeTrackingPage />)
+
+    expect((await screen.findAllByText('My task')).length).toBeGreaterThan(0)
+    expect(screen.queryByText('Other user task')).toBeNull()
   })
 })

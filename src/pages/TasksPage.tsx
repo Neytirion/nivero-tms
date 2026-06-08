@@ -10,25 +10,7 @@ import {
   type TaskPreview,
   type WorkPackagePreview,
 } from '../lib/pm'
-import { toCanonicalTaskStatus } from '../shared/utils/task-status.ts'
-
-function normalizeStatus(value: string | null | undefined): TaskStatus {
-  return toCanonicalTaskStatus(value)
-}
-
-function getPriorityBadgeClass(priority: string | null | undefined) {
-  const normalized = (priority ?? 'medium').toLowerCase()
-
-  if (normalized === 'high') {
-    return 'bg-rose-100 text-rose-800 border border-rose-200'
-  }
-
-  if (normalized === 'low') {
-    return 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-  }
-
-  return 'bg-amber-100 text-amber-800 border border-amber-200'
-}
+import { buildCalendarMeta, getTaskPriorityBadgeClass, normalizeTaskStatus, shiftMonthValue } from './tasks-page.utils'
 
 type TaskViewMode = 'list' | 'board' | 'calendar'
 
@@ -284,64 +266,11 @@ export function TasksPage() {
   )
 
   const shiftCalendarMonth = (direction: -1 | 1) => {
-    const [yearText, monthText] = calendarMonth.split('-')
-    const year = Number.parseInt(yearText, 10)
-    const month = Number.parseInt(monthText, 10)
-
-    if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
-      return
-    }
-
-    const nextDate = new Date(year, month - 1 + direction, 1)
-    const nextYear = nextDate.getFullYear()
-    const nextMonth = String(nextDate.getMonth() + 1).padStart(2, '0')
-    setCalendarMonth(`${nextYear}-${nextMonth}`)
+    setCalendarMonth((prev) => shiftMonthValue(prev, direction))
   }
 
   const calendarMeta = useMemo(() => {
-    const [yearText, monthText] = calendarMonth.split('-')
-    const year = Number.parseInt(yearText, 10)
-    const month = Number.parseInt(monthText, 10)
-
-    if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
-      return null
-    }
-
-    const firstDay = new Date(year, month - 1, 1)
-    const daysInMonth = new Date(year, month, 0).getDate()
-    const firstWeekday = firstDay.getDay()
-    const cellCount = Math.ceil((firstWeekday + daysInMonth) / 7) * 7
-
-    const tasksByDate = tasks.reduce<Record<string, TaskPreview[]>>((acc, task) => {
-      if (!task.due_date) {
-        return acc
-      }
-      const dueKey = task.due_date.slice(0, 10)
-      if (!dueKey.startsWith(calendarMonth)) {
-        return acc
-      }
-      acc[dueKey] = [...(acc[dueKey] ?? []), task]
-      return acc
-    }, {})
-
-    const cells = Array.from({ length: cellCount }, (_, index) => {
-      const dayNumber = index - firstWeekday + 1
-      if (dayNumber < 1 || dayNumber > daysInMonth) {
-        return null
-      }
-
-      const dateKey = `${calendarMonth}-${String(dayNumber).padStart(2, '0')}`
-      return {
-        dayNumber,
-        dateKey,
-        tasks: tasksByDate[dateKey] ?? [],
-      }
-    })
-
-    return {
-      cells,
-      monthTitle: firstDay.toLocaleDateString(undefined, { month: 'long', year: 'numeric' }),
-    }
+    return buildCalendarMeta(calendarMonth, tasks)
   }, [calendarMonth, tasks])
 
   const assignTaskHandler = async (taskId: string, userId: string) => {
@@ -623,7 +552,7 @@ export function TasksPage() {
             <p className="mb-3 text-xs text-slate-500">Drag card to change task status</p>
             <div className="grid gap-4 xl:grid-cols-5">
               {KANBAN_COLUMNS.map((column) => {
-                const columnTasks = tasks.filter((task) => normalizeStatus(task.status) === column.key)
+                const columnTasks = tasks.filter((task) => normalizeTaskStatus(task.status) === column.key)
 
                 return (
                   <KanbanColumn
@@ -689,7 +618,7 @@ export function TasksPage() {
                       <td className="px-3 py-2 text-slate-600">{task.status ?? 'todo'}</td>
                       <td className="px-3 py-2">
                         <span
-                          className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${getPriorityBadgeClass(
+                          className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${getTaskPriorityBadgeClass(
                             task.priority,
                           )}`}
                         >
@@ -776,7 +705,7 @@ export function TasksPage() {
                         {cell.tasks.slice(0, 3).map((task) => (
                           <div
                             key={task.id}
-                            className={`rounded bg-white px-1.5 py-1 text-[10px] border ${getPriorityBadgeClass(task.priority)}`}
+                            className={`rounded bg-white px-1.5 py-1 text-[10px] border ${getTaskPriorityBadgeClass(task.priority)}`}
                             title={`${task.title}${
                               task.blocked_by_task_id
                                 ? ` | Blocked by: ${

@@ -10,37 +10,17 @@ import {
   type TaskPreview,
   type TimeEntryPreview,
 } from '../lib/pm'
+import {
+  buildWeeklySummary,
+  endOfWeek,
+  formatHours,
+  startOfWeek,
+  toDateInputValue,
+  toHours,
+} from './time-tracking.utils'
 
 const BILLABLE_CATEGORIES = ['delivery', 'support', 'research']
 const NON_BILLABLE_CATEGORIES = ['meeting', 'admin']
-
-function toDateInputValue(date: Date) {
-  return date.toISOString().slice(0, 10)
-}
-
-function startOfWeek(date: Date) {
-  const value = new Date(date)
-  const day = value.getDay()
-  const diff = day === 0 ? -6 : 1 - day
-  value.setDate(value.getDate() + diff)
-  value.setHours(0, 0, 0, 0)
-  return value
-}
-
-function endOfWeek(date: Date) {
-  const value = new Date(date)
-  value.setDate(value.getDate() + 6)
-  value.setHours(23, 59, 59, 999)
-  return value
-}
-
-function toHours(minutes: number) {
-  return minutes / 60
-}
-
-function formatHours(minutes: number) {
-  return `${toHours(minutes).toFixed(2)}h`
-}
 
 export function TimeTrackingPage() {
   const { projects, selectedProjectId, currentUserId, status, setStatus, isLoading, loadDashboardPreview } = useWorkspace()
@@ -94,27 +74,7 @@ export function TimeTrackingPage() {
     }
   }, [weekAnchorDate])
 
-  const weeklySummary = useMemo(() => {
-    const byDay = visibleEntries.reduce<Record<string, number>>((acc, entry) => {
-      const key = entry.entry_date
-      acc[key] = (acc[key] ?? 0) + entry.minutes_spent
-      return acc
-    }, {})
-
-    const totalMinutes = visibleEntries.reduce((sum, entry) => sum + entry.minutes_spent, 0)
-    const billableMinutes = visibleEntries
-      .filter((entry) => entry.is_billable)
-      .reduce((sum, entry) => sum + entry.minutes_spent, 0)
-
-    const nonBillableMinutes = totalMinutes - billableMinutes
-
-    return {
-      byDay,
-      totalMinutes,
-      billableMinutes,
-      nonBillableMinutes,
-    }
-  }, [visibleEntries])
+  const weeklySummary = useMemo(() => buildWeeklySummary(visibleEntries), [visibleEntries])
 
   const resetManualEntryForm = () => {
     setEditingEntryId(null)

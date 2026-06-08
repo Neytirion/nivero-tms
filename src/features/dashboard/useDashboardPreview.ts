@@ -5,8 +5,8 @@ import {
   resolveProjectRole,
   type ProjectRoleName,
 } from '../../shared/utils/permissions'
-import { deriveRiskFromProgressAndHours } from '../projects/utils/project-metrics.ts'
 import { isTaskClosedStatus } from '../../shared/utils/task-status.ts'
+import { calculateProjectMetrics } from './project-metrics'
 import {
   completeProject,
   createProject,
@@ -135,97 +135,26 @@ export function useDashboardPreview() {
         if (project.id !== projectId) {
           return project
         }
-
-        const totalTasks = projectTasks.length
-        const doneTasks = projectTasks.filter((task) => isTaskClosedStatus(task.status)).length
-
-        const totalEstimatedHoursFromTasks = projectTasks.reduce((sum, task) => {
-          const estimate = task.estimate_hours ?? 0
-          return sum + (estimate > 0 ? estimate : 0)
-        }, 0)
-
-        const doneEstimatedHoursFromTasks = projectTasks.reduce((sum, task) => {
-          if (!isTaskClosedStatus(task.status)) {
-            return sum
-          }
-
-          const estimate = task.estimate_hours ?? 0
-          return sum + (estimate > 0 ? estimate : 0)
-        }, 0)
-
-        const nextProgress =
-          totalEstimatedHoursFromTasks > 0
-            ? Math.round((doneEstimatedHoursFromTasks / totalEstimatedHoursFromTasks) * 100)
-            : totalTasks === 0
-              ? 0
-              : Math.round((doneTasks / totalTasks) * 100)
-
-        const rolledActualHours = projectTasks.reduce((sum, task) => {
-          const actual = task.actual_hours ?? 0
-          return sum + (actual > 0 ? actual : 0)
-        }, 0)
-
-        const nextRiskLabel = deriveRiskFromProgressAndHours({
-          progressPercent: nextProgress,
-          estimatedHours: project.estimated_hours,
-          actualHours: rolledActualHours,
-        })
-        const nextRisk: 'green' | 'yellow' | 'red' =
-          nextRiskLabel === 'Red' ? 'red' : nextRiskLabel === 'Amber' ? 'yellow' : 'green'
+        const metrics = calculateProjectMetrics(project, projectTasks)
 
         return {
           ...project,
-          progress_percent: nextProgress,
-          actual_hours: Number(rolledActualHours.toFixed(2)),
-          risk_status: nextRisk,
+          progress_percent: metrics.progressPercent,
+          actual_hours: metrics.actualHours,
+          risk_status: metrics.riskStatus,
         }
       }),
     )
   }
 
   const mergeProjectMetrics = (project: ProjectPreview, projectTasks: TaskPreview[]) => {
-    const totalTasks = projectTasks.length
-    const doneTasks = projectTasks.filter((task) => isTaskClosedStatus(task.status)).length
-
-    const totalEstimatedHoursFromTasks = projectTasks.reduce((sum, task) => {
-      const estimate = task.estimate_hours ?? 0
-      return sum + (estimate > 0 ? estimate : 0)
-    }, 0)
-
-    const doneEstimatedHoursFromTasks = projectTasks.reduce((sum, task) => {
-      if (!isTaskClosedStatus(task.status)) {
-        return sum
-      }
-
-      const estimate = task.estimate_hours ?? 0
-      return sum + (estimate > 0 ? estimate : 0)
-    }, 0)
-
-    const nextProgress =
-      totalEstimatedHoursFromTasks > 0
-        ? Math.round((doneEstimatedHoursFromTasks / totalEstimatedHoursFromTasks) * 100)
-        : totalTasks === 0
-          ? 0
-          : Math.round((doneTasks / totalTasks) * 100)
-
-    const rolledActualHours = projectTasks.reduce((sum, task) => {
-      const actual = task.actual_hours ?? 0
-      return sum + (actual > 0 ? actual : 0)
-    }, 0)
-
-    const nextRiskLabel = deriveRiskFromProgressAndHours({
-      progressPercent: nextProgress,
-      estimatedHours: project.estimated_hours,
-      actualHours: rolledActualHours,
-    })
-    const nextRisk: 'green' | 'yellow' | 'red' =
-      nextRiskLabel === 'Red' ? 'red' : nextRiskLabel === 'Amber' ? 'yellow' : 'green'
+    const metrics = calculateProjectMetrics(project, projectTasks)
 
     return {
       ...project,
-      progress_percent: nextProgress,
-      actual_hours: Number(rolledActualHours.toFixed(2)),
-      risk_status: nextRisk,
+      progress_percent: metrics.progressPercent,
+      actual_hours: metrics.actualHours,
+      risk_status: metrics.riskStatus,
     }
   }
 

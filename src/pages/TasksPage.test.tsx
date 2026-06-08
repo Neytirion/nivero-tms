@@ -20,8 +20,13 @@ vi.mock('../lib/pm', () => ({
   hasProjectEstimateVersion: vi.fn(),
 }))
 
+let lastKanbanProps: unknown = null
+
 vi.mock('../features/tasks/components', () => ({
-  KanbanColumn: () => <div>kanban-column</div>,
+  KanbanColumn: (props: unknown) => {
+    lastKanbanProps = props
+    return <div>kanban-column</div>
+  },
   TaskLogTimeModal: () => null,
 }))
 
@@ -55,6 +60,7 @@ function mockTaskForm() {
 
 describe('TasksPage', () => {
   beforeEach(() => {
+    lastKanbanProps = null
     mockTaskForm()
     mockGetProjectTaskWorkPackages.mockResolvedValue([
       { id: 'wp1', name: 'Backend', estimated_hours: 20 },
@@ -107,5 +113,29 @@ describe('TasksPage', () => {
         dueDate: '2026-06-20',
       })
     })
+  })
+
+  it('hides delete action in board view for members', async () => {
+    const task = createTaskPreview({ id: 't-member', title: 'Member task', project_id: 'p1' })
+    const workspace = createWorkspaceState({
+      selectedProjectId: 'p1',
+      projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
+      tasks: [task],
+      getProjectRole: vi.fn(() => 'member' as const),
+      canDeleteTask: vi.fn(() => true),
+    })
+    mockUseWorkspace.mockReturnValue(workspace)
+
+    render(<TasksPage />)
+
+    await waitFor(() => {
+      expect(lastKanbanProps).toBeTruthy()
+    })
+
+    const firstCallProps = lastKanbanProps as {
+      canDeleteTask: (task: ReturnType<typeof createTaskPreview>) => boolean
+    }
+
+    expect(firstCallProps.canDeleteTask(task)).toBe(false)
   })
 })

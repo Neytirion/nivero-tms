@@ -84,6 +84,13 @@ export function TasksPage() {
   )
   const myRoleInSelectedProject = selectedProject ? getProjectRole(selectedProject.id) : null
   const isMemberInSelectedProject = myRoleInSelectedProject === 'member'
+  const canDeleteTaskInView = (task: TaskPreview) => {
+    if (isMemberInSelectedProject) {
+      return false
+    }
+
+    return canDeleteTask(task)
+  }
   const projectStartDate = selectedProject?.start_date ?? ''
   const projectEndDate = selectedProject?.end_date ?? ''
   const parsedEstimateHours = Number.parseFloat(taskEstimateHours)
@@ -258,6 +265,10 @@ export function TasksPage() {
   }, {})
   const dependencyLabelByTaskId = tasks.reduce<Record<string, string>>((acc, task) => {
     acc[task.id] = task.title
+    return acc
+  }, {})
+  const workPackageLabelById = workPackages.reduce<Record<string, string>>((acc, workPackage) => {
+    acc[workPackage.id] = workPackage.name
     return acc
   }, {})
   const assigneeOptions = projectMembers
@@ -621,6 +632,7 @@ export function TasksPage() {
                     label={column.label}
                     tasks={columnTasks}
                     assigneeLabelByUserId={assigneeLabelByUserId}
+                    workPackageLabelById={workPackageLabelById}
                     dependencyLabelByTaskId={dependencyLabelByTaskId}
                     assigneeOptions={assigneeOptions}
                     canAssignAssignee={canAssignAssignee}
@@ -636,7 +648,7 @@ export function TasksPage() {
                     onDragTaskStart={setDragTaskId}
                     onLogTime={setLogTimeTask}
                     canManageTask={canManageTask}
-                    canDeleteTask={canDeleteTask}
+                    canDeleteTask={canDeleteTaskInView}
                   />
                 )
               })}
@@ -650,6 +662,7 @@ export function TasksPage() {
               <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th className="px-3 py-2 text-left">Task</th>
+                  <th className="px-3 py-2 text-left">Work Package</th>
                   <th className="px-3 py-2 text-left">Status</th>
                   <th className="px-3 py-2 text-left">Priority</th>
                   <th className="px-3 py-2 text-left">Assignee</th>
@@ -660,7 +673,7 @@ export function TasksPage() {
               <tbody>
                 {tasks.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-3 py-4 text-center text-slate-500">
+                    <td colSpan={7} className="px-3 py-4 text-center text-slate-500">
                       No tasks yet
                     </td>
                   </tr>
@@ -668,6 +681,11 @@ export function TasksPage() {
                   tasks.map((task) => (
                     <tr key={task.id} className="border-t border-slate-100">
                       <td className="px-3 py-2 text-slate-800">{task.title}</td>
+                      <td className="px-3 py-2 text-slate-600">
+                        {task.work_package_id
+                          ? workPackageLabelById[task.work_package_id] ?? task.work_package_id
+                          : 'Not linked'}
+                      </td>
                       <td className="px-3 py-2 text-slate-600">{task.status ?? 'todo'}</td>
                       <td className="px-3 py-2">
                         <span

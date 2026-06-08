@@ -7,6 +7,7 @@ interface TaskCardProps {
   task: TaskPreview
   assigneeLabel: string
   blockedByLabel?: string
+  workPackageLabel?: string
   assigneeOptions?: Array<{
     userId: string
     label: string
@@ -37,6 +38,7 @@ export function TaskCard({
   task,
   assigneeLabel,
   blockedByLabel,
+  workPackageLabel,
   assigneeOptions,
   canAssignAssignee,
   onAssignTask,
@@ -86,6 +88,7 @@ export function TaskCard({
         </span>
       </div>
       <p className="mt-2 text-xs text-slate-500">Assignee: {assigneeLabel}</p>
+      <p className="mt-1 text-xs text-slate-500">Work Package: {workPackageLabel ?? 'Not linked'}</p>
       {blockedByLabel ? <p className="mt-1 text-xs text-slate-500">Blocked by: {blockedByLabel}</p> : null}
       <p className="mt-1 text-xs text-slate-500">
         Estimate: {task.estimate_hours ?? 0}h | Actual: {task.actual_hours ?? 0}h

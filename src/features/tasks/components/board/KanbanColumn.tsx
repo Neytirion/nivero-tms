@@ -8,6 +8,7 @@ interface KanbanColumnProps {
   label: string
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
+  workPackageLabelById?: Record<string, string>
   dependencyLabelByTaskId?: Record<string, string>
   assigneeOptions?: Array<{
     userId: string
@@ -29,6 +30,7 @@ export function KanbanColumn({
   label,
   tasks,
   assigneeLabelByUserId,
+  workPackageLabelById,
   dependencyLabelByTaskId,
   assigneeOptions,
   canAssignAssignee,
@@ -78,6 +80,11 @@ export function KanbanColumn({
                 task.blocked_by_task_id
                   ? dependencyLabelByTaskId?.[task.blocked_by_task_id] ?? task.blocked_by_task_id
                   : 'None'
+              }
+              workPackageLabel={
+                task.work_package_id
+                  ? workPackageLabelById?.[task.work_package_id] ?? task.work_package_id
+                  : 'Not linked'
               }
               assigneeOptions={assigneeOptions ?? []}
               canAssignAssignee={Boolean(canAssignAssignee)}

@@ -24,7 +24,46 @@ export function deriveProgress(project: Pick<ProjectPreview, 'progress_percent' 
   return clampPercent((project.actual_hours / project.estimated_hours) * 100)
 }
 
-export function deriveRisk(project: Pick<ProjectPreview, 'risk_status' | 'estimated_hours' | 'actual_hours'>) {
+export function deriveRiskFromProgressAndHours(input: {
+  progressPercent: number | null | undefined
+  estimatedHours: number | null | undefined
+  actualHours: number | null | undefined
+}) {
+  const estimatedHours = input.estimatedHours ?? 0
+  const actualHours = input.actualHours ?? 0
+
+  if (estimatedHours <= 0 || actualHours <= 0) {
+    return 'Green'
+  }
+
+  const burnRatio = actualHours / estimatedHours
+  if (burnRatio > 1) {
+    return 'Red'
+  }
+
+  if (input.progressPercent == null) {
+    if (burnRatio >= 0.85) {
+      return 'Amber'
+    }
+
+    return 'Green'
+  }
+
+  const progressRatio = clampPercent(input.progressPercent) / 100
+  const burnVariance = burnRatio - progressRatio
+
+  if (burnVariance > 0.2) {
+    return 'Red'
+  }
+
+  if (burnVariance > 0.1) {
+    return 'Amber'
+  }
+
+  return 'Green'
+}
+
+export function deriveRisk(project: Pick<ProjectPreview, 'risk_status' | 'progress_percent' | 'estimated_hours' | 'actual_hours'>) {
   if (project.risk_status) {
     const normalized = project.risk_status.toLowerCase()
     if (normalized.includes('red')) {
@@ -36,18 +75,11 @@ export function deriveRisk(project: Pick<ProjectPreview, 'risk_status' | 'estima
     return 'Green'
   }
 
-  if (!project.estimated_hours || !project.actual_hours) {
-    return 'Green'
-  }
-
-  const ratio = project.actual_hours / project.estimated_hours
-  if (ratio > 1) {
-    return 'Red'
-  }
-  if (ratio >= 0.85) {
-    return 'Amber'
-  }
-  return 'Green'
+  return deriveRiskFromProgressAndHours({
+    progressPercent: project.progress_percent,
+    estimatedHours: project.estimated_hours,
+    actualHours: project.actual_hours,
+  })
 }
 
 export function formatDate(value: string | null | undefined) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { deriveProgress, deriveRisk, formatDate } from './project-metrics'
+import { deriveProgress, deriveRisk, deriveRiskFromProgressAndHours, formatDate } from './project-metrics'
 
 describe('project-metrics', () => {
   describe('deriveProgress', () => {
@@ -53,6 +53,7 @@ describe('project-metrics', () => {
       expect(
         deriveRisk({
           risk_status: 'red',
+          progress_percent: null,
           estimated_hours: 100,
           actual_hours: 50,
         }),
@@ -63,6 +64,7 @@ describe('project-metrics', () => {
       expect(
         deriveRisk({
           risk_status: null,
+          progress_percent: null,
           estimated_hours: 100,
           actual_hours: 85,
         }),
@@ -73,10 +75,45 @@ describe('project-metrics', () => {
       expect(
         deriveRisk({
           risk_status: null,
+          progress_percent: null,
           estimated_hours: 100,
           actual_hours: 101,
         }),
       ).toBe('Red')
+    })
+
+    it('computes red when burn is far ahead of progress', () => {
+      expect(
+        deriveRisk({
+          risk_status: null,
+          progress_percent: 20,
+          estimated_hours: 100,
+          actual_hours: 60,
+        }),
+      ).toBe('Red')
+    })
+
+    it('keeps green when progress is ahead of burn', () => {
+      expect(
+        deriveRisk({
+          risk_status: null,
+          progress_percent: 90,
+          estimated_hours: 100,
+          actual_hours: 85,
+        }),
+      ).toBe('Green')
+    })
+  })
+
+  describe('deriveRiskFromProgressAndHours', () => {
+    it('returns amber when burn is moderately ahead of progress', () => {
+      expect(
+        deriveRiskFromProgressAndHours({
+          progressPercent: 70,
+          estimatedHours: 100,
+          actualHours: 85,
+        }),
+      ).toBe('Amber')
     })
   })
 

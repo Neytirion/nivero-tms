@@ -5,6 +5,7 @@ import {
   resolveProjectRole,
   type ProjectRoleName,
 } from '../../shared/utils/permissions'
+import { deriveRiskFromProgressAndHours } from '../projects/utils/project-metrics.ts'
 import { isTaskClosedStatus } from '../../shared/utils/task-status.ts'
 import {
   completeProject,
@@ -164,14 +165,13 @@ export function useDashboardPreview() {
           return sum + (actual > 0 ? actual : 0)
         }, 0)
 
-        const estimatedHours = project.estimated_hours ?? 0
-        let nextRisk: 'green' | 'yellow' | 'red' = 'green'
-
-        if (estimatedHours > 0 && rolledActualHours > estimatedHours) {
-          nextRisk = 'red'
-        } else if (estimatedHours > 0 && rolledActualHours >= estimatedHours * 0.85) {
-          nextRisk = 'yellow'
-        }
+        const nextRiskLabel = deriveRiskFromProgressAndHours({
+          progressPercent: nextProgress,
+          estimatedHours: project.estimated_hours,
+          actualHours: rolledActualHours,
+        })
+        const nextRisk: 'green' | 'yellow' | 'red' =
+          nextRiskLabel === 'Red' ? 'red' : nextRiskLabel === 'Amber' ? 'yellow' : 'green'
 
         return {
           ...project,
@@ -213,14 +213,13 @@ export function useDashboardPreview() {
       return sum + (actual > 0 ? actual : 0)
     }, 0)
 
-    const estimatedHours = project.estimated_hours ?? 0
-    let nextRisk: 'green' | 'yellow' | 'red' = 'green'
-
-    if (estimatedHours > 0 && rolledActualHours > estimatedHours) {
-      nextRisk = 'red'
-    } else if (estimatedHours > 0 && rolledActualHours >= estimatedHours * 0.85) {
-      nextRisk = 'yellow'
-    }
+    const nextRiskLabel = deriveRiskFromProgressAndHours({
+      progressPercent: nextProgress,
+      estimatedHours: project.estimated_hours,
+      actualHours: rolledActualHours,
+    })
+    const nextRisk: 'green' | 'yellow' | 'red' =
+      nextRiskLabel === 'Red' ? 'red' : nextRiskLabel === 'Amber' ? 'yellow' : 'green'
 
     return {
       ...project,

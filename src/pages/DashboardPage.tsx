@@ -100,27 +100,9 @@ export function DashboardPage() {
   const openTasksForDashboard = isMemberInSelectedProject ? memberTasksAcrossProjects : openTasks
 
   const cards = [
-    {
-      label: 'Active Projects',
-      value: activeProjects,
-      accent: 'from-emerald-500/20 via-emerald-400/10 to-white',
-      badge: 'bg-emerald-100 text-emerald-700',
-      hint: 'Currently in progress',
-    },
-    {
-      label: 'Total Tasks',
-      value: tasks.length,
-      accent: 'from-cyan-500/20 via-cyan-400/10 to-white',
-      badge: 'bg-cyan-100 text-cyan-700',
-      hint: 'Across the workspace',
-    },
-    {
-      label: 'Logged Hours',
-      value: `${loggedHours.toFixed(1)}h`,
-      accent: 'from-slate-500/20 via-slate-300/10 to-white',
-      badge: 'bg-slate-100 text-slate-700',
-      hint: 'Time captured in tasks',
-    },
+    { label: 'Active Projects', value: activeProjects },
+    { label: 'Total Tasks', value: tasks.length },
+    { label: 'Logged Hours', value: `${loggedHours.toFixed(1)}h` },
   ]
 
   const selectedProjectName = projects.find((project) => project.id === selectedProjectId)?.name
@@ -160,35 +142,16 @@ export function DashboardPage() {
       <section className="page-section bg-slate-50">
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Dashboard</p>
         <h2 className="mt-1 text-2xl font-bold text-slate-900">Portfolio Overview</h2>
-        <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium text-slate-600">
-          <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
-            Total Projects <span className="ml-1 font-semibold text-slate-900">{projects.length}</span>
-          </span>
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-emerald-700 shadow-sm">
-            Active <span className="ml-1 font-semibold text-emerald-900">{activeProjects}</span>
-          </span>
-          <span className="rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1.5 text-cyan-700 shadow-sm">
-            Completed <span className="ml-1 font-semibold text-cyan-900">{completedProjects}</span>
-          </span>
-          <span className="rounded-full border border-rose-200 bg-rose-50 px-3 py-1.5 text-rose-700 shadow-sm">
-            Risks <span className="ml-1 font-semibold text-rose-900">{riskProjects}</span>
-          </span>
-        </div>
+        <p className="mt-2 text-sm text-slate-600">
+          Total Projects: {projects.length} · Active: {activeProjects} · Completed: {completedProjects} · Risks: {riskProjects}
+        </p>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map((card) => (
-          <article
-            key={card.label}
-            className={`page-section overflow-hidden border border-slate-200 bg-gradient-to-br ${card.accent}`}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{card.label}</p>
-                <p className="mt-2 text-3xl font-black tracking-tight text-slate-950">{card.value}</p>
-              </div>
-              <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${card.badge}`}>{card.hint}</span>
-            </div>
+          <article key={card.label} className="page-section bg-white">
+            <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{card.label}</p>
+            <p className="mt-2 text-2xl font-bold text-slate-900">{card.value}</p>
           </article>
         ))}
       </section>

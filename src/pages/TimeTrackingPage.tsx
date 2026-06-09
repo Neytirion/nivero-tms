@@ -27,8 +27,7 @@ export function TimeTrackingPage() {
   const [entries, setEntries] = useState<TimeEntryPreview[]>([])
   const [isEntriesLoading, setIsEntriesLoading] = useState(false)
   const [activeProjectId, setActiveProjectId] = useState(selectedProjectId ?? '')
-  const [allProjectTasks, setAllProjectTasks] = useState<TaskPreview[]>([])
-  const [visibleProjectTasks, setVisibleProjectTasks] = useState<TaskPreview[]>([])
+  const [projectTasks, setProjectTasks] = useState<TaskPreview[]>([])
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null)
   const [entryToDelete, setEntryToDelete] = useState<TimeEntryPreview | null>(null)
 
@@ -122,8 +121,7 @@ export function TimeTrackingPage() {
   useEffect(() => {
     const loadProjectTasks = async () => {
       if (!activeProjectId) {
-        setAllProjectTasks([])
-        setVisibleProjectTasks([])
+        setProjectTasks([])
         setManualTaskId('')
         setTimerTaskId('')
         return
@@ -131,7 +129,6 @@ export function TimeTrackingPage() {
 
       try {
         const nextTasks = await getProjectTasks(activeProjectId)
-        setAllProjectTasks(nextTasks)
         const visibleTasks = nextTasks.filter((task) => {
           if (!currentUserId) {
             return true
@@ -140,13 +137,12 @@ export function TimeTrackingPage() {
           return task.assigned_to === currentUserId
         })
 
-        setVisibleProjectTasks(visibleTasks)
+        setProjectTasks(visibleTasks)
         setManualTaskId((prev) => (visibleTasks.some((task) => task.id === prev) ? prev : ''))
         setTimerTaskId((prev) => (visibleTasks.some((task) => task.id === prev) ? prev : ''))
       } catch (error) {
         setStatus(error instanceof Error ? `Task load error: ${error.message}` : 'Task load error')
-        setAllProjectTasks([])
-        setVisibleProjectTasks([])
+        setProjectTasks([])
       }
     }
 
@@ -343,7 +339,7 @@ export function TimeTrackingPage() {
       <section className="grid gap-4 xl:grid-cols-2">
         <ManualEntryPanel
           activeProjectId={activeProjectId}
-          projectTasks={visibleProjectTasks}
+          projectTasks={projectTasks}
           manualTaskId={manualTaskId}
           manualDate={manualDate}
           manualDateMin={manualDateMin}
@@ -369,7 +365,7 @@ export function TimeTrackingPage() {
           timerNotes={timerNotes}
           timerStartedAt={timerStartedAt}
           isTimerSaving={isTimerSaving}
-          projectTasks={visibleProjectTasks}
+          projectTasks={projectTasks}
           onTimerTaskIdChange={setTimerTaskId}
           onTimerIsBillableChange={setTimerIsBillable}
           onTimerNotesChange={setTimerNotes}
@@ -384,7 +380,7 @@ export function TimeTrackingPage() {
         isEntriesLoading={isEntriesLoading}
         visibleEntries={visibleEntries}
         projects={projects}
-        projectTasks={allProjectTasks}
+        projectTasks={projectTasks}
         onCancelEdit={cancelEditEntry}
         onBeginEdit={beginEditEntry}
         onRequestDelete={setEntryToDelete}
@@ -394,7 +390,7 @@ export function TimeTrackingPage() {
         isEntriesLoading={isEntriesLoading}
         entries={entries}
         projects={projects}
-        projectTasks={allProjectTasks}
+        projectTasks={projectTasks}
         weeklySummary={weeklySummary}
       />
 

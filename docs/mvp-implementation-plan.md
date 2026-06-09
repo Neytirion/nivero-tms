@@ -99,7 +99,7 @@ Goal: track billable work reliably.
 Features:
 - Manual time entries.
 - Timer start/stop flow.
-- Billable/non-billable categories.
+- Billable/non-billable time classification.
 - Weekly timesheet and task/project links.
 
 Deliverables:

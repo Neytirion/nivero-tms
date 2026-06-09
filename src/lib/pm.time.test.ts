@@ -82,7 +82,6 @@ describe('pm.time', () => {
         entryDate: '2026-06-05',
         hoursSpent: 2,
         isBillable: true,
-        category: 'delivery',
       }),
     ).resolves.toMatchObject({ id: 'te-1', user_id: 'u1' })
 
@@ -98,7 +97,6 @@ describe('pm.time', () => {
         entryDate: '2026-06-05',
         hoursSpent: 2,
         isBillable: true,
-        category: 'delivery',
       }),
     ).rejects.toThrow('User is not authenticated')
   })
@@ -119,7 +117,6 @@ describe('pm.time', () => {
         entryDate: '2026-06-06',
         hoursSpent: 3,
         isBillable: false,
-        category: 'admin',
         notes: 'fixed',
       }),
     ).resolves.toMatchObject({ id: 'te-1', minutes_spent: 180 })
@@ -143,7 +140,6 @@ describe('pm.time', () => {
         entryDate: '2026-06-06',
         hoursSpent: 3,
         isBillable: false,
-        category: 'admin',
       }),
     ).rejects.toThrow('Permission denied: you cannot update this time entry')
   })

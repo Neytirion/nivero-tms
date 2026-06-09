@@ -5,15 +5,12 @@ type TimerPanelProps = {
   trackedTimerLabel: string
   timerTaskId: string
   timerIsBillable: boolean
-  timerCategory: string
-  timerCategoryOptions: string[]
   timerNotes: string
   timerStartedAt: number | null
   isTimerSaving: boolean
   projectTasks: TaskPreview[]
   onTimerTaskIdChange: (value: string) => void
   onTimerIsBillableChange: (value: boolean) => void
-  onTimerCategoryChange: (value: string) => void
   onTimerNotesChange: (value: string) => void
   onStartTimer: () => void
   onStopAndSaveTimer: () => void
@@ -25,15 +22,12 @@ export function TimerPanel({
   trackedTimerLabel,
   timerTaskId,
   timerIsBillable,
-  timerCategory,
-  timerCategoryOptions,
   timerNotes,
   timerStartedAt,
   isTimerSaving,
   projectTasks,
   onTimerTaskIdChange,
   onTimerIsBillableChange,
-  onTimerCategoryChange,
   onTimerNotesChange,
   onStartTimer,
   onStopAndSaveTimer,
@@ -76,21 +70,6 @@ export function TimerPanel({
           >
             <option value="billable">Billable</option>
             <option value="non-billable">Non-billable</option>
-          </select>
-        </label>
-
-        <label className="block">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Category</span>
-          <select
-            value={timerCategory}
-            onChange={(event) => onTimerCategoryChange(event.target.value)}
-            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
-          >
-            {timerCategoryOptions.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
           </select>
         </label>
 

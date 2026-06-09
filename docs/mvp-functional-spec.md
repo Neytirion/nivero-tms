@@ -63,7 +63,7 @@ Sample work packages:
 ## Time Tracking
 - Manual time entry.
 - Timer-based tracking.
-- Billable and non-billable categories.
+- Billable and non-billable time classification.
 - Hours linked to tasks and projects.
 - Weekly timesheet overview.
 

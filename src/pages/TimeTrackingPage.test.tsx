@@ -84,7 +84,6 @@ describe('TimeTrackingPage', () => {
           projectId: 'p1',
           hoursSpent: 1,
           isBillable: true,
-          category: 'delivery',
         }),
       )
     })
@@ -139,7 +138,6 @@ describe('TimeTrackingPage', () => {
         entry_date: '2026-06-05',
         minutes_spent: 30000,
         is_billable: true,
-        category: 'delivery',
         notes: 'bad log',
         started_at: null,
         ended_at: null,

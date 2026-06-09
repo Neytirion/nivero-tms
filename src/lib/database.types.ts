@@ -615,7 +615,6 @@ export interface Database {
           entry_date: string
           minutes_spent: number
           is_billable: boolean
-          category: string
           notes: string | null
           started_at: string | null
           ended_at: string | null
@@ -630,7 +629,6 @@ export interface Database {
           entry_date?: string
           minutes_spent: number
           is_billable?: boolean
-          category?: string
           notes?: string | null
           started_at?: string | null
           ended_at?: string | null
@@ -645,7 +643,6 @@ export interface Database {
           entry_date?: string
           minutes_spent?: number
           is_billable?: boolean
-          category?: string
           notes?: string | null
           started_at?: string | null
           ended_at?: string | null

@@ -9,8 +9,6 @@ type ManualEntryPanelProps = {
   manualDateMax?: string
   manualHours: string
   manualIsBillable: boolean
-  manualCategory: string
-  manualCategoryOptions: string[]
   manualNotes: string
   editingEntryId: string | null
   isLoading: boolean
@@ -18,7 +16,6 @@ type ManualEntryPanelProps = {
   onManualDateChange: (value: string) => void
   onManualHoursChange: (value: string) => void
   onManualIsBillableChange: (value: boolean) => void
-  onManualCategoryChange: (value: string) => void
   onManualNotesChange: (value: string) => void
   onSubmit: () => void
 }
@@ -32,8 +29,6 @@ export function ManualEntryPanel({
   manualDateMax,
   manualHours,
   manualIsBillable,
-  manualCategory,
-  manualCategoryOptions,
   manualNotes,
   editingEntryId,
   isLoading,
@@ -41,7 +36,6 @@ export function ManualEntryPanel({
   onManualDateChange,
   onManualHoursChange,
   onManualIsBillableChange,
-  onManualCategoryChange,
   onManualNotesChange,
   onSubmit,
 }: ManualEntryPanelProps) {
@@ -106,21 +100,6 @@ export function ManualEntryPanel({
           >
             <option value="billable">Billable</option>
             <option value="non-billable">Non-billable</option>
-          </select>
-        </label>
-
-        <label className="block">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Category</span>
-          <select
-            value={manualCategory}
-            onChange={(event) => onManualCategoryChange(event.target.value)}
-            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
-          >
-            {manualCategoryOptions.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
           </select>
         </label>
 

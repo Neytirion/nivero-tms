@@ -228,7 +228,6 @@ export function TasksPage() {
       entryDate: new Date().toISOString().slice(0, 10),
       hoursSpent: hours,
       isBillable: true,
-      category: 'delivery',
       notes: comment,
     })
 

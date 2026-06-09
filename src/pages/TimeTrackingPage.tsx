@@ -22,9 +22,6 @@ import { TimerPanel } from './time-tracking/TimerPanel'
 import { MyLogsSection } from './time-tracking/MyLogsSection'
 import { WeeklyOverviewSection } from './time-tracking/WeeklyOverviewSection'
 
-const BILLABLE_CATEGORIES = ['delivery', 'support', 'research']
-const NON_BILLABLE_CATEGORIES = ['meeting', 'admin']
-
 export function TimeTrackingPage() {
   const { projects, selectedProjectId, currentUserId, status, setStatus, isLoading, loadDashboardPreview } = useWorkspace()
   const [entries, setEntries] = useState<TimeEntryPreview[]>([])
@@ -38,12 +35,10 @@ export function TimeTrackingPage() {
   const [manualDate, setManualDate] = useState(toDateInputValue(new Date()))
   const [manualHours, setManualHours] = useState('1')
   const [manualIsBillable, setManualIsBillable] = useState(true)
-  const [manualCategory, setManualCategory] = useState(BILLABLE_CATEGORIES[0])
   const [manualNotes, setManualNotes] = useState('')
 
   const [timerTaskId, setTimerTaskId] = useState('')
   const [timerIsBillable, setTimerIsBillable] = useState(true)
-  const [timerCategory, setTimerCategory] = useState(BILLABLE_CATEGORIES[0])
   const [timerNotes, setTimerNotes] = useState('')
   const [timerStartedAt, setTimerStartedAt] = useState<number | null>(null)
   const [timerElapsedSec, setTimerElapsedSec] = useState(0)
@@ -58,8 +53,6 @@ export function TimeTrackingPage() {
   const manualDateMin = activeProject?.start_date ?? undefined
   const manualDateMax = activeProject?.end_date ?? undefined
 
-  const manualCategoryOptions = manualIsBillable ? BILLABLE_CATEGORIES : NON_BILLABLE_CATEGORIES
-  const timerCategoryOptions = timerIsBillable ? BILLABLE_CATEGORIES : NON_BILLABLE_CATEGORIES
   const visibleEntries = useMemo(
     () => (currentUserId ? entries.filter((entry) => entry.user_id === currentUserId) : entries),
     [currentUserId, entries],
@@ -85,7 +78,6 @@ export function TimeTrackingPage() {
     setManualDate(toDateInputValue(new Date()))
     setManualHours('1')
     setManualIsBillable(true)
-    setManualCategory(BILLABLE_CATEGORIES[0])
     setManualNotes('')
   }
 
@@ -97,7 +89,6 @@ export function TimeTrackingPage() {
     setManualDate(entry.entry_date)
     setManualHours((entry.minutes_spent / 60).toFixed(2))
     setManualIsBillable(entry.is_billable)
-    setManualCategory(entry.category)
     setManualNotes(entry.notes ?? '')
   }
 
@@ -226,7 +217,6 @@ export function TimeTrackingPage() {
           entryDate: manualDate,
           hoursSpent: parsedHours,
           isBillable: manualIsBillable,
-          category: manualCategory,
           notes: manualNotes,
         })
         setStatus('Time entry updated')
@@ -237,7 +227,6 @@ export function TimeTrackingPage() {
           entryDate: manualDate,
           hoursSpent: parsedHours,
           isBillable: manualIsBillable,
-          category: manualCategory,
           notes: manualNotes,
         })
         setStatus('Time entry created')
@@ -298,7 +287,6 @@ export function TimeTrackingPage() {
         entryDate: timerEntryDate,
         hoursSpent: elapsedHours,
         isBillable: timerIsBillable,
-        category: timerCategory,
         notes: timerNotes,
       })
 
@@ -334,7 +322,7 @@ export function TimeTrackingPage() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Time Tracking</p>
         <h2 className="mt-1 text-2xl font-bold text-slate-900">Track Work Hours</h2>
         <p className="mt-2 text-sm text-slate-600">
-          Manual entries, timer-based tracking, billable categories, and weekly timesheet overview.
+          Manual entries, timer-based tracking, and weekly timesheet overview.
         </p>
         <p className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">{status}</p>
       </section>
@@ -358,22 +346,13 @@ export function TimeTrackingPage() {
           manualDateMax={manualDateMax}
           manualHours={manualHours}
           manualIsBillable={manualIsBillable}
-          manualCategory={manualCategory}
-          manualCategoryOptions={manualCategoryOptions}
           manualNotes={manualNotes}
           editingEntryId={editingEntryId}
           isLoading={isLoading}
           onManualTaskIdChange={setManualTaskId}
           onManualDateChange={setManualDate}
           onManualHoursChange={setManualHours}
-          onManualIsBillableChange={(nextIsBillable) => {
-            setManualIsBillable(nextIsBillable)
-            setManualCategory((prev) => {
-              const options = nextIsBillable ? BILLABLE_CATEGORIES : NON_BILLABLE_CATEGORIES
-              return options.includes(prev) ? prev : options[0]
-            })
-          }}
-          onManualCategoryChange={setManualCategory}
+          onManualIsBillableChange={setManualIsBillable}
           onManualNotesChange={setManualNotes}
           onSubmit={() => void submitManualEntry()}
         />
@@ -383,21 +362,12 @@ export function TimeTrackingPage() {
           trackedTimerLabel={trackedTimerLabel}
           timerTaskId={timerTaskId}
           timerIsBillable={timerIsBillable}
-          timerCategory={timerCategory}
-          timerCategoryOptions={timerCategoryOptions}
           timerNotes={timerNotes}
           timerStartedAt={timerStartedAt}
           isTimerSaving={isTimerSaving}
           projectTasks={projectTasks}
           onTimerTaskIdChange={setTimerTaskId}
-          onTimerIsBillableChange={(nextIsBillable) => {
-            setTimerIsBillable(nextIsBillable)
-            setTimerCategory((prev) => {
-              const options = nextIsBillable ? BILLABLE_CATEGORIES : NON_BILLABLE_CATEGORIES
-              return options.includes(prev) ? prev : options[0]
-            })
-          }}
-          onTimerCategoryChange={setTimerCategory}
+          onTimerIsBillableChange={setTimerIsBillable}
           onTimerNotesChange={setTimerNotes}
           onStartTimer={startTimer}
           onStopAndSaveTimer={() => void stopAndSaveTimer()}

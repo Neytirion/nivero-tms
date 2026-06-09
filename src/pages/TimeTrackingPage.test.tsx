@@ -126,6 +126,71 @@ describe('TimeTrackingPage', () => {
     expect(screen.queryByText('Other user task')).not.toBeInTheDocument()
   })
 
+  it('resolves task titles in logs and weekly overview when no single project is selected', async () => {
+    const workspace = createWorkspace(null)
+    mockUseWorkspace.mockReturnValue(
+      createWorkspaceState({
+        ...workspace,
+        selectedProjectId: null,
+        projects: [
+          createProjectPreview({
+            id: 'p1',
+            name: 'Apollo',
+            start_date: '2026-06-01',
+            end_date: '2026-06-30',
+          }),
+          createProjectPreview({
+            id: 'p2',
+            name: 'Hermes',
+            start_date: '2026-06-01',
+            end_date: '2026-06-30',
+          }),
+        ],
+      }),
+    )
+    mockGetProjectTasks.mockImplementation(async (projectId: string) => {
+      if (projectId === 'p1') {
+        return [
+          {
+            id: 't1',
+            title: 'Apollo task',
+            assigned_to: 'u1',
+            status: 'todo',
+          },
+        ] as never
+      }
+
+      return [
+        {
+          id: 't2',
+          title: 'Hermes task',
+          assigned_to: 'u2',
+          status: 'todo',
+        },
+      ] as never
+    })
+    mockGetTimeEntries.mockResolvedValue([
+      {
+        id: 'te-1',
+        user_id: 'u1',
+        project_id: 'p2',
+        task_id: 't2',
+        entry_date: '2026-06-05',
+        minutes_spent: 120,
+        is_billable: true,
+        notes: 'cross-project log',
+        started_at: null,
+        ended_at: null,
+        created_at: '2026-06-05T10:00:00.000Z',
+      },
+    ] as never)
+
+    render(<TimeTrackingPage />)
+
+    expect((await screen.findAllByText('Hermes task')).length).toBeGreaterThan(0)
+    expect(screen.queryByText('t2')).not.toBeInTheDocument()
+  })
+
   it('edits and deletes own logs even when task is missing', async () => {
     const workspace = createWorkspace()
     mockUseWorkspace.mockReturnValue(workspace)

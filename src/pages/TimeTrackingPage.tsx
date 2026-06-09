@@ -121,7 +121,19 @@ export function TimeTrackingPage() {
   useEffect(() => {
     const loadProjectTasks = async () => {
       if (!activeProjectId) {
-        setProjectTasks([])
+        try {
+          const tasksByProject = await Promise.all(
+            projects.map(async (project) => ({
+              tasks: await getProjectTasks(project.id),
+            })),
+          )
+
+          setProjectTasks(tasksByProject.flatMap((item) => item.tasks))
+        } catch (error) {
+          setStatus(error instanceof Error ? `Task load error: ${error.message}` : 'Task load error')
+          setProjectTasks([])
+        }
+
         setManualTaskId('')
         setTimerTaskId('')
         return
@@ -147,7 +159,7 @@ export function TimeTrackingPage() {
     }
 
     void loadProjectTasks()
-  }, [activeProjectId, currentUserId, setStatus])
+  }, [activeProjectId, currentUserId, projects, setStatus])
 
   useEffect(() => {
     if (!timerStartedAt) {

@@ -56,14 +56,16 @@ export function DashboardPage() {
   const isMemberInSelectedProject = selectedProjectRole === 'member'
 
   useEffect(() => {
-    if (!isMemberInSelectedProject || !currentUserId || projects.length === 0) {
-      setMemberTasksAcrossProjects([])
-      return
-    }
-
     let isCancelled = false
 
     const loadMemberTasksAcrossProjects = async () => {
+      if (!isMemberInSelectedProject || !currentUserId || projects.length === 0) {
+        if (!isCancelled) {
+          setMemberTasksAcrossProjects([])
+        }
+        return
+      }
+
       const tasksByProject = await Promise.all(
         projects.map(async (project) => ({
           projectId: project.id,

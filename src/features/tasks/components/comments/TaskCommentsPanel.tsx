@@ -62,7 +62,6 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
       }
     }
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadMentionHints()
   }, [projectId])
 

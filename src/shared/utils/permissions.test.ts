@@ -30,6 +30,16 @@ describe('permissions', () => {
     expect(hasProjectPermission('manager', 'task.assign')).toBe(true)
   })
 
+  it('grants member role update and remove permissions to admin only', () => {
+    expect(hasProjectPermission('admin', 'member.role.update')).toBe(true)
+    expect(hasProjectPermission('admin', 'member.remove')).toBe(true)
+  })
+
+  it('does not grant member management permissions to manager', () => {
+    expect(hasProjectPermission('manager', 'member.role.update')).toBe(false)
+    expect(hasProjectPermission('manager', 'member.remove')).toBe(false)
+  })
+
   it('does not grant member delete any task permission', () => {
     expect(hasProjectPermission('member', 'task.delete.any')).toBe(false)
   })

@@ -53,6 +53,8 @@ function createWorkspaceState(overrides: Partial<WorkspaceState> = {}): Workspac
     canDeleteProject: vi.fn(() => false),
     canAssignTasksInProject: vi.fn(() => false),
     canInviteToProject: vi.fn(() => false),
+    canUpdateProjectMemberRoles: vi.fn(() => false),
+    canRemoveProjectMembers: vi.fn(() => false),
     loadDashboardPreview: vi.fn(async () => undefined),
     selectProject: vi.fn(async () => undefined),
     addProject: vi.fn(async () => undefined),
@@ -142,6 +144,20 @@ describe('ResourcePlanningPage', () => {
     mockGetTimeEntries.mockResolvedValue([
       { id: 'e1', user_id: 'u1', minutes_spent: 180, project_id: 'p1', task_id: 't1', entry_date: '2026-06-05' },
     ] as never)
+  })
+
+  it('blocks access for users without owner/admin/manager role', async () => {
+    mockUseWorkspace.mockReturnValue(createWorkspaceState({
+      projects: [
+        createProjectPreview({ id: 'p1', name: 'Apollo', status: 'active' }),
+      ],
+      getProjectRole: vi.fn(() => 'member' as const),
+    }))
+
+    render(<ResourcePlanningPage />)
+
+    expect(await screen.findByText(/available only for owner, admin, or manager roles/i)).toBeTruthy()
+    expect(screen.queryByText('Alice Johnson')).toBeNull()
   })
 
   it('renders consultant allocation and overbooked status', async () => {

@@ -13,6 +13,7 @@ export function AuthPage() {
     status,
     isSubmitting,
     submit,
+    signInWithGoogle,
   } = useAuthForm()
 
   return (
@@ -92,6 +93,21 @@ export function AuthPage() {
               : mode === 'sign-up'
                 ? 'Create account'
                 : 'Sign in'}
+          </button>
+
+          <div className="flex items-center gap-2 pt-1">
+            <span className="h-px flex-1 bg-slate-200" />
+            <span className="text-[11px] uppercase tracking-[0.12em] text-slate-400">or</span>
+            <span className="h-px flex-1 bg-slate-200" />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void signInWithGoogle()}
+            disabled={isSubmitting}
+            className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Continue with Google
           </button>
         </form>
       </section>

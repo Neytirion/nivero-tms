@@ -8,17 +8,17 @@ import type {
   WorkPackagePreview,
 } from './pm.types'
 import { assertProjectEditable } from './pm.helpers'
+import {
+  getEstimateWithProjectById,
+  getLatestEstimateVersion,
+  getProjectEstimatePreviews,
+  getProjectMembershipRole,
+  getProjectOwner,
+  getWorkPackagesByEstimateIds,
+} from './pm.estimates.queries'
 
 async function assertEstimateIsLatestDraft(estimateId: string, action: string) {
-  const { data: estimate, error: estimateError } = await supabase
-    .from('estimates')
-    .select('id,project_id,version_number,status')
-    .eq('id', estimateId)
-    .maybeSingle()
-
-  if (estimateError) {
-    throw new Error(estimateError.message)
-  }
+  const estimate = await getEstimateWithProjectById(estimateId)
 
   if (!estimate) {
     throw new Error('Estimate version not found')
@@ -26,17 +26,7 @@ async function assertEstimateIsLatestDraft(estimateId: string, action: string) {
 
   await assertProjectEditable(estimate.project_id, action)
 
-  const { data: latestEstimate, error: latestEstimateError } = await supabase
-    .from('estimates')
-    .select('version_number')
-    .eq('project_id', estimate.project_id)
-    .order('version_number', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (latestEstimateError) {
-    throw new Error(latestEstimateError.message)
-  }
+  const latestEstimate = await getLatestEstimateVersion(estimate.project_id)
 
   if (latestEstimate && latestEstimate.version_number !== estimate.version_number) {
     throw new Error(`Cannot ${action}: previous estimate versions are read-only`)
@@ -62,66 +52,26 @@ export async function getProjectEstimates(projectId: string) {
 
   const actorId = userData.user.id
 
-  const { data: projectData, error: projectError } = await supabase
-    .from('projects')
-    .select('owner_id')
-    .eq('id', projectId)
-    .maybeSingle()
-
-  if (projectError) {
-    throw new Error(projectError.message)
-  }
-
-  const { data: membershipData, error: membershipError } = await supabase
-    .from('project_members')
-    .select('role')
-    .eq('project_id', projectId)
-    .eq('user_id', actorId)
-    .maybeSingle()
-
-  if (membershipError) {
-    throw new Error(membershipError.message)
-  }
+  const [projectData, membershipData] = await Promise.all([
+    getProjectOwner(projectId),
+    getProjectMembershipRole(projectId, actorId),
+  ])
 
   const isOwner = projectData?.owner_id === actorId
   const isAdmin = (membershipData?.role ?? '').toLowerCase() === 'admin'
   const isManager = (membershipData?.role ?? '').toLowerCase() === 'manager'
   const canViewDrafts = isOwner || isAdmin || isManager
 
-  let estimatesQuery = supabase
-    .from('estimates')
-    .select('id,project_id,version_number,status,created_by,approved_at,created_at,updated_at')
-    .eq('project_id', projectId)
-    .order('version_number', { ascending: false })
-
-  if (!canViewDrafts) {
-    estimatesQuery = estimatesQuery.eq('status', 'approved')
-  }
-
-  const { data: estimatesData, error: estimatesError } = await estimatesQuery
-
-  if (estimatesError) {
-    throw new Error(estimatesError.message)
-  }
-
-  const estimates = estimatesData satisfies EstimatePreview[]
+  const estimates = await getProjectEstimatePreviews(projectId, canViewDrafts)
 
   if (estimates.length === 0) {
     return [] as EstimateWithPackages[]
   }
 
   const estimateIds = estimates.map((estimate) => estimate.id)
-  const { data: packagesData, error: packagesError } = await supabase
-    .from('work_packages')
-    .select('id,estimate_id,name,estimated_hours,sort_order,is_active,created_at')
-    .in('estimate_id', estimateIds)
-    .order('sort_order', { ascending: true })
+  const packages = await getWorkPackagesByEstimateIds(estimateIds)
 
-  if (packagesError) {
-    throw new Error(packagesError.message)
-  }
-
-  const packagesByEstimateId = (packagesData satisfies WorkPackagePreview[]).reduce<
+  const packagesByEstimateId = packages.reduce<
     Record<string, WorkPackagePreview[]>
   >((acc, item) => {
     if (!acc[item.estimate_id]) {

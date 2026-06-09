@@ -126,6 +126,45 @@ describe('TimeTrackingPage', () => {
     expect(screen.queryByText('Other user task')).not.toBeInTheDocument()
   })
 
+  it('shows task titles in logs and weekly overview even when the task is assigned to another user', async () => {
+    const workspace = createWorkspace()
+    mockUseWorkspace.mockReturnValue(workspace)
+    mockGetProjectTasks.mockResolvedValue([
+      {
+        id: 't1',
+        title: 'My task',
+        assigned_to: 'u1',
+        status: 'todo',
+      },
+      {
+        id: 't2',
+        title: 'Other user task',
+        assigned_to: 'u2',
+        status: 'todo',
+      },
+    ] as never)
+    mockGetTimeEntries.mockResolvedValue([
+      {
+        id: 'te-1',
+        user_id: 'u1',
+        project_id: 'p1',
+        task_id: 't2',
+        entry_date: '2026-06-05',
+        minutes_spent: 120,
+        is_billable: true,
+        notes: 'review work',
+        started_at: null,
+        ended_at: null,
+        created_at: '2026-06-05T10:00:00.000Z',
+      },
+    ] as never)
+
+    render(<TimeTrackingPage />)
+
+    expect((await screen.findAllByText('Other user task')).length).toBeGreaterThan(0)
+    expect(screen.queryByDisplayValue('t2')).not.toBeInTheDocument()
+  })
+
   it('edits and deletes own logs even when task is missing', async () => {
     const workspace = createWorkspace()
     mockUseWorkspace.mockReturnValue(workspace)

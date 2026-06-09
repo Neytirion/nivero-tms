@@ -24,6 +24,7 @@ interface ProjectDetailsSectionProps {
   onSettingsDeadlineChange: (value: string) => void
   canEditSelectedProject: boolean
   canDeleteSelectedProject?: boolean
+  canManageMemberRoles?: boolean
   tasks: TaskPreview[]
   incompleteTaskCount?: number
   teamMemberNames: string[]
@@ -62,6 +63,7 @@ export function ProjectDetailsSection({
   onSettingsDeadlineChange,
   canEditSelectedProject,
   canDeleteSelectedProject,
+  canManageMemberRoles,
   tasks,
   incompleteTaskCount,
   teamMemberNames,
@@ -245,7 +247,7 @@ export function ProjectDetailsSection({
                 isLoading={isLoading}
                 selectedProjectId={selectedProjectId}
                 projectMembers={projectMembers}
-                canEditSelectedProject={canEditSelectedProject}
+                canManageMemberRoles={canManageMemberRoles}
                 pendingRoleByUserId={pendingRoleByUserId}
                 onPendingRoleChange={onPendingRoleChange}
                 selectedProjectOwnerId={selectedProjectOwnerId}

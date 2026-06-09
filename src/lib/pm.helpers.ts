@@ -179,11 +179,11 @@ export async function assertUserCanModifyTask(taskId: string, userId: string, mo
   }
 
   const role = task.project_id ? await getUserProjectRole(task.project_id, userId) : null
-  const isCreatorOfUnassignedTask = task.created_by === userId && !task.assigned_to
+  const isCreator = task.created_by === userId
   const canManageAny = hasProjectPermission(role, mode === 'delete' ? 'task.delete.any' : 'task.manage.any')
   const canManageOwn =
     hasProjectPermission(role, mode === 'delete' ? 'task.delete.own' : 'task.manage.own') &&
-    (task.assigned_to === userId || isCreatorOfUnassignedTask)
+    (mode === 'delete' ? isCreator : task.assigned_to === userId || (isCreator && !task.assigned_to))
 
   if (!canManageAny && !canManageOwn) {
     throw new Error(

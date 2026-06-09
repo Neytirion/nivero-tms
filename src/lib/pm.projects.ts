@@ -136,7 +136,7 @@ export async function updateProject(projectId: string, patch: UpdateProjectInput
   }
 
   if (!data) {
-    throw new Error('Permission denied: only owner or admin can edit this project')
+    throw new Error('Permission denied: only owner, admin, or manager can edit this project')
   }
 
   return data satisfies ProjectPreview
@@ -176,7 +176,7 @@ export async function completeProject(projectId: string) {
   }
 
   if (!data) {
-    throw new Error('Permission denied: only owner or admin can complete this project')
+    throw new Error('Permission denied: only owner, admin, or manager can complete this project')
   }
 
   return data satisfies ProjectPreview

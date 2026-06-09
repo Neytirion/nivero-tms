@@ -82,7 +82,7 @@ function statusLabel(status: ConsultantRow['status']) {
 }
 
 export function ResourcePlanningPage() {
-  const { projects, status, setStatus } = useWorkspace()
+  const { projects, status, setStatus, getProjectRole } = useWorkspace()
 
   const [weekAnchorDate, setWeekAnchorDate] = useState(toDateInputValue(new Date()))
   const [isLoading, setIsLoading] = useState(false)
@@ -108,9 +108,22 @@ export function ResourcePlanningPage() {
     () => projects.filter((project) => project.status !== 'completed'),
     [projects],
   )
+  const hasKnownProjectRole = useMemo(
+    () => projects.some((project) => getProjectRole(project.id) !== null),
+    [getProjectRole, projects],
+  )
+  const canViewResourcePlanning = useMemo(
+    () =>
+      projects.some((project) => {
+        const role = getProjectRole(project.id)
+        return role === 'owner' || role === 'admin' || role === 'manager'
+      }),
+    [getProjectRole, projects],
+  )
+  const shouldBlockByRole = projects.length > 0 && hasKnownProjectRole && !canViewResourcePlanning
 
   useEffect(() => {
-    if (activeProjects.length === 0) return
+    if (shouldBlockByRole || activeProjects.length === 0) return
 
     const load = async () => {
       setIsLoading(true)
@@ -158,7 +171,7 @@ export function ResourcePlanningPage() {
 
     void load()
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeProjects.length, weekRange.startDate, weekRange.endDate, setStatus])
+  }, [shouldBlockByRole, activeProjects.length, weekRange.startDate, weekRange.endDate, setStatus])
 
   const consultantRows = useMemo<ConsultantRow[]>(() => {
     const byUser = new Map<
@@ -247,6 +260,22 @@ export function ResourcePlanningPage() {
   const summaryOverbooked = consultantRows.filter((row) => row.status === 'overbooked').length
   const summaryAtRisk = consultantRows.filter((row) => row.status === 'at-risk').length
   const summaryAvailable = consultantRows.filter((row) => row.status === 'available').length
+
+  if (shouldBlockByRole) {
+    return (
+      <div className="space-y-5">
+        <section className="page-section bg-[linear-gradient(120deg,rgba(99,102,241,0.08),rgba(14,116,144,0.06))]">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">
+            Resource Planning
+          </p>
+          <h2 className="mt-1 text-2xl font-bold text-slate-900">Consultant Allocation</h2>
+          <p className="mt-2 text-sm text-slate-600">
+            This module is available only for owner, admin, or manager roles.
+          </p>
+        </section>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-5">

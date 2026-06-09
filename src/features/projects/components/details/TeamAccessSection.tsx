@@ -13,7 +13,7 @@ interface TeamAccessSectionProps {
   isLoading: boolean
   selectedProjectId: string | null
   projectMembers: ProjectMemberListItem[]
-  canEditSelectedProject: boolean
+  canManageMemberRoles?: boolean
   pendingRoleByUserId: Record<string, string>
   onPendingRoleChange: (userId: string, role: string) => void
   selectedProjectOwnerId: string | null | undefined
@@ -35,7 +35,7 @@ export function TeamAccessSection({
   isLoading,
   selectedProjectId,
   projectMembers,
-  canEditSelectedProject,
+  canManageMemberRoles = false,
   pendingRoleByUserId,
   onPendingRoleChange,
   selectedProjectOwnerId,
@@ -99,7 +99,7 @@ export function TeamAccessSection({
                 <p className="text-sm font-medium text-slate-800">{member.full_name ?? 'Unknown user'}</p>
                 <p className="mt-0.5 text-xs text-slate-500">{member.email ?? 'No email'}</p>
               </div>
-              {canEditSelectedProject && member.user_id ? (
+              {canManageMemberRoles && member.user_id ? (
                 <div className="flex items-center gap-2">
                   <select
                     value={pendingRoleByUserId[member.user_id] ?? member.role ?? 'member'}
@@ -109,7 +109,7 @@ export function TeamAccessSection({
                   >
                     <option value="member">member</option>
                     {canAssignManagerRole ? <option value="manager">manager</option> : null}
-                    <option value="admin">admin</option>
+                    {canAssignAdminRole ? <option value="admin">admin</option> : null}
                   </select>
                   <button
                     type="button"

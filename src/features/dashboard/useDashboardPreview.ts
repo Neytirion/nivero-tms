@@ -95,6 +95,16 @@ export function useDashboardPreview() {
     return !isProjectCompleted(projectId) && hasProjectPermission(role, 'project.invite')
   }
 
+  const canUpdateProjectMemberRoles = (projectId: string) => {
+    const role = getProjectRole(projectId)
+    return !isProjectCompleted(projectId) && hasProjectPermission(role, 'member.role.update')
+  }
+
+  const canRemoveProjectMembers = (projectId: string) => {
+    const role = getProjectRole(projectId)
+    return !isProjectCompleted(projectId) && hasProjectPermission(role, 'member.remove')
+  }
+
   const canManageTask = (task: TaskPreview) => {
     if (!currentUserId) {
       return false
@@ -595,7 +605,7 @@ export function useDashboardPreview() {
       return
     }
 
-    if (!canManageProject(selectedProjectId)) {
+    if (!canUpdateProjectMemberRoles(selectedProjectId)) {
       setStatus('Permission denied: only owner or admin can change roles')
       return
     }
@@ -636,7 +646,7 @@ export function useDashboardPreview() {
       return
     }
 
-    if (!canManageProject(selectedProjectId)) {
+    if (!canRemoveProjectMembers(selectedProjectId)) {
       setStatus('Permission denied: only owner or admin can remove members')
       return
     }
@@ -686,7 +696,7 @@ export function useDashboardPreview() {
     }
 
     if (!canManageProject(selectedProjectId)) {
-      setStatus('Permission denied: only owner or admin can complete this project')
+      setStatus('Permission denied: only owner, admin, or manager can complete this project')
       return
     }
 
@@ -729,6 +739,8 @@ export function useDashboardPreview() {
     canDeleteProject,
     canAssignTasksInProject,
     canInviteToProject,
+    canUpdateProjectMemberRoles,
+    canRemoveProjectMembers,
     loadDashboardPreview,
     selectProject,
     addProject,

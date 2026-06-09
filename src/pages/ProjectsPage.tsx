@@ -4,6 +4,7 @@ import { useWorkspace } from '../features/dashboard/workspace-context.tsx'
 import { CreateProjectModal, ProjectDetailsSection, ProjectsSummaryCards, ProjectsTable, type DetailsTab } from '../features/projects/components'
 import { useProjectForm } from '../features/projects/hooks/useProjectForm.ts'
 import { deriveRisk } from '../features/projects/utils/project-metrics.ts'
+import { hasProjectPermission } from '../shared/utils/permissions'
 
 export function ProjectsPage() {
   const {
@@ -68,6 +69,7 @@ export function ProjectsPage() {
   const canEditSelectedProject = selectedProject ? canManageProject(selectedProject.id) : false
   const canDeleteSelectedProject = selectedProject ? canDeleteProject(selectedProject.id) : false
   const canInviteToSelectedProject = selectedProject ? canInviteToProject(selectedProject.id) : false
+  const canManageMemberRoles = hasProjectPermission(myRoleInSelectedProject, 'member.role.update')
   const canAssignAdminRole =
     selectedProject?.owner_id != null && selectedProject.owner_id === currentUserId
   const canAssignManagerRole = myRoleInSelectedProject === 'owner' || myRoleInSelectedProject === 'admin'
@@ -272,6 +274,7 @@ export function ProjectsPage() {
         onSettingsDeadlineChange={(value) => updateSettingsDraft({ deadline: value })}
         canEditSelectedProject={canEditSelectedProject}
         canDeleteSelectedProject={canDeleteSelectedProject}
+        canManageMemberRoles={canManageMemberRoles}
         tasks={tasks}
         incompleteTaskCount={incompleteTaskCount}
         teamMemberNames={teamMemberNames}

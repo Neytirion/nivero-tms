@@ -5,6 +5,8 @@ export type ProjectPermission =
   | 'project.delete'
   | 'project.invite'
   | 'project.complete'
+  | 'member.role.update'
+  | 'member.remove'
   | 'task.assign'
   | 'task.manage.any'
   | 'task.manage.own'
@@ -17,6 +19,8 @@ const ROLE_PERMISSIONS: Record<ProjectRoleName, readonly ProjectPermission[]> = 
     'project.delete',
     'project.invite',
     'project.complete',
+    'member.role.update',
+    'member.remove',
     'task.assign',
     'task.manage.any',
     'task.manage.own',
@@ -28,6 +32,8 @@ const ROLE_PERMISSIONS: Record<ProjectRoleName, readonly ProjectPermission[]> = 
     'project.delete',
     'project.invite',
     'project.complete',
+    'member.role.update',
+    'member.remove',
     'task.assign',
     'task.manage.any',
     'task.manage.own',

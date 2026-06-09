@@ -85,7 +85,8 @@ export async function getProjectEstimates(projectId: string) {
 
   const isOwner = projectData?.owner_id === actorId
   const isAdmin = (membershipData?.role ?? '').toLowerCase() === 'admin'
-  const canViewDrafts = isOwner || isAdmin
+  const isManager = (membershipData?.role ?? '').toLowerCase() === 'manager'
+  const canViewDrafts = isOwner || isAdmin || isManager
 
   let estimatesQuery = supabase
     .from('estimates')

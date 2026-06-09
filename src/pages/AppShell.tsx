@@ -1,13 +1,12 @@
 import type { User } from '@supabase/supabase-js'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { WorkspaceProvider } from '../features/dashboard/workspace-context.tsx'
+import { WorkspaceProvider, useWorkspace } from '../features/dashboard/workspace-context.tsx'
 
-const activeNavItems = [
+const baseNavItems = [
   { to: '/app/dashboard', label: 'Dashboard', description: 'Portfolio health and priorities' },
   { to: '/app/projects', label: 'Projects', description: 'Project catalog and details' },
   { to: '/app/tasks', label: 'Tasks', description: 'Kanban board and task flow' },
   { to: '/app/time-tracking', label: 'Time Tracking', description: 'Entries, timer, and weekly timesheet' },
-  { to: '/app/resources', label: 'Resources', description: 'Consultant allocation and availability' },
 ]
 
 interface AppShellProps {
@@ -15,15 +14,33 @@ interface AppShellProps {
 }
 
 export function AppShell({ user }: AppShellProps) {
+  return (
+    <WorkspaceProvider>
+      <AppShellLayout user={user} />
+    </WorkspaceProvider>
+  )
+}
+
+function AppShellLayout({ user }: AppShellProps) {
   const navigate = useNavigate()
+  const { projects, getProjectRole } = useWorkspace()
 
   const avatarUrl = (user.user_metadata.avatar_url as string | undefined) ?? ''
   const fullName = (user.user_metadata.full_name as string | undefined) ?? ''
   const avatarFallback = (fullName || user.email || '?').charAt(0).toUpperCase()
+  const canViewResourcePlanning = projects.some((project) => {
+    const role = getProjectRole(project.id)
+    return role === 'owner' || role === 'admin' || role === 'manager'
+  })
+  const activeNavItems = canViewResourcePlanning
+    ? [
+        ...baseNavItems,
+        { to: '/app/resources', label: 'Resources', description: 'Consultant allocation and availability' },
+      ]
+    : baseNavItems
 
   return (
-    <WorkspaceProvider>
-      <main className="min-h-screen bg-[radial-gradient(circle_at_0%_0%,_#cffafe_0%,_#ecfeff_16%,_#f8fafc_56%,_#f1f5f9_100%)]">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_0%_0%,_#cffafe_0%,_#ecfeff_16%,_#f8fafc_56%,_#f1f5f9_100%)]">
         <header className="sticky top-0 z-20 border-b border-slate-200 bg-[#e0f2da]">
           <div className="flex h-16 items-center justify-between px-4 md:px-6 lg:px-8">
             <button
@@ -91,6 +108,5 @@ export function AppShell({ user }: AppShellProps) {
           </div>
         </section>
       </main>
-    </WorkspaceProvider>
   )
 }

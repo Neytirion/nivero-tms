@@ -1,10 +1,8 @@
 import { supabase } from './supabase'
 import type {
-  EstimatePreview,
   EstimateWithPackages,
   ProjectTaskWorkPackagePreview,
   SaveEstimateDraftInput,
-  WorkPackage,
   WorkPackagePreview,
 } from './pm.types'
 import { assertProjectEditable } from './pm.helpers'
@@ -16,6 +14,18 @@ import {
   getProjectOwner,
   getWorkPackagesByEstimateIds,
 } from './pm.estimates.queries'
+import {
+  archivePackages,
+  cloneEstimateWorkPackages,
+  getEstimateTotalHours,
+  getExistingDraftPackages,
+  insertDraftPackage,
+  insertEstimateVersion,
+  markEstimateAsApproved,
+  markEstimateAsDraft,
+  updateExistingPackage,
+  updateProjectEstimatedHours,
+} from './pm.estimates.mutations'
 
 async function assertEstimateIsLatestDraft(estimateId: string, action: string) {
   const estimate = await getEstimateWithProjectById(estimateId)
@@ -136,38 +146,9 @@ export async function createEstimateVersion(projectId: string) {
   const latest = estimates[0] ?? null
   const nextVersion = latest ? latest.version_number + 1 : 1
 
-  const { data: estimateData, error: estimateError } = await supabase
-    .from('estimates')
-    .insert({
-      project_id: projectId,
-      version_number: nextVersion,
-      status: 'draft',
-      created_by: userData.user.id,
-    })
-    .select('id,project_id,version_number,status,created_by,approved_at,created_at,updated_at')
-    .single()
+  const createdEstimate = await insertEstimateVersion(projectId, nextVersion, userData.user.id)
 
-  if (estimateError) {
-    throw new Error(estimateError.message)
-  }
-
-  const createdEstimate = estimateData satisfies EstimatePreview
-
-  if (latest && latest.work_packages.length > 0) {
-    const clonedPackages = latest.work_packages.map((item, index) => ({
-      estimate_id: createdEstimate.id,
-      name: item.name,
-      estimated_hours: item.estimated_hours,
-      is_active: item.is_active,
-      sort_order: index,
-    }))
-
-    const { error: cloneError } = await supabase.from('work_packages').insert(clonedPackages)
-
-    if (cloneError) {
-      throw new Error(cloneError.message)
-    }
-  }
+  await cloneEstimateWorkPackages(createdEstimate.id, latest?.work_packages ?? [])
 
   return createdEstimate
 }
@@ -182,16 +163,7 @@ export async function saveEstimateDraft(input: SaveEstimateDraftInput) {
     }))
     .filter((item) => item.name.length > 0)
 
-  const { data: existingPackagesData, error: existingPackagesError } = await supabase
-    .from('work_packages')
-    .select('id,name,is_active')
-    .eq('estimate_id', input.estimateId)
-
-  if (existingPackagesError) {
-    throw new Error(existingPackagesError.message)
-  }
-
-  const existingPackages = existingPackagesData satisfies Array<Pick<WorkPackage, 'id' | 'name' | 'is_active'>>
+  const existingPackages = await getExistingDraftPackages(input.estimateId)
   const usedPackageIds = new Set<string>()
 
   const findPackageByName = (name: string) => {
@@ -209,91 +181,25 @@ export async function saveEstimateDraft(input: SaveEstimateDraftInput) {
     if (existingPackage) {
       usedPackageIds.add(existingPackage.id)
 
-      const { error: updatePackageError } = await supabase
-        .from('work_packages')
-        .update({
-          name: item.name,
-          estimated_hours: item.estimatedHours,
-          sort_order: index,
-          is_active: true,
-        })
-        .eq('id', existingPackage.id)
-
-      if (updatePackageError) {
-        throw new Error(updatePackageError.message)
-      }
+      await updateExistingPackage(existingPackage.id, item.name, item.estimatedHours, index)
 
       continue
     }
 
-    const { error: insertPackageError } = await supabase.from('work_packages').insert({
-      estimate_id: input.estimateId,
-      name: item.name,
-      estimated_hours: item.estimatedHours,
-      sort_order: index,
-      is_active: true,
-    })
-
-    if (insertPackageError) {
-      throw new Error(insertPackageError.message)
-    }
+    await insertDraftPackage(input.estimateId, item.name, item.estimatedHours, index)
   }
 
   const packagesToArchive = existingPackages.filter((item) => !usedPackageIds.has(item.id))
 
-  if (packagesToArchive.length > 0) {
-    const { error: archivePackagesError } = await supabase
-      .from('work_packages')
-      .update({ is_active: false })
-      .in(
-        'id',
-        packagesToArchive.map((item) => item.id),
-      )
+  await archivePackages(packagesToArchive.map((item) => item.id))
 
-    if (archivePackagesError) {
-      throw new Error(archivePackagesError.message)
-    }
-  }
-
-  const { error: updateEstimateError } = await supabase
-    .from('estimates')
-    .update({ status: 'draft', updated_at: new Date().toISOString() })
-    .eq('id', input.estimateId)
-
-  if (updateEstimateError) {
-    throw new Error(updateEstimateError.message)
-  }
+  await markEstimateAsDraft(input.estimateId)
 }
 
 export async function approveEstimate(estimateId: string) {
   const targetEstimate = await assertEstimateIsLatestDraft(estimateId, 'approve estimate')
 
-  const { error: approveError } = await supabase
-    .from('estimates')
-    .update({ status: 'approved', approved_at: new Date().toISOString(), updated_at: new Date().toISOString() })
-    .eq('id', estimateId)
-
-  if (approveError) {
-    throw new Error(approveError.message)
-  }
-
-  const { data: packagesData, error: packagesError } = await supabase
-    .from('work_packages')
-    .select('estimated_hours')
-    .eq('estimate_id', estimateId)
-
-  if (packagesError) {
-    throw new Error(packagesError.message)
-  }
-
-  const nextEstimatedHours = (packagesData ?? []).reduce((sum, item) => sum + (item.estimated_hours ?? 0), 0)
-
-  const { error: projectUpdateError } = await supabase
-    .from('projects')
-    .update({ estimated_hours: nextEstimatedHours })
-    .eq('id', targetEstimate.project_id)
-
-  if (projectUpdateError) {
-    throw new Error(projectUpdateError.message)
-  }
+  await markEstimateAsApproved(estimateId)
+  const nextEstimatedHours = await getEstimateTotalHours(estimateId)
+  await updateProjectEstimatedHours(targetEstimate.project_id, nextEstimatedHours)
 }

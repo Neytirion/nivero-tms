@@ -8,6 +8,7 @@ interface TaskCalendarViewProps {
   onCalendarMonthChange: (month: string) => void
   onShiftCalendarMonth: (direction: -1 | 1) => void
   calendarMeta: CalendarMeta
+  assigneeLabelByUserId: Record<string, string>
   dependencyLabelByTaskId: Record<string, string>
 }
 
@@ -53,6 +54,7 @@ export function TaskCalendarView({
   onCalendarMonthChange,
   onShiftCalendarMonth,
   calendarMeta,
+  assigneeLabelByUserId,
   dependencyLabelByTaskId,
 }: TaskCalendarViewProps) {
   const todayKey = new Date().toISOString().slice(0, 10)
@@ -183,6 +185,11 @@ export function TaskCalendarView({
                           </span>
                         ) : null}
                       </div>
+                      {task.assigned_to ? (
+                        <p className="mt-1 truncate text-[9px] text-slate-600">
+                          Assignee: {assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to}
+                        </p>
+                      ) : null}
                       <div className="mt-1 flex flex-wrap items-center gap-1">
                         <span
                           className={`rounded border px-1 py-0 text-[9px] font-semibold uppercase tracking-wide ${getTaskStatusBadgeClass(task.status)}`}

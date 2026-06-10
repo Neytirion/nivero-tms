@@ -14,6 +14,8 @@ export function TimeTrackingPage() {
     isEntriesLoading,
     activeProjectId,
     projectTasks,
+    taskLabelById,
+    isTaskLabelsLoading,
     editingEntryId,
     entryToDelete,
     manualTaskId,
@@ -123,7 +125,8 @@ export function TimeTrackingPage() {
         isEntriesLoading={isEntriesLoading}
         visibleEntries={visibleEntries}
         projects={projects}
-        projectTasks={projectTasks}
+        taskLabelById={taskLabelById}
+        isTaskLabelsLoading={isTaskLabelsLoading}
         onCancelEdit={cancelEditEntry}
         onBeginEdit={beginEditEntry}
         onRequestDelete={setEntryToDelete}
@@ -133,7 +136,8 @@ export function TimeTrackingPage() {
         isEntriesLoading={isEntriesLoading}
         entries={entries}
         projects={projects}
-        projectTasks={projectTasks}
+        taskLabelById={taskLabelById}
+        isTaskLabelsLoading={isTaskLabelsLoading}
         weeklySummary={weeklySummary}
       />
 

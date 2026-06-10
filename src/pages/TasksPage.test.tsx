@@ -211,4 +211,38 @@ describe('TasksPage', () => {
     expect(screen.getByText('owner')).toBeInTheDocument()
     expect(screen.getByText('member')).toBeInTheDocument()
   })
+
+  it('shows task assignee in calendar view', async () => {
+    const workspace = createWorkspaceState({
+      selectedProjectId: 'p1',
+      projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Calendar task',
+          project_id: 'p1',
+          assigned_to: 'u2',
+          due_date: new Date().toISOString().slice(0, 10),
+        }),
+      ],
+      projectMembers: [
+        {
+          member_id: 'm2',
+          project_id: 'p1',
+          user_id: 'u2',
+          role: 'member',
+          joined_at: '2026-06-02T00:00:00.000Z',
+          full_name: 'Bob Smith',
+          email: 'bob@example.com',
+        },
+      ],
+    })
+    mockUseWorkspace.mockReturnValue(workspace)
+
+    render(<TasksPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'Calendar' }))
+
+    expect(await screen.findByText('Assignee: Bob Smith')).toBeInTheDocument()
+  })
 })

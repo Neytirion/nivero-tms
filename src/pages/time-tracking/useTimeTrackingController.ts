@@ -30,6 +30,8 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
   const [isEntriesLoading, setIsEntriesLoading] = useState(false)
   const [activeProjectId, setActiveProjectId] = useState(selectedProjectId ?? '')
   const [projectTasks, setProjectTasks] = useState<TaskPreview[]>([])
+  const [taskLabelById, setTaskLabelById] = useState<Record<string, string>>({})
+  const [isTaskLabelsLoading, setIsTaskLabelsLoading] = useState(false)
   const [editingEntryId, setEditingEntryId] = useState<string | null>(null)
   const [entryToDelete, setEntryToDelete] = useState<TimeEntryPreview | null>(null)
 
@@ -122,6 +124,8 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
 
   useEffect(() => {
     const loadProjectTasks = async () => {
+      setIsTaskLabelsLoading(true)
+
       if (!activeProjectId) {
         try {
           const tasksByProject = await Promise.all(
@@ -130,10 +134,20 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
             })),
           )
 
-          setProjectTasks(tasksByProject.flatMap((item) => item.tasks))
+          const allTasks = tasksByProject.flatMap((item) => item.tasks)
+          setProjectTasks(allTasks)
+          setTaskLabelById(
+            allTasks.reduce<Record<string, string>>((acc, task) => {
+              acc[task.id] = task.title
+              return acc
+            }, {}),
+          )
         } catch (error) {
           setStatus(error instanceof Error ? `Task load error: ${error.message}` : 'Task load error')
           setProjectTasks([])
+          setTaskLabelById({})
+        } finally {
+          setIsTaskLabelsLoading(false)
         }
 
         setManualTaskId('')
@@ -152,11 +166,20 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
         })
 
         setProjectTasks(visibleTasks)
+        setTaskLabelById(
+          nextTasks.reduce<Record<string, string>>((acc, task) => {
+            acc[task.id] = task.title
+            return acc
+          }, {}),
+        )
         setManualTaskId((prev) => (visibleTasks.some((task) => task.id === prev) ? prev : ''))
         setTimerTaskId((prev) => (visibleTasks.some((task) => task.id === prev) ? prev : ''))
       } catch (error) {
         setStatus(error instanceof Error ? `Task load error: ${error.message}` : 'Task load error')
         setProjectTasks([])
+        setTaskLabelById({})
+      } finally {
+        setIsTaskLabelsLoading(false)
       }
     }
 
@@ -335,6 +358,8 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
     isEntriesLoading,
     activeProjectId,
     projectTasks,
+    taskLabelById,
+    isTaskLabelsLoading,
     editingEntryId,
     entryToDelete,
     manualTaskId,

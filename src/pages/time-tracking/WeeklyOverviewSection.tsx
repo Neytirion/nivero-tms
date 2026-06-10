@@ -1,4 +1,4 @@
-import type { ProjectPreview, TaskPreview, TimeEntryPreview } from '../../lib/pm'
+import type { ProjectPreview, TimeEntryPreview } from '../../lib/pm'
 import { formatHours, toHours } from '../time-tracking.utils'
 
 type WeeklySummary = {
@@ -12,7 +12,8 @@ type WeeklyOverviewSectionProps = {
   isEntriesLoading: boolean
   entries: TimeEntryPreview[]
   projects: ProjectPreview[]
-  projectTasks: TaskPreview[]
+  taskLabelById: Record<string, string>
+  isTaskLabelsLoading: boolean
   weeklySummary: WeeklySummary
 }
 
@@ -20,7 +21,8 @@ export function WeeklyOverviewSection({
   isEntriesLoading,
   entries,
   projects,
-  projectTasks,
+  taskLabelById,
+  isTaskLabelsLoading,
   weeklySummary,
 }: WeeklyOverviewSectionProps) {
   return (
@@ -65,9 +67,11 @@ export function WeeklyOverviewSection({
               </tr>
             ) : (
               entries.map((entry) => {
-                const projectName = projects.find((project) => project.id === entry.project_id)?.name ?? entry.project_id
+                const projectName =
+                  projects.find((project) => project.id === entry.project_id)?.name ??
+                  (projects.length === 0 ? 'Loading project...' : 'Project unavailable')
                 const taskName = entry.task_id
-                  ? projectTasks.find((task) => task.id === entry.task_id)?.title ?? entry.task_id
+                  ? taskLabelById[entry.task_id] ?? (isTaskLabelsLoading ? 'Loading task...' : 'Task unavailable')
                   : 'Unlinked'
 
                 return (

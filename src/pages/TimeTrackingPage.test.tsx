@@ -126,6 +126,76 @@ describe('TimeTrackingPage', () => {
     expect(screen.queryByText('Other user task')).not.toBeInTheDocument()
   })
 
+  it('resolves task title in logs even when selector hides that task', async () => {
+    const workspace = createWorkspace()
+    mockUseWorkspace.mockReturnValue(workspace)
+    mockGetProjectTasks.mockResolvedValue([
+      {
+        id: 't1',
+        title: 'My task',
+        assigned_to: 'u1',
+        status: 'todo',
+      },
+      {
+        id: 't2',
+        title: 'Shared task title',
+        assigned_to: 'u2',
+        status: 'todo',
+      },
+    ] as never)
+    mockGetTimeEntries.mockResolvedValue([
+      {
+        id: 'te-1',
+        user_id: 'u1',
+        project_id: 'p1',
+        task_id: 't2',
+        entry_date: '2026-06-05',
+        minutes_spent: 120,
+        is_billable: true,
+        notes: 'worked on shared task',
+        started_at: null,
+        ended_at: null,
+        created_at: '2026-06-05T10:00:00.000Z',
+      },
+    ] as never)
+
+    render(<TimeTrackingPage />)
+
+    expect((await screen.findAllByText('Shared task title')).length).toBeGreaterThan(0)
+    expect(screen.queryByText('t2')).not.toBeInTheDocument()
+    expect(screen.queryAllByRole('option', { name: 'Shared task title' })).toHaveLength(0)
+  })
+
+  it('does not show raw project id when project name is unavailable yet', async () => {
+    mockUseWorkspace.mockReturnValue(
+      createWorkspaceState({
+        currentUserId: 'u1',
+        projects: [],
+        selectedProjectId: null,
+      }),
+    )
+    mockGetTimeEntries.mockResolvedValue([
+      {
+        id: 'te-1',
+        user_id: 'u1',
+        project_id: 'p2',
+        task_id: null,
+        entry_date: '2026-06-05',
+        minutes_spent: 120,
+        is_billable: true,
+        notes: 'cross-project log',
+        started_at: null,
+        ended_at: null,
+        created_at: '2026-06-05T10:00:00.000Z',
+      },
+    ] as never)
+
+    render(<TimeTrackingPage />)
+
+    expect((await screen.findAllByText('Loading project...')).length).toBeGreaterThan(0)
+    expect(screen.queryByText('p2')).not.toBeInTheDocument()
+  })
+
   it('resolves task titles in logs and weekly overview when no single project is selected', async () => {
     const workspace = createWorkspace(null)
     mockUseWorkspace.mockReturnValue(

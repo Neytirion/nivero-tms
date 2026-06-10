@@ -113,6 +113,7 @@ export function TaskViewsSection({
           onCalendarMonthChange={onCalendarMonthChange}
           onShiftCalendarMonth={onShiftCalendarMonth}
           calendarMeta={calendarMeta}
+          assigneeLabelByUserId={assigneeLabelByUserId}
           dependencyLabelByTaskId={dependencyLabelByTaskId}
         />
       ) : null}

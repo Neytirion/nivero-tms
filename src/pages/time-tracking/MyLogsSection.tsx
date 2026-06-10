@@ -1,4 +1,4 @@
-import type { ProjectPreview, TaskPreview, TimeEntryPreview } from '../../lib/pm'
+import type { ProjectPreview, TimeEntryPreview } from '../../lib/pm'
 import { toHours } from '../time-tracking.utils'
 
 type MyLogsSectionProps = {
@@ -6,7 +6,8 @@ type MyLogsSectionProps = {
   isEntriesLoading: boolean
   visibleEntries: TimeEntryPreview[]
   projects: ProjectPreview[]
-  projectTasks: TaskPreview[]
+  taskLabelById: Record<string, string>
+  isTaskLabelsLoading: boolean
   onCancelEdit: () => void
   onBeginEdit: (entry: TimeEntryPreview) => void
   onRequestDelete: (entry: TimeEntryPreview) => void
@@ -17,7 +18,8 @@ export function MyLogsSection({
   isEntriesLoading,
   visibleEntries,
   projects,
-  projectTasks,
+  taskLabelById,
+  isTaskLabelsLoading,
   onCancelEdit,
   onBeginEdit,
   onRequestDelete,
@@ -67,9 +69,11 @@ export function MyLogsSection({
               </tr>
             ) : (
               visibleEntries.map((entry) => {
-                const projectName = projects.find((project) => project.id === entry.project_id)?.name ?? entry.project_id
+                const projectName =
+                  projects.find((project) => project.id === entry.project_id)?.name ??
+                  (projects.length === 0 ? 'Loading project...' : 'Project unavailable')
                 const taskName = entry.task_id
-                  ? projectTasks.find((task) => task.id === entry.task_id)?.title ?? entry.task_id
+                  ? taskLabelById[entry.task_id] ?? (isTaskLabelsLoading ? 'Loading task...' : 'Task unavailable')
                   : 'Unlinked'
 
                 return (

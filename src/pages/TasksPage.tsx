@@ -65,6 +65,8 @@ export function TasksPage() {
     selectProject,
   } = useTasksPageController()
 
+  const visibleProjectMembers = selectedProject ? projectMembers : []
+
   return (
     <div className="space-y-5">
       <section className="page-section bg-[linear-gradient(120deg,rgba(14,116,144,0.08),rgba(16,185,129,0.06))]">
@@ -83,6 +85,36 @@ export function TasksPage() {
             ? `${myRoleInSelectedProject} in ${selectedProject.name}`
             : 'Select a project to see your role.'}
         </p>
+      </section>
+
+      <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Project Members</p>
+          {selectedProject ? (
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-700">
+              {visibleProjectMembers.length}
+            </span>
+          ) : null}
+        </div>
+
+        {!selectedProject ? (
+          <p className="mt-1 text-sm text-slate-600">Select a project to see all members.</p>
+        ) : visibleProjectMembers.length === 0 ? (
+          <p className="mt-1 text-sm text-slate-600">No members found in this project yet.</p>
+        ) : (
+          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+            {visibleProjectMembers.map((member) => {
+              const memberName = member.full_name || member.email || member.user_id || 'Unknown member'
+
+              return (
+                <li key={member.member_id} className="rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2">
+                  <p className="text-sm font-semibold text-slate-900">{memberName}</p>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">{member.role}</p>
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </section>
 
       <CreateTaskSection

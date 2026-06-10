@@ -176,4 +176,39 @@ describe('TasksPage', () => {
     })
     expect(workspace.addTask).not.toHaveBeenCalled()
   })
+
+  it('shows all members of selected project', async () => {
+    const workspace = createWorkspaceState({
+      selectedProjectId: 'p1',
+      projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
+      projectMembers: [
+        {
+          member_id: 'm1',
+          project_id: 'p1',
+          user_id: 'u1',
+          role: 'owner',
+          joined_at: '2026-06-01T00:00:00.000Z',
+          full_name: 'Alice Johnson',
+          email: 'alice@example.com',
+        },
+        {
+          member_id: 'm2',
+          project_id: 'p1',
+          user_id: 'u2',
+          role: 'member',
+          joined_at: '2026-06-02T00:00:00.000Z',
+          full_name: null,
+          email: 'bob@example.com',
+        },
+      ],
+    })
+    mockUseWorkspace.mockReturnValue(workspace)
+
+    render(<TasksPage />)
+
+    expect(await screen.findByText('Alice Johnson')).toBeInTheDocument()
+    expect(screen.getByText('bob@example.com')).toBeInTheDocument()
+    expect(screen.getByText('owner')).toBeInTheDocument()
+    expect(screen.getByText('member')).toBeInTheDocument()
+  })
 })

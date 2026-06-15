@@ -149,6 +149,7 @@ describe('DashboardPage', () => {
       ],
       selectedProjectId: 'p1',
       currentUserId: 'u1',
+      getProjectRole: vi.fn(() => 'manager' as const),
     }))
   })
 
@@ -175,6 +176,34 @@ describe('DashboardPage', () => {
     expect(screen.getByText(/Implement API/)).toBeTruthy()
     expect(screen.queryByText(/Write docs/)).toBeNull()
     expect(screen.getByText('Current project: Apollo')).toBeTruthy()
+  })
+
+  it('shows consultant summary when user has no manager access', () => {
+    mockUseWorkspace.mockReturnValue(createWorkspaceState({
+      projects: [createProjectPreview({ id: 'p1', name: 'Apollo', status: 'active' })],
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Implement API',
+          status: 'in_progress',
+          priority: 'high',
+          assigned_to: 'u1',
+          actual_hours: 5,
+          project_id: 'p1',
+        }),
+      ],
+      selectedProjectId: 'p1',
+      currentUserId: 'u1',
+      getProjectRole: vi.fn(() => 'member' as const),
+    }))
+
+    render(<DashboardPage />)
+
+    expect(screen.getByText('Consultant dashboard: assigned tasks, due dates, and your tracked task hours.')).toBeTruthy()
+    expect(screen.getByText('My Open Tasks')).toBeTruthy()
+    expect(screen.getByText('Due This Week')).toBeTruthy()
+    expect(screen.getByText('My Tracked Task Hours')).toBeTruthy()
+    expect(screen.queryByText('Project Health')).toBeNull()
   })
 
   it('shows member tasks from all projects with priority and due date', async () => {

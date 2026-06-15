@@ -17,6 +17,7 @@ function createProjectPreview(overrides: Partial<ProjectPreview> = {}): ProjectP
     end_date: null,
     estimated_hours: 0,
     actual_hours: 0,
+    budget_amount: null,
     progress_percent: 0,
     risk_status: 'green',
     status: 'active',
@@ -163,6 +164,8 @@ describe('DashboardPage', () => {
     expect(screen.getByText('80% · Hours: 120 / 100')).toBeTruthy()
     expect(screen.getAllByText(/Start:/).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/Planned End:/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Forecast:/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Budget:/).length).toBeGreaterThan(0)
   })
 
   it('shows only open tasks assigned to current user in My Tasks', () => {

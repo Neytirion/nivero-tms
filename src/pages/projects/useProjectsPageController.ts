@@ -29,11 +29,13 @@ export function useProjectsPageController() {
     projectId: string | null
     name: string
     description: string
+    startDate: string
     deadline: string
   }>({
     projectId: null,
     name: '',
     description: '',
+    startDate: '',
     deadline: '',
   })
   const [isSaveSettingsConfirmOpen, setIsSaveSettingsConfirmOpen] = useState(false)
@@ -107,6 +109,7 @@ export function useProjectsPageController() {
           projectId: selectedProject?.id ?? null,
           name: selectedProject?.name ?? '',
           description: selectedProject?.description ?? '',
+          startDate: selectedProject?.start_date ?? '',
           deadline: selectedProject?.deadline_at ?? '',
         }
 
@@ -145,6 +148,7 @@ export function useProjectsPageController() {
             projectId: selectedProject.id,
             name: selectedProject.name,
             description: selectedProject.description ?? '',
+            startDate: selectedProject.start_date ?? '',
             deadline: selectedProject.deadline_at ?? '',
           }
 
@@ -200,9 +204,15 @@ export function useProjectsPageController() {
       return
     }
 
+    if (currentSettingsDraft.startDate && currentSettingsDraft.deadline && currentSettingsDraft.deadline < currentSettingsDraft.startDate) {
+      setStatus('Planned end date cannot be earlier than start date')
+      return
+    }
+
     await editProject(selectedProject.id, {
       name: currentSettingsDraft.name,
       description: currentSettingsDraft.description,
+      startDate: currentSettingsDraft.startDate || undefined,
       deadlineAt: currentSettingsDraft.deadline || undefined,
     })
 

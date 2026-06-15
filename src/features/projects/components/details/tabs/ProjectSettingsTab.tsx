@@ -3,6 +3,8 @@ interface ProjectSettingsTabProps {
   onSettingsNameChange: (value: string) => void
   settingsDescription: string
   onSettingsDescriptionChange: (value: string) => void
+  settingsStartDate: string
+  onSettingsStartDateChange: (value: string) => void
   settingsDeadline: string
   onSettingsDeadlineChange: (value: string) => void
   canEditSelectedProject: boolean
@@ -17,6 +19,8 @@ export function ProjectSettingsTab({
   onSettingsNameChange,
   settingsDescription,
   onSettingsDescriptionChange,
+  settingsStartDate,
+  onSettingsStartDateChange,
   settingsDeadline,
   onSettingsDeadlineChange,
   canEditSelectedProject,
@@ -29,29 +33,53 @@ export function ProjectSettingsTab({
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
       <h4 className="text-sm font-semibold text-slate-900">Project Settings</h4>
       <div className="mt-3 space-y-2">
-        <input
-          type="text"
-          value={settingsName}
-          onChange={(event) => onSettingsNameChange(event.target.value)}
-          placeholder="Project name"
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-          disabled={!canEditSelectedProject}
-        />
-        <input
-          type="text"
-          value={settingsDescription}
-          onChange={(event) => onSettingsDescriptionChange(event.target.value)}
-          placeholder="Project description"
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-          disabled={!canEditSelectedProject}
-        />
-        <input
-          type="date"
-          value={settingsDeadline}
-          onChange={(event) => onSettingsDeadlineChange(event.target.value)}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-          disabled={!canEditSelectedProject}
-        />
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Project Name</span>
+          <input
+            type="text"
+            value={settingsName}
+            onChange={(event) => onSettingsNameChange(event.target.value)}
+            placeholder="Project name"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            disabled={!canEditSelectedProject}
+          />
+        </label>
+
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Project Description</span>
+          <input
+            type="text"
+            value={settingsDescription}
+            onChange={(event) => onSettingsDescriptionChange(event.target.value)}
+            placeholder="Project description"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            disabled={!canEditSelectedProject}
+          />
+        </label>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Start Date</span>
+            <input
+              type="date"
+              value={settingsStartDate}
+              onChange={(event) => onSettingsStartDateChange(event.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+              disabled={!canEditSelectedProject}
+            />
+          </label>
+
+          <label className="block">
+            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Planned End Date</span>
+            <input
+              type="date"
+              value={settingsDeadline}
+              onChange={(event) => onSettingsDeadlineChange(event.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+              disabled={!canEditSelectedProject}
+            />
+          </label>
+        </div>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">

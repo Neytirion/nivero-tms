@@ -7,7 +7,7 @@ export async function getMyProjects() {
   const { data, error } = await supabase
     .from('projects')
     .select(
-      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,progress_percent,risk_status,status,completed_at,deadline_at,created_at',
+      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,created_at',
     )
     .order('created_at', { ascending: false })
 
@@ -83,11 +83,12 @@ export async function createProject(input: CreateProjectInput) {
       start_date: input.startDate ?? null,
       end_date: input.endDate ?? null,
       estimated_hours: input.estimatedHours ?? null,
+      budget_amount: input.budgetAmount ?? null,
       deadline_at: input.endDate ?? null,
       owner_id: userData.user.id,
     })
     .select(
-      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,progress_percent,risk_status,status,completed_at,deadline_at,created_at',
+      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,created_at',
     )
     .single()
 
@@ -124,10 +125,12 @@ export async function updateProject(projectId: string, patch: UpdateProjectInput
       name: patch.name,
       description: patch.description ?? null,
       deadline_at: patch.deadline_at ?? null,
+      start_date: patch.start_date ?? null,
+      budget_amount: patch.budget_amount !== undefined ? patch.budget_amount : undefined,
     })
     .eq('id', projectId)
     .select(
-      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,progress_percent,risk_status,status,completed_at,deadline_at,created_at',
+      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,created_at',
     )
     .maybeSingle()
 
@@ -167,7 +170,7 @@ export async function completeProject(projectId: string) {
     })
     .eq('id', projectId)
     .select(
-      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,progress_percent,risk_status,status,completed_at,deadline_at,created_at',
+      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,created_at',
     )
     .maybeSingle()
 

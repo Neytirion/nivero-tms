@@ -89,3 +89,64 @@ export function formatDate(value: string | null | undefined) {
 
   return new Date(value).toLocaleDateString()
 }
+
+export function deriveForecastCompletionDate(
+  project: Pick<
+    ProjectPreview,
+    'status' | 'start_date' | 'end_date' | 'progress_percent' | 'estimated_hours' | 'actual_hours'
+  >,
+): string | null {
+  if ((project.status ?? '').toLowerCase() === 'completed') {
+    return project.end_date ?? null
+  }
+
+  if (!project.start_date) {
+    return null
+  }
+
+  const startedAt = new Date(project.start_date)
+  if (Number.isNaN(startedAt.getTime())) {
+    return null
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  if (startedAt.getTime() > today.getTime()) {
+    return null
+  }
+
+  const progressPercent = deriveProgress(project)
+  if (progressPercent <= 0) {
+    return null
+  }
+
+  const elapsedMs = today.getTime() - startedAt.getTime()
+  const elapsedDays = Math.max(1, elapsedMs / (24 * 60 * 60 * 1000))
+  const projectedTotalDays = elapsedDays / (progressPercent / 100)
+
+  if (!Number.isFinite(projectedTotalDays)) {
+    return null
+  }
+
+  const forecastDate = new Date(startedAt)
+  forecastDate.setDate(forecastDate.getDate() + Math.round(projectedTotalDays))
+  return forecastDate.toISOString().slice(0, 10)
+}
+
+export function deriveBudgetConsumption(
+  project: Pick<ProjectPreview, 'budget_amount' | 'estimated_hours' | 'actual_hours'>,
+): { spentAmount: number; budgetAmount: number; burnPercent: number } | null {
+  const budget = project.budget_amount ?? 0
+  const estimated = project.estimated_hours ?? 0
+  const actual = project.actual_hours ?? 0
+
+  if (budget <= 0 || estimated <= 0 || actual < 0) {
+    return null
+  }
+
+  const spentAmount = Number(((actual / estimated) * budget).toFixed(2))
+  const burnPercent = Number(((spentAmount / budget) * 100).toFixed(1))
+
+  return { spentAmount, budgetAmount: budget, burnPercent }
+}

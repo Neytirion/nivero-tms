@@ -114,6 +114,8 @@ export function ProjectsPage() {
         onSettingsNameChange={(value) => updateSettingsDraft({ name: value })}
         settingsDescription={currentSettingsDraft.description}
         onSettingsDescriptionChange={(value) => updateSettingsDraft({ description: value })}
+        settingsStartDate={currentSettingsDraft.startDate}
+        onSettingsStartDateChange={(value) => updateSettingsDraft({ startDate: value })}
         settingsDeadline={currentSettingsDraft.deadline}
         onSettingsDeadlineChange={(value) => updateSettingsDraft({ deadline: value })}
         canEditSelectedProject={canEditSelectedProject}

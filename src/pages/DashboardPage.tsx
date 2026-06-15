@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useWorkspace } from '../features/dashboard/workspace-context.tsx'
 import { deriveProgress, deriveRisk } from '../features/projects/utils/project-metrics'
+import { deriveBudgetConsumption, deriveForecastCompletionDate } from '../features/projects/utils/project-metrics'
 import { getProjectTasks, type TaskPreview } from '../lib/pm'
 
 function formatDueDate(value: string | null | undefined) {
@@ -39,6 +40,11 @@ export function DashboardPage() {
           plannedEndDate: project.end_date,
           estimatedHours: project.estimated_hours ?? 0,
           actualHours: project.actual_hours ?? 0,
+          forecastDate: deriveForecastCompletionDate(project),
+          budgetConsumption: deriveBudgetConsumption(project),
+          isNotStarted: project.start_date
+            ? new Date(project.start_date).getTime() > Date.now()
+            : false,
         }
       }),
     [projects],
@@ -213,6 +219,20 @@ export function DashboardPage() {
                 <p className="mt-1 text-xs text-slate-600">
                   Planned End: {project.plannedEndDate ? formatDueDate(project.plannedEndDate) : 'Not set'}
                 </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Forecast:{' '}
+                  {project.isNotStarted
+                    ? 'Not started'
+                    : project.forecastDate
+                      ? formatDueDate(project.forecastDate)
+                      : 'Not enough data'}
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Budget:{' '}
+                  {project.budgetConsumption
+                    ? `${formatCurrency(project.budgetConsumption.spentAmount)} / ${formatCurrency(project.budgetConsumption.budgetAmount)} (${project.budgetConsumption.burnPercent}%)`
+                    : 'Not set'}
+                </p>
               </article>
             ))
           )}
@@ -268,4 +288,12 @@ function compareDueDateAsc(left: string | null | undefined, right: string | null
   }
 
   return left.localeCompare(right)
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  }).format(value)
 }

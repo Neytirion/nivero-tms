@@ -23,6 +23,7 @@ export type ProjectPreview = Pick<
   | 'end_date'
   | 'estimated_hours'
   | 'actual_hours'
+  | 'budget_amount'
   | 'progress_percent'
   | 'risk_status'
   | 'status'
@@ -118,12 +119,15 @@ export interface CreateProjectInput {
   startDate?: string
   endDate?: string
   estimatedHours?: number
+  budgetAmount?: number
 }
 
 export interface UpdateProjectInput {
   name: string
   description?: string
   deadline_at?: string
+  start_date?: string
+  budget_amount?: number
 }
 
 export interface CreateTaskInput {

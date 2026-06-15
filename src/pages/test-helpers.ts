@@ -14,6 +14,7 @@ export function createProjectPreview(overrides: Partial<ProjectPreview> = {}): P
     end_date: null,
     estimated_hours: 0,
     actual_hours: 0,
+    budget_amount: null,
     progress_percent: 0,
     risk_status: 'green',
     status: 'active',

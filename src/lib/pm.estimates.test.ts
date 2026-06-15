@@ -97,10 +97,10 @@ describe('pm.estimates', () => {
     expect(estimateEqCalls).not.toContainEqual(['status', 'approved'])
   })
 
-  it('limits non-manager members to approved estimate versions', async () => {
+  it('limits non-manager members to approved estimate versions when project has started', async () => {
     const estimateEqCalls: Array<[string, string]> = []
 
-    const projectMaybeSingle = vi.fn().mockResolvedValue({ data: { owner_id: 'owner-1' }, error: null })
+    const projectMaybeSingle = vi.fn().mockResolvedValue({ data: { owner_id: 'owner-1', start_date: '2026-01-01' }, error: null })
     const projectEq = vi.fn().mockReturnValue({ maybeSingle: projectMaybeSingle })
     const projectSelect = vi.fn().mockReturnValue({ eq: projectEq })
 
@@ -154,6 +154,78 @@ describe('pm.estimates', () => {
     await getProjectEstimates('p1')
 
     expect(estimateEqCalls).toContainEqual(['status', 'approved'])
+  })
+
+  it('hides estimates from regular members when project has not started yet', async () => {
+    const projectMaybeSingle = vi.fn().mockResolvedValue({ data: { owner_id: 'owner-1', start_date: '2999-01-01' }, error: null })
+    const projectEq = vi.fn().mockReturnValue({ maybeSingle: projectMaybeSingle })
+    const projectSelect = vi.fn().mockReturnValue({ eq: projectEq })
+
+    const membershipMaybeSingle = vi.fn().mockResolvedValue({ data: { role: 'member' }, error: null })
+    const membershipEqUser = vi.fn().mockReturnValue({ maybeSingle: membershipMaybeSingle })
+    const membershipEqProject = vi.fn().mockReturnValue({ eq: membershipEqUser })
+    const membershipSelect = vi.fn().mockReturnValue({ eq: membershipEqProject })
+
+    const estimatesSelect = vi.fn()
+
+    mocks.from.mockImplementation((table: string) => {
+      if (table === 'projects') return { select: projectSelect }
+      if (table === 'project_members') return { select: membershipSelect }
+      if (table === 'estimates') return { select: estimatesSelect }
+      throw new Error(`Unexpected table: ${table}`)
+    })
+
+    const result = await getProjectEstimates('p1')
+
+    expect(result).toHaveLength(0)
+    expect(estimatesSelect).not.toHaveBeenCalled()
+  })
+
+  it('allows manager to see estimates even when project has not started', async () => {
+    const projectMaybeSingle = vi.fn().mockResolvedValue({ data: { owner_id: 'owner-1', start_date: '2999-01-01' }, error: null })
+    const projectEq = vi.fn().mockReturnValue({ maybeSingle: projectMaybeSingle })
+    const projectSelect = vi.fn().mockReturnValue({ eq: projectEq })
+
+    const membershipMaybeSingle = vi.fn().mockResolvedValue({ data: { role: 'manager' }, error: null })
+    const membershipEqUser = vi.fn().mockReturnValue({ maybeSingle: membershipMaybeSingle })
+    const membershipEqProject = vi.fn().mockReturnValue({ eq: membershipEqUser })
+    const membershipSelect = vi.fn().mockReturnValue({ eq: membershipEqProject })
+
+    const estimatesRows = [{ id: 'e1', project_id: 'p1', version_number: 1, status: 'draft' }]
+    const estimatesQuery: {
+      eq: ReturnType<typeof vi.fn>
+      order: ReturnType<typeof vi.fn>
+      then: (resolve: (value: { data: unknown[]; error: null }) => void) => void
+    } = {
+      eq: vi.fn(() => estimatesQuery),
+      order: vi.fn(() => estimatesQuery),
+      then: (resolve) => resolve({ data: estimatesRows, error: null }),
+    }
+    const estimatesSelect = vi.fn().mockReturnValue(estimatesQuery)
+
+    const packagesQuery: {
+      in: ReturnType<typeof vi.fn>
+      order: ReturnType<typeof vi.fn>
+      then: (resolve: (value: { data: unknown[]; error: null }) => void) => void
+    } = {
+      in: vi.fn(() => packagesQuery),
+      order: vi.fn(() => packagesQuery),
+      then: (resolve) => resolve({ data: [], error: null }),
+    }
+    const packagesSelect = vi.fn().mockReturnValue(packagesQuery)
+
+    mocks.from.mockImplementation((table: string) => {
+      if (table === 'projects') return { select: projectSelect }
+      if (table === 'project_members') return { select: membershipSelect }
+      if (table === 'estimates') return { select: estimatesSelect }
+      if (table === 'work_packages') return { select: packagesSelect }
+      throw new Error(`Unexpected table: ${table}`)
+    })
+
+    const result = await getProjectEstimates('p1')
+
+    expect(result).toHaveLength(1)
+    expect(estimatesSelect).toHaveBeenCalled()
   })
 
   it('blocks approving non-latest estimate versions', async () => {

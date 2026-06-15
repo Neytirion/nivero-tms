@@ -35,6 +35,8 @@ export function DashboardPage() {
           name: project.name,
           progress,
           risk,
+          startDate: project.start_date,
+          plannedEndDate: project.end_date,
           estimatedHours: project.estimated_hours ?? 0,
           actualHours: project.actual_hours ?? 0,
         }
@@ -204,6 +206,12 @@ export function DashboardPage() {
 
                 <p className="mt-2 text-xs text-slate-600">
                   {project.progress}% · Hours: {project.actualHours} / {project.estimatedHours}
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Start: {project.startDate ? formatDueDate(project.startDate) : 'Not set'}
+                </p>
+                <p className="mt-1 text-xs text-slate-600">
+                  Planned End: {project.plannedEndDate ? formatDueDate(project.plannedEndDate) : 'Not set'}
                 </p>
               </article>
             ))

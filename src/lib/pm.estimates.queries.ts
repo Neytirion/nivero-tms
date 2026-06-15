@@ -34,7 +34,7 @@ export async function getLatestEstimateVersion(projectId: string) {
 export async function getProjectOwner(projectId: string) {
   const { data, error } = await supabase
     .from('projects')
-    .select('owner_id')
+    .select('owner_id,start_date')
     .eq('id', projectId)
     .maybeSingle()
 

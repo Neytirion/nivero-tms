@@ -109,6 +109,8 @@ describe('DashboardPage', () => {
           id: 'p1',
           name: 'Apollo',
           status: 'active',
+          start_date: '2026-06-01',
+          end_date: '2026-06-25',
           estimated_hours: 100,
           actual_hours: 120,
           progress_percent: 80,
@@ -159,6 +161,8 @@ describe('DashboardPage', () => {
     expect(screen.getAllByText('Apollo').length).toBeGreaterThan(0)
     expect(screen.getByText('Risk: Red')).toBeTruthy()
     expect(screen.getByText('80% · Hours: 120 / 100')).toBeTruthy()
+    expect(screen.getAllByText(/Start:/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Planned End:/).length).toBeGreaterThan(0)
   })
 
   it('shows only open tasks assigned to current user in My Tasks', () => {

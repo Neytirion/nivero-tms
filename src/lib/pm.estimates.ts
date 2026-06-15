@@ -72,6 +72,20 @@ export async function getProjectEstimates(projectId: string) {
   const isManager = (membershipData?.role ?? '').toLowerCase() === 'manager'
   const canViewDrafts = isOwner || isAdmin || isManager
 
+  // Spec: approved estimates are visible to regular members only after the project has started.
+  const isRegularMember = !isOwner && !isAdmin && !isManager
+  if (isRegularMember) {
+    const startDate = projectData?.start_date
+    const projectHasStarted =
+      typeof startDate === 'string' &&
+      startDate.length > 0 &&
+      new Date(startDate).getTime() <= Date.now()
+
+    if (!projectHasStarted) {
+      return [] as EstimateWithPackages[]
+    }
+  }
+
   const estimates = await getProjectEstimatePreviews(projectId, canViewDrafts)
 
   if (estimates.length === 0) {

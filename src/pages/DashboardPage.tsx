@@ -26,6 +26,7 @@ function formatDueDate(value: string | null | undefined) {
 export function DashboardPage() {
   const { projects, tasks, selectedProjectId, currentUserId, getProjectRole } = useWorkspace()
   const [memberTasksAcrossProjects, setMemberTasksAcrossProjects] = useState<TaskPreview[]>([])
+  const [dashboardModeOverride, setDashboardModeOverride] = useState<DashboardMode | null>(null)
   const hasManagerAccess = useMemo(
     () => projects.some((project) => {
       const role = getProjectRole(project.id)
@@ -33,7 +34,7 @@ export function DashboardPage() {
     }),
     [projects, getProjectRole],
   )
-  const [dashboardMode, setDashboardMode] = useState<DashboardMode>(hasManagerAccess ? 'manager' : 'consultant')
+  const dashboardMode: DashboardMode = dashboardModeOverride ?? (hasManagerAccess ? 'manager' : 'consultant')
 
   const healthItems = useMemo(
     () =>
@@ -72,16 +73,6 @@ export function DashboardPage() {
 
   const selectedProjectRole = selectedProjectId ? getProjectRole(selectedProjectId) : null
   const isMemberInSelectedProject = selectedProjectRole === 'member'
-
-  useEffect(() => {
-    setDashboardMode((prev) => {
-      if (!hasManagerAccess) {
-        return 'consultant'
-      }
-
-      return prev
-    })
-  }, [hasManagerAccess])
 
   useEffect(() => {
     let isCancelled = false
@@ -200,7 +191,7 @@ export function DashboardPage() {
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Mode</p>
           <button
             type="button"
-            onClick={() => setDashboardMode('consultant')}
+            onClick={() => setDashboardModeOverride('consultant')}
             className={`rounded-lg border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
               dashboardMode === 'consultant'
                 ? 'border-cyan-300 bg-cyan-100 text-cyan-900'
@@ -212,7 +203,7 @@ export function DashboardPage() {
           {hasManagerAccess ? (
             <button
               type="button"
-              onClick={() => setDashboardMode('manager')}
+              onClick={() => setDashboardModeOverride('manager')}
               className={`rounded-lg border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
                 dashboardMode === 'manager'
                   ? 'border-cyan-300 bg-cyan-100 text-cyan-900'

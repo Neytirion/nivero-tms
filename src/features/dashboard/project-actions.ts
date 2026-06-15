@@ -69,20 +69,21 @@ export function createProjectActions(config: ProjectActionsConfig) {
     patch: { name?: string; description?: string; deadlineAt?: string; startDate?: string },
   ) => {
     if (!config.ensureProjectEditable(projectId, 'edit project')) {
-      return
+      return false
     }
 
     if (!config.canManageProject(projectId)) {
       config.setStatus('Permission denied: only owner or admin can edit this project')
-      return
+      return false
     }
 
     if (!patch.name?.trim()) {
       config.setStatus('Project name is required')
-      return
+      return false
     }
 
     config.setIsLoading(true)
+    let success = false
 
     try {
       const updatedProject = await updateProject(projectId, {
@@ -96,11 +97,15 @@ export function createProjectActions(config: ProjectActionsConfig) {
         prev.map((project) => (project.id === projectId ? updatedProject : project)),
       )
       config.setStatus(`Project updated: ${updatedProject.name}`)
+      success = true
     } catch (error) {
       config.setStatus(error instanceof Error ? `Update project error: ${error.message}` : 'Unknown error')
+      success = false
+    } finally {
+      config.setIsLoading(false)
     }
 
-    config.setIsLoading(false)
+    return success
   }
 
   const removeProject = async (projectId: string) => {

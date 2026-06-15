@@ -119,15 +119,21 @@ export async function deleteProject(projectId: string) {
 export async function updateProject(projectId: string, patch: UpdateProjectInput) {
   await assertProjectEditable(projectId, 'edit project')
 
+  const updatePayload = {
+    name: patch.name,
+    ...(patch.description !== undefined
+      ? { description: patch.description.trim() ? patch.description : null }
+      : {}),
+    ...(patch.deadline_at !== undefined
+      ? { deadline_at: patch.deadline_at || null, end_date: patch.deadline_at || null }
+      : {}),
+    ...(patch.start_date !== undefined ? { start_date: patch.start_date || null } : {}),
+    ...(patch.budget_amount !== undefined ? { budget_amount: patch.budget_amount } : {}),
+  }
+
   const { data, error } = await supabase
     .from('projects')
-    .update({
-      name: patch.name,
-      description: patch.description ?? null,
-      deadline_at: patch.deadline_at ?? null,
-      start_date: patch.start_date ?? null,
-      budget_amount: patch.budget_amount !== undefined ? patch.budget_amount : undefined,
-    })
+    .update(updatePayload)
     .eq('id', projectId)
     .select(
       'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,created_at',

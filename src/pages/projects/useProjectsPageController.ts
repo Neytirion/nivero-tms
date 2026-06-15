@@ -110,7 +110,7 @@ export function useProjectsPageController() {
           name: selectedProject?.name ?? '',
           description: selectedProject?.description ?? '',
           startDate: selectedProject?.start_date ?? '',
-          deadline: selectedProject?.deadline_at ?? '',
+            deadline: selectedProject?.end_date ?? selectedProject?.deadline_at ?? '',
         }
 
   const filteredProjects = useMemo(() => {
@@ -149,7 +149,7 @@ export function useProjectsPageController() {
             name: selectedProject.name,
             description: selectedProject.description ?? '',
             startDate: selectedProject.start_date ?? '',
-            deadline: selectedProject.deadline_at ?? '',
+              deadline: selectedProject.end_date ?? selectedProject.deadline_at ?? '',
           }
 
     setSettingsDraft({
@@ -209,14 +209,16 @@ export function useProjectsPageController() {
       return
     }
 
-    await editProject(selectedProject.id, {
+    const wasSaved = await editProject(selectedProject.id, {
       name: currentSettingsDraft.name,
       description: currentSettingsDraft.description,
       startDate: currentSettingsDraft.startDate || undefined,
       deadlineAt: currentSettingsDraft.deadline || undefined,
     })
 
-    setIsSaveSettingsConfirmOpen(false)
+    if (wasSaved) {
+        setIsSaveSettingsConfirmOpen(false)
+      }
   }
 
   const deleteSelectedProjectHandler = async () => {

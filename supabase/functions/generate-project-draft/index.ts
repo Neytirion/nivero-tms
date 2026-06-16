@@ -9,10 +9,95 @@
  */
 
 import { serve } from 'https://deno.land/std@0.208.0/http/server.ts'
-import { validateAiProjectDraft } from '../../../src/lib/ai/ai.schemas.ts'
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions'
+const MAX_INPUT_LENGTH = 10000
+const MIN_INPUT_LENGTH = 10
+const REQUEST_TIMEOUT_MS = 30000
+
+interface ValidationError {
+  [key: string]: string[]
+}
+
+/**
+ * Validate AI project draft structure without external dependencies
+ */
+function validateProjectDraft(data: unknown): { valid: boolean; errors?: ValidationError } {
+  if (!data || typeof data !== 'object') {
+    return { valid: false, errors: { _general: ['Expected object'] } }
+  }
+
+  const obj = data as Record<string, unknown>
+  const errors: ValidationError = {}
+
+  // Validate project
+  if (!obj.project || typeof obj.project !== 'object') {
+    errors.project = ['Project is required and must be an object']
+  } else {
+    const project = obj.project as Record<string, unknown>
+    if (!project.name || typeof project.name !== 'string' || project.name.length < 3 || project.name.length > 255) {
+      errors['project.name'] = ['Name must be 3-255 characters']
+    }
+    if (typeof project.estimated_hours !== 'number' || project.estimated_hours < 0) {
+      errors['project.estimated_hours'] = ['Must be a non-negative number']
+    }
+  }
+
+  // Validate estimates
+  if (!obj.estimates || typeof obj.estimates !== 'object') {
+    errors.estimates = ['Estimates is required and must be an object']
+  } else {
+    const estimates = obj.estimates as Record<string, unknown>
+    if (!Array.isArray(estimates.work_packages) || estimates.work_packages.length === 0) {
+      errors['estimates.work_packages'] = ['At least one work package is required']
+    } else {
+      const workPackages = estimates.work_packages as unknown[]
+      for (let i = 0; i < workPackages.length; i++) {
+        const pkg = workPackages[i]
+        if (!pkg || typeof pkg !== 'object') {
+          errors[`work_package_${i}`] = ['Must be an object']
+          continue
+        }
+        const pkgObj = pkg as Record<string, unknown>
+        if (!pkgObj.name || typeof pkgObj.name !== 'string' || pkgObj.name.length < 3) {
+          errors[`work_package_${i}.name`] = ['Name must be at least 3 characters']
+        }
+        if (typeof pkgObj.estimated_hours !== 'number' || pkgObj.estimated_hours < 0) {
+          errors[`work_package_${i}.estimated_hours`] = ['Must be a non-negative number']
+        }
+        if (!Array.isArray(pkgObj.tasks) || pkgObj.tasks.length === 0) {
+          errors[`work_package_${i}.tasks`] = ['At least one task is required']
+        } else {
+          const tasks = pkgObj.tasks as unknown[]
+          for (let j = 0; j < tasks.length; j++) {
+            const task = tasks[j]
+            if (!task || typeof task !== 'object') {
+              errors[`task_${i}_${j}`] = ['Must be an object']
+              continue
+            }
+            const taskObj = task as Record<string, unknown>
+            if (!taskObj.title || typeof taskObj.title !== 'string' || taskObj.title.length < 3) {
+              errors[`task_${i}_${j}.title`] = ['Title must be at least 3 characters']
+            }
+            if (typeof taskObj.estimate_hours !== 'number' || taskObj.estimate_hours < 0) {
+              errors[`task_${i}_${j}.estimate_hours`] = ['Must be a non-negative number']
+            }
+            if (!taskObj.priority || !['low', 'medium', 'high'].includes(taskObj.priority as string)) {
+              errors[`task_${i}_${j}.priority`] = ['Must be one of: low, medium, high']
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return { valid: false, errors }
+  }
+
+  return { valid: true }
+}
 
 serve(async (req) => {
   // Handle CORS
@@ -20,8 +105,8 @@ serve(async (req) => {
     return new Response(null, {
       headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-client-info, apikey',
       },
     })
   }
@@ -42,6 +127,34 @@ serve(async (req) => {
         JSON.stringify({
           success: false,
           error: 'Text input is required',
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    const trimmedText = text.trim()
+
+    if (trimmedText.length < MIN_INPUT_LENGTH) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Project description must be at least ${MIN_INPUT_LENGTH} characters`,
+        }),
+        {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    if (trimmedText.length > MAX_INPUT_LENGTH) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `Project description must not exceed ${MAX_INPUT_LENGTH} characters`,
         }),
         {
           status: 400,
@@ -98,7 +211,7 @@ Return ONLY valid JSON (no markdown, no extra text) matching this exact structur
   }
 }
 
-User input: "${text.replace(/"/g, '\\"')}"
+User input: "${trimmedText.replace(/"/g, '\\"')}"
 
 Requirements:
 - Generate realistic project breakdown
@@ -109,24 +222,47 @@ Requirements:
 - Return ONLY the JSON object, nothing else
 `
 
-    const openaiResponse = await fetch(OPENAI_API_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
+    let openaiResponse
+    try {
+      openaiResponse = await fetch(OPENAI_API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages: [
+            {
+              role: 'user',
+              content: prompt,
+            },
+          ],
+          temperature: 0.7,
+          max_tokens: 4000,
+        }),
+        signal: controller.signal,
+      })
+    } catch (fetchError) {
+      clearTimeout(timeoutId)
+      if (fetchError instanceof DOMException && fetchError.name === 'AbortError') {
+        return new Response(
+          JSON.stringify({
+            success: false,
+            error: 'Request timed out. Please try again with a shorter description.',
+          }),
           {
-            role: 'user',
-            content: prompt,
-          },
-        ],
-        temperature: 0.7,
-        max_tokens: 4000,
-      }),
-    })
+            status: 504,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        )
+      }
+      throw fetchError
+    }
+    clearTimeout(timeoutId)
 
     if (!openaiResponse.ok) {
       const error = await openaiResponse.json()
@@ -176,7 +312,7 @@ Requirements:
     }
 
     // Validate against schema
-    const validation = validateAiProjectDraft(draftData)
+    const validation = validateProjectDraft(draftData)
 
     if (!validation.valid) {
       return new Response(
@@ -195,11 +331,14 @@ Requirements:
     return new Response(
       JSON.stringify({
         success: true,
-        draft: validation.data,
+        draft: draftData,
       }),
       {
         status: 200,
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*',
+        },
       }
     )
   } catch (error) {

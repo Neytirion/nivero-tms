@@ -3,7 +3,7 @@
  * Allows manual project creation or AI-powered generation
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AiProjectGeneratorModal } from '../../ai'
 import type { AiProjectDraft } from '../../../../lib/ai'
 
@@ -42,6 +42,13 @@ export function CreateProjectWithAiModal({
 }: CreateProjectWithAiModalProps) {
   const [mode, setMode] = useState<'manual' | 'ai'>('manual')
   const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false)
+
+  // Open AI generator automatically when AI mode is selected
+  useEffect(() => {
+    if (mode === 'ai' && !isAiGeneratorOpen) {
+      setIsAiGeneratorOpen(true)
+    }
+  }, [mode, isAiGeneratorOpen])
 
   if (!isOpen) {
     return null
@@ -158,7 +165,7 @@ export function CreateProjectWithAiModal({
             <div className="mt-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-700">
               <p className="font-medium">Generate with AI</p>
               <p className="mt-1 text-xs">
-                Describe your project and AI will generate the structure, work packages, and tasks. You can review and adjust before creating.
+                Click "Generate Project" to open the AI generator and describe your project.
               </p>
             </div>
           )}
@@ -197,7 +204,10 @@ export function CreateProjectWithAiModal({
       {/* AI Generator Modal */}
       <AiProjectGeneratorModal
         isOpen={isAiGeneratorOpen}
-        onClose={() => setIsAiGeneratorOpen(false)}
+        onClose={() => {
+          setIsAiGeneratorOpen(false)
+          setMode('manual')
+        }}
         onConfirm={onCreateFromAiDraft}
       />
     </>

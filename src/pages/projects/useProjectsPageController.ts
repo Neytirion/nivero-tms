@@ -4,6 +4,8 @@ import { useProjectForm } from '../../features/projects/hooks/useProjectForm.ts'
 import { deriveRisk } from '../../features/projects/utils/project-metrics.ts'
 import { hasProjectPermission } from '../../shared/utils/permissions'
 import type { DetailsTab } from '../../features/projects/components'
+import type { AiProjectDraft } from '../../lib/ai'
+import { createProjectFromAiDraft } from '../../lib/ai/ai-mapper'
 
 export function useProjectsPageController() {
   const {
@@ -173,6 +175,24 @@ export function useProjectsPageController() {
     setIsCreateModalOpen(false)
   }
 
+  const createProjectFromAiDraftHandler = async (draft: AiProjectDraft) => {
+    try {
+      setStatus('Creating project from AI draft...')
+      const result = await createProjectFromAiDraft(draft)
+      
+      setStatus(`Project created with ${result.taskCount} tasks!`)
+      reset()
+      setIsCreateModalOpen(false)
+      
+      // Refresh projects
+      await loadDashboardPreview()
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create project from AI draft'
+      setStatus(errorMessage)
+      console.error('Error creating project from AI draft:', error)
+    }
+  }
+
   const inviteMemberHandler = async () => {
     const email = memberEmail.trim()
 
@@ -291,6 +311,7 @@ export function useProjectsPageController() {
     currentSettingsDraft,
     updateSettingsDraft,
     createProjectHandler,
+    createProjectFromAiDraftHandler,
     inviteMemberHandler,
     completeProjectHandler,
     saveProjectSettings,

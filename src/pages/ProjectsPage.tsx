@@ -1,5 +1,5 @@
 import { ConfirmDialog } from '../shared/components'
-import { CreateProjectModal, ProjectDetailsSection, ProjectsSummaryCards, ProjectsTable } from '../features/projects/components'
+import { CreateProjectWithAiModal, ProjectDetailsSection, ProjectsSummaryCards, ProjectsTable } from '../features/projects/components'
 import { useProjectsPageController } from './projects/useProjectsPageController'
 
 export function ProjectsPage() {
@@ -56,6 +56,7 @@ export function ProjectsPage() {
     currentSettingsDraft,
     updateSettingsDraft,
     createProjectHandler,
+    createProjectFromAiDraftHandler,
     inviteMemberHandler,
     completeProjectHandler,
     saveProjectSettings,
@@ -178,7 +179,7 @@ export function ProjectsPage() {
         onConfirm={deleteSelectedProjectHandler}
       />
 
-      <CreateProjectModal
+      <CreateProjectWithAiModal
         isOpen={isCreateModalOpen}
         projectName={projectName}
         projectCustomer={projectCustomer}
@@ -191,6 +192,7 @@ export function ProjectsPage() {
         onProjectStartDateChange={setProjectStartDate}
         onProjectEndDateChange={setProjectEndDate}
         onCreate={createProjectHandler}
+        onCreateFromAiDraft={createProjectFromAiDraftHandler}
         onClose={() => {
           setIsCreateModalOpen(false)
           reset()

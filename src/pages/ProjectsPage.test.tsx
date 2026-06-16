@@ -17,6 +17,7 @@ vi.mock('../features/projects/components', () => ({
   ProjectsSummaryCards: () => <div>summary-cards</div>,
   ProjectsTable: () => <div>projects-table</div>,
   CreateProjectModal: () => null,
+  CreateProjectWithAiModal: () => null,
   ProjectDetailsSection: (props: {
     onInviteMember: () => void
     onMemberEmailChange: (value: string) => void

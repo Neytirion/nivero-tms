@@ -83,7 +83,6 @@ export function createProjectActions(config: ProjectActionsConfig) {
     }
 
     config.setIsLoading(true)
-    let success = false
 
     try {
       const updatedProject = await updateProject(projectId, {
@@ -97,15 +96,13 @@ export function createProjectActions(config: ProjectActionsConfig) {
         prev.map((project) => (project.id === projectId ? updatedProject : project)),
       )
       config.setStatus(`Project updated: ${updatedProject.name}`)
-      success = true
+      return true
     } catch (error) {
       config.setStatus(error instanceof Error ? `Update project error: ${error.message}` : 'Unknown error')
-      success = false
+      return false
     } finally {
       config.setIsLoading(false)
     }
-
-    return success
   }
 
   const removeProject = async (projectId: string) => {

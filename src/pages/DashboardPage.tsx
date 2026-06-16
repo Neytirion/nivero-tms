@@ -54,7 +54,7 @@ export function DashboardPage() {
           forecastDate: deriveForecastCompletionDate(project),
           budgetConsumption: deriveBudgetConsumption(project),
           isNotStarted: project.start_date
-            ? new Date(project.start_date).getTime() > Date.now()
+            ? new Date(project.start_date).getTime() > new Date().getTime()
             : false,
         }
       }),

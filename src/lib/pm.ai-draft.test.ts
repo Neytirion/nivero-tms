@@ -117,7 +117,7 @@ describe('createProjectFromAiDraft (atomic flow)', () => {
 
     expect(estimateError).toBeNull()
     expect(estimate?.version_number).toBe(1)
-    expect(estimate?.status).toBeLower()
+    expect(estimate?.status).toBe('draft')
 
     // Verify work packages were created
     const { data: workPackages, error: wpError } = await supabase

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { ProjectPreview } from '../../lib/pm'
+import type { ProjectPreview, TimeEntryPreview } from '../../lib/pm'
 import { endOfWeek, startOfWeek, toDateInputValue } from '../time-tracking.utils'
 import { useTimeTrackingFilters } from './useTimeTrackingFilters'
 import { useTimeTrackingManualForm } from './useTimeTrackingManualForm'
@@ -138,7 +138,7 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
     })
   }
 
-  const handleBeginEditEntry = (entry) => {
+  const handleBeginEditEntry = (entry: TimeEntryPreview) => {
     beginEditEntry(entry, setEditingEntryId, setActiveProjectId, setWeekAnchorDate)
   }
 

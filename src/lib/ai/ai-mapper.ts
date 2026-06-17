@@ -40,7 +40,7 @@ export async function createProjectFromAiDraft(draft: AiProjectDraft) {
     )
 
     // Call atomic RPC function
-    const { data, error } = await supabase.rpc('create_project_from_ai_draft', {
+    const { data, error } = await (supabase.rpc as any)('create_project_from_ai_draft', {
       p_project_name: draft.project.name,
       p_project_customer_name: draft.project.customer_name ?? null,
       p_project_start_date: draft.project.start_date ?? null,
@@ -62,7 +62,7 @@ export async function createProjectFromAiDraft(draft: AiProjectDraft) {
       throw new Error('Unexpected response from server')
     }
 
-    const result = data as CreateProjectFromDraftResult
+    const result = (data ?? {}) as unknown as CreateProjectFromDraftResult
 
     return {
       success: true,

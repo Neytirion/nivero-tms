@@ -223,12 +223,66 @@ export type ProjectPreview = Pick<
 
 ---
 
-## Recommended Next Steps (Priority Order)
+## 11. Hierarchical Hook Composition for Page Controllers
 
-1. **Phase 22 (Architecture Cleanup)**
-   - Refactor large page controllers into smaller hooks
-   - Centralize SELECT field lists in query constants
-   - Add unified error codes/types
+**Decision** (Phase 22): Split monolithic page controllers (300+ lines) into specialized single-responsibility hooks organized by domain.
+
+**Problem Addressed**:
+- Large page controllers (`useTimeTrackingController`, `useProjectsPageController`, etc.) mixed multiple concerns
+- Difficult to test, understand, and maintain
+- High cognitive load when adding features
+
+**Solution**:
+```typescript
+// Composition pattern:
+usePageController() {
+  const filters = usePageFilters(data)
+  const form = usePageForm()
+  const modals = usePageModals()
+  const actions = usePageActions(inputs)
+  
+  // Orchestrate composed hooks
+  return { ...filters, ...form, ...modals, ...actions, derivedState, workspaceData }
+}
+```
+
+**Applied To** (Phase 22 - Complete):
+- **TimeTrackingPage**: 350→220 lines (4 hooks)
+  - [useTimeTrackingFilters](../src/pages/time-tracking/useTimeTrackingFilters.ts) – project, week, edit mode
+  - [useTimeTrackingManualForm](../src/pages/time-tracking/useTimeTrackingManualForm.ts) – form state
+  - [useTimeTrackingTimer](../src/pages/time-tracking/useTimeTrackingTimer.ts) – timer lifecycle
+  - [useTimeTrackingActions](../src/pages/time-tracking/useTimeTrackingActions.ts) – API calls, mutations
+  - Testing: ✅ All 10 tests pass
+
+- **ProjectsPage**: 294→230 lines (5 hooks)
+  - [useProjectsPageFilters](../src/pages/projects/useProjectsPageFilters.ts) – search, tabs
+  - [useProjectsMemberForm](../src/pages/projects/useProjectsMemberForm.ts) – member invite, roles
+  - [useProjectsSettingsForm](../src/pages/projects/useProjectsSettingsForm.ts) – project metadata
+  - [useProjectsModals](../src/pages/projects/useProjectsModals.ts) – dialog states
+  - [useProjectsActions](../src/pages/projects/useProjectsActions.ts) – async handlers
+  - Testing: ✅ All 3 tests pass
+
+**Benefits**:
+- ✓ Reduced cognitive load (30% avg complexity reduction)
+- ✓ Single Responsibility Principle
+- ✓ Improved testability
+- ✓ Better code reuse across pages
+- ✓ Clearer data flow and state management
+
+**Tradeoffs**:
+- More files to navigate (4-5 per page)
+- Additional memoization calls
+- Slightly more prop-drilling through composition
+
+**See Also**: [phase-22-controller-refactoring.md](./phase-22-controller-refactoring.md) for detailed metrics and lessons learned
+
+---
+
+## Future Phases
+
+1. **Phase 22c (Controller Refactoring - Final)**
+   - Refactor [useTasksPageController](../src/pages/tasks/useTasksPageController.ts) (309 lines)
+   - Apply same 5-hook pattern (filters, form, modals, actions, board-logic)
 
 2. **Phase 23 (Integration Tests)**
    - End-to-end test workflows (project → estimate → tasks → time tracking)
@@ -239,6 +293,11 @@ export type ProjectPreview = Pick<
    - Consider TanStack Query for server state
    - Split workspace state into domain slices
    - Add optimistic updates for mutations
+
+4. **Phase 25 (Documentation)**
+   - API documentation (auto-generated from RPC functions)
+   - Component storybook for UI library
+   - Onboarding guide for developers
 
 4. **Phase 25 (Documentation)**
    - API documentation (auto-generated from RPC functions)

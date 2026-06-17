@@ -34,7 +34,7 @@ export function ProjectsPage() {
     setMemberEmail,
     setMemberRole,
     pendingRoleByUserId,
-    setPendingRoleByUserId,
+    updatePendingRole,
     isCompleteConfirmOpen,
     setIsCompleteConfirmOpen,
     isSaveSettingsConfirmOpen,
@@ -136,12 +136,7 @@ export function ProjectsPage() {
         onInviteMember={inviteMemberHandler}
         projectMembers={projectMembers}
         pendingRoleByUserId={pendingRoleByUserId}
-        onPendingRoleChange={(userId, role) =>
-          setPendingRoleByUserId((prev) => ({
-            ...prev,
-            [userId]: role,
-          }))
-        }
+        onPendingRoleChange={updatePendingRole}
         selectedProjectOwnerId={selectedProject?.owner_id}
         onSaveRole={updateMemberRoleHandler}
         onOpenDeleteConfirm={() => setIsDeleteConfirmOpen(true)}

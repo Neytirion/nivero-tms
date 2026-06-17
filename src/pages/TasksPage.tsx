@@ -87,36 +87,6 @@ export function TasksPage() {
         </p>
       </section>
 
-      <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Project Members</p>
-          {selectedProject ? (
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-700">
-              {visibleProjectMembers.length}
-            </span>
-          ) : null}
-        </div>
-
-        {!selectedProject ? (
-          <p className="mt-1 text-sm text-slate-600">Select a project to see all members.</p>
-        ) : visibleProjectMembers.length === 0 ? (
-          <p className="mt-1 text-sm text-slate-600">No members found in this project yet.</p>
-        ) : (
-          <ul className="mt-3 grid gap-2 sm:grid-cols-2">
-            {visibleProjectMembers.map((member) => {
-              const memberName = member.full_name || member.email || member.user_id || 'Unknown member'
-
-              return (
-                <li key={member.member_id} className="rounded-lg border border-slate-200 bg-slate-50/70 px-3 py-2">
-                  <p className="text-sm font-semibold text-slate-900">{memberName}</p>
-                  <p className="text-xs uppercase tracking-wide text-slate-500">{member.role}</p>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </section>
-
       <CreateTaskSection
         hasEstimateVersion={hasEstimateVersion}
         selectedProjectId={selectedProjectId}
@@ -188,6 +158,36 @@ export function TasksPage() {
         onShiftCalendarMonth={shiftCalendarMonth}
         calendarMeta={calendarMeta}
       />
+
+      <section className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-3 py-2.5">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-[11px] font-medium tracking-[0.12em] text-slate-500">Project Members</p>
+          {selectedProject ? (
+            <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-500">
+              {visibleProjectMembers.length}
+            </span>
+          ) : null}
+        </div>
+
+        {!selectedProject ? (
+          <p className="mt-1 text-xs text-slate-500">Select a project to see members.</p>
+        ) : visibleProjectMembers.length === 0 ? (
+          <p className="mt-1 text-xs text-slate-500">No members found in this project yet.</p>
+        ) : (
+          <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
+            {visibleProjectMembers.map((member) => {
+              const memberName = member.full_name || member.email || member.user_id || 'Unknown member'
+
+              return (
+                <li key={member.member_id} className="rounded-md border border-slate-200 bg-white/80 px-2.5 py-1.5">
+                  <p className="text-xs font-medium text-slate-700">{memberName}</p>
+                  <p className="text-[11px] uppercase tracking-wide text-slate-400">{member.role}</p>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </section>
 
       <TaskLogTimeModal
         isOpen={Boolean(logTimeTask)}

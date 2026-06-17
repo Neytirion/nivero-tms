@@ -15,9 +15,95 @@ interface AiProjectGeneratorModalProps {
 
 export function AiProjectGeneratorModal({ isOpen, onClose, onConfirm }: AiProjectGeneratorModalProps) {
   const [inputText, setInputText] = useState('')
-  const [fileName, setFileName] = useState<string | null>(null)
   const [isConfirming, setIsConfirming] = useState(false)
+  const [draftEdits, setDraftEdits] = useState<AiProjectDraft | null>(null)
   const { isLoading, error, preview, validationErrors, generate, reset } = useGenerateProject()
+
+  const effectiveDraft = draftEdits ?? preview
+
+  const updateProjectField = <K extends keyof AiProjectDraft['project']>(
+    key: K,
+    value: AiProjectDraft['project'][K]
+  ) => {
+    if (!effectiveDraft) return
+
+    setDraftEdits((prev) => {
+      const base = prev ?? effectiveDraft
+      return {
+        ...base,
+        project: {
+          ...base.project,
+          [key]: value,
+        },
+      }
+    })
+  }
+
+  const updateWorkPackageField = (workPackageIndex: number, key: 'name' | 'estimated_hours', value: string | number) => {
+    if (!effectiveDraft) return
+
+    setDraftEdits((prev) => {
+      const base = prev ?? effectiveDraft
+      return {
+        ...base,
+        estimates: {
+          ...base.estimates,
+          work_packages: base.estimates.work_packages.map((workPackage, index) => {
+            if (index !== workPackageIndex) return workPackage
+            return {
+              ...workPackage,
+              [key]: value,
+            }
+          }),
+        },
+      }
+    })
+  }
+
+  const updateTaskField = (
+    workPackageIndex: number,
+    taskIndex: number,
+    key: 'title' | 'priority' | 'estimate_hours',
+    value: string | number
+  ) => {
+    if (!effectiveDraft) return
+
+    setDraftEdits((prev) => {
+      const base = prev ?? effectiveDraft
+      return {
+        ...base,
+        estimates: {
+          ...base.estimates,
+          work_packages: base.estimates.work_packages.map((workPackage, wpIndex) => {
+            if (wpIndex !== workPackageIndex) return workPackage
+            return {
+              ...workPackage,
+              tasks: workPackage.tasks.map((task, tIndex) => {
+                if (tIndex !== taskIndex) return task
+                return {
+                  ...task,
+                  [key]: value,
+                }
+              }),
+            }
+          }),
+        },
+      }
+    })
+  }
+
+  const hasInvalidDraft =
+    !!effectiveDraft &&
+    (
+      !effectiveDraft.project.name.trim() ||
+      effectiveDraft.project.name.trim().length < 3 ||
+      effectiveDraft.project.estimated_hours < 0 ||
+      effectiveDraft.estimates.work_packages.some((workPackage) =>
+        !workPackage.name.trim() ||
+        workPackage.estimated_hours < 0 ||
+        workPackage.tasks.some((task) => !task.title.trim() || task.estimate_hours < 0)
+      )
+    )
 
   if (!isOpen) return null
 
@@ -25,24 +111,15 @@ export function AiProjectGeneratorModal({ isOpen, onClose, onConfirm }: AiProjec
     await generate(inputText)
   }
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-
-    setFileName(file.name)
-    const text = await file.text()
-    setInputText(text)
-  }
-
   const handleConfirm = async () => {
-    if (!preview) return
+    if (!effectiveDraft || hasInvalidDraft) return
 
     setIsConfirming(true)
     try {
-      await onConfirm(preview)
+      await onConfirm(effectiveDraft)
       reset()
       setInputText('')
-      setFileName(null)
+      setDraftEdits(null)
       onClose()
     } catch (err) {
       console.error('Error confirming project:', err)
@@ -54,7 +131,7 @@ export function AiProjectGeneratorModal({ isOpen, onClose, onConfirm }: AiProjec
   const handleClose = () => {
     reset()
     setInputText('')
-    setFileName(null)
+    setDraftEdits(null)
     onClose()
   }
 
@@ -63,7 +140,7 @@ export function AiProjectGeneratorModal({ isOpen, onClose, onConfirm }: AiProjec
       <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
         <h2 className="mb-4 text-2xl font-bold">Generate Project with AI</h2>
 
-        {!preview ? (
+        {!effectiveDraft ? (
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
               Describe your project in detail and let AI create the structure for you.
@@ -79,19 +156,6 @@ export function AiProjectGeneratorModal({ isOpen, onClose, onConfirm }: AiProjec
                 disabled={isLoading}
                 className="w-full rounded-lg border border-gray-300 p-3 text-sm disabled:bg-gray-100"
                 rows={6}
-              />
-              {fileName && <p className="mt-1 text-xs text-gray-500">Uploaded: {fileName}</p>}
-            </div>
-
-            {/* File upload */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Or Upload a File</label>
-              <input
-                type="file"
-                accept=".txt,.md,.doc,.docx"
-                onChange={handleFileUpload}
-                disabled={isLoading}
-                className="block w-full text-sm text-gray-500 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-medium file:text-blue-600 hover:file:bg-blue-100 disabled:opacity-50"
               />
             </div>
 
@@ -131,56 +195,138 @@ export function AiProjectGeneratorModal({ isOpen, onClose, onConfirm }: AiProjec
         ) : (
           /* Preview section */
           <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Preview Your Project</h3>
+            <h3 className="text-lg font-semibold">Review and Edit Before Creation</h3>
 
             {/* Project info */}
             <div className="rounded-lg bg-blue-50 p-4">
-              <h4 className="font-semibold text-blue-900">{preview.project.name}</h4>
-              {preview.project.description && <p className="mt-1 text-sm text-blue-800">{preview.project.description}</p>}
-              {preview.project.customer_name && (
-                <p className="mt-1 text-xs text-blue-700">Customer: {preview.project.customer_name}</p>
-              )}
-              <div className="mt-2 flex gap-4 text-xs text-blue-700">
-                {preview.project.start_date && <div>Starts: {preview.project.start_date}</div>}
-                {preview.project.end_date && <div>Ends: {preview.project.end_date}</div>}
-                <div>Est. Hours: {preview.project.estimated_hours}</div>
-                {preview.project.budget_amount && <div>Budget: ${preview.project.budget_amount}</div>}
+              <h4 className="mb-3 font-semibold text-blue-900">Project</h4>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <label className="text-xs text-blue-900">
+                  Name
+                  <input
+                    type="text"
+                    value={effectiveDraft.project.name}
+                    onChange={(event) => updateProjectField('name', event.target.value)}
+                    className="mt-1 w-full rounded border border-blue-200 px-2 py-1 text-sm text-slate-900"
+                  />
+                </label>
+                <label className="text-xs text-blue-900">
+                  Customer
+                  <input
+                    type="text"
+                    value={effectiveDraft.project.customer_name ?? ''}
+                    onChange={(event) => updateProjectField('customer_name', event.target.value || undefined)}
+                    className="mt-1 w-full rounded border border-blue-200 px-2 py-1 text-sm text-slate-900"
+                  />
+                </label>
+                <label className="text-xs text-blue-900">
+                  Start Date
+                  <input
+                    type="date"
+                    value={effectiveDraft.project.start_date ?? ''}
+                    onChange={(event) => updateProjectField('start_date', event.target.value || undefined)}
+                    className="mt-1 w-full rounded border border-blue-200 px-2 py-1 text-sm text-slate-900"
+                  />
+                </label>
+                <label className="text-xs text-blue-900">
+                  End Date
+                  <input
+                    type="date"
+                    value={effectiveDraft.project.end_date ?? ''}
+                    onChange={(event) => updateProjectField('end_date', event.target.value || undefined)}
+                    className="mt-1 w-full rounded border border-blue-200 px-2 py-1 text-sm text-slate-900"
+                  />
+                </label>
+                <label className="text-xs text-blue-900">
+                  Estimated Hours
+                  <input
+                    type="number"
+                    min={0}
+                    value={effectiveDraft.project.estimated_hours}
+                    onChange={(event) => updateProjectField('estimated_hours', Number(event.target.value) || 0)}
+                    className="mt-1 w-full rounded border border-blue-200 px-2 py-1 text-sm text-slate-900"
+                  />
+                </label>
+                <label className="text-xs text-blue-900">
+                  Budget
+                  <input
+                    type="number"
+                    min={0}
+                    value={effectiveDraft.project.budget_amount ?? ''}
+                    onChange={(event) =>
+                      updateProjectField(
+                        'budget_amount',
+                        event.target.value === '' ? undefined : Number(event.target.value)
+                      )
+                    }
+                    className="mt-1 w-full rounded border border-blue-200 px-2 py-1 text-sm text-slate-900"
+                  />
+                </label>
               </div>
             </div>
 
             {/* Work packages and tasks preview */}
             <div className="space-y-3">
-              {preview.estimates.work_packages.map((pkg, pkgIdx) => (
+              {effectiveDraft.estimates.work_packages.map((pkg, pkgIdx) => (
                 <div key={pkgIdx} className="rounded-lg border border-gray-200 p-3">
-                  <div className="flex items-center justify-between">
-                    <h5 className="font-medium">{pkg.name}</h5>
-                    <span className="text-xs font-semibold text-gray-600">{pkg.estimated_hours}h</span>
+                  <div className="grid gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+                    <input
+                      type="text"
+                      value={pkg.name}
+                      onChange={(event) => updateWorkPackageField(pkgIdx, 'name', event.target.value)}
+                      className="rounded border border-gray-300 px-2 py-1 text-sm font-medium text-slate-900"
+                    />
+                    <input
+                      type="number"
+                      min={0}
+                      value={pkg.estimated_hours}
+                      onChange={(event) => updateWorkPackageField(pkgIdx, 'estimated_hours', Number(event.target.value) || 0)}
+                      className="w-28 rounded border border-gray-300 px-2 py-1 text-xs font-semibold text-gray-700"
+                    />
                   </div>
                   <ul className="mt-2 space-y-1">
-                    {pkg.tasks.slice(0, 3).map((task, taskIdx) => (
-                      <li key={taskIdx} className="text-sm text-gray-700">
-                        • {task.title}
-                        <span className="ml-2 inline-block rounded px-2 py-0.5 text-xs bg-gray-100">
-                          {task.priority}
-                        </span>
-                        <span className="ml-2 text-gray-500">{task.estimate_hours}h</span>
+                    {pkg.tasks.map((task, taskIdx) => (
+                      <li key={taskIdx} className="grid gap-2 sm:grid-cols-[1fr_auto_auto] sm:items-center">
+                        <input
+                          type="text"
+                          value={task.title}
+                          onChange={(event) => updateTaskField(pkgIdx, taskIdx, 'title', event.target.value)}
+                          className="rounded border border-gray-300 px-2 py-1 text-sm text-gray-700"
+                        />
+                        <select
+                          value={task.priority}
+                          onChange={(event) => updateTaskField(pkgIdx, taskIdx, 'priority', event.target.value)}
+                          className="rounded border border-gray-300 px-2 py-1 text-xs"
+                        >
+                          <option value="low">low</option>
+                          <option value="medium">medium</option>
+                          <option value="high">high</option>
+                        </select>
+                        <input
+                          type="number"
+                          min={0}
+                          value={task.estimate_hours}
+                          onChange={(event) => updateTaskField(pkgIdx, taskIdx, 'estimate_hours', Number(event.target.value) || 0)}
+                          className="w-20 rounded border border-gray-300 px-2 py-1 text-xs text-gray-600"
+                        />
                       </li>
                     ))}
-                    {pkg.tasks.length > 3 && (
-                      <li className="text-xs text-gray-500 italic">
-                        ... and {pkg.tasks.length - 3} more tasks
-                      </li>
-                    )}
                   </ul>
                 </div>
               ))}
             </div>
 
+            {hasInvalidDraft && (
+              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-700">
+                Please fill required fields (project name, work package names, task titles) and use non-negative hours.
+              </div>
+            )}
+
             {/* Action buttons */}
             <div className="flex gap-3">
               <button
                 onClick={handleConfirm}
-                disabled={isConfirming}
+                disabled={isConfirming || hasInvalidDraft}
                 className="flex-1 rounded-lg bg-green-600 px-4 py-2 text-white font-medium hover:bg-green-500 disabled:bg-gray-300"
               >
                 {isConfirming ? 'Creating...' : 'Create Project'}
@@ -189,6 +335,7 @@ export function AiProjectGeneratorModal({ isOpen, onClose, onConfirm }: AiProjec
                 onClick={() => {
                   reset()
                   setInputText('')
+                  setDraftEdits(null)
                 }}
                 className="rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-50"
               >

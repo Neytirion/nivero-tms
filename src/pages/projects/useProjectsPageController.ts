@@ -1,12 +1,31 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect } from 'react'
 import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
 import { useProjectForm } from '../../features/projects/hooks/useProjectForm.ts'
 import { deriveRisk } from '../../features/projects/utils/project-metrics.ts'
 import { hasProjectPermission } from '../../shared/utils/permissions'
 import type { DetailsTab } from '../../features/projects/components'
-import type { AiProjectDraft } from '../../lib/ai'
-import { createProjectFromAiDraft } from '../../lib/ai/ai-mapper'
+import { useProjectsPageFilters } from './useProjectsPageFilters'
+import { useProjectsMemberForm } from './useProjectsMemberForm'
+import { useProjectsSettingsForm } from './useProjectsSettingsForm'
+import { useProjectsModals } from './useProjectsModals'
+import { useProjectsActions, type UseProjectsActionsInput } from './useProjectsActions'
 
+/**
+ * Compose projects page hooks into a cohesive controller
+ *
+ * Refactored from monolithic 294-line hook into:
+ * - useProjectsPageFilters: search, tab selection, filtered projects
+ * - useProjectsMemberForm: member invite form state, role assignment
+ * - useProjectsSettingsForm: project metadata editing form state
+ * - useProjectsModals: dialog open/close states
+ * - useProjectsActions: all async handlers and user actions
+ *
+ * Benefits:
+ * - Each hook has single responsibility
+ * - Easier to test, reuse, and maintain
+ * - Clearer data flow and concerns separation
+ * - Main controller now coordinates composition
+ */
 export function useProjectsPageController() {
   const {
     projectName,
@@ -20,29 +39,6 @@ export function useProjectsPageController() {
     canSubmit,
     reset,
   } = useProjectForm()
-
-  const [memberEmail, setMemberEmail] = useState('')
-  const [memberRole, setMemberRole] = useState('member')
-  const [searchValue, setSearchValue] = useState('')
-  const [activeTab, setActiveTab] = useState<DetailsTab>('overview')
-  const [isCompleteConfirmOpen, setIsCompleteConfirmOpen] = useState(false)
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  const [settingsDraft, setSettingsDraft] = useState<{
-    projectId: string | null
-    name: string
-    description: string
-    startDate: string
-    deadline: string
-  }>({
-    projectId: null,
-    name: '',
-    description: '',
-    startDate: '',
-    deadline: '',
-  })
-  const [isSaveSettingsConfirmOpen, setIsSaveSettingsConfirmOpen] = useState(false)
-  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
-  const [pendingRoleByUserId, setPendingRoleByUserId] = useState<Record<string, string>>({})
 
   const {
     status,
@@ -67,31 +63,105 @@ export function useProjectsPageController() {
     completeSelectedProject,
   } = useWorkspace()
 
+  // Filters: search and tab selection
+  const {
+    searchValue,
+    activeTab,
+    setSearchValue,
+    setActiveTab,
+    filteredProjects,
+  } = useProjectsPageFilters(projects)
+
+  // Derived state from workspace - needed early for settings form
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null
+
+  // Member management: invite form and role assignment
+  const {
+    memberEmail,
+    memberRole,
+    pendingRoleByUserId,
+    effectiveMemberRole,
+    setMemberEmail,
+    setMemberRole,
+    setPendingRoleByUserId,
+    updatePendingRole,
+    resetMemberForm,
+  } = useProjectsMemberForm(
+    selectedProjectId ? canDeleteProject(selectedProjectId) : false, // canAssignAdminRole approximation
+    selectedProjectId ? canManageProject(selectedProjectId) : false, // canAssignManagerRole approximation
+  )
+
+  // Settings form: project metadata editing
+  const {
+    settingsDraft,
+    currentSettingsDraft,
+    setSettingsDraft,
+    updateSettingsDraft,
+    resetSettingsDraft,
+  } = useProjectsSettingsForm(selectedProject ?? null)
+
+  // Modals: dialog states
+  const {
+    isCreateModalOpen,
+    isCompleteConfirmOpen,
+    isSaveSettingsConfirmOpen,
+    isDeleteConfirmOpen,
+    setIsCreateModalOpen,
+    setIsCompleteConfirmOpen,
+    setIsSaveSettingsConfirmOpen,
+    setIsDeleteConfirmOpen,
+  } = useProjectsModals()
+
+  // Actions: all async handlers
+  const actionsInput: UseProjectsActionsInput = {
+    selectedProjectId,
+    selectedProject: selectedProject ?? null,
+    currentSettingsDraft,
+    setStatus,
+    canSubmit,
+    reset,
+    addProject,
+    editProject,
+    removeProject,
+    completeSelectedProject,
+    inviteMemberToSelectedProjectByEmail,
+    changeSelectedProjectMemberRole,
+    loadDashboardPreview,
+    onCreateModalClose: () => setIsCreateModalOpen(false),
+    onCompleteConfirmClose: () => setIsCompleteConfirmOpen(false),
+    onSaveSettingsConfirmClose: () => setIsSaveSettingsConfirmOpen(false),
+    onDeleteConfirmClose: () => setIsDeleteConfirmOpen(false),
+  }
+
+  const {
+    createProjectHandler,
+    createProjectFromAiDraftHandler,
+    inviteMemberHandler: inviteMemberHandlerRaw,
+    completeProjectHandler,
+    saveProjectSettings,
+    deleteSelectedProjectHandler,
+    updateMemberRoleHandler: updateMemberRoleHandlerRaw,
+  } = useProjectsActions(actionsInput)
+
+  // Derived state from workspace and permissions
   const myRoleInSelectedProject = selectedProject ? getProjectRole(selectedProject.id) : null
   const canEditSelectedProject = selectedProject ? canManageProject(selectedProject.id) : false
   const canDeleteSelectedProject = selectedProject ? canDeleteProject(selectedProject.id) : false
-  const canInviteToSelectedProject = selectedProject ? canInviteToProject(selectedProject.id) : false
+  const canInviteToSelectedProject = selectedProject
+    ? canInviteToProject(selectedProject.id)
+    : false
   const canManageMemberRoles = hasProjectPermission(myRoleInSelectedProject, 'member.role.update')
   const canAssignAdminRole =
     selectedProject?.owner_id != null && selectedProject.owner_id === currentUserId
   const canAssignManagerRole = myRoleInSelectedProject === 'owner' || myRoleInSelectedProject === 'admin'
 
-  const effectiveMemberRole = useMemo(() => {
-    if (memberRole === 'admin' && !canAssignAdminRole) {
-      return 'member'
-    }
-
-    if (memberRole === 'manager' && !canAssignManagerRole) {
-      return 'member'
-    }
-
-    return memberRole
-  }, [memberRole, canAssignAdminRole, canAssignManagerRole])
-
   const totalProjects = projects.length
-  const activeProjects = projects.filter((project) => (project.status ?? '').toLowerCase() !== 'completed').length
-  const completedProjects = projects.filter((project) => (project.status ?? '').toLowerCase() === 'completed').length
+  const activeProjects = projects.filter(
+    (project) => (project.status ?? '').toLowerCase() !== 'completed',
+  ).length
+  const completedProjects = projects.filter(
+    (project) => (project.status ?? '').toLowerCase() === 'completed',
+  ).length
   const riskProjects = projects.filter((project) => deriveRisk(project) === 'Red').length
   const teamMemberNames = projectMembers.map((member) => member.full_name ?? member.email ?? 'Unknown')
   const teamMemberNameByUserId = projectMembers.reduce<Record<string, string>>((acc, member) => {
@@ -103,31 +173,13 @@ export function useProjectsPageController() {
   const projectManagerName = selectedProject?.project_manager_id
     ? teamMemberNameByUserId[selectedProject.project_manager_id] ?? 'Assigned'
     : 'Not set'
-  const incompleteTaskCount = tasks.filter((task) => (task.status ?? '').toLowerCase() !== 'done' && (task.status ?? '').toLowerCase() !== 'completed').length
-  const currentSettingsDraft =
-    selectedProject && settingsDraft.projectId === selectedProject.id
-      ? settingsDraft
-      : {
-          projectId: selectedProject?.id ?? null,
-          name: selectedProject?.name ?? '',
-          description: selectedProject?.description ?? '',
-          startDate: selectedProject?.start_date ?? '',
-            deadline: selectedProject?.end_date ?? selectedProject?.deadline_at ?? '',
-        }
+  const incompleteTaskCount = tasks.filter(
+    (task) =>
+      (task.status ?? '').toLowerCase() !== 'done' &&
+      (task.status ?? '').toLowerCase() !== 'completed',
+  ).length
 
-  const filteredProjects = useMemo(() => {
-    const query = searchValue.trim().toLowerCase()
-
-    if (!query) {
-      return projects
-    }
-
-    return projects.filter((project) => {
-      const source = [project.name, project.customer_name, project.description].filter(Boolean).join(' ').toLowerCase()
-      return source.includes(query)
-    })
-  }, [projects, searchValue])
-
+  // Sync selected project when URL changes
   useEffect(() => {
     if (!selectedProjectId) {
       return
@@ -138,128 +190,18 @@ export function useProjectsPageController() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProjectId])
 
-  const updateSettingsDraft = (patch: Partial<Omit<typeof currentSettingsDraft, 'projectId'>>) => {
-    if (!selectedProject) {
-      return
-    }
-
-    const baseDraft =
-      settingsDraft.projectId === selectedProject.id
-        ? settingsDraft
-        : {
-            projectId: selectedProject.id,
-            name: selectedProject.name,
-            description: selectedProject.description ?? '',
-            startDate: selectedProject.start_date ?? '',
-              deadline: selectedProject.end_date ?? selectedProject.deadline_at ?? '',
-          }
-
-    setSettingsDraft({
-      ...baseDraft,
-      ...patch,
-    })
-  }
-
-  const createProjectHandler = async () => {
-    if (!canSubmit) {
-      return
-    }
-
-    await addProject({
-      name: projectName.trim(),
-      customerName: projectCustomer.trim() || undefined,
-      startDate: projectStartDate || undefined,
-      endDate: projectEndDate || undefined,
-    })
-    reset()
-    setIsCreateModalOpen(false)
-  }
-
-  const createProjectFromAiDraftHandler = async (draft: AiProjectDraft) => {
-    try {
-      setStatus('Creating project from AI draft (atomic operation)...')
-      
-      // The createProjectFromAiDraft now uses a single database transaction:
-      // entire project (with estimate, work packages, and tasks) is created
-      // or rolled back as a single unit, preventing partial data states.
-      const result = await createProjectFromAiDraft(draft)
-      
-      setStatus(`✓ Project created: "${result.projectId.slice(0, 8)}..." with ${result.taskCount} tasks`)
-      reset()
-      setIsCreateModalOpen(false)
-      
-      // Refresh projects to show newly created one
-      await loadDashboardPreview()
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create project from AI draft'
-      setStatus(`✗ Error: ${errorMessage}`)
-      console.error('Error creating project from AI draft:', error)
-    }
-  }
-
+  // Wrapper handlers with form reset
   const inviteMemberHandler = async () => {
-    const email = memberEmail.trim()
-
-    if (!selectedProjectId) {
-      setStatus('Select a project before inviting members')
-      return
-    }
-
-    if (!email) {
-      setStatus('Member email is required')
-      return
-    }
-
-    await inviteMemberToSelectedProjectByEmail(email, effectiveMemberRole)
-    setMemberEmail('')
-  }
-
-  const completeProjectHandler = async () => {
-    if (!selectedProject) {
-      return
-    }
-
-    await completeSelectedProject()
-    setIsCompleteConfirmOpen(false)
-  }
-
-  const saveProjectSettings = async () => {
-    if (!selectedProject) {
-      return
-    }
-
-    if (currentSettingsDraft.startDate && currentSettingsDraft.deadline && currentSettingsDraft.deadline < currentSettingsDraft.startDate) {
-      setStatus('Planned end date cannot be earlier than start date')
-      return
-    }
-
-    const wasSaved = await editProject(selectedProject.id, {
-      name: currentSettingsDraft.name,
-      description: currentSettingsDraft.description,
-      startDate: currentSettingsDraft.startDate || undefined,
-      deadlineAt: currentSettingsDraft.deadline || undefined,
-    })
-
-    if (wasSaved) {
-        setIsSaveSettingsConfirmOpen(false)
-      }
-  }
-
-  const deleteSelectedProjectHandler = async () => {
-    if (!selectedProjectId) {
-      return
-    }
-
-    await removeProject(selectedProjectId)
-    setIsDeleteConfirmOpen(false)
+    await inviteMemberHandlerRaw(memberEmail, effectiveMemberRole)
+    resetMemberForm()
   }
 
   const updateMemberRoleHandler = async (userId: string, fallbackRole: string) => {
-    const nextRole = pendingRoleByUserId[userId] ?? fallbackRole
-    await changeSelectedProjectMemberRole(userId, nextRole)
+    await updateMemberRoleHandlerRaw(userId, fallbackRole, pendingRoleByUserId)
   }
 
   return {
+    // Data from workspace
     status,
     isLoading,
     projects,
@@ -267,6 +209,8 @@ export function useProjectsPageController() {
     projectMembers,
     selectedProject,
     selectedProjectId,
+
+    // Permissions & derived states
     myRoleInSelectedProject,
     canManageProject,
     canEditSelectedProject,
@@ -275,7 +219,8 @@ export function useProjectsPageController() {
     canInviteToSelectedProject,
     canAssignAdminRole,
     canAssignManagerRole,
-    effectiveMemberRole,
+
+    // Statistics
     totalProjects,
     activeProjects,
     completedProjects,
@@ -283,17 +228,29 @@ export function useProjectsPageController() {
     teamMemberNames,
     projectManagerName,
     incompleteTaskCount,
+
+    // Filters
     searchValue,
     setSearchValue,
     filteredProjects,
     activeTab,
     setActiveTab,
+
+    // Member form
     memberEmail,
     setMemberEmail,
     memberRole,
     setMemberRole,
+    effectiveMemberRole,
     pendingRoleByUserId,
     setPendingRoleByUserId,
+    updatePendingRole,
+
+    // Settings form
+    currentSettingsDraft,
+    updateSettingsDraft,
+
+    // Modals
     isCompleteConfirmOpen,
     setIsCompleteConfirmOpen,
     isSaveSettingsConfirmOpen,
@@ -302,6 +259,8 @@ export function useProjectsPageController() {
     setIsDeleteConfirmOpen,
     isCreateModalOpen,
     setIsCreateModalOpen,
+
+    // Project form (from useProjectForm)
     projectName,
     setProjectName,
     projectCustomer,
@@ -312,8 +271,8 @@ export function useProjectsPageController() {
     setProjectEndDate,
     canSubmit,
     reset,
-    currentSettingsDraft,
-    updateSettingsDraft,
+
+    // Actions
     createProjectHandler,
     createProjectFromAiDraftHandler,
     inviteMemberHandler,

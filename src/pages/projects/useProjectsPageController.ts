@@ -3,7 +3,6 @@ import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
 import { useProjectForm } from '../../features/projects/hooks/useProjectForm.ts'
 import { deriveRisk } from '../../features/projects/utils/project-metrics.ts'
 import { hasProjectPermission } from '../../shared/utils/permissions'
-import type { DetailsTab } from '../../features/projects/components'
 import { useProjectsPageFilters } from './useProjectsPageFilters'
 import { useProjectsMemberForm } from './useProjectsMemberForm'
 import { useProjectsSettingsForm } from './useProjectsSettingsForm'
@@ -93,11 +92,8 @@ export function useProjectsPageController() {
 
   // Settings form: project metadata editing
   const {
-    settingsDraft,
     currentSettingsDraft,
-    setSettingsDraft,
     updateSettingsDraft,
-    resetSettingsDraft,
   } = useProjectsSettingsForm(selectedProject ?? null)
 
   // Modals: dialog states

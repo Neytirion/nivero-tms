@@ -72,7 +72,6 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
     setTimerStartedAt,
     setIsTimerSaving,
     startTimer: timerStartRaw,
-    stopTimer: timerStopRaw,
     cancelTimer,
   } = useTimeTrackingTimer()
 

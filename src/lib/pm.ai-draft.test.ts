@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import { supabase } from './supabase'
 import { createProjectFromAiDraft } from './ai/ai-mapper'
 import type { AiProjectDraft } from './ai/ai.types'
@@ -26,7 +26,6 @@ describe('createProjectFromAiDraft (atomic flow)', () => {
 
   it('creates complete project structure from valid AI draft', async () => {
     if (!testAuthUser) {
-      vi.skip()
       return
     }
 
@@ -161,7 +160,6 @@ describe('createProjectFromAiDraft (atomic flow)', () => {
 
   it('rejects draft with missing project name', async () => {
     if (!testAuthUser) {
-      vi.skip()
       return
     }
 
@@ -197,7 +195,6 @@ describe('createProjectFromAiDraft (atomic flow)', () => {
 
   it('maintains atomicity on partial failures', async () => {
     if (!testAuthUser) {
-      vi.skip()
       return
     }
 

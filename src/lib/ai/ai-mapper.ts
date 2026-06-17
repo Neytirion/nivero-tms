@@ -73,6 +73,8 @@ export async function createProjectFromAiDraft(draft: AiProjectDraft) {
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error'
     console.error('Error creating project from AI draft:', error)
-    throw new Error(`Failed to create project from AI draft: ${message}`)
+    throw new Error(`Failed to create project from AI draft: ${message}`, {
+      cause: error,
+    })
   }
 }

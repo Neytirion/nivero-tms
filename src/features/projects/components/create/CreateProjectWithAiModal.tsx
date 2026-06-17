@@ -3,7 +3,7 @@
  * Allows manual project creation or AI-powered generation
  */
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { AiProjectGeneratorModal } from '../../ai'
 import type { AiProjectDraft } from '../../../../lib/ai'
 
@@ -42,13 +42,6 @@ export function CreateProjectWithAiModal({
 }: CreateProjectWithAiModalProps) {
   const [mode, setMode] = useState<'manual' | 'ai'>('manual')
   const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false)
-
-  // Open AI generator automatically when AI mode is selected
-  useEffect(() => {
-    if (mode === 'ai' && !isAiGeneratorOpen) {
-      setIsAiGeneratorOpen(true)
-    }
-  }, [mode, isAiGeneratorOpen])
 
   if (!isOpen) {
     return null
@@ -91,7 +84,10 @@ export function CreateProjectWithAiModal({
               Manual
             </button>
             <button
-              onClick={() => setMode('ai')}
+              onClick={() => {
+                setMode('ai')
+                setIsAiGeneratorOpen(true)
+              }}
               className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-75 ${
                 mode === 'ai'
                   ? 'border-blue-600 text-blue-600'

@@ -1,7 +1,3 @@
--- Phase 21: Atomic project creation from AI draft
--- Ensures project + estimate + work packages + tasks are created as a single transaction
--- or rolled back entirely on any error.
-
 create or replace function public.create_project_from_ai_draft(
   p_project_name text,
   p_project_customer_name text default null,
@@ -38,7 +34,6 @@ begin
     raise exception 'Project name is required';
   end if;
 
-  -- 1. Create project
   insert into public.projects (
     name,
     customer_name,
@@ -67,7 +62,6 @@ begin
     raise exception 'Failed to create project';
   end if;
 
-  -- 2. Create estimate version (always v1)
   insert into public.estimates (
     project_id,
     version_number,
@@ -84,7 +78,6 @@ begin
     raise exception 'Failed to create estimate';
   end if;
 
-  -- 3. Create work packages and build name->id index
   for i in 0 .. jsonb_array_length(v_work_packages) - 1 loop
     v_work_package := jsonb_array_element(v_work_packages, i);
 
@@ -110,7 +103,6 @@ begin
     end if;
   end loop;
 
-  -- 4. Create tasks linked to work packages
   for i in 0 .. jsonb_array_length(v_tasks) - 1 loop
     v_task_json := jsonb_array_element(v_tasks, i);
 
@@ -132,9 +124,9 @@ begin
         v_project_id,
         v_work_package_id,
         v_task_json ->> 'title',
-        (v_task_json ->> 'description'),
-        coalesce((v_task_json ->> 'status'), 'todo'),
-        coalesce((v_task_json ->> 'priority'), 'medium'),
+        v_task_json ->> 'description',
+        coalesce(v_task_json ->> 'status', 'todo'),
+        coalesce(v_task_json ->> 'priority', 'medium'),
         (v_task_json ->> 'estimate_hours')::numeric,
         v_actor_id
       );
@@ -143,7 +135,6 @@ begin
     end if;
   end loop;
 
-  -- 5. Return success with metadata
   return jsonb_build_object(
     'success', true,
     'project_id', v_project_id,
@@ -153,7 +144,6 @@ begin
   );
 
 exception when others then
-  -- Any error triggers automatic transaction rollback
   raise exception 'Failed to create project from AI draft: %', sqlerrm;
 end;
 $$;

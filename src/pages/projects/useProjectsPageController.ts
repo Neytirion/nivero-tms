@@ -177,18 +177,22 @@ export function useProjectsPageController() {
 
   const createProjectFromAiDraftHandler = async (draft: AiProjectDraft) => {
     try {
-      setStatus('Creating project from AI draft...')
+      setStatus('Creating project from AI draft (atomic operation)...')
+      
+      // The createProjectFromAiDraft now uses a single database transaction:
+      // entire project (with estimate, work packages, and tasks) is created
+      // or rolled back as a single unit, preventing partial data states.
       const result = await createProjectFromAiDraft(draft)
       
-      setStatus(`Project created with ${result.taskCount} tasks!`)
+      setStatus(`✓ Project created: "${result.projectId.slice(0, 8)}..." with ${result.taskCount} tasks`)
       reset()
       setIsCreateModalOpen(false)
       
-      // Refresh projects
+      // Refresh projects to show newly created one
       await loadDashboardPreview()
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create project from AI draft'
-      setStatus(errorMessage)
+      setStatus(`✗ Error: ${errorMessage}`)
       console.error('Error creating project from AI draft:', error)
     }
   }

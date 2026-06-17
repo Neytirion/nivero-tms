@@ -76,6 +76,7 @@ To set up the database and enable security policies, run these SQL files in orde
 7. **Phase 6**: `supabase/mvp_phase6_progress_from_tasks.sql` (completion-based progress)
 8. **Phase 7**: `supabase/mvp_phase7_task_assignee_update_policy.sql` (assignee permissions)
 9. **Phase 8**: `supabase/mvp_phase8_database_integrity.sql` (FK constraints & indices)
+10. **Phase 21**: `supabase/mvp_phase21_atomic_project_creation.sql` (atomic AI draft → project flow)
 
 Run each file content in Supabase SQL Editor in order.
 

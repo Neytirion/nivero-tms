@@ -3,7 +3,7 @@
  * Allows manual project creation or AI-powered generation
  */
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AiProjectGeneratorModal } from '../../ai'
 import type { AiProjectDraft } from '../../../../lib/ai'
 
@@ -43,6 +43,13 @@ export function CreateProjectWithAiModal({
   const [mode, setMode] = useState<'manual' | 'ai'>('manual')
   const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false)
 
+  // Open AI generator automatically when AI mode is selected
+  useEffect(() => {
+    if (mode === 'ai' && !isAiGeneratorOpen) {
+      setIsAiGeneratorOpen(true)
+    }
+  }, [mode, isAiGeneratorOpen])
+
   if (!isOpen) {
     return null
   }
@@ -54,7 +61,7 @@ export function CreateProjectWithAiModal({
           type="button"
           onClick={onClose}
           aria-label="Close create project modal"
-          className="absolute inset-0 bg-slate-900/45 backdrop-blur-[1px]"
+          className="absolute inset-0 bg-slate-900/45"
         />
 
         <section className="relative z-10 w-full max-w-xl rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl">
@@ -75,7 +82,7 @@ export function CreateProjectWithAiModal({
           <div className="mt-4 flex gap-2 border-b border-slate-200">
             <button
               onClick={() => setMode('manual')}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-75 ${
                 mode === 'manual'
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -84,11 +91,8 @@ export function CreateProjectWithAiModal({
               Manual
             </button>
             <button
-              onClick={() => {
-                setMode('ai')
-                setIsAiGeneratorOpen(true)
-              }}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition ${
+              onClick={() => setMode('ai')}
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-75 ${
                 mode === 'ai'
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
@@ -171,7 +175,7 @@ export function CreateProjectWithAiModal({
             <button
               type="button"
               onClick={onClose}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors duration-75 hover:bg-slate-100"
             >
               Cancel
             </button>
@@ -180,7 +184,7 @@ export function CreateProjectWithAiModal({
                 type="button"
                 onClick={() => void onCreate()}
                 disabled={isLoading || !canSubmit}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-75 hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Create project
               </button>
@@ -188,7 +192,7 @@ export function CreateProjectWithAiModal({
               <button
                 type="button"
                 onClick={() => setIsAiGeneratorOpen(true)}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500"
+                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-75 hover:bg-blue-500"
               >
                 Generate Project
               </button>
@@ -198,14 +202,16 @@ export function CreateProjectWithAiModal({
       </div>
 
       {/* AI Generator Modal */}
-      <AiProjectGeneratorModal
-        isOpen={isAiGeneratorOpen}
-        onClose={() => {
-          setIsAiGeneratorOpen(false)
-          setMode('manual')
-        }}
-        onConfirm={onCreateFromAiDraft}
-      />
+      {isAiGeneratorOpen ? (
+        <AiProjectGeneratorModal
+          isOpen={isAiGeneratorOpen}
+          onClose={() => {
+            setIsAiGeneratorOpen(false)
+            setMode('manual')
+          }}
+          onConfirm={onCreateFromAiDraft}
+        />
+      ) : null}
     </>
   )
 }

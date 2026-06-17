@@ -29,8 +29,10 @@ type CreateTaskSectionProps = {
   dependencyOptions: DependencyOption[]
   canAssignAssignee: boolean
   projectMembers: ProjectMemberListItem[]
+  missingRequiredFields: string[]
+  hasAttemptedSubmit: boolean
   isLoading: boolean
-  submitAttempted: boolean
+  canSubmit: boolean
   onSelectProject: (projectId: string) => void
   onTaskTitleChange: (value: string) => void
   onTaskDescriptionChange: (value: string) => void
@@ -67,8 +69,10 @@ export function CreateTaskSection({
   dependencyOptions,
   canAssignAssignee,
   projectMembers,
+  missingRequiredFields,
+  hasAttemptedSubmit,
   isLoading,
-  submitAttempted,
+  canSubmit,
   onSelectProject,
   onTaskTitleChange,
   onTaskDescriptionChange,
@@ -108,7 +112,7 @@ export function CreateTaskSection({
                   }
                 }}
                 className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 ${
-                  submitAttempted && isProjectMissing ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
+                  hasAttemptedSubmit && isProjectMissing ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
                 }`}
               >
                 <option value="">Select project</option>
@@ -128,7 +132,7 @@ export function CreateTaskSection({
                 onChange={(event) => onTaskTitleChange(event.target.value)}
                 placeholder="Short task name"
                 className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 ${
-                  submitAttempted && isTaskTitleMissing ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
+                  hasAttemptedSubmit && isTaskTitleMissing ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
                 }`}
               />
             </div>
@@ -159,7 +163,7 @@ export function CreateTaskSection({
                 onChange={(event) => onTaskEstimateHoursChange(event.target.value)}
                 placeholder="e.g. 6"
                 className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 ${
-                  submitAttempted && isEstimateHoursMissingOrInvalid ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
+                  hasAttemptedSubmit && isEstimateHoursMissingOrInvalid ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
                 }`}
               />
             </div>
@@ -205,7 +209,7 @@ export function CreateTaskSection({
                 value={taskWorkPackageId}
                 onChange={(event) => onTaskWorkPackageIdChange(event.target.value)}
                 className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 ${
-                  submitAttempted && isWorkPackageMissing ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
+                  hasAttemptedSubmit && isWorkPackageMissing ? 'border-rose-400 bg-rose-50/40' : 'border-slate-300'
                 }`}
               >
                 <option value="">Select work package</option>
@@ -264,13 +268,21 @@ export function CreateTaskSection({
       </div>
 
       <div className="mt-3 flex items-center justify-between gap-3">
-        <p className="text-xs text-slate-500">
-          {selectedProject ? `Selected project: ${selectedProject.name}` : 'Select a project first.'}
-        </p>
+        {missingRequiredFields.length > 0 ? null : (
+          <p className="text-xs text-slate-500">
+            {selectedProject ? `Selected project: ${selectedProject.name}` : 'Select a project first.'}
+          </p>
+        )}
         <button
           type="button"
           onClick={onCreateTask}
-          disabled={isLoading}
+          disabled={
+            !selectedProjectId ||
+            hasEstimateVersion !== true ||
+            !canSubmit ||
+            missingRequiredFields.length > 0 ||
+            isLoading
+          }
           className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Create task

@@ -36,11 +36,11 @@ export function useTasksPageController() {
 
   const [dragTaskId, setDragTaskId] = useState<string | null>(null)
   const [logTimeTask, setLogTimeTask] = useState<TaskPreview | null>(null)
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [workPackages, setWorkPackages] = useState<Array<Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours'>>>([])
   const [hasEstimateVersion, setHasEstimateVersion] = useState<boolean | null>(null)
   const [taskViewMode, setTaskViewMode] = useState<TaskViewMode>('board')
   const [calendarMonth, setCalendarMonth] = useState(new Date().toISOString().slice(0, 7))
-  const [submitAttempted, setSubmitAttempted] = useState(false)
 
   const {
     status,
@@ -150,9 +150,10 @@ export function useTasksPageController() {
   const canAssignAssignee = selectedProject ? canAssignTasksInProject(selectedProject.id) : false
 
   const createTaskHandler = async () => {
-    setSubmitAttempted(true)
+    setHasAttemptedSubmit(true)
 
     if (!selectedProjectId) {
+      setStatus('Select a project before creating tasks')
       return
     }
 
@@ -170,7 +171,13 @@ export function useTasksPageController() {
       return
     }
 
-    if (!canSubmit || isWorkPackageMissing) {
+    if (!canSubmit) {
+      setStatus('Task title, estimated hours, and work package are required')
+      return
+    }
+
+    if (isWorkPackageMissing) {
+      setStatus('Work package is required')
       return
     }
 
@@ -203,8 +210,8 @@ export function useTasksPageController() {
       dueDate: taskDueDate || undefined,
     })
 
+    setHasAttemptedSubmit(false)
     reset()
-    setSubmitAttempted(false)
   }
 
   const moveTaskToStatus = async (taskId: string, status: TaskStatus) => {
@@ -308,6 +315,7 @@ export function useTasksPageController() {
     isEstimateHoursMissingOrInvalid,
     isWorkPackageMissing,
     missingRequiredFields,
+    hasAttemptedSubmit,
     taskTitle,
     setTaskTitle,
     taskDescription,
@@ -331,7 +339,6 @@ export function useTasksPageController() {
     workPackageLabelById,
     assigneeOptions,
     canSubmit,
-    submitAttempted,
     logTimeTask,
     setLogTimeTask,
     calendarMeta,

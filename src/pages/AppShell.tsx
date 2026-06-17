@@ -23,7 +23,7 @@ export function AppShell({ user }: AppShellProps) {
 
 function AppShellLayout({ user }: AppShellProps) {
   const navigate = useNavigate()
-  const { projects, getProjectRole } = useWorkspace()
+  const { projects, selectedProjectId, selectProject, isLoading, getProjectRole } = useWorkspace()
 
   const avatarUrl = (user.user_metadata.avatar_url as string | undefined) ?? ''
   const fullName = (user.user_metadata.full_name as string | undefined) ?? ''
@@ -76,6 +76,29 @@ function AppShellLayout({ user }: AppShellProps) {
           <div className="grid min-h-[calc(100vh-4rem)] gap-0 lg:grid-cols-[280px_1fr]">
             <aside className="border-b border-[#cfe5c8] bg-[#e3f1de] px-4 py-5 text-slate-800 lg:border-b-0 lg:border-r lg:px-5">
               <div>
+                <div className="mb-4 rounded-xl border border-[#bad6b2] bg-white/80 p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5f7b57]">Current Project</p>
+                  <select
+                    aria-label="Select current project"
+                    value={selectedProjectId ?? ''}
+                    onChange={(event) => {
+                      if (!event.target.value) return
+                      void selectProject(event.target.value)
+                    }}
+                    disabled={projects.length === 0 || isLoading}
+                    className="mt-2 w-full rounded-lg border border-[#bad6b2] bg-white px-2.5 py-2 text-sm text-slate-800 outline-none disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {projects.length === 0 ? (
+                      <option value="">No projects available</option>
+                    ) : null}
+                    {projects.map((project) => (
+                      <option key={project.id} value={project.id}>
+                        {project.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5f7b57]">
                   Active Modules
                 </p>

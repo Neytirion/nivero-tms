@@ -22,7 +22,10 @@ describe('AppShell', () => {
 
   it('hides Resources navigation for member-only access', () => {
     mockUseWorkspace.mockReturnValue({
-      projects: [{ id: 'p1' }],
+      projects: [{ id: 'p1', name: 'Project One' }],
+      selectedProjectId: 'p1',
+      selectProject: vi.fn(async () => undefined),
+      isLoading: false,
       getProjectRole: () => 'member',
     })
 
@@ -33,11 +36,15 @@ describe('AppShell', () => {
     )
 
     expect(screen.queryByText('Resources')).toBeNull()
+    expect(screen.getByLabelText('Select current project')).toBeTruthy()
   })
 
   it('shows Resources navigation for manager role', () => {
     mockUseWorkspace.mockReturnValue({
-      projects: [{ id: 'p1' }],
+      projects: [{ id: 'p1', name: 'Project One' }],
+      selectedProjectId: 'p1',
+      selectProject: vi.fn(async () => undefined),
+      isLoading: false,
       getProjectRole: () => 'manager',
     })
 
@@ -48,5 +55,6 @@ describe('AppShell', () => {
     )
 
     expect(screen.getByText('Resources')).toBeTruthy()
+    expect(screen.getByLabelText('Select current project')).toBeTruthy()
   })
 })

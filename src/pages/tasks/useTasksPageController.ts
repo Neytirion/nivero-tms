@@ -36,6 +36,7 @@ export function useTasksPageController() {
 
   const [dragTaskId, setDragTaskId] = useState<string | null>(null)
   const [logTimeTask, setLogTimeTask] = useState<TaskPreview | null>(null)
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [workPackages, setWorkPackages] = useState<Array<Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours'>>>([])
   const [hasEstimateVersion, setHasEstimateVersion] = useState<boolean | null>(null)
   const [taskViewMode, setTaskViewMode] = useState<TaskViewMode>('board')
@@ -149,6 +150,8 @@ export function useTasksPageController() {
   const canAssignAssignee = selectedProject ? canAssignTasksInProject(selectedProject.id) : false
 
   const createTaskHandler = async () => {
+    setHasAttemptedSubmit(true)
+
     if (!selectedProjectId) {
       setStatus('Select a project before creating tasks')
       return
@@ -207,6 +210,7 @@ export function useTasksPageController() {
       dueDate: taskDueDate || undefined,
     })
 
+    setHasAttemptedSubmit(false)
     reset()
   }
 
@@ -311,6 +315,7 @@ export function useTasksPageController() {
     isEstimateHoursMissingOrInvalid,
     isWorkPackageMissing,
     missingRequiredFields,
+    hasAttemptedSubmit,
     taskTitle,
     setTaskTitle,
     taskDescription,

@@ -30,6 +30,7 @@ export function TasksPage() {
     isEstimateHoursMissingOrInvalid,
     isWorkPackageMissing,
     missingRequiredFields,
+    hasAttemptedSubmit,
     taskTitle,
     setTaskTitle,
     taskDescription,
@@ -112,6 +113,7 @@ export function TasksPage() {
         canAssignAssignee={canAssignAssignee}
         projectMembers={projectMembers}
         missingRequiredFields={missingRequiredFields}
+        hasAttemptedSubmit={hasAttemptedSubmit}
         isLoading={isLoading}
         canSubmit={canSubmit}
         onSelectProject={(projectId) => {

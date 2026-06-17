@@ -1,20 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
+import type { ProjectPreview } from '../../lib/pm'
+import { endOfWeek, startOfWeek, toDateInputValue } from '../time-tracking.utils'
+import { useTimeTrackingFilters } from './useTimeTrackingFilters'
+import { useTimeTrackingManualForm } from './useTimeTrackingManualForm'
+import { useTimeTrackingTimer } from './useTimeTrackingTimer'
 import {
-  createTimeEntry,
-  deleteTimeEntry,
-  getProjectTasks,
-  getTimeEntries,
-  updateTimeEntry,
-  type ProjectPreview,
-  type TaskPreview,
-  type TimeEntryPreview,
-} from '../../lib/pm'
-import {
-  buildWeeklySummary,
-  endOfWeek,
-  startOfWeek,
-  toDateInputValue,
-} from '../time-tracking.utils'
+  useTimeTrackingActions,
+  type UseTimeTrackingActionsInput,
+} from './useTimeTrackingActions'
+import { buildWeeklySummary } from '../time-tracking.utils'
 
 interface UseTimeTrackingControllerInput {
   projects: ProjectPreview[]
@@ -24,44 +18,65 @@ interface UseTimeTrackingControllerInput {
   loadDashboardPreview: () => Promise<void>
 }
 
+/**
+ * Compose time tracking hooks into a cohesive controller
+ *
+ * Refactored from monolithic 350-line hook into:
+ * - useTimeTrackingFilters: project/week/edit selection
+ * - useTimeTrackingManualForm: manual entry form state
+ * - useTimeTrackingTimer: timer state and elapsed calculation
+ * - useTimeTrackingActions: API calls and data loading
+ *
+ * Benefits:
+ * - Each hook has single responsibility
+ * - Easier to test, reuse, and maintain
+ * - Clearer data flow
+ */
 export function useTimeTrackingController(input: UseTimeTrackingControllerInput) {
-  const { projects, selectedProjectId, currentUserId, setStatus, loadDashboardPreview } = input
-  const [entries, setEntries] = useState<TimeEntryPreview[]>([])
-  const [isEntriesLoading, setIsEntriesLoading] = useState(false)
-  const [activeProjectId, setActiveProjectId] = useState(selectedProjectId ?? '')
-  const [projectTasks, setProjectTasks] = useState<TaskPreview[]>([])
-  const [taskLabelById, setTaskLabelById] = useState<Record<string, string>>({})
-  const [isTaskLabelsLoading, setIsTaskLabelsLoading] = useState(false)
-  const [editingEntryId, setEditingEntryId] = useState<string | null>(null)
-  const [entryToDelete, setEntryToDelete] = useState<TimeEntryPreview | null>(null)
+  const { projects, selectedProjectId, currentUserId, setStatus, loadDashboardPreview } =
+    input
 
-  const [manualTaskId, setManualTaskId] = useState('')
-  const [manualDate, setManualDate] = useState(toDateInputValue(new Date()))
-  const [manualHours, setManualHours] = useState('1')
-  const [manualIsBillable, setManualIsBillable] = useState(true)
-  const [manualNotes, setManualNotes] = useState('')
+  // Filters: project, week, edit mode
+  const { activeProjectId, editingEntryId, weekAnchorDate, entryToDelete, setActiveProjectId, setEditingEntryId, setWeekAnchorDate, setEntryToDelete } =
+    useTimeTrackingFilters(selectedProjectId)
 
-  const [timerTaskId, setTimerTaskId] = useState('')
-  const [timerIsBillable, setTimerIsBillable] = useState(true)
-  const [timerNotes, setTimerNotes] = useState('')
-  const [timerStartedAt, setTimerStartedAt] = useState<number | null>(null)
-  const [timerElapsedSec, setTimerElapsedSec] = useState(0)
-  const [isTimerSaving, setIsTimerSaving] = useState(false)
+  // Manual entry form
+  const {
+    manualTaskId,
+    manualDate,
+    manualHours,
+    manualIsBillable,
+    manualNotes,
+    setManualTaskId,
+    setManualDate,
+    setManualHours,
+    setManualIsBillable,
+    setManualNotes,
+    resetManualEntryForm: resetManualForm,
+    beginEditEntry,
+    cancelEditEntry,
+  } = useTimeTrackingManualForm()
 
-  const [weekAnchorDate, setWeekAnchorDate] = useState(toDateInputValue(new Date()))
+  // Timer
+  const {
+    timerTaskId,
+    timerIsBillable,
+    timerNotes,
+    timerStartedAt,
+    timerElapsedSec,
+    isTimerSaving,
+    trackedTimerLabel,
+    setTimerTaskId,
+    setTimerIsBillable,
+    setTimerNotes,
+    setTimerStartedAt,
+    setIsTimerSaving,
+    startTimer: timerStartRaw,
+    stopTimer: timerStopRaw,
+    cancelTimer,
+  } = useTimeTrackingTimer()
 
-  const activeProject = useMemo(
-    () => projects.find((project) => project.id === activeProjectId) ?? null,
-    [projects, activeProjectId],
-  )
-  const manualDateMin = activeProject?.start_date ?? undefined
-  const manualDateMax = activeProject?.end_date ?? undefined
-
-  const visibleEntries = useMemo(
-    () => (currentUserId ? entries.filter((entry) => entry.user_id === currentUserId) : entries),
-    [currentUserId, entries],
-  )
-
+  // Compute week range
   const weekRange = useMemo(() => {
     const anchor = new Date(`${weekAnchorDate}T00:00:00`)
     const start = startOfWeek(anchor)
@@ -74,221 +89,58 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
     }
   }, [weekAnchorDate])
 
+  // Actions: load data, save, delete
+  const actionsInput: UseTimeTrackingActionsInput = {
+    projects,
+    currentUserId,
+    activeProjectId,
+    weekRange,
+    editingEntryId,
+    setStatus,
+    loadDashboardPreview,
+    setEntryToDelete,
+  }
+
+  const {
+    entries,
+    isEntriesLoading,
+    projectTasks,
+    taskLabelById,
+    isTaskLabelsLoading,
+    manualDateMin,
+    manualDateMax,
+    reloadCurrentWeek,
+    submitManualEntry: submitManualRaw,
+    deleteEntryHandler,
+    startTimerAndSave,
+  } = useTimeTrackingActions(actionsInput)
+
+  // Derived state
+  const visibleEntries = useMemo(
+    () => (currentUserId ? entries.filter((entry) => entry.user_id === currentUserId) : entries),
+    [currentUserId, entries],
+  )
+
   const weeklySummary = useMemo(() => buildWeeklySummary(visibleEntries), [visibleEntries])
 
-  const resetManualEntryForm = () => {
-    setEditingEntryId(null)
-    setManualTaskId('')
-    setManualDate(toDateInputValue(new Date()))
-    setManualHours('1')
-    setManualIsBillable(true)
-    setManualNotes('')
-  }
-
-  const beginEditEntry = (entry: TimeEntryPreview) => {
-    setActiveProjectId(entry.project_id)
-    setWeekAnchorDate(entry.entry_date)
-    setEditingEntryId(entry.id)
-    setManualTaskId(entry.task_id ?? '')
-    setManualDate(entry.entry_date)
-    setManualHours((entry.minutes_spent / 60).toFixed(2))
-    setManualIsBillable(entry.is_billable)
-    setManualNotes(entry.notes ?? '')
-  }
-
-  const cancelEditEntry = () => {
-    resetManualEntryForm()
-  }
-
-  useEffect(() => {
-    const loadWeekEntries = async () => {
-      setIsEntriesLoading(true)
-
-      try {
-        const nextEntries = await getTimeEntries({
-          fromDate: weekRange.startDate,
-          toDate: weekRange.endDate,
-          projectId: activeProjectId || undefined,
-        })
-        setEntries(nextEntries)
-      } catch (error) {
-        setStatus(error instanceof Error ? `Time entries load error: ${error.message}` : 'Time entries load error')
-        setEntries([])
-      }
-
-      setIsEntriesLoading(false)
-    }
-
-    void loadWeekEntries()
-  }, [activeProjectId, setStatus, weekRange.endDate, weekRange.startDate])
-
-  useEffect(() => {
-    const loadProjectTasks = async () => {
-      setIsTaskLabelsLoading(true)
-
-      if (!activeProjectId) {
-        try {
-          const tasksByProject = await Promise.all(
-            projects.map(async (project) => ({
-              tasks: await getProjectTasks(project.id),
-            })),
-          )
-
-          const allTasks = tasksByProject.flatMap((item) => item.tasks)
-          setProjectTasks(allTasks)
-          setTaskLabelById(
-            allTasks.reduce<Record<string, string>>((acc, task) => {
-              acc[task.id] = task.title
-              return acc
-            }, {}),
-          )
-        } catch (error) {
-          setStatus(error instanceof Error ? `Task load error: ${error.message}` : 'Task load error')
-          setProjectTasks([])
-          setTaskLabelById({})
-        } finally {
-          setIsTaskLabelsLoading(false)
-        }
-
-        setManualTaskId('')
-        setTimerTaskId('')
-        return
-      }
-
-      try {
-        const nextTasks = await getProjectTasks(activeProjectId)
-        const visibleTasks = nextTasks.filter((task) => {
-          if (!currentUserId) {
-            return true
-          }
-
-          return task.assigned_to === currentUserId
-        })
-
-        setProjectTasks(visibleTasks)
-        setTaskLabelById(
-          nextTasks.reduce<Record<string, string>>((acc, task) => {
-            acc[task.id] = task.title
-            return acc
-          }, {}),
-        )
-        setManualTaskId((prev) => (visibleTasks.some((task) => task.id === prev) ? prev : ''))
-        setTimerTaskId((prev) => (visibleTasks.some((task) => task.id === prev) ? prev : ''))
-      } catch (error) {
-        setStatus(error instanceof Error ? `Task load error: ${error.message}` : 'Task load error')
-        setProjectTasks([])
-        setTaskLabelById({})
-      } finally {
-        setIsTaskLabelsLoading(false)
-      }
-    }
-
-    void loadProjectTasks()
-  }, [activeProjectId, currentUserId, projects, setStatus])
-
-  useEffect(() => {
-    if (!timerStartedAt) {
-      return
-    }
-
-    const intervalId = window.setInterval(() => {
-      setTimerElapsedSec(Math.floor((Date.now() - timerStartedAt) / 1000))
-    }, 1000)
-
-    return () => window.clearInterval(intervalId)
-  }, [timerStartedAt])
-
-  const reloadCurrentWeek = async () => {
-    setIsEntriesLoading(true)
-
-    try {
-      const nextEntries = await getTimeEntries({
-        fromDate: weekRange.startDate,
-        toDate: weekRange.endDate,
-        projectId: activeProjectId || undefined,
-      })
-      setEntries(nextEntries)
-    } catch (error) {
-      setStatus(error instanceof Error ? `Time entries load error: ${error.message}` : 'Time entries load error')
-      setEntries([])
-    }
-
-    setIsEntriesLoading(false)
-  }
-
-  const refreshWorkspaceMetrics = async () => {
-    try {
-      await loadDashboardPreview()
-    } catch {
-      // Keep page usable even if background refresh fails.
-    }
-  }
-
+  // Composed actions with proper sequencing
   const submitManualEntry = async () => {
-    if (!activeProjectId) {
-      setStatus('Select a project before logging time')
-      return
-    }
-
-    const parsedHours = Number.parseFloat(manualHours)
-    if (!Number.isFinite(parsedHours) || parsedHours <= 0) {
-      setStatus('Hours must be greater than 0')
-      return
-    }
-
-    if (manualDateMin && manualDate < manualDateMin) {
-      setStatus('Manual entry date must be within selected project dates')
-      return
-    }
-
-    if (manualDateMax && manualDate > manualDateMax) {
-      setStatus('Manual entry date must be within selected project dates')
-      return
-    }
-
-    try {
-      if (editingEntryId) {
-        await updateTimeEntry(editingEntryId, {
-          projectId: activeProjectId,
-          taskId: manualTaskId || undefined,
-          entryDate: manualDate,
-          hoursSpent: parsedHours,
-          isBillable: manualIsBillable,
-          notes: manualNotes,
-        })
-        setStatus('Time entry updated')
-      } else {
-        await createTimeEntry({
-          projectId: activeProjectId,
-          taskId: manualTaskId || undefined,
-          entryDate: manualDate,
-          hoursSpent: parsedHours,
-          isBillable: manualIsBillable,
-          notes: manualNotes,
-        })
-        setStatus('Time entry created')
-      }
-
-      resetManualEntryForm()
-      setWeekAnchorDate(manualDate)
-      await Promise.all([reloadCurrentWeek(), refreshWorkspaceMetrics()])
-    } catch (error) {
-      setStatus(error instanceof Error ? `Time entry save error: ${error.message}` : 'Time entry save error')
-    }
+    await submitManualRaw({
+      activeProjectId,
+      manualTaskId,
+      manualDate,
+      manualHours,
+      manualIsBillable,
+      manualNotes,
+      onSuccess: () => {
+        resetManualForm()
+        setWeekAnchorDate(manualDate)
+      },
+    })
   }
 
-  const deleteEntryHandler = async (entry: TimeEntryPreview) => {
-    try {
-      await deleteTimeEntry(entry.id)
-      if (editingEntryId === entry.id) {
-        resetManualEntryForm()
-      }
-      setEntryToDelete(null)
-      await Promise.all([reloadCurrentWeek(), refreshWorkspaceMetrics()])
-      setStatus('Time entry deleted')
-    } catch (error) {
-      setStatus(error instanceof Error ? `Delete time entry error: ${error.message}` : 'Delete time entry error')
-    }
+  const handleBeginEditEntry = (entry) => {
+    beginEditEntry(entry, setEditingEntryId, setActiveProjectId, setWeekAnchorDate)
   }
 
   const startTimer = () => {
@@ -297,8 +149,7 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
       return
     }
 
-    setTimerStartedAt(Date.now())
-    setTimerElapsedSec(0)
+    timerStartRaw()
   }
 
   const stopAndSaveTimer = async () => {
@@ -306,79 +157,67 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
       return
     }
 
-    if (!activeProjectId) {
-      setStatus('Select a project before saving timer entry')
-      return
-    }
-
-    const timerEntryDate = toDateInputValue(new Date())
-    const elapsedSec = Math.floor((Date.now() - timerStartedAt) / 1000)
-    const elapsedHours = Math.max(1 / 60, elapsedSec / 3600)
-
     setIsTimerSaving(true)
 
     try {
-      await createTimeEntry({
-        projectId: activeProjectId,
-        taskId: timerTaskId || undefined,
-        entryDate: timerEntryDate,
-        hoursSpent: elapsedHours,
-        isBillable: timerIsBillable,
-        notes: timerNotes,
+      await startTimerAndSave({
+        activeProjectId,
+        timerTaskId,
+        timerIsBillable,
+        timerNotes,
+        elapsedSec: timerElapsedSec,
+        onSuccess: () => {
+          setTimerStartedAt(null)
+          setTimerNotes('')
+          const now = new Date()
+          const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+          setWeekAnchorDate(dateStr)
+        },
       })
-
-      setTimerStartedAt(null)
-      setTimerElapsedSec(0)
-      setTimerNotes('')
-      setWeekAnchorDate(timerEntryDate)
-      await Promise.all([reloadCurrentWeek(), refreshWorkspaceMetrics()])
-      setStatus('Timer entry saved')
-    } catch (error) {
-      setStatus(error instanceof Error ? `Timer save error: ${error.message}` : 'Timer save error')
     } finally {
       setIsTimerSaving(false)
     }
   }
 
-  const cancelTimer = () => {
-    setTimerStartedAt(null)
-    setTimerElapsedSec(0)
-  }
-
-  const trackedTimerLabel = useMemo(() => {
-    const hours = Math.floor(timerElapsedSec / 3600)
-    const minutes = Math.floor((timerElapsedSec % 3600) / 60)
-    const seconds = timerElapsedSec % 60
-
-    return [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':')
-  }, [timerElapsedSec])
-
   return {
+    // Entries & loading
     entries,
     isEntriesLoading,
+    visibleEntries,
+    
+    // Project selection
     activeProjectId,
     projectTasks,
     taskLabelById,
     isTaskLabelsLoading,
+
+    // Edit mode
     editingEntryId,
     entryToDelete,
+
+    // Manual entry form
     manualTaskId,
     manualDate,
-    manualDateMin,
-    manualDateMax,
     manualHours,
     manualIsBillable,
     manualNotes,
+    manualDateMin,
+    manualDateMax,
+
+    // Timer state
     timerTaskId,
     timerIsBillable,
     timerNotes,
     timerStartedAt,
     trackedTimerLabel,
     isTimerSaving,
+
+    // Week selection
     weekAnchorDate,
     weekRange,
-    visibleEntries,
     weeklySummary,
+
+    // Setters (preserve original API)
     setActiveProjectId,
     setWeekAnchorDate,
     setManualTaskId,
@@ -390,12 +229,15 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
     setTimerIsBillable,
     setTimerNotes,
     setEntryToDelete,
+
+    // Actions
     submitManualEntry,
+    deleteEntryHandler,
     startTimer,
     stopAndSaveTimer,
     cancelTimer,
     cancelEditEntry,
-    beginEditEntry,
-    deleteEntryHandler,
+    beginEditEntry: handleBeginEditEntry,
+    reloadCurrentWeek,
   }
 }

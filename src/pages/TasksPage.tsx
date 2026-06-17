@@ -29,8 +29,6 @@ export function TasksPage() {
     isTaskTitleMissing,
     isEstimateHoursMissingOrInvalid,
     isWorkPackageMissing,
-    missingRequiredFields,
-    hasAttemptedSubmit,
     taskTitle,
     setTaskTitle,
     taskDescription,
@@ -53,7 +51,7 @@ export function TasksPage() {
     dependencyLabelByTaskId,
     workPackageLabelById,
     assigneeOptions,
-    canSubmit,
+    submitAttempted,
     logTimeTask,
     setLogTimeTask,
     calendarMeta,
@@ -112,10 +110,8 @@ export function TasksPage() {
         dependencyOptions={dependencyOptions}
         canAssignAssignee={canAssignAssignee}
         projectMembers={projectMembers}
-        missingRequiredFields={missingRequiredFields}
-        hasAttemptedSubmit={hasAttemptedSubmit}
         isLoading={isLoading}
-        canSubmit={canSubmit}
+        submitAttempted={submitAttempted}
         onSelectProject={(projectId) => {
           void selectProject(projectId)
         }}

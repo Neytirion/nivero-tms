@@ -8,7 +8,12 @@
  * 4. Returns a draft ready for preview and confirmation
  */
 
-import { serve } from 'https://deno.land/std@0.208.0/http/server.ts'
+declare const Deno: {
+  env: {
+    get(key: string): string | undefined
+  }
+  serve(handler: (req: Request) => Response | Promise<Response>): void
+}
 
 const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
 const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions'
@@ -99,7 +104,7 @@ function validateProjectDraft(data: unknown): { valid: boolean; errors?: Validat
   return { valid: true }
 }
 
-serve(async (req) => {
+Deno.serve(async (req: Request) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, {

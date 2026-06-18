@@ -14,6 +14,35 @@ interface CreateProjectFromDraftResult {
   work_package_count: number
 }
 
+interface CreateProjectFromAiDraftRpcArgs {
+  p_project_name: string
+  p_project_customer_name: string | null
+  p_project_start_date: string | null
+  p_project_end_date: string | null
+  p_project_estimated_hours: number | null
+  p_project_budget_amount: number | null
+  p_work_packages: Array<{
+    name: string
+    estimated_hours: number
+  }>
+  p_tasks: Array<{
+    work_package_name: string
+    title: string
+    description: string | null
+    priority: 'low' | 'medium' | 'high'
+    status: 'todo' | 'backlog'
+    estimate_hours: number
+  }>
+}
+
+type CreateProjectFromAiDraftRpc = (
+  fn: 'create_project_from_ai_draft',
+  args: CreateProjectFromAiDraftRpcArgs,
+) => Promise<{
+  data: unknown
+  error: { message?: string } | null
+}>
+
 /**
  * Create a complete project from an AI draft using atomic RPC
  * 
@@ -39,8 +68,10 @@ export async function createProjectFromAiDraft(draft: AiProjectDraft) {
       }))
     )
 
+    const createProjectFromAiDraftRpc = supabase.rpc as unknown as CreateProjectFromAiDraftRpc
+
     // Call atomic RPC function
-    const { data, error } = await (supabase.rpc as any)('create_project_from_ai_draft', {
+    const { data, error } = await createProjectFromAiDraftRpc('create_project_from_ai_draft', {
       p_project_name: draft.project.name,
       p_project_customer_name: draft.project.customer_name ?? null,
       p_project_start_date: draft.project.start_date ?? null,

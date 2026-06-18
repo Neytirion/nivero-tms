@@ -1,133 +1,51 @@
-import { useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { useWorkspace } from '../features/dashboard/workspace-context.tsx'
 import { supabase } from '../lib/supabase'
+import { useAvatarUpload } from './profile/useAvatarUpload'
+import { usePasswordChange } from './profile/usePasswordChange'
+import { useProfileDetails } from './profile/useProfileDetails'
 
 interface ProfilePageProps {
   user: User
 }
 
 export function ProfilePage({ user }: ProfilePageProps) {
-  const [fullName, setFullName] = useState((user.user_metadata.full_name as string | undefined) ?? '')
-  const [displayName, setDisplayName] = useState((user.user_metadata.display_name as string | undefined) ?? '')
-  const [bio, setBio] = useState((user.user_metadata.bio as string | undefined) ?? '')
   const email = user.email ?? ''
-  const [editSnapshot, setEditSnapshot] = useState({
-    fullName: (user.user_metadata.full_name as string | undefined) ?? '',
-    displayName: (user.user_metadata.display_name as string | undefined) ?? '',
-    bio: (user.user_metadata.bio as string | undefined) ?? '',
-  })
-  const [avatarUrl, setAvatarUrl] = useState((user.user_metadata.avatar_url as string | undefined) ?? '')
-  const [avatarFile, setAvatarFile] = useState<File | null>(null)
-  const [isEditingProfile, setIsEditingProfile] = useState(false)
-  const [isSavingProfile, setIsSavingProfile] = useState(false)
-  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmNewPassword, setConfirmNewPassword] = useState('')
-  const [isChangingPassword, setIsChangingPassword] = useState(false)
   const { status, setStatus, resetDashboardPreview } = useWorkspace()
 
-  const saveProfile = async () => {
-    if (!isEditingProfile) {
-      return
-    }
+  const {
+    fullName,
+    setFullName,
+    displayName,
+    setDisplayName,
+    bio,
+    setBio,
+    avatarUrl,
+    setAvatarUrl,
+    isEditingProfile,
+    isSavingProfile,
+    startEditingProfile,
+    cancelEditingProfile,
+    saveProfile,
+  } = useProfileDetails({ user, setStatus })
 
-    setIsSavingProfile(true)
+  const { setAvatarFile, isUploadingAvatar, uploadAvatar } = useAvatarUpload({
+    userId: user.id,
+    fullName,
+    displayName,
+    bio,
+    setAvatarUrl,
+    setStatus,
+  })
 
-    const nextFullName = fullName.trim()
-    const nextDisplayName = displayName.trim()
-    const nextBio = bio.trim()
-
-    const updatePayload: {
-      data: {
-        full_name: string | null
-        display_name: string | null
-        bio: string | null
-        avatar_url: string | null
-      }
-    } = {
-      data: {
-        full_name: nextFullName || null,
-        display_name: nextDisplayName || null,
-        bio: nextBio || null,
-        avatar_url: avatarUrl || null,
-      },
-    }
-
-    const { error } = await supabase.auth.updateUser(updatePayload)
-
-    if (error) {
-      setStatus(`Profile update error: ${error.message}`)
-      setIsSavingProfile(false)
-      return
-    }
-
-    setFullName(nextFullName)
-    setDisplayName(nextDisplayName)
-    setBio(nextBio)
-    setEditSnapshot({
-      fullName: nextFullName,
-      displayName: nextDisplayName,
-      bio: nextBio,
-    })
-    setIsEditingProfile(false)
-
-    setStatus('Profile updated')
-    setIsSavingProfile(false)
-  }
-
-  const uploadAvatar = async () => {
-    if (!avatarFile) {
-      setStatus('Select an image file first')
-      return
-    }
-
-    if (!avatarFile.type.startsWith('image/')) {
-      setStatus('Only image files are allowed')
-      return
-    }
-
-    setIsUploadingAvatar(true)
-
-    const extension = avatarFile.name.split('.').pop()?.toLowerCase() || 'png'
-    const filePath = `${user.id}/avatar-${Date.now()}.${extension}`
-
-    const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, avatarFile, {
-      upsert: true,
-      cacheControl: '3600',
-    })
-
-    if (uploadError) {
-      setStatus(
-        `Avatar upload error: ${uploadError.message}. Ensure Storage bucket "avatars" exists and allows upload for authenticated users.`,
-      )
-      setIsUploadingAvatar(false)
-      return
-    }
-
-    const { data: publicUrlData } = supabase.storage.from('avatars').getPublicUrl(filePath)
-    const nextAvatarUrl = publicUrlData.publicUrl
-
-    const { error: updateError } = await supabase.auth.updateUser({
-      data: {
-        avatar_url: nextAvatarUrl,
-        full_name: fullName.trim() || null,
-        display_name: displayName.trim() || null,
-        bio: bio.trim() || null,
-      },
-    })
-
-    if (updateError) {
-      setStatus(`Avatar metadata update error: ${updateError.message}`)
-      setIsUploadingAvatar(false)
-      return
-    }
-
-    setAvatarUrl(nextAvatarUrl)
-    setAvatarFile(null)
-    setStatus('Avatar uploaded')
-    setIsUploadingAvatar(false)
-  }
+  const {
+    newPassword,
+    setNewPassword,
+    confirmNewPassword,
+    setConfirmNewPassword,
+    isChangingPassword,
+    changePassword,
+  } = usePasswordChange({ setStatus })
 
   const signOut = async () => {
     const { error } = await supabase.auth.signOut()
@@ -138,33 +56,6 @@ export function ProfilePage({ user }: ProfilePageProps) {
     }
 
     resetDashboardPreview()
-  }
-
-  const changePassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      setStatus('Password must be at least 6 characters long')
-      return
-    }
-
-    if (newPassword !== confirmNewPassword) {
-      setStatus('New password and confirmation do not match')
-      return
-    }
-
-    setIsChangingPassword(true)
-
-    const { error } = await supabase.auth.updateUser({ password: newPassword })
-
-    if (error) {
-      setStatus(`Password change error: ${error.message}`)
-      setIsChangingPassword(false)
-      return
-    }
-
-    setNewPassword('')
-    setConfirmNewPassword('')
-    setStatus('Password updated successfully')
-    setIsChangingPassword(false)
   }
 
   const profileName = displayName || fullName || 'Team member'
@@ -240,14 +131,7 @@ export function ProfilePage({ user }: ProfilePageProps) {
             {!isEditingProfile ? (
               <button
                 type="button"
-                onClick={() => {
-                  setEditSnapshot({
-                    fullName,
-                    displayName,
-                    bio,
-                  })
-                  setIsEditingProfile(true)
-                }}
+                onClick={startEditingProfile}
                 className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-600"
               >
                 Edit profile
@@ -314,13 +198,7 @@ export function ProfilePage({ user }: ProfilePageProps) {
                 <>
                   <button
                     type="button"
-                    onClick={() => {
-                      setFullName(editSnapshot.fullName)
-                      setDisplayName(editSnapshot.displayName)
-                      setBio(editSnapshot.bio)
-                      setIsEditingProfile(false)
-                      setStatus('Profile editing canceled')
-                    }}
+                    onClick={cancelEditingProfile}
                     disabled={isSavingProfile}
                     className="rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
                   >

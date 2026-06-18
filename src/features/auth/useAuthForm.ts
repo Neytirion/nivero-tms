@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { supabase } from '../../lib/supabase'
 
@@ -48,6 +48,7 @@ export function useAuthForm() {
           email,
           password,
           options: {
+            emailRedirectTo: `${window.location.origin}/auth`,
             data: {
               full_name: fullName,
             },
@@ -81,6 +82,17 @@ export function useAuthForm() {
       const { error } = await supabase.auth.signInWithPassword({ email, password })
 
       if (error) {
+        const normalizedMessage = error.message.toLowerCase()
+        const normalizedCode = (error.code ?? '').toLowerCase()
+
+        if (
+          normalizedCode.includes('email_not_confirmed') ||
+          normalizedMessage.includes('email not confirmed')
+        ) {
+          setStatus('Please confirm your email before signing in. Check your inbox.')
+          return
+        }
+
         setStatus(`Sign in error: ${error.message}`)
         return
       }
@@ -103,24 +115,83 @@ export function useAuthForm() {
     try {
       setStatus('Redirecting to Google...')
 
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data: oauthData, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth`,
+          skipBrowserRedirect: true,
         },
       })
 
       if (error) {
+        const normalizedMessage = error.message.toLowerCase()
+
+        if (normalizedMessage.includes('unsupported provider') || normalizedMessage.includes('provider is not enabled')) {
+          setStatus('Google sign-in is not enabled in Supabase yet. Enable Google provider in Auth settings.')
+          return
+        }
+
         setStatus(`Google sign-in error: ${error.message}`)
         return
       }
 
-      setStatus('Redirecting to Google...')
+      if (!oauthData?.url) {
+        setStatus('Google sign-in error: failed to prepare OAuth redirect URL.')
+        return
+      }
+
+      window.location.assign(oauthData.url)
     } finally {
       isSubmittingRef.current = false
       setIsSubmitting(false)
     }
   }
+
+  useEffect(() => {
+    let isMounted = true
+
+    const handleOAuthCallback = async () => {
+      const queryParams = new URLSearchParams(window.location.search)
+      const hashParams = new URLSearchParams(window.location.hash.startsWith('#') ? window.location.hash.slice(1) : '')
+      const callbackCode = queryParams.get('code')
+      const callbackError = queryParams.get('error_description') ?? hashParams.get('error_description')
+
+      if (callbackError) {
+        setStatus(`Auth error: ${callbackError}`)
+        return
+      }
+
+      if (!callbackCode || isSubmittingRef.current) {
+        return
+      }
+
+      isSubmittingRef.current = true
+      setIsSubmitting(true)
+      setStatus('Completing sign-in...')
+
+      const { error } = await supabase.auth.exchangeCodeForSession(window.location.href)
+
+      if (!isMounted) {
+        return
+      }
+
+      if (error) {
+        setStatus(`Google callback error: ${error.message}`)
+      } else {
+        setStatus('Signed in with Google. Redirecting...')
+      }
+
+      window.history.replaceState({}, document.title, window.location.pathname)
+      isSubmittingRef.current = false
+      setIsSubmitting(false)
+    }
+
+    void handleOAuthCallback()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   return {
     mode,

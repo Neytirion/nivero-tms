@@ -2,8 +2,10 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthPage } from './pages/AuthPage.tsx'
 import { AppShell } from './pages/AppShell.tsx'
 import { DashboardPage } from './pages/DashboardPage.tsx'
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage.tsx'
 import { ProfilePage } from './pages/ProfilePage.tsx'
 import { ProjectsPage } from './pages/ProjectsPage.tsx'
+import { ResetPasswordPage } from './pages/ResetPasswordPage.tsx'
 import { TasksPage } from './pages/TasksPage.tsx'
 import { TimeTrackingPage } from './pages/TimeTrackingPage.tsx'
 import { ResourcePlanningPage } from './pages/ResourcePlanningPage.tsx'
@@ -25,6 +27,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route
           path="/auth"
           element={user ? <Navigate to="/app/dashboard" replace /> : <AuthPage />}

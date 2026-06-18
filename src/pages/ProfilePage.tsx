@@ -22,6 +22,9 @@ export function ProfilePage({ user }: ProfilePageProps) {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [isSavingProfile, setIsSavingProfile] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [isChangingPassword, setIsChangingPassword] = useState(false)
   const { status, setStatus, resetDashboardPreview } = useWorkspace()
 
   const saveProfile = async () => {
@@ -137,6 +140,33 @@ export function ProfilePage({ user }: ProfilePageProps) {
     resetDashboardPreview()
   }
 
+  const changePassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      setStatus('Password must be at least 6 characters long')
+      return
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setStatus('New password and confirmation do not match')
+      return
+    }
+
+    setIsChangingPassword(true)
+
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+
+    if (error) {
+      setStatus(`Password change error: ${error.message}`)
+      setIsChangingPassword(false)
+      return
+    }
+
+    setNewPassword('')
+    setConfirmNewPassword('')
+    setStatus('Password updated successfully')
+    setIsChangingPassword(false)
+  }
+
   const profileName = displayName || fullName || 'Team member'
   const avatarInitial = (profileName || email || '?').charAt(0).toUpperCase()
 
@@ -232,84 +262,124 @@ export function ProfilePage({ user }: ProfilePageProps) {
           </p>
 
           <div className="mt-4 grid gap-4">
-          <label className="space-y-1">
-            <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-600">Full name</span>
-            <input
-              type="text"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              placeholder="Full name"
-              disabled={!isEditingProfile || isSavingProfile}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-            />
-          </label>
+            <label className="space-y-1">
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-600">Full name</span>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(event) => setFullName(event.target.value)}
+                placeholder="Full name"
+                disabled={!isEditingProfile || isSavingProfile}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+              />
+            </label>
 
-          <label className="space-y-1">
-            <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-600">Display name</span>
-            <input
-              type="text"
-              value={displayName}
-              onChange={(event) => setDisplayName(event.target.value)}
-              placeholder="How your name should be shown"
-              disabled={!isEditingProfile || isSavingProfile}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-            />
-          </label>
+            <label className="space-y-1">
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-600">Display name</span>
+              <input
+                type="text"
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+                placeholder="How your name should be shown"
+                disabled={!isEditingProfile || isSavingProfile}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+              />
+            </label>
 
-          <label className="space-y-1">
-            <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-600">About me</span>
-            <textarea
-              value={bio}
-              onChange={(event) => setBio(event.target.value)}
-              placeholder="A short introduction"
-              rows={3}
-              disabled={!isEditingProfile || isSavingProfile}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-            />
-          </label>
+            <label className="space-y-1">
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-600">About me</span>
+              <textarea
+                value={bio}
+                onChange={(event) => setBio(event.target.value)}
+                placeholder="A short introduction"
+                rows={3}
+                disabled={!isEditingProfile || isSavingProfile}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+              />
+            </label>
 
-          <label className="space-y-1">
-            <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-600">Email</span>
-            <input
-              type="email"
-              value={email}
-              readOnly
-              disabled
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-            />
-          </label>
+            <label className="space-y-1">
+              <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-600">Email</span>
+              <input
+                type="email"
+                value={email}
+                readOnly
+                disabled
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+              />
+            </label>
 
-          <div className="flex flex-wrap items-center gap-2 pt-2">
-            {isEditingProfile ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFullName(editSnapshot.fullName)
-                    setDisplayName(editSnapshot.displayName)
-                    setBio(editSnapshot.bio)
-                    setIsEditingProfile(false)
-                    setStatus('Profile editing canceled')
-                  }}
-                  disabled={isSavingProfile}
-                  className="rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={saveProfile}
-                  disabled={isSavingProfile}
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSavingProfile ? 'Saving...' : 'Save profile'}
-                </button>
-              </>
-            ) : (
-              <span className="text-xs text-slate-500">Fields are locked in view mode.</span>
-            )}
+            <div className="flex flex-wrap items-center gap-2 pt-2">
+              {isEditingProfile ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFullName(editSnapshot.fullName)
+                      setDisplayName(editSnapshot.displayName)
+                      setBio(editSnapshot.bio)
+                      setIsEditingProfile(false)
+                      setStatus('Profile editing canceled')
+                    }}
+                    disabled={isSavingProfile}
+                    className="rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={saveProfile}
+                    disabled={isSavingProfile}
+                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSavingProfile ? 'Saving...' : 'Save profile'}
+                  </button>
+                </>
+              ) : (
+                <span className="text-xs text-slate-500">Fields are locked in view mode.</span>
+              )}
+            </div>
           </div>
-        </div>
+
+          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+            <h4 className="text-sm font-semibold text-slate-900">Change password</h4>
+            <p className="mt-1 text-xs text-slate-600">Set a new password for this account.</p>
+
+            <div className="mt-3 grid gap-3">
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                placeholder="New password"
+                autoComplete="new-password"
+                minLength={6}
+                disabled={isChangingPassword}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+              />
+
+              <input
+                type="password"
+                value={confirmNewPassword}
+                onChange={(event) => setConfirmNewPassword(event.target.value)}
+                placeholder="Confirm new password"
+                autoComplete="new-password"
+                minLength={6}
+                disabled={isChangingPassword}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+              />
+
+              <div>
+                <button
+                  type="button"
+                  onClick={changePassword}
+                  disabled={isChangingPassword}
+                  className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {isChangingPassword ? 'Updating...' : 'Update password'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -1,4 +1,5 @@
 import { useAuthForm } from '../features/auth/useAuthForm.ts'
+import { Link } from 'react-router-dom'
 
 export function AuthPage() {
   const {
@@ -80,6 +81,17 @@ export function AuthPage() {
             required
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
           />
+
+          {mode === 'sign-in' ? (
+            <div className="flex justify-end">
+              <Link
+                to="/auth/forgot-password"
+                className="text-xs font-medium text-sky-700 transition hover:text-sky-600"
+              >
+                Forgot password?
+              </Link>
+            </div>
+          ) : null}
 
           <button
             type="submit"

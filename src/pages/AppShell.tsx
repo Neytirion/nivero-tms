@@ -3,10 +3,10 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { WorkspaceProvider, useWorkspace } from '../features/dashboard/workspace-context.tsx'
 
 const baseNavItems = [
-  { to: '/app/dashboard', label: 'Dashboard', description: 'Portfolio health and priorities' },
-  { to: '/app/projects', label: 'Projects', description: 'Project catalog and details' },
-  { to: '/app/tasks', label: 'Tasks', description: 'Kanban board and task flow' },
-  { to: '/app/time-tracking', label: 'Time Tracking', description: 'Entries, timer, and weekly timesheet' },
+  { to: '/app/dashboard', label: 'Dashboard' },
+  { to: '/app/projects', label: 'Projects' },
+  { to: '/app/tasks', label: 'Tasks' },
+  { to: '/app/time-tracking', label: 'Time Tracking' },
 ]
 
 interface AppShellProps {
@@ -35,7 +35,7 @@ function AppShellLayout({ user }: AppShellProps) {
   const activeNavItems = canViewResourcePlanning
     ? [
         ...baseNavItems,
-        { to: '/app/resources', label: 'Resources', description: 'Consultant allocation and availability' },
+        { to: '/app/resources', label: 'Resources' },
       ]
     : baseNavItems
 
@@ -116,7 +116,6 @@ function AppShellLayout({ user }: AppShellProps) {
                       }
                     >
                       <p className="text-sm font-semibold">{item.label}</p>
-                      <p className="mt-0.5 text-[11px] opacity-80">{item.description}</p>
                     </NavLink>
                   ))}
                 </nav>

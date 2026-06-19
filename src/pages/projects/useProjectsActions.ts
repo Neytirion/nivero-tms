@@ -9,6 +9,7 @@ export interface UseProjectsActionsInput {
     projectId: string | null
     name: string
     description: string
+    customerName: string
     startDate: string
     deadline: string
   }
@@ -26,6 +27,7 @@ export interface UseProjectsActionsInput {
     input: {
       name: string
       description: string
+      customerName?: string
       startDate?: string
       deadlineAt?: string
     },
@@ -182,6 +184,7 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
       const wasSaved = await editProject(selectedProject.id, {
         name: currentSettingsDraft.name,
         description: currentSettingsDraft.description,
+        customerName: currentSettingsDraft.customerName || undefined,
         startDate: currentSettingsDraft.startDate || undefined,
         deadlineAt: currentSettingsDraft.deadline || undefined,
       })

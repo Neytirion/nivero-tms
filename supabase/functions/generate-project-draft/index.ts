@@ -182,8 +182,14 @@ Deno.serve(async (req: Request) => {
     }
 
     // Call OpenAI
+    const today = new Date()
+    const todayIso = today.toISOString().split('T')[0]
+    
     const prompt = `
 You are a project management assistant. Based on the user's description, generate a structured project plan.
+
+IMPORTANT: Today's date is ${todayIso}. When the user mentions a duration (e.g., "4 months", "3 weeks"), calculate dates from today.
+For example, if the user says "4 months" and today is ${todayIso}, the end date should be approximately 4 months from today.
 
 Return ONLY valid JSON (no markdown, no extra text) matching this exact structure:
 {

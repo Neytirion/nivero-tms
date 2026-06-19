@@ -66,7 +66,7 @@ export function createProjectActions(config: ProjectActionsConfig) {
 
   const editProject = async (
     projectId: string,
-    patch: { name?: string; description?: string; deadlineAt?: string; startDate?: string },
+    patch: { name?: string; description?: string; customerName?: string; deadlineAt?: string; startDate?: string },
   ) => {
     if (!config.ensureProjectEditable(projectId, 'edit project')) {
       return false
@@ -88,6 +88,7 @@ export function createProjectActions(config: ProjectActionsConfig) {
       const updatedProject = await updateProject(projectId, {
         name: patch.name.trim(),
         description: patch.description,
+        customer_name: patch.customerName,
         deadline_at: patch.deadlineAt,
         start_date: patch.startDate,
       })

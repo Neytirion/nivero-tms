@@ -125,6 +125,7 @@ export interface CreateProjectInput {
 export interface UpdateProjectInput {
   name: string
   description?: string
+  customer_name?: string
   deadline_at?: string
   start_date?: string
   budget_amount?: number

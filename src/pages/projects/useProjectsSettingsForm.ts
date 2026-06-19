@@ -5,6 +5,7 @@ interface SettingsDraftState {
   projectId: string | null
   name: string
   description: string
+  customerName: string
   startDate: string
   deadline: string
 }
@@ -27,6 +28,7 @@ export function useProjectsSettingsForm(
     projectId: null,
     name: '',
     description: '',
+    customerName: '',
     startDate: '',
     deadline: '',
   })
@@ -47,6 +49,7 @@ export function useProjectsSettingsForm(
       projectId: selectedProject.id,
       name: selectedProject.name ?? '',
       description: selectedProject.description ?? '',
+      customerName: selectedProject.customer_name ?? '',
       startDate: selectedProject.start_date ?? '',
       deadline: selectedProject.end_date ?? selectedProject.deadline_at ?? '',
     }
@@ -66,6 +69,7 @@ export function useProjectsSettingsForm(
             projectId: selectedProject.id,
             name: selectedProject.name ?? '',
             description: selectedProject.description ?? '',
+            customerName: selectedProject.customer_name ?? '',
             startDate: selectedProject.start_date ?? '',
             deadline: selectedProject.end_date ?? selectedProject.deadline_at ?? '',
           }
@@ -81,6 +85,7 @@ export function useProjectsSettingsForm(
       projectId: null,
       name: '',
       description: '',
+      customerName: '',
       startDate: '',
       deadline: '',
     })

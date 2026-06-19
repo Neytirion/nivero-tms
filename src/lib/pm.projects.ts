@@ -124,6 +124,9 @@ export async function updateProject(projectId: string, patch: UpdateProjectInput
     ...(patch.description !== undefined
       ? { description: patch.description.trim() ? patch.description : null }
       : {}),
+    ...(patch.customer_name !== undefined
+      ? { customer_name: patch.customer_name.trim() ? patch.customer_name : null }
+      : {}),
     ...(patch.deadline_at !== undefined
       ? { deadline_at: patch.deadline_at || null, end_date: patch.deadline_at || null }
       : {}),

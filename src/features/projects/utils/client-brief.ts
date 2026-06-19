@@ -28,11 +28,46 @@ export type ClientBriefExportFormat = 'html' | 'pdf' | 'docx'
 
 const DEFAULT_THEME: ClientBriefTheme = {
   brandName: 'Nivero',
-  primaryColor: '#0f766e',
-  accentColor: '#fb923c',
-  surfaceColor: '#f8fafc',
-  textColor: '#0f172a',
-  mutedTextColor: '#475569',
+  primaryColor: '#e0f2da',
+  accentColor: '#7db991',
+  surfaceColor: '#f5f8f2',
+  textColor: '#1f2937',
+  mutedTextColor: '#55606f',
+}
+
+function hexToRgb(hex: string) {
+  const normalized = hex.replace('#', '').trim()
+  const full = normalized.length === 3
+    ? normalized.split('').map((value) => `${value}${value}`).join('')
+    : normalized
+
+  if (!/^[0-9a-fA-F]{6}$/.test(full)) {
+    return { r: 15, g: 76, b: 77 }
+  }
+
+  return {
+    r: Number.parseInt(full.slice(0, 2), 16),
+    g: Number.parseInt(full.slice(2, 4), 16),
+    b: Number.parseInt(full.slice(4, 6), 16),
+  }
+}
+
+function softenRgb(rgb: { r: number; g: number; b: number }, intensity: number) {
+  const factor = Math.max(0, Math.min(1, intensity))
+  return {
+    r: Math.round(rgb.r + (255 - rgb.r) * factor),
+    g: Math.round(rgb.g + (255 - rgb.g) * factor),
+    b: Math.round(rgb.b + (255 - rgb.b) * factor),
+  }
+}
+
+function darkenRgb(rgb: { r: number; g: number; b: number }, intensity: number) {
+  const factor = Math.max(0, Math.min(1, intensity))
+  return {
+    r: Math.round(rgb.r * (1 - factor)),
+    g: Math.round(rgb.g * (1 - factor)),
+    b: Math.round(rgb.b * (1 - factor)),
+  }
 }
 
 function escapeHtml(value: string) {
@@ -136,55 +171,90 @@ export function buildClientBriefHtml(input: BuildClientBriefInput) {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>${escapeHtml(projectName)} - Client Brief</title>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap');
       :root {
         --primary: ${theme.primaryColor};
         --accent: ${theme.accentColor};
         --surface: ${theme.surfaceColor};
         --text: ${theme.textColor};
         --muted: ${theme.mutedTextColor};
+        --brand-ink: color-mix(in srgb, var(--primary) 18%, #173126);
       }
       * { box-sizing: border-box; }
       body {
         margin: 0;
-        font-family: "Avenir Next", "Segoe UI", sans-serif;
+        font-family: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
         color: var(--text);
         background:
-          radial-gradient(circle at top right, color-mix(in srgb, var(--accent) 20%, white) 0%, transparent 38%),
+          radial-gradient(circle at 88% 0%, color-mix(in srgb, var(--accent) 24%, white) 0%, transparent 42%),
+          radial-gradient(circle at 0% 78%, color-mix(in srgb, var(--primary) 12%, white) 0%, transparent 46%),
           linear-gradient(180deg, #ffffff 0%, var(--surface) 100%);
       }
       .page {
         max-width: 980px;
         margin: 0 auto;
-        padding: 28px 20px 56px;
+        padding: 30px 20px 56px;
       }
       .hero {
-        border-radius: 18px;
-        padding: 24px;
-        background: linear-gradient(140deg, var(--primary) 0%, color-mix(in srgb, var(--primary) 72%, #022c22) 100%);
+        border-radius: 24px;
+        padding: 28px;
+        background:
+          linear-gradient(140deg, #173126 0%, #234236 100%);
         color: #fff;
+        box-shadow: 0 18px 40px rgba(15, 76, 77, 0.22);
       }
-      .eyebrow { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85; }
-      .title { margin: 10px 0 8px; font-size: 34px; line-height: 1.1; }
+      .brand-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .brand-mark {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.96);
+        border: 1px solid rgba(255, 255, 255, 0.65);
+        border-radius: 999px;
+        padding: 5px 11px;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+      }
+      .brand-glyph {
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 15px solid color-mix(in srgb, var(--accent) 70%, #8ecf9e);
+      }
+      .brand-word {
+        color: #173126;
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.02em;
+        text-transform: lowercase;
+      }
+      .eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; opacity: 0.86; font-weight: 700; }
+      .title { margin: 10px 0 8px; font-size: 36px; line-height: 1.1; font-weight: 800; max-width: 16ch; }
       .subtitle { margin: 0; max-width: 68ch; opacity: 0.94; }
       .grid { margin-top: 16px; display: grid; gap: 12px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .card {
-        border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        background: #fff;
-        padding: 14px;
+        border: 1px solid color-mix(in srgb, var(--primary) 16%, #d8dee5);
+        border-radius: 16px;
+        background: color-mix(in srgb, white 88%, var(--surface));
+        padding: 14px 15px;
       }
       .label { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
-      .value { margin-top: 7px; font-size: 18px; font-weight: 700; }
+      .value { margin-top: 7px; font-size: 18px; font-weight: 800; color: var(--brand-ink); }
       .section { margin-top: 18px; }
       .section h2 { margin: 0 0 8px; font-size: 18px; }
       .section p { margin: 0; color: var(--muted); line-height: 1.5; }
       .chip-wrap { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
       .chip {
-        border: 1px solid color-mix(in srgb, var(--primary) 20%, #e2e8f0);
+        border: 1px solid color-mix(in srgb, var(--primary) 28%, #d9e0e0);
         border-radius: 999px;
         padding: 5px 10px;
         font-size: 12px;
-        background: color-mix(in srgb, var(--primary) 9%, white);
+        background: color-mix(in srgb, var(--primary) 12%, white);
+        color: color-mix(in srgb, var(--primary) 86%, #122);
       }
       .muted { color: var(--muted); font-size: 13px; }
       table {
@@ -200,9 +270,9 @@ export function buildClientBriefHtml(input: BuildClientBriefInput) {
         font-size: 13px;
       }
       th {
-        background: color-mix(in srgb, var(--primary) 7%, white);
+        background: color-mix(in srgb, var(--primary) 10%, white);
         color: var(--text);
-        border-bottom: 1px solid #dbeafe;
+        border-bottom: 1px solid color-mix(in srgb, var(--primary) 20%, #dce6e6);
       }
       td { border-bottom: 1px solid #f1f5f9; }
       .footer {
@@ -222,9 +292,15 @@ export function buildClientBriefHtml(input: BuildClientBriefInput) {
   <body>
     <main class="page">
       <section class="hero">
-        <p class="eyebrow">${escapeHtml(theme.brandName)} Delivery Brief</p>
+        <div class="brand-row">
+          <span class="brand-mark" aria-label="${escapeHtml(theme.brandName)} mark">
+            <span class="brand-glyph"></span>
+            <span class="brand-word">${escapeHtml(theme.brandName.toLowerCase())}</span>
+          </span>
+          <p class="eyebrow">${escapeHtml(theme.brandName)} Delivery Brief</p>
+        </div>
         <h1 class="title">${escapeHtml(projectName)}</h1>
-        <p class="subtitle">Prepared for ${escapeHtml(customer)}. This brief summarizes objectives, execution model, timeline, and a delivery-ready task snapshot.</p>
+        <p class="subtitle">Prepared for ${escapeHtml(customer)}. This brief summarizes goals, estimate modules, delivery scope, and project execution setup.</p>
       </section>
 
       <section class="grid">
@@ -238,7 +314,7 @@ export function buildClientBriefHtml(input: BuildClientBriefInput) {
       </section>
 
       <section class="section card">
-        <h2>Project Story</h2>
+        <h2>Description</h2>
         <p>${escapeHtml(description)}</p>
       </section>
 
@@ -289,6 +365,13 @@ function downloadBlob(fileName: string, blob: Blob) {
 export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   const { jsPDF } = await import('jspdf')
   const theme = input.theme ?? DEFAULT_THEME
+  const primaryRgb = hexToRgb(theme.primaryColor)
+  const accentRgb = hexToRgb(theme.accentColor)
+  const softAccentRgb = softenRgb(accentRgb, 0.6)
+  const brandInkRgb = darkenRgb(primaryRgb, 0.82)
+  const headerTextRgb = darkenRgb(accentRgb, 0.56)
+  const textRgb = hexToRgb(theme.textColor)
+  const mutedRgb = hexToRgb(theme.mutedTextColor)
   const generatedAt = input.generatedAt ?? new Date()
   const projectName = input.project.name || 'Project'
   const customer = input.project.customer_name ?? 'Confidential'
@@ -315,34 +398,40 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
     cursorY = margin
   }
 
-  pdf.setFillColor(15, 118, 110)
+  pdf.setFillColor(primaryRgb.r, primaryRgb.g, primaryRgb.b)
   pdf.rect(0, 0, pageWidth, 122, 'F')
 
-  pdf.setTextColor(255, 255, 255)
+  pdf.setFillColor(accentRgb.r, accentRgb.g, accentRgb.b)
+  pdf.rect(0, 0, pageWidth, 10, 'F')
+
+  pdf.setFillColor(softAccentRgb.r, softAccentRgb.g, softAccentRgb.b)
+  pdf.circle(pageWidth - 42, -8, 80, 'F')
+
+  pdf.setTextColor(headerTextRgb.r, headerTextRgb.g, headerTextRgb.b)
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(10)
-  pdf.text(`${theme.brandName} Delivery Brief`, margin, 36)
+  pdf.text(`${theme.brandName} Delivery Brief`, margin, 40)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(24)
-  pdf.text(truncateLine(projectName, 70), margin, 62)
+  pdf.text(truncateLine(projectName, 70), margin, 69)
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(11)
-  pdf.text(truncateLine(`Prepared for ${customer}`, 90), margin, 84)
+  pdf.text(truncateLine(`Prepared for ${customer}`, 90), margin, 92)
 
   cursorY = 148
-  pdf.setTextColor(15, 23, 42)
+  pdf.setTextColor(textRgb.r, textRgb.g, textRgb.b)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(12)
   pdf.text('Project Snapshot', margin, cursorY)
 
   cursorY += 16
-  pdf.setDrawColor(226, 232, 240)
-  pdf.setFillColor(248, 250, 252)
+  pdf.setDrawColor(205, 215, 214)
+  pdf.setFillColor(248, 249, 245)
   pdf.roundedRect(margin, cursorY, contentWidth, 68, 8, 8, 'FD')
 
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(11)
-  pdf.setTextColor(71, 85, 105)
+  pdf.setTextColor(mutedRgb.r, mutedRgb.g, mutedRgb.b)
   if (includeExecutionHealth) {
     pdf.text('Progress', margin + 16, cursorY + 20)
     pdf.text('Risk', margin + contentWidth / 3 + 8, cursorY + 20)
@@ -354,7 +443,7 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   }
 
   pdf.setFont('helvetica', 'bold')
-  pdf.setTextColor(15, 23, 42)
+  pdf.setTextColor(brandInkRgb.r, brandInkRgb.g, brandInkRgb.b)
   if (includeExecutionHealth) {
     pdf.text(`${progress}%`, margin + 16, cursorY + 42)
     pdf.text(risk, margin + contentWidth / 3 + 8, cursorY + 42)
@@ -370,12 +459,12 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
 
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(12)
-  pdf.text('Project Story', margin, cursorY)
+  pdf.text('Description', margin, cursorY)
   cursorY += 16
 
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(10)
-  pdf.setTextColor(71, 85, 105)
+  pdf.setTextColor(mutedRgb.r, mutedRgb.g, mutedRgb.b)
   const descriptionLines = pdf.splitTextToSize(description, contentWidth)
   pdf.text(descriptionLines, margin, cursorY)
   cursorY += descriptionLines.length * 14 + 10
@@ -383,13 +472,13 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   ensureSpace(84)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(12)
-  pdf.setTextColor(15, 23, 42)
+  pdf.setTextColor(textRgb.r, textRgb.g, textRgb.b)
   pdf.text('Delivery Details', margin, cursorY)
   cursorY += 16
 
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(10)
-  pdf.setTextColor(71, 85, 105)
+  pdf.setTextColor(mutedRgb.r, mutedRgb.g, mutedRgb.b)
   pdf.text(`Manager: ${managerName}`, margin, cursorY)
   cursorY += 14
   pdf.text(`Start: ${formatDate(input.project.start_date)}   End: ${formatDate(input.project.end_date)}`, margin, cursorY)
@@ -400,13 +489,13 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   ensureSpace(80)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(12)
-  pdf.setTextColor(15, 23, 42)
+  pdf.setTextColor(textRgb.r, textRgb.g, textRgb.b)
   pdf.text('Team', margin, cursorY)
   cursorY += 16
 
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(10)
-  pdf.setTextColor(71, 85, 105)
+  pdf.setTextColor(mutedRgb.r, mutedRgb.g, mutedRgb.b)
   const teamLine = input.teamMemberNames.length
     ? input.teamMemberNames.join(', ')
     : 'Team will be assigned after approval.'
@@ -417,13 +506,13 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   ensureSpace(120)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(12)
-  pdf.setTextColor(15, 23, 42)
+  pdf.setTextColor(textRgb.r, textRgb.g, textRgb.b)
   pdf.text('Estimate Modules', margin, cursorY)
   cursorY += 14
 
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(10)
-  pdf.setTextColor(71, 85, 105)
+  pdf.setTextColor(mutedRgb.r, mutedRgb.g, mutedRgb.b)
   if (estimateModules.length === 0) {
     pdf.text('Estimate modules are not configured yet.', margin, cursorY + 4)
     cursorY += 18
@@ -439,7 +528,7 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
 
   const footer = `Generated: ${generatedAt.toLocaleString('en-GB')}  |  Prepared by ${theme.brandName}`
   pdf.setFontSize(9)
-  pdf.setTextColor(100, 116, 139)
+  pdf.setTextColor(mutedRgb.r, mutedRgb.g, mutedRgb.b)
   pdf.text(footer, margin, pageHeight - 24)
 
   const safeName = normalizeFileSafe(projectName || 'project')
@@ -452,6 +541,10 @@ export async function downloadClientBriefDocx(input: BuildClientBriefInput) {
   const { Document, HeadingLevel, Packer, Paragraph, TextRun } = await import('docx')
 
   const theme = input.theme ?? DEFAULT_THEME
+  const brandInkRgb = darkenRgb(hexToRgb(theme.primaryColor), 0.82)
+  const brandInkHex = [brandInkRgb.r, brandInkRgb.g, brandInkRgb.b]
+    .map((value) => value.toString(16).padStart(2, '0'))
+    .join('')
   const generatedAt = input.generatedAt ?? new Date()
   const projectName = input.project.name || 'Project'
   const customer = input.project.customer_name ?? 'Confidential'
@@ -482,7 +575,7 @@ export async function downloadClientBriefDocx(input: BuildClientBriefInput) {
           new Paragraph({
             heading: HeadingLevel.TITLE,
             spacing: { after: 120 },
-            children: [new TextRun({ text: `${projectName} - Client Brief`, bold: true, color: '0F766E' })],
+            children: [new TextRun({ text: `${projectName} - Client Brief`, bold: true, color: brandInkHex.toUpperCase() })],
           }),
           new Paragraph({ children: [new TextRun({ text: `Prepared by ${theme.brandName} for ${customer}`, italics: true })], spacing: { after: 180 } }),
           new Paragraph({ heading: HeadingLevel.HEADING_1, text: 'Project Snapshot' }),
@@ -498,7 +591,7 @@ export async function downloadClientBriefDocx(input: BuildClientBriefInput) {
               new Paragraph(`Estimated Hours: ${formatNumber(input.project.estimated_hours)}h`),
               new Paragraph({ spacing: { after: 160 }, text: `Planned End: ${formatDate(input.project.end_date)}` }),
             ]),
-          new Paragraph({ heading: HeadingLevel.HEADING_1, text: 'Project Story' }),
+          new Paragraph({ heading: HeadingLevel.HEADING_1, text: 'Description' }),
           new Paragraph({ spacing: { after: 180 }, children: [new TextRun(description)] }),
           new Paragraph({ heading: HeadingLevel.HEADING_1, text: 'Delivery Details' }),
           new Paragraph(`Manager: ${managerName}`),

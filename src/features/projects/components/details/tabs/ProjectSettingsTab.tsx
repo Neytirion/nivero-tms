@@ -3,6 +3,8 @@ interface ProjectSettingsTabProps {
   onSettingsNameChange: (value: string) => void
   settingsDescription: string
   onSettingsDescriptionChange: (value: string) => void
+  settingsCustomerName: string
+  onSettingsCustomerNameChange: (value: string) => void
   settingsStartDate: string
   onSettingsStartDateChange: (value: string) => void
   settingsDeadline: string
@@ -19,6 +21,8 @@ export function ProjectSettingsTab({
   onSettingsNameChange,
   settingsDescription,
   onSettingsDescriptionChange,
+  settingsCustomerName,
+  onSettingsCustomerNameChange,
   settingsStartDate,
   onSettingsStartDateChange,
   settingsDeadline,
@@ -52,6 +56,18 @@ export function ProjectSettingsTab({
             value={settingsDescription}
             onChange={(event) => onSettingsDescriptionChange(event.target.value)}
             placeholder="Project description"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            disabled={!canEditSelectedProject}
+          />
+        </label>
+
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Customer</span>
+          <input
+            type="text"
+            value={settingsCustomerName}
+            onChange={(event) => onSettingsCustomerNameChange(event.target.value)}
+            placeholder="Customer name"
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
             disabled={!canEditSelectedProject}
           />

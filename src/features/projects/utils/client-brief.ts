@@ -369,7 +369,6 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   const accentRgb = hexToRgb(theme.accentColor)
   const softAccentRgb = softenRgb(accentRgb, 0.6)
   const brandInkRgb = darkenRgb(primaryRgb, 0.82)
-  const headerTextRgb = darkenRgb(accentRgb, 0.56)
   const textRgb = hexToRgb(theme.textColor)
   const mutedRgb = hexToRgb(theme.mutedTextColor)
   const generatedAt = input.generatedAt ?? new Date()
@@ -461,10 +460,6 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
     }
   }
 
-  pdf.setTextColor(headerTextRgb.r, headerTextRgb.g, headerTextRgb.b)
-  pdf.setFont('helvetica', 'normal')
-  pdf.setFontSize(10)
-  pdf.text(`${theme.brandName} Delivery Brief`, logoDataUrl ? margin + logoWidth + 8 : margin, 40)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(24)
   pdf.text(truncateLine(projectName, 70), margin, 69)

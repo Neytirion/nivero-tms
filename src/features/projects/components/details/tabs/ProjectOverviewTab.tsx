@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import type { ProjectPreview, TaskPreview } from '../../../../../lib/pm'
-import { downloadClientBriefHtml } from '../../../utils/client-brief'
+import { downloadClientBrief, type ClientBriefExportFormat } from '../../../utils/client-brief'
 import { deriveProgress, deriveRisk, formatDate } from '../../../utils/project-metrics'
 
 interface ProjectOverviewTabProps {
@@ -15,13 +16,22 @@ export function ProjectOverviewTab({
   projectManagerName,
   teamMemberNames,
 }: ProjectOverviewTabProps) {
-  const exportClientBrief = () => {
-    downloadClientBriefHtml({
-      project: selectedProject,
-      tasks,
-      teamMemberNames,
-      projectManagerName,
-    })
+  const [exportFormat, setExportFormat] = useState<ClientBriefExportFormat>('pdf')
+  const [isExporting, setIsExporting] = useState(false)
+
+  const exportClientBrief = async () => {
+    setIsExporting(true)
+
+    try {
+      await downloadClientBrief({
+        project: selectedProject,
+        tasks,
+        teamMemberNames,
+        projectManagerName,
+      }, exportFormat)
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   return (
@@ -29,13 +39,27 @@ export function ProjectOverviewTab({
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h4 className="text-sm font-semibold text-slate-900">Overview</h4>
-          <button
-            type="button"
-            onClick={exportClientBrief}
-            className="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-cyan-900 transition hover:bg-cyan-100"
-          >
-            Export client brief
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={exportFormat}
+              onChange={(event) => setExportFormat(event.target.value as ClientBriefExportFormat)}
+              className="rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-700"
+              aria-label="Select export format"
+            >
+              <option value="pdf">PDF</option>
+              <option value="html">HTML</option>
+              <option value="docx">DOCX</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={() => void exportClientBrief()}
+              disabled={isExporting}
+              className="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-cyan-900 transition hover:bg-cyan-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isExporting ? 'Exporting...' : `Export client brief ${exportFormat.toUpperCase()}`}
+            </button>
+          </div>
         </div>
         <div className="mt-3 grid gap-3 lg:grid-cols-3">
           <div className="rounded-lg border border-slate-200 bg-white p-3">

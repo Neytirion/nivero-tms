@@ -187,6 +187,7 @@ export function ProjectDetailsSection({
           {activeTab === 'overview' ? (
             <ProjectOverviewTab
               selectedProject={selectedProject}
+              tasks={tasks}
               projectManagerName={projectManagerName}
               teamMemberNames={teamMemberNames}
             />

@@ -39,7 +39,7 @@ type CreateProjectFromAiDraftRpc = (
   fn: 'create_project_from_ai_draft',
   args: CreateProjectFromAiDraftRpcArgs,
 ) => Promise<{
-  data: unknown
+  data: CreateProjectFromDraftResult | null
   error: { message?: string } | null
 }>
 
@@ -68,10 +68,7 @@ export async function createProjectFromAiDraft(draft: AiProjectDraft) {
       }))
     )
 
-    const createProjectFromAiDraftRpc = supabase.rpc as unknown as CreateProjectFromAiDraftRpc
-
-    // Call atomic RPC function
-    const { data, error } = await createProjectFromAiDraftRpc('create_project_from_ai_draft', {
+    const rpcArgs: CreateProjectFromAiDraftRpcArgs = {
       p_project_name: draft.project.name,
       p_project_customer_name: draft.project.customer_name ?? null,
       p_project_start_date: draft.project.start_date ?? null,
@@ -83,7 +80,13 @@ export async function createProjectFromAiDraft(draft: AiProjectDraft) {
         estimated_hours: wp.estimated_hours,
       })),
       p_tasks: tasks,
-    })
+    }
+
+    // Bind rpc to preserve Supabase client context in browser runtime.
+    const rpc = supabase.rpc.bind(supabase) as unknown as CreateProjectFromAiDraftRpc
+
+    // Call atomic RPC function
+    const { data, error } = await rpc('create_project_from_ai_draft', rpcArgs)
 
     if (error) {
       throw new Error(error.message || 'Failed to create project from AI draft')

@@ -1,21 +1,42 @@
-import type { ProjectPreview } from '../../../../../lib/pm'
+import type { ProjectPreview, TaskPreview } from '../../../../../lib/pm'
+import { downloadClientBriefHtml } from '../../../utils/client-brief'
 import { deriveProgress, deriveRisk, formatDate } from '../../../utils/project-metrics'
 
 interface ProjectOverviewTabProps {
   selectedProject: ProjectPreview
+  tasks: TaskPreview[]
   projectManagerName?: string
   teamMemberNames: string[]
 }
 
 export function ProjectOverviewTab({
   selectedProject,
+  tasks,
   projectManagerName,
   teamMemberNames,
 }: ProjectOverviewTabProps) {
+  const exportClientBrief = () => {
+    downloadClientBriefHtml({
+      project: selectedProject,
+      tasks,
+      teamMemberNames,
+      projectManagerName,
+    })
+  }
+
   return (
     <div className="mt-4 grid gap-4">
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-        <h4 className="text-sm font-semibold text-slate-900">Overview</h4>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h4 className="text-sm font-semibold text-slate-900">Overview</h4>
+          <button
+            type="button"
+            onClick={exportClientBrief}
+            className="rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-cyan-900 transition hover:bg-cyan-100"
+          >
+            Export client brief
+          </button>
+        </div>
         <div className="mt-3 grid gap-3 lg:grid-cols-3">
           <div className="rounded-lg border border-slate-200 bg-white p-3">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Dates</p>

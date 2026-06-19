@@ -405,10 +405,12 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
       const blob = await response.blob()
       const svgDataUrl = URL.createObjectURL(blob)
       
-      // Convert SVG to PNG via canvas
+      // Convert SVG to PNG via canvas with high resolution
+      const dpr = 8 // Device pixel ratio for crisp rendering
+      const size = 48
       const canvas = document.createElement('canvas')
-      canvas.width = 40
-      canvas.height = 40
+      canvas.width = size * dpr
+      canvas.height = size * dpr
       const ctx = canvas.getContext('2d')
       
       logoDataUrl = await new Promise<string | null>((resolve) => {
@@ -416,7 +418,7 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
         img.crossOrigin = 'anonymous'
         img.onload = () => {
           if (ctx) {
-            ctx.drawImage(img, 0, 0, 40, 40)
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
             resolve(canvas.toDataURL('image/png'))
           } else {
             resolve(null)
@@ -446,7 +448,7 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   // Add logo if loaded successfully
   if (logoDataUrl) {
     try {
-      pdf.addImage(logoDataUrl, 'PNG', margin, 18, 32, 32)
+      pdf.addImage(logoDataUrl, 'PNG', margin, 14, 48, 48)
     } catch {
       // Logo adding failed, continue without it
     }
@@ -455,7 +457,7 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   pdf.setTextColor(headerTextRgb.r, headerTextRgb.g, headerTextRgb.b)
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(10)
-  pdf.text(`${theme.brandName} Delivery Brief`, logoDataUrl ? margin + 40 : margin, 40)
+  pdf.text(`${theme.brandName} Delivery Brief`, logoDataUrl ? margin + 60 : margin, 40)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(24)
   pdf.text(truncateLine(projectName, 70), margin, 69)

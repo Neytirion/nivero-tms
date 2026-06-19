@@ -399,18 +399,21 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
 
   // Load and add logo if available
   let logoDataUrl: string | null = null
+  let logoWidth = 0
+  let logoHeight = 0
   try {
     const response = await fetch('/nivero-logo.svg')
     if (response.ok) {
       const blob = await response.blob()
       const svgDataUrl = URL.createObjectURL(blob)
       
-      // Convert SVG to PNG via canvas with high resolution
-      const dpr = 8 // Device pixel ratio for crisp rendering
-      const size = 48
+      // Convert SVG to PNG via canvas, preserving aspect ratio (1500x328)
+      const dpr = 2 // Device pixel ratio for crisp rendering
+      const canvasWidth = 1500
+      const canvasHeight = 328
       const canvas = document.createElement('canvas')
-      canvas.width = size * dpr
-      canvas.height = size * dpr
+      canvas.width = canvasWidth * dpr
+      canvas.height = canvasHeight * dpr
       const ctx = canvas.getContext('2d')
       
       logoDataUrl = await new Promise<string | null>((resolve) => {
@@ -419,6 +422,10 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
         img.onload = () => {
           if (ctx) {
             ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+            // Calculate PDF dimensions preserving aspect ratio
+            // Use 120pt width, calculate height from ratio
+            logoWidth = 120
+            logoHeight = logoWidth * (canvasHeight / canvasWidth)
             resolve(canvas.toDataURL('image/png'))
           } else {
             resolve(null)
@@ -448,7 +455,7 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   // Add logo if loaded successfully
   if (logoDataUrl) {
     try {
-      pdf.addImage(logoDataUrl, 'PNG', margin, 14, 48, 48)
+      pdf.addImage(logoDataUrl, 'PNG', margin, 16, logoWidth, logoHeight)
     } catch {
       // Logo adding failed, continue without it
     }
@@ -457,7 +464,7 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   pdf.setTextColor(headerTextRgb.r, headerTextRgb.g, headerTextRgb.b)
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(10)
-  pdf.text(`${theme.brandName} Delivery Brief`, logoDataUrl ? margin + 60 : margin, 40)
+  pdf.text(`${theme.brandName} Delivery Brief`, logoDataUrl ? margin + logoWidth + 8 : margin, 40)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(24)
   pdf.text(truncateLine(projectName, 70), margin, 69)

@@ -374,7 +374,6 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   const mutedRgb = hexToRgb(theme.mutedTextColor)
   const generatedAt = input.generatedAt ?? new Date()
   const projectName = input.project.name || 'Project'
-  const customer = input.project.customer_name ?? 'Confidential'
   const managerName = input.projectManagerName ?? 'Not assigned'
   const progress = deriveProgress(input.project)
   const risk = deriveRisk(input.project)
@@ -398,6 +397,43 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
     cursorY = margin
   }
 
+  // Load and add logo if available
+  let logoDataUrl: string | null = null
+  try {
+    const response = await fetch('/nivero-logo.svg')
+    if (response.ok) {
+      const blob = await response.blob()
+      const svgDataUrl = URL.createObjectURL(blob)
+      
+      // Convert SVG to PNG via canvas
+      const canvas = document.createElement('canvas')
+      canvas.width = 40
+      canvas.height = 40
+      const ctx = canvas.getContext('2d')
+      
+      logoDataUrl = await new Promise<string | null>((resolve) => {
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        img.onload = () => {
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, 40, 40)
+            resolve(canvas.toDataURL('image/png'))
+          } else {
+            resolve(null)
+          }
+          URL.revokeObjectURL(svgDataUrl)
+        }
+        img.onerror = () => {
+          resolve(null)
+          URL.revokeObjectURL(svgDataUrl)
+        }
+        img.src = svgDataUrl
+      })
+    }
+  } catch {
+    // Logo loading failed, continue without it
+  }
+
   pdf.setFillColor(primaryRgb.r, primaryRgb.g, primaryRgb.b)
   pdf.rect(0, 0, pageWidth, 122, 'F')
 
@@ -407,16 +443,22 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   pdf.setFillColor(softAccentRgb.r, softAccentRgb.g, softAccentRgb.b)
   pdf.circle(pageWidth - 42, -8, 80, 'F')
 
+  // Add logo if loaded successfully
+  if (logoDataUrl) {
+    try {
+      pdf.addImage(logoDataUrl, 'PNG', margin, 18, 32, 32)
+    } catch {
+      // Logo adding failed, continue without it
+    }
+  }
+
   pdf.setTextColor(headerTextRgb.r, headerTextRgb.g, headerTextRgb.b)
   pdf.setFont('helvetica', 'normal')
   pdf.setFontSize(10)
-  pdf.text(`${theme.brandName} Delivery Brief`, margin, 40)
+  pdf.text(`${theme.brandName} Delivery Brief`, logoDataUrl ? margin + 40 : margin, 40)
   pdf.setFont('helvetica', 'bold')
   pdf.setFontSize(24)
   pdf.text(truncateLine(projectName, 70), margin, 69)
-  pdf.setFont('helvetica', 'normal')
-  pdf.setFontSize(11)
-  pdf.text(truncateLine(`Prepared for ${customer}`, 90), margin, 92)
 
   cursorY = 148
   pdf.setTextColor(textRgb.r, textRgb.g, textRgb.b)

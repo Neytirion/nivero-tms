@@ -1,4 +1,4 @@
-import type { TaskStatus } from '../../features/tasks/constants'
+export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'review' | 'done'
 
 function normalizeStatusValue(value: string | null | undefined) {
   return (value ?? '').trim().toLowerCase().replace(/[\s-]+/g, '_')

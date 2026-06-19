@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import type { ProjectPreview, TimeEntryPreview } from '../../lib/pm'
-import { endOfWeek, startOfWeek, toDateInputValue } from '../time-tracking.utils'
+import { endOfWeek, startOfWeek, toDateInputValue } from './time-tracking.utils'
 import { useTimeTrackingFilters } from './useTimeTrackingFilters'
 import { useTimeTrackingManualForm } from './useTimeTrackingManualForm'
 import { useTimeTrackingTimer } from './useTimeTrackingTimer'
@@ -8,7 +8,7 @@ import {
   useTimeTrackingActions,
   type UseTimeTrackingActionsInput,
 } from './useTimeTrackingActions'
-import { buildWeeklySummary } from '../time-tracking.utils'
+import { buildWeeklySummary } from './time-tracking.utils'
 
 interface UseTimeTrackingControllerInput {
   projects: ProjectPreview[]

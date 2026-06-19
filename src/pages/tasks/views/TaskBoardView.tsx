@@ -1,7 +1,7 @@
 import { KANBAN_COLUMNS, type TaskStatus } from '../../../features/tasks/constants.ts'
 import { KanbanColumn } from '../../../features/tasks/components'
 import type { TaskPreview } from '../../../lib/pm'
-import { normalizeTaskStatus } from '../../tasks-page.utils'
+import { normalizeTaskStatus } from '../tasks-page.utils'
 import type { AssigneeOption } from './task-view-types'
 
 interface TaskBoardViewProps {

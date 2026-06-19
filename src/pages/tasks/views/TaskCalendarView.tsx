@@ -1,5 +1,5 @@
 import type { TaskPreview } from '../../../lib/pm'
-import { getTaskPriorityBadgeClass, normalizeTaskStatus } from '../../tasks-page.utils'
+import { getTaskPriorityBadgeClass, normalizeTaskStatus } from '../tasks-page.utils'
 import type { CalendarMeta } from './task-view-types'
 
 interface TaskCalendarViewProps {

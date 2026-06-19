@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { toDateInputValue } from '../time-tracking.utils'
+import { toDateInputValue } from './time-tracking.utils'
 import type { TimeEntryPreview } from '../../lib/pm'
 
 export interface UseTimeTrackingManualFormReturn {

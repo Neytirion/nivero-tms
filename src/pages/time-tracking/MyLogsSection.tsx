@@ -1,5 +1,5 @@
 import type { ProjectPreview, TimeEntryPreview } from '../../lib/pm'
-import { toHours } from '../time-tracking.utils'
+import { toHours } from './time-tracking.utils'
 
 type MyLogsSectionProps = {
   editingEntryId: string | null

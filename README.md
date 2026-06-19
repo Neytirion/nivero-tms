@@ -42,25 +42,63 @@ VITE_SUPABASE_PUBLISHABLE_KEY=your_supabase_anon_or_publishable_key
 ```text
 src/
   pages/
-    AuthPage.tsx
     AppShell.tsx
-    ProfilePage.tsx
-    ProjectsPage.tsx
-    TasksPage.tsx
+    auth/
+      AuthPage.tsx
+      ForgotPasswordPage.tsx
+      ResetPasswordPage.tsx
+    dashboard/
+      DashboardPage.tsx
+      useDashboardPageController.ts
+    profile/
+      ProfilePage.tsx
+      useProfileDetails.ts
+      useAvatarUpload.ts
+      usePasswordChange.ts
+    projects/
+      ProjectsPage.tsx
+      useProjectsPageController.ts
+      useProjectsActions.ts
+    tasks/
+      TasksPage.tsx
+      useTasksPageController.ts
+      views/
+    time-tracking/
+      TimeTrackingPage.tsx
+      useTimeTrackingController.ts
+    resource-planning/
+      ResourcePlanningPage.tsx
   features/
     auth/
     dashboard/
     projects/
-      hooks/
       components/
+      hooks/
+      utils/
+        client-brief/
     tasks/
-      hooks/
       components/
+      hooks/
       constants.ts
+  shared/
+    components/
+    utils/
   lib/
-    supabase.ts
-    pm.ts
+    ai/
     database.types.ts
+    supabase.ts
+    pm/
+      index.ts
+      types.ts
+      helpers.ts
+      projects/
+      tasks/
+      estimates/
+      members/
+      time/
+      comments/
+      collaboration/
+      documents/
 ```
 
 ## Supabase Migrations & RLS

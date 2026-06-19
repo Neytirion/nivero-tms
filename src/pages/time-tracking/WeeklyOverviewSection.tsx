@@ -1,5 +1,5 @@
 import type { ProjectPreview, TimeEntryPreview } from '../../lib/pm'
-import { formatHours, toHours } from '../time-tracking.utils'
+import { formatHours, toHours } from './time-tracking.utils'
 
 type WeeklySummary = {
   byDay: Record<string, number>

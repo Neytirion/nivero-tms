@@ -1,5 +1,5 @@
 import { createTimeEntry, deleteTimeEntry, updateTimeEntry, type TimeEntryPreview } from '../../lib/pm'
-import { toDateInputValue } from '../time-tracking.utils'
+import { toDateInputValue } from './time-tracking.utils'
 
 interface UseTimeTrackingMutationsInput {
   editingEntryId: string | null

@@ -19,4 +19,55 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
+  {
+    files: ['src/lib/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            '../../pages/*',
+            '../pages/*',
+            './pages/*',
+            '../../features/*',
+            '../features/*',
+            './features/*',
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/features/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            '../../pages/*',
+            '../pages/*',
+            './pages/*',
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/shared/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            '../../pages/*',
+            '../pages/*',
+            './pages/*',
+            '../../features/*',
+            '../features/*',
+            './features/*',
+          ],
+        },
+      ],
+    },
+  },
 ])

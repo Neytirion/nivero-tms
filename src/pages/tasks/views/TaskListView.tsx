@@ -1,5 +1,5 @@
 import type { TaskPreview } from '../../../lib/pm'
-import { getTaskPriorityBadgeClass } from '../../tasks-page.utils'
+import { getTaskPriorityBadgeClass } from '../tasks-page.utils'
 
 interface TaskListViewProps {
   tasks: TaskPreview[]

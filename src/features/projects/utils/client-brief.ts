@@ -24,6 +24,22 @@ interface BuildClientBriefInput {
   theme?: ClientBriefTheme
 }
 
+interface BriefViewModel {
+  theme: ClientBriefTheme
+  generatedAt: Date
+  projectName: string
+  customer: string
+  managerName: string
+  progress: number
+  risk: string
+  includeExecutionHealth: boolean
+  estimateModules: Array<{
+    name: string
+    estimated_hours: number | null
+  }>
+  description: string
+}
+
 export type ClientBriefExportFormat = 'html' | 'pdf' | 'docx'
 
 const DEFAULT_THEME: ClientBriefTheme = {
@@ -138,17 +154,103 @@ function truncateLine(value: string, max = 110) {
   return `${value.slice(0, max - 3)}...`
 }
 
+function buildBriefViewModel(input: BuildClientBriefInput): BriefViewModel {
+  return {
+    theme: input.theme ?? DEFAULT_THEME,
+    generatedAt: input.generatedAt ?? new Date(),
+    projectName: input.project.name || 'Project',
+    customer: input.project.customer_name ?? 'Confidential',
+    managerName: input.projectManagerName ?? 'Not assigned',
+    progress: deriveProgress(input.project),
+    risk: deriveRisk(input.project),
+    includeExecutionHealth: hasProjectExecutionSignals(input.project, input.tasks),
+    estimateModules: getEstimateModules(input),
+    description: input.project.description ?? 'This proposal outlines the project scope, delivery milestones, and execution approach.',
+  }
+}
+
+interface PdfLogoAsset {
+  dataUrl: string
+  width: number
+  height: number
+}
+
+async function loadPdfLogoAsset(targetWidth = 120): Promise<PdfLogoAsset | null> {
+  try {
+    const response = await fetch('/nivero-logo.svg')
+    if (!response.ok) {
+      return null
+    }
+
+    const blob = await response.blob()
+    const svgDataUrl = URL.createObjectURL(blob)
+    const dpr = 2
+
+    return await new Promise<PdfLogoAsset | null>((resolve) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+
+      img.onload = () => {
+        const sourceWidth = img.naturalWidth || 1500
+        const sourceHeight = img.naturalHeight || 328
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.max(1, sourceWidth * dpr)
+        canvas.height = Math.max(1, sourceHeight * dpr)
+        const ctx = canvas.getContext('2d')
+
+        if (!ctx) {
+          URL.revokeObjectURL(svgDataUrl)
+          resolve(null)
+          return
+        }
+
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        const dataUrl = canvas.toDataURL('image/png')
+        URL.revokeObjectURL(svgDataUrl)
+        resolve({
+          dataUrl,
+          width: targetWidth,
+          height: targetWidth * (sourceHeight / sourceWidth),
+        })
+      }
+
+      img.onerror = () => {
+        URL.revokeObjectURL(svgDataUrl)
+        resolve(null)
+      }
+
+      img.src = svgDataUrl
+    })
+  } catch {
+    return null
+  }
+}
+
+async function loadEstimateModules(projectId: string) {
+  try {
+    const modules = await getProjectTaskWorkPackages(projectId)
+    return modules.map((item) => ({
+      name: item.name,
+      estimated_hours: item.estimated_hours,
+    }))
+  } catch {
+    return []
+  }
+}
+
 export function buildClientBriefHtml(input: BuildClientBriefInput) {
-  const theme = input.theme ?? DEFAULT_THEME
-  const generatedAt = input.generatedAt ?? new Date()
-  const projectName = input.project.name || 'Project'
-  const progress = deriveProgress(input.project)
-  const risk = deriveRisk(input.project)
-  const includeExecutionHealth = hasProjectExecutionSignals(input.project, input.tasks)
-  const estimateModules = getEstimateModules(input)
-  const customer = input.project.customer_name ?? 'Confidential'
-  const managerName = input.projectManagerName ?? 'Not assigned'
-  const description = input.project.description ?? 'This proposal outlines the project scope, delivery milestones, and execution approach.'
+  const {
+    theme,
+    generatedAt,
+    projectName,
+    progress,
+    risk,
+    includeExecutionHealth,
+    estimateModules,
+    customer,
+    managerName,
+    description,
+  } = buildBriefViewModel(input)
 
   const estimateModuleRows = estimateModules
     .map((module) => {
@@ -364,21 +466,24 @@ function downloadBlob(fileName: string, blob: Blob) {
 
 export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   const { jsPDF } = await import('jspdf')
-  const theme = input.theme ?? DEFAULT_THEME
+  const {
+    theme,
+    generatedAt,
+    projectName,
+    managerName,
+    progress,
+    risk,
+    includeExecutionHealth,
+    estimateModules,
+    description,
+  } = buildBriefViewModel(input)
+
   const primaryRgb = hexToRgb(theme.primaryColor)
   const accentRgb = hexToRgb(theme.accentColor)
   const softAccentRgb = softenRgb(accentRgb, 0.6)
   const brandInkRgb = darkenRgb(primaryRgb, 0.82)
   const textRgb = hexToRgb(theme.textColor)
   const mutedRgb = hexToRgb(theme.mutedTextColor)
-  const generatedAt = input.generatedAt ?? new Date()
-  const projectName = input.project.name || 'Project'
-  const managerName = input.projectManagerName ?? 'Not assigned'
-  const progress = deriveProgress(input.project)
-  const risk = deriveRisk(input.project)
-  const includeExecutionHealth = hasProjectExecutionSignals(input.project, input.tasks)
-  const estimateModules = getEstimateModules(input)
-  const description = input.project.description ?? 'This proposal outlines the project scope, delivery milestones, and execution approach.'
 
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' })
   const pageWidth = pdf.internal.pageSize.getWidth()
@@ -396,51 +501,7 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
     cursorY = margin
   }
 
-  // Load and add logo if available
-  let logoDataUrl: string | null = null
-  let logoWidth = 0
-  let logoHeight = 0
-  try {
-    const response = await fetch('/nivero-logo.svg')
-    if (response.ok) {
-      const blob = await response.blob()
-      const svgDataUrl = URL.createObjectURL(blob)
-      
-      // Convert SVG to PNG via canvas, preserving aspect ratio (1500x328)
-      const dpr = 2 // Device pixel ratio for crisp rendering
-      const canvasWidth = 1500
-      const canvasHeight = 328
-      const canvas = document.createElement('canvas')
-      canvas.width = canvasWidth * dpr
-      canvas.height = canvasHeight * dpr
-      const ctx = canvas.getContext('2d')
-      
-      logoDataUrl = await new Promise<string | null>((resolve) => {
-        const img = new Image()
-        img.crossOrigin = 'anonymous'
-        img.onload = () => {
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-            // Calculate PDF dimensions preserving aspect ratio
-            // Use 120pt width, calculate height from ratio
-            logoWidth = 120
-            logoHeight = logoWidth * (canvasHeight / canvasWidth)
-            resolve(canvas.toDataURL('image/png'))
-          } else {
-            resolve(null)
-          }
-          URL.revokeObjectURL(svgDataUrl)
-        }
-        img.onerror = () => {
-          resolve(null)
-          URL.revokeObjectURL(svgDataUrl)
-        }
-        img.src = svgDataUrl
-      })
-    }
-  } catch {
-    // Logo loading failed, continue without it
-  }
+  const logo = await loadPdfLogoAsset(120)
 
   pdf.setFillColor(primaryRgb.r, primaryRgb.g, primaryRgb.b)
   pdf.rect(0, 0, pageWidth, 122, 'F')
@@ -452,9 +513,9 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
   pdf.circle(pageWidth - 42, -8, 80, 'F')
 
   // Add logo if loaded successfully
-  if (logoDataUrl) {
+  if (logo) {
     try {
-      pdf.addImage(logoDataUrl, 'PNG', margin, 16, logoWidth, logoHeight)
+      pdf.addImage(logo.dataUrl, 'PNG', margin, 16, logo.width, logo.height)
     } catch {
       // Logo adding failed, continue without it
     }
@@ -586,20 +647,23 @@ export async function downloadClientBriefPdf(input: BuildClientBriefInput) {
 export async function downloadClientBriefDocx(input: BuildClientBriefInput) {
   const { Document, HeadingLevel, Packer, Paragraph, TextRun } = await import('docx')
 
-  const theme = input.theme ?? DEFAULT_THEME
+  const {
+    theme,
+    generatedAt,
+    projectName,
+    customer,
+    managerName,
+    progress,
+    risk,
+    includeExecutionHealth,
+    estimateModules,
+    description,
+  } = buildBriefViewModel(input)
+
   const brandInkRgb = darkenRgb(hexToRgb(theme.primaryColor), 0.82)
   const brandInkHex = [brandInkRgb.r, brandInkRgb.g, brandInkRgb.b]
     .map((value) => value.toString(16).padStart(2, '0'))
     .join('')
-  const generatedAt = input.generatedAt ?? new Date()
-  const projectName = input.project.name || 'Project'
-  const customer = input.project.customer_name ?? 'Confidential'
-  const managerName = input.projectManagerName ?? 'Not assigned'
-  const progress = deriveProgress(input.project)
-  const risk = deriveRisk(input.project)
-  const includeExecutionHealth = hasProjectExecutionSignals(input.project, input.tasks)
-  const estimateModules = getEstimateModules(input)
-  const description = input.project.description ?? 'This proposal outlines the project scope, delivery milestones, and execution approach.'
 
   const moduleParagraphs = estimateModules.length
     ? estimateModules.flatMap((module, index) => {
@@ -666,17 +730,7 @@ export async function downloadClientBrief(
   input: BuildClientBriefInput,
   format: ClientBriefExportFormat,
 ) {
-  let estimateModules: BuildClientBriefInput['estimateModules']
-
-  try {
-    const modules = await getProjectTaskWorkPackages(input.project.id)
-    estimateModules = modules.map((item) => ({
-      name: item.name,
-      estimated_hours: item.estimated_hours,
-    }))
-  } catch {
-    estimateModules = []
-  }
+  const estimateModules = await loadEstimateModules(input.project.id)
 
   const exportInput: BuildClientBriefInput = {
     ...input,

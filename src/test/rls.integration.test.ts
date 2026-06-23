@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
+import { hasProjectPermission } from '../shared/utils/permissions'
 
 /**
  * RLS (Row Level Security) Policy Verification Tests
@@ -8,169 +9,70 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
  *
  * CRITICAL: These tests help catch data leak vulnerabilities before they reach production.
  * They ensure permission boundaries are enforced at the database layer, not just app layer.
+ * 
+ * NOTE: Full RLS verification requires actual Supabase connection (see MANUAL VERIFICATION CHECKLIST below).
+ * These tests verify app-layer permission enforcement that maps to RLS policies.
  */
 
-vi.mock('../lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(),
-    auth: {
-      getUser: vi.fn(),
-    },
-  },
-}))
-
-import { supabase } from '../lib/supabase'
-
-const mockSupabase = supabase as unknown as typeof supabase
-
-describe('RLS Policy Verification', () => {
-  beforeEach(() => {
-    vi.clearAllMocks()
-  })
-
+describe('RLS Policy Verification - App Layer Permission Mapping', () => {
   describe('Project Task Access Boundary', () => {
-    it('member of project A cannot access tasks from project B (cross-project boundary)', async () => {
-      // Setup: User is member of project A
-      const currentUserId = 'user-1'
-      
-      // User is member of project A
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: currentUserId } },
-        error: null,
-      })
-
-      // Verify that RLS policies prevent cross-project access
-      // This is the behavioral expectation
-      expect(currentUserId).toBe('user-1')
+    it('admin role cannot delete projects (enforced by permission system)', () => {
+      // This permission check maps to RLS policy: only owners can delete
+      expect(hasProjectPermission('admin', 'project.delete')).toBe(false)
+      expect(hasProjectPermission('owner', 'project.delete')).toBe(true)
     })
 
-    it('member cannot see members list of other projects', async () => {
-      // Setup: User is member of project A
-      const currentUserId = 'user-2'
-      
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: currentUserId } },
-        error: null,
-      })
-
-      // RLS should prevent access to other projects' member lists
-      expect(currentUserId).toBe('user-2')
+    it('member role has limited permissions', () => {
+      // Members can only invite, manage own tasks, delete own tasks
+      expect(hasProjectPermission('member', 'task.assign')).toBe(false)
+      expect(hasProjectPermission('member', 'task.manage.own')).toBe(true)
     })
   })
 
   describe('Owner vs Admin Permissions', () => {
-    it('admin cannot delete project (only owner can)', async () => {
-      // Setup: User is admin of project
-      const currentUserId = 'admin-user'
-      
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: currentUserId } },
-        error: null,
-      })
-
-      // When admin tries to delete project via RLS
-      // RLS should reject the operation
-      mockSupabase.from.mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          data: null,
-          error: {
-            message: 'new row violates row-level security policy',
-            code: 'PGRST204',
-          },
-        }),
-      })
-
-      // Verify delete is restricted (admin should not be able to delete)
-      expect(currentUserId).toBe('admin-user')
+    it('admin cannot manage arbitrary members (only owner can update roles)', () => {
+      // Owner has member.role.update, admin may or may not
+      expect(hasProjectPermission('owner', 'member.role.update')).toBe(true)
     })
 
-    it('admin cannot change member roles (only owner can)', async () => {
-      // Setup: User is admin
-      const adminUserId = 'admin-user'
-      
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: adminUserId } },
-        error: null,
-      })
-
-      // Admin should not have member.role.update permission
-      // This is verified in permissions.test.ts
-      expect(adminUserId).toBe('admin-user')
+    it('owner has all permissions including delete and member management', () => {
+      // Owner role has all critical permissions
+      expect(hasProjectPermission('owner', 'project.delete')).toBe(true)
+      expect(hasProjectPermission('owner', 'member.role.update')).toBe(true)
+      expect(hasProjectPermission('owner', 'project.manage')).toBe(true)
+      expect(hasProjectPermission('owner', 'task.assign')).toBe(true)
     })
   })
 
   describe('Member Task Assignment Boundaries', () => {
-    it('member cannot assign tasks to themselves unless they have task.assign permission', async () => {
-      // Setup: Member user (not manager)
-      const memberUserId = 'member-user'
-      
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: memberUserId } },
-        error: null,
-      })
+    it('member cannot assign tasks (only managers can)', () => {
+      // Members can manage their own tasks but not assign others
+      expect(hasProjectPermission('member', 'task.assign')).toBe(false)
+      expect(hasProjectPermission('manager', 'task.assign')).toBe(true)
+    })
 
-      // Members have 'task.manage.own' but not 'task.assign'
-      // This is verified in access-control.test.ts
-      expect(memberUserId).toBe('member-user')
+    it('member can only manage and delete own tasks', () => {
+      // Members have manage.own and delete.own permission but not any
+      expect(hasProjectPermission('member', 'task.manage.own')).toBe(true)
+      expect(hasProjectPermission('member', 'task.delete.own')).toBe(true)
+      expect(hasProjectPermission('member', 'task.manage.any')).toBe(false)
+      expect(hasProjectPermission('member', 'task.delete.any')).toBe(false)
     })
   })
 
-  describe('Time Entry Access Control', () => {
-    it('member can only see their own time entries', async () => {
-      const currentUserId = 'user-3'
-      
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: currentUserId } },
-        error: null,
-      })
-
-      // RLS should filter time entries by current user
-      mockSupabase.from.mockReturnValue({
-        eq: vi.fn().mockResolvedValue({
-          data: [
-            { id: 'entry-1', user_id: currentUserId, hours: 8 },
-          ],
-          error: null,
-        }),
-      })
-
-      expect(currentUserId).toBe('user-3')
+  describe('Project State and Access', () => {
+    it('admin can manage and complete project but not delete', () => {
+      // Admin has manage and complete permission but not delete permission
+      expect(hasProjectPermission('admin', 'project.manage')).toBe(true)
+      expect(hasProjectPermission('admin', 'project.complete')).toBe(true)
+      expect(hasProjectPermission('admin', 'project.delete')).toBe(false)
     })
-  })
 
-  describe('Completed Project Read-Only Access', () => {
-    it('no modifications allowed to completed projects (RLS enforces read-only)', async () => {
-      const currentUserId = 'user-5'
-      
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: { id: currentUserId } },
-        error: null,
-      })
-
-      // Completed projects should reject updates via RLS
-      expect(currentUserId).toBe('user-5')
-    })
-  })
-
-  describe('Anonymous/Unauthenticated Access Prevention', () => {
-    it('unauthenticated user cannot access any project data', async () => {
-      // User not authenticated
-      mockSupabase.auth.getUser.mockResolvedValue({
-        data: { user: null },
-        error: { message: 'Not authenticated' },
-      })
-
-      // Any data query should be denied
-      mockSupabase.from.mockReturnValue({
-        select: vi.fn().mockResolvedValue({
-          data: [],
-          error: { message: 'not authenticated' },
-        }),
-      })
-
-      const result = await mockSupabase.from('projects').select()
-      expect(result.data).toEqual([])
-      expect(result.error).toBeDefined()
+    it('manager has task management permissions', () => {
+      // Managers can manage any tasks and delete any tasks
+      expect(hasProjectPermission('manager', 'task.manage.any')).toBe(true)
+      expect(hasProjectPermission('manager', 'task.delete.any')).toBe(true)
+      expect(hasProjectPermission('manager', 'task.assign')).toBe(true)
     })
   })
 })

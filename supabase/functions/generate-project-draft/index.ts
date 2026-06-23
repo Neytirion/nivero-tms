@@ -21,6 +21,28 @@ const MAX_INPUT_LENGTH = 10000
 const MIN_INPUT_LENGTH = 10
 const REQUEST_TIMEOUT_MS = 30000
 
+function getCorsHeaders(req: Request): HeadersInit {
+  const origin = req.headers.get('origin')
+
+  return {
+    'Access-Control-Allow-Origin': origin ?? '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-client-info, apikey',
+    Vary: 'Origin',
+  }
+}
+
+function jsonResponse(req: Request, body: unknown, status = 200, headers: HeadersInit = {}): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...getCorsHeaders(req),
+      'Content-Type': 'application/json',
+      ...headers,
+    },
+  })
+}
+
 interface ValidationError {
   [key: string]: string[]
 }
@@ -108,19 +130,12 @@ Deno.serve(async (req: Request) => {
   // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response(null, {
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-client-info, apikey',
-      },
+      headers: getCorsHeaders(req),
     })
   }
 
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-      status: 405,
-      headers: { 'Content-Type': 'application/json' },
-    })
+    return jsonResponse(req, { error: 'Method not allowed' }, 405)
   }
 
   try {
@@ -128,56 +143,48 @@ Deno.serve(async (req: Request) => {
     const { text } = await req.json()
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        req,
+        {
           success: false,
           error: 'Text input is required',
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        },
+        400
       )
     }
 
     const trimmedText = text.trim()
 
     if (trimmedText.length < MIN_INPUT_LENGTH) {
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        req,
+        {
           success: false,
           error: `Project description must be at least ${MIN_INPUT_LENGTH} characters`,
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        },
+        400
       )
     }
 
     if (trimmedText.length > MAX_INPUT_LENGTH) {
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        req,
+        {
           success: false,
           error: `Project description must not exceed ${MAX_INPUT_LENGTH} characters`,
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        },
+        400
       )
     }
 
     if (!OPENAI_API_KEY) {
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        req,
+        {
           success: false,
           error: 'OpenAI API key not configured',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        },
+        500
       )
     }
 
@@ -260,15 +267,13 @@ Requirements:
     } catch (fetchError) {
       clearTimeout(timeoutId)
       if (fetchError instanceof DOMException && fetchError.name === 'AbortError') {
-        return new Response(
-          JSON.stringify({
+        return jsonResponse(
+          req,
+          {
             success: false,
             error: 'Request timed out. Please try again with a shorter description.',
-          }),
-          {
-            status: 504,
-            headers: { 'Content-Type': 'application/json' },
-          }
+          },
+          504
         )
       }
       throw fetchError
@@ -277,15 +282,13 @@ Requirements:
 
     if (!openaiResponse.ok) {
       const error = await openaiResponse.json()
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        req,
+        {
           success: false,
           error: `OpenAI error: ${error.error?.message || 'Unknown error'}`,
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        },
+        500
       )
     }
 
@@ -293,15 +296,13 @@ Requirements:
     const content = openaiData.choices[0]?.message?.content
 
     if (!content) {
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        req,
+        {
           success: false,
           error: 'No response from OpenAI',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        },
+        500
       )
     }
 
@@ -310,15 +311,13 @@ Requirements:
     try {
       draftData = JSON.parse(content)
     } catch {
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        req,
+        {
           success: false,
           error: 'Invalid JSON returned from AI model',
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        },
+        500
       )
     }
 
@@ -326,43 +325,34 @@ Requirements:
     const validation = validateProjectDraft(draftData)
 
     if (!validation.valid) {
-      return new Response(
-        JSON.stringify({
+      return jsonResponse(
+        req,
+        {
           success: false,
           error: 'Generated project does not meet validation requirements',
           validation_errors: validation.errors,
-        }),
-        {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
+        },
+        400
       )
     }
 
-    return new Response(
-      JSON.stringify({
+    return jsonResponse(
+      req,
+      {
         success: true,
         draft: draftData,
-      }),
-      {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*',
-        },
-      }
+      },
+      200
     )
   } catch (error) {
     console.error('Error in generate-project:', error)
-    return new Response(
-      JSON.stringify({
+    return jsonResponse(
+      req,
+      {
         success: false,
         error: error instanceof Error ? error.message : 'Internal server error',
-      }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
+      },
+      500
     )
   }
 })

@@ -12,6 +12,7 @@ export interface UseProjectsActionsInput {
     customerName: string
     startDate: string
     deadline: string
+    budgetAmount: string
   }
   setStatus: (status: string) => void
   canSubmit: boolean
@@ -30,6 +31,7 @@ export interface UseProjectsActionsInput {
       customerName?: string
       startDate?: string
       deadlineAt?: string
+      budgetAmount?: string
     },
   ) => Promise<boolean>
   removeProject: (projectId: string) => Promise<void>
@@ -187,6 +189,7 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
         customerName: currentSettingsDraft.customerName || undefined,
         startDate: currentSettingsDraft.startDate || undefined,
         deadlineAt: currentSettingsDraft.deadline || undefined,
+        budgetAmount: currentSettingsDraft.budgetAmount || undefined,
       })
 
       if (wasSaved) {

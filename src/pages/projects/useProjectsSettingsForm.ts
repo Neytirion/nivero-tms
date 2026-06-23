@@ -8,6 +8,7 @@ interface SettingsDraftState {
   customerName: string
   startDate: string
   deadline: string
+  budgetAmount: string
 }
 
 export interface UseProjectsSettingsFormReturn {
@@ -31,6 +32,7 @@ export function useProjectsSettingsForm(
     customerName: '',
     startDate: '',
     deadline: '',
+    budgetAmount: '',
   })
 
   // Compute current draft based on selected project and unsaved changes
@@ -52,6 +54,7 @@ export function useProjectsSettingsForm(
       customerName: selectedProject.customer_name ?? '',
       startDate: selectedProject.start_date ?? '',
       deadline: selectedProject.end_date ?? selectedProject.deadline_at ?? '',
+      budgetAmount: selectedProject.budget_amount ? String(selectedProject.budget_amount) : '',
     }
   }, [selectedProject, settingsDraft])
 
@@ -71,8 +74,7 @@ export function useProjectsSettingsForm(
             description: selectedProject.description ?? '',
             customerName: selectedProject.customer_name ?? '',
             startDate: selectedProject.start_date ?? '',
-            deadline: selectedProject.end_date ?? selectedProject.deadline_at ?? '',
-          }
+            deadline: selectedProject.end_date ?? selectedProject.deadline_at ?? '',            budgetAmount: selectedProject.budget_amount ? String(selectedProject.budget_amount) : '',          }
 
     setSettingsDraft({
       ...baseDraft,
@@ -88,6 +90,7 @@ export function useProjectsSettingsForm(
       customerName: '',
       startDate: '',
       deadline: '',
+      budgetAmount: '',
     })
   }
 

@@ -9,6 +9,8 @@ interface ProjectSettingsTabProps {
   onSettingsStartDateChange: (value: string) => void
   settingsDeadline: string
   onSettingsDeadlineChange: (value: string) => void
+  settingsBudgetAmount: string
+  onSettingsBudgetAmountChange: (value: string) => void
   canEditSelectedProject: boolean
   canDeleteSelectedProject?: boolean
   isLoading: boolean
@@ -27,6 +29,8 @@ export function ProjectSettingsTab({
   onSettingsStartDateChange,
   settingsDeadline,
   onSettingsDeadlineChange,
+  settingsBudgetAmount,
+  onSettingsBudgetAmountChange,
   canEditSelectedProject,
   canDeleteSelectedProject,
   isLoading,
@@ -96,6 +100,20 @@ export function ProjectSettingsTab({
             />
           </label>
         </div>
+
+        <label className="block">
+          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Budget Amount</span>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={settingsBudgetAmount}
+            onChange={(event) => onSettingsBudgetAmountChange(event.target.value)}
+            placeholder="e.g. 50000"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            disabled={!canEditSelectedProject}
+          />
+        </label>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">

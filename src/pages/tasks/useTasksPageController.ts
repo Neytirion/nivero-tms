@@ -104,7 +104,7 @@ export function useTasksPageController() {
 
   const canAssignAssignee = selectedProject ? canAssignTasksInProject(selectedProject.id) : false
 
-  const { createTaskHandler, moveTaskToStatus, assignTaskHandler, submitTaskLogTime } =
+  const { createTaskHandler, moveTaskToStatus, assignTaskHandler, updateTaskDueDateHandler, submitTaskLogTime } =
     useTaskControllerActions({
       selectedProjectId,
       hasEstimateVersion,
@@ -225,6 +225,7 @@ export function useTasksPageController() {
     createTaskHandler,
     moveTaskToStatus,
     assignTaskHandler,
+    updateTaskDueDateHandler,
     removeTask,
     submitTaskLogTime,
     shiftCalendarMonth,

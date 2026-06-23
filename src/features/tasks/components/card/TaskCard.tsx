@@ -14,10 +14,13 @@ interface TaskCardProps {
   }>
   canAssignAssignee?: boolean
   onAssignTask?: (taskId: string, userId: string) => void | Promise<void>
+  onUpdateDueDate?: (taskId: string, dueDate: string) => void | Promise<void>
   onDelete: (taskId: string) => void | Promise<void>
   onLogTime: (task: TaskPreview) => void
   isLocked: boolean
   canDelete: boolean
+  projectStartDate?: string
+  projectEndDate?: string
 }
 
 function getPriorityBadgeClass(priority: string | null | undefined) {
@@ -42,12 +45,16 @@ export function TaskCard({
   assigneeOptions,
   canAssignAssignee,
   onAssignTask,
+  onUpdateDueDate,
   onDelete,
   onLogTime,
   isLocked,
   canDelete,
+  projectStartDate,
+  projectEndDate,
 }: TaskCardProps) {
   const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'
+  const dueDateInputValue = task.due_date?.slice(0, 10) ?? ''
   const [isCommentsOpen, setIsCommentsOpen] = useState(false)
   const [commentsCount, setCommentsCount] = useState(0)
 
@@ -111,6 +118,23 @@ export function TaskCard({
               </option>
             ))}
           </select>
+        </div>
+      ) : null}
+
+      {!isLocked && onUpdateDueDate ? (
+        <div className="mt-2">
+          <label htmlFor={`task-due-date-${task.id}`} className="mb-1 block text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+            Due date
+          </label>
+          <input
+            id={`task-due-date-${task.id}`}
+            type="date"
+            value={dueDateInputValue}
+            min={projectStartDate || undefined}
+            max={projectEndDate || undefined}
+            onChange={(event) => void onUpdateDueDate(task.id, event.target.value)}
+            className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-800 outline-none focus:border-slate-500"
+          />
         </div>
       ) : null}
 

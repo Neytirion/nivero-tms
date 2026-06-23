@@ -20,10 +20,13 @@ type TaskViewsSectionProps = {
   onDragTaskIdChange: (taskId: string | null) => void
   onMoveTaskToStatus: (taskId: string, status: TaskStatus) => void
   onAssignTask: (taskId: string, userId: string) => void
+  onUpdateTaskDueDate: (taskId: string, dueDate: string) => void
   onDeleteTask: (taskId: string) => void
   onLogTime: (task: TaskPreview | null) => void
   canManageTask: (task: TaskPreview) => boolean
   canDeleteTask: (task: TaskPreview) => boolean
+  projectStartDate: string
+  projectEndDate: string
   calendarMonth: string
   onCalendarMonthChange: (month: string) => void
   onShiftCalendarMonth: (direction: -1 | 1) => void
@@ -43,10 +46,13 @@ export function TaskViewsSection({
   onDragTaskIdChange,
   onMoveTaskToStatus,
   onAssignTask,
+  onUpdateTaskDueDate,
   onDeleteTask,
   onLogTime,
   canManageTask,
   canDeleteTask,
+  projectStartDate,
+  projectEndDate,
   calendarMonth,
   onCalendarMonthChange,
   onShiftCalendarMonth,
@@ -90,10 +96,13 @@ export function TaskViewsSection({
           onDragTaskIdChange={onDragTaskIdChange}
           onMoveTaskToStatus={onMoveTaskToStatus}
           onAssignTask={onAssignTask}
+          onUpdateTaskDueDate={onUpdateTaskDueDate}
           onDeleteTask={onDeleteTask}
           onLogTime={onLogTime}
           canManageTask={canManageTask}
           canDeleteTask={canDeleteTask}
+          projectStartDate={projectStartDate}
+          projectEndDate={projectEndDate}
         />
       ) : null}
 

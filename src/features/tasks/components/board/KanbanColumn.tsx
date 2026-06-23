@@ -18,11 +18,14 @@ interface KanbanColumnProps {
   onDropTask: (status: TaskStatus) => void
   onDragOver: (event: DragEvent<HTMLDivElement>) => void
   onAssignTask?: (taskId: string, userId: string) => void | Promise<void>
+  onUpdateTaskDueDate?: (taskId: string, dueDate: string) => void | Promise<void>
   onDeleteTask: (taskId: string) => void | Promise<void>
   onDragTaskStart: (taskId: string) => void
   onLogTime: (task: TaskPreview) => void
   canManageTask: (task: TaskPreview) => boolean
   canDeleteTask: (task: TaskPreview) => boolean
+  projectStartDate?: string
+  projectEndDate?: string
 }
 
 export function KanbanColumn({
@@ -37,11 +40,14 @@ export function KanbanColumn({
   onDropTask,
   onDragOver,
   onAssignTask,
+  onUpdateTaskDueDate,
   onDeleteTask,
   onDragTaskStart,
   onLogTime,
   canManageTask,
   canDeleteTask,
+  projectStartDate,
+  projectEndDate,
 }: KanbanColumnProps) {
   return (
     <div
@@ -89,10 +95,13 @@ export function KanbanColumn({
               assigneeOptions={assigneeOptions ?? []}
               canAssignAssignee={Boolean(canAssignAssignee)}
               onAssignTask={onAssignTask ?? (() => undefined)}
+              onUpdateDueDate={onUpdateTaskDueDate ?? (() => undefined)}
               onDelete={onDeleteTask}
               onLogTime={onLogTime}
               isLocked={!canManageTask(task)}
               canDelete={canDeleteTask(task)}
+              projectStartDate={projectStartDate}
+              projectEndDate={projectEndDate}
             />
           </div>
         ))}

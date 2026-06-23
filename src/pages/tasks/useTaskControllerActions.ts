@@ -33,6 +33,7 @@ interface UseTaskControllerActionsInput {
   editTask: (taskId: string, patch: {
     status?: string
     assignedTo?: string
+    dueDate?: string
   }) => Promise<void>
   setStatus: (status: string) => void
   setHasAttemptedSubmit: (value: boolean) => void
@@ -122,6 +123,24 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
     })
   }
 
+  const updateTaskDueDateHandler = async (taskId: string, dueDate: string) => {
+    if (dueDate) {
+      if (input.projectStartDate && dueDate < input.projectStartDate) {
+        input.setStatus('Due date must be within project dates')
+        return
+      }
+
+      if (input.projectEndDate && dueDate > input.projectEndDate) {
+        input.setStatus('Due date must be within project dates')
+        return
+      }
+    }
+
+    await input.editTask(taskId, {
+      dueDate: dueDate || undefined,
+    })
+  }
+
   const submitTaskLogTime = async (hours: number, comment: string) => {
     if (!input.logTimeTask || !input.selectedProjectId) {
       input.setStatus('Select project and task before logging time')
@@ -151,6 +170,7 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
     createTaskHandler,
     moveTaskToStatus,
     assignTaskHandler,
+    updateTaskDueDateHandler,
     submitTaskLogTime,
   }
 }

@@ -75,4 +75,24 @@ describe('TaskCard', () => {
     expect(screen.getByText('Comments panel for t1')).toBeTruthy()
     expect(screen.getByText('Hide comments')).toBeTruthy()
   })
+
+  it('updates due date for editable task', async () => {
+    const onUpdateDueDate = vi.fn()
+
+    render(
+      <TaskCard
+        task={baseTask}
+        assigneeLabel="Alice"
+        onUpdateDueDate={onUpdateDueDate}
+        onDelete={vi.fn()}
+        onLogTime={vi.fn()}
+        isLocked={false}
+        canDelete={true}
+      />,
+    )
+
+    fireEvent.change(screen.getByLabelText('Due date'), { target: { value: '2026-06-18' } })
+
+    expect(onUpdateDueDate).toHaveBeenCalledWith('t1', '2026-06-18')
+  })
 })

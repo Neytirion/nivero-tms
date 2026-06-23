@@ -245,4 +245,37 @@ describe('TasksPage', () => {
 
     expect(await screen.findByText('Assignee: Bob Smith')).toBeInTheDocument()
   })
+
+  it('updates due date for existing task from board view', async () => {
+    const workspace = createWorkspaceState({
+      selectedProjectId: 'p1',
+      projects: [createProjectPreview({ id: 'p1', name: 'Apollo', start_date: '2026-06-01', end_date: '2026-06-30' })],
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Board task',
+          project_id: 'p1',
+          due_date: '2026-06-20',
+        }),
+      ],
+      canManageTask: vi.fn(() => true),
+    })
+    mockUseWorkspace.mockReturnValue(workspace)
+
+    render(<TasksPage />)
+
+    await waitFor(() => {
+      expect(lastKanbanProps).not.toBeNull()
+    })
+
+    const kanbanProps = lastKanbanProps as {
+      onUpdateTaskDueDate: (taskId: string, dueDate: string) => void
+    }
+
+    kanbanProps.onUpdateTaskDueDate('t1', '2026-06-25')
+
+    await waitFor(() => {
+      expect(workspace.editTask).toHaveBeenCalledWith('t1', { dueDate: '2026-06-25' })
+    })
+  })
 })

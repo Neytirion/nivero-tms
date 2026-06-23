@@ -15,10 +15,13 @@ interface TaskBoardViewProps {
   onDragTaskIdChange: (taskId: string | null) => void
   onMoveTaskToStatus: (taskId: string, status: TaskStatus) => void
   onAssignTask: (taskId: string, userId: string) => void
+  onUpdateTaskDueDate: (taskId: string, dueDate: string) => void
   onDeleteTask: (taskId: string) => void
   onLogTime: (task: TaskPreview | null) => void
   canManageTask: (task: TaskPreview) => boolean
   canDeleteTask: (task: TaskPreview) => boolean
+  projectStartDate: string
+  projectEndDate: string
 }
 
 export function TaskBoardView({
@@ -32,10 +35,13 @@ export function TaskBoardView({
   onDragTaskIdChange,
   onMoveTaskToStatus,
   onAssignTask,
+  onUpdateTaskDueDate,
   onDeleteTask,
   onLogTime,
   canManageTask,
   canDeleteTask,
+  projectStartDate,
+  projectEndDate,
 }: TaskBoardViewProps) {
   return (
     <>
@@ -63,11 +69,14 @@ export function TaskBoardView({
                 onDragTaskIdChange(null)
               }}
               onAssignTask={onAssignTask}
+              onUpdateTaskDueDate={onUpdateTaskDueDate}
               onDeleteTask={onDeleteTask}
               onDragTaskStart={onDragTaskIdChange}
               onLogTime={onLogTime}
               canManageTask={canManageTask}
               canDeleteTask={canDeleteTask}
+              projectStartDate={projectStartDate}
+              projectEndDate={projectEndDate}
             />
           )
         })}

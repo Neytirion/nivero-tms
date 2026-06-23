@@ -60,6 +60,7 @@ export function TasksPage() {
     createTaskHandler,
     moveTaskToStatus,
     assignTaskHandler,
+    updateTaskDueDateHandler,
     removeTask,
     submitTaskLogTime,
     shiftCalendarMonth,
@@ -147,6 +148,9 @@ export function TasksPage() {
         onAssignTask={(taskId, userId) => {
           void assignTaskHandler(taskId, userId)
         }}
+        onUpdateTaskDueDate={(taskId, dueDate) => {
+          void updateTaskDueDateHandler(taskId, dueDate)
+        }}
         onDeleteTask={(taskId) => {
           void removeTask(taskId)
         }}
@@ -155,6 +159,8 @@ export function TasksPage() {
         }}
         canManageTask={canManageTask}
         canDeleteTask={canDeleteTaskInView}
+        projectStartDate={projectStartDate}
+        projectEndDate={projectEndDate}
         calendarMonth={calendarMonth}
         onCalendarMonthChange={setCalendarMonth}
         onShiftCalendarMonth={shiftCalendarMonth}

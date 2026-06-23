@@ -21,7 +21,7 @@ vi.mock('../lib/supabase', () => ({
 
 import { supabase } from '../lib/supabase'
 
-const mockSupabase = supabase as any
+const mockSupabase = supabase as unknown as typeof supabase
 
 describe('RLS Policy Verification', () => {
   beforeEach(() => {

@@ -31,6 +31,7 @@ const ROLE_PERMISSIONS: Record<ProjectRoleName, readonly ProjectPermission[]> = 
     'project.manage',
     'project.invite',
     'project.complete',
+    'member.role.update',
     'member.remove',
     'task.assign',
     'task.manage.any',

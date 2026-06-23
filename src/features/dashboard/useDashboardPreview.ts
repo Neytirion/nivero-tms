@@ -1,21 +1,16 @@
 import { useState } from 'react'
-import {
-  normalizeProjectRole,
-  type ProjectRoleName,
-} from '../../shared/utils/permissions'
-import { createAccessControl } from './access-control'
 import { createMemberActions } from './member-actions'
 import { createProjectActions } from './project-actions'
 import { createProjectSyncActions } from './project-sync'
 import { createTaskActions } from './task-actions'
+import { useAccessControl } from './useAccessControl'
+import { useWorkspaceAuth } from './useWorkspaceAuth'
 import {
-  getMyProjectMemberships,
   getMyProjects,
   type ProjectMemberListItem,
   type ProjectPreview,
   type TaskPreview,
 } from '../../lib/pm'
-import { supabase } from '../../lib/supabase'
 
 export function useDashboardPreview() {
   const [status, setStatus] = useState('Click the button to load dashboard data')
@@ -24,8 +19,9 @@ export function useDashboardPreview() {
   const [tasks, setTasks] = useState<TaskPreview[]>([])
   const [projectMembers, setProjectMembers] = useState<ProjectMemberListItem[]>([])
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
-  const [membershipRoleByProjectId, setMembershipRoleByProjectId] = useState<Record<string, ProjectRoleName>>({})
+
+  // Auth management - separated into its own hook
+  const auth = useWorkspaceAuth()
 
   const {
     applyProjectMetricsFromTasks,
@@ -40,10 +36,11 @@ export function useDashboardPreview() {
     setSelectedProjectId,
   })
 
-  const accessControl = createAccessControl({
+  // Access control - memoized permission checks
+  const accessControl = useAccessControl({
     projects,
-    currentUserId,
-    membershipRoleByProjectId,
+    currentUserId: auth.currentUserId,
+    membershipRoleByProjectId: auth.membershipRoleByProjectId,
   })
 
   const {
@@ -75,7 +72,7 @@ export function useDashboardPreview() {
     removeSelectedProjectMember,
   } = createMemberActions({
     selectedProjectId,
-    currentUserId,
+    currentUserId: auth.currentUserId,
     projectMembers,
     setStatus,
     setIsLoading,
@@ -133,22 +130,11 @@ export function useDashboardPreview() {
     setStatus('Loading projects and tasks...')
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.getUser()
-      if (authError) {
-        throw authError
+      // Load auth data
+      await auth.loadAuth()
+      if (auth.error) {
+        throw new Error(auth.error)
       }
-
-      setCurrentUserId(authData.user?.id ?? null)
-
-      const memberships = await getMyProjectMemberships()
-      setMembershipRoleByProjectId(
-        memberships.reduce<Record<string, ProjectRoleName>>((acc: Record<string, ProjectRoleName>, membership) => {
-          if (membership.project_id) {
-            acc[membership.project_id] = normalizeProjectRole(membership.role)
-          }
-          return acc
-        }, {}),
-      )
 
       const nextProjects = await getMyProjects()
       const nextProjectsWithMetrics = await hydrateProjectsWithTaskMetrics(nextProjects)
@@ -179,7 +165,6 @@ export function useDashboardPreview() {
       setTasks([])
       setProjectMembers([])
       setSelectedProjectId(null)
-      setMembershipRoleByProjectId({})
     }
 
     setIsLoading(false)
@@ -213,7 +198,7 @@ export function useDashboardPreview() {
     tasks,
     projectMembers,
     selectedProjectId,
-    currentUserId,
+    currentUserId: auth.currentUserId,
     getProjectRole,
     canManageProject,
     canDeleteProject,

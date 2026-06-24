@@ -111,6 +111,10 @@ export function useProjectsPageController() {
   const actionsInput: UseProjectsActionsInput = {
     selectedProjectId,
     selectedProject: selectedProject ?? null,
+    projectName,
+    projectCustomer,
+    projectStartDate,
+    projectEndDate,
     currentSettingsDraft,
     setStatus,
     canSubmit,

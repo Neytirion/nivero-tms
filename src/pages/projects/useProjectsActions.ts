@@ -5,6 +5,10 @@ import type { ProjectPreview } from '../../lib/pm'
 export interface UseProjectsActionsInput {
   selectedProjectId: string | null
   selectedProject: ProjectPreview | null
+  projectName: string
+  projectCustomer: string
+  projectStartDate: string
+  projectEndDate: string
   currentSettingsDraft: {
     projectId: string | null
     name: string
@@ -62,6 +66,10 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
   const {
     selectedProjectId,
     selectedProject,
+    projectName,
+    projectCustomer,
+    projectStartDate,
+    projectEndDate,
     currentSettingsDraft,
     setStatus,
     canSubmit,
@@ -86,10 +94,10 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
 
     try {
       await addProject({
-        name: currentSettingsDraft.name.trim(),
-        customerName: currentSettingsDraft.description.trim() || undefined,
-        startDate: currentSettingsDraft.startDate || undefined,
-        endDate: currentSettingsDraft.deadline || undefined,
+        name: projectName.trim(),
+        customerName: projectCustomer.trim() || undefined,
+        startDate: projectStartDate || undefined,
+        endDate: projectEndDate || undefined,
       })
       reset()
       onCreateModalClose()

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ResourcePlanningPage } from './ResourcePlanningPage'
 import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
@@ -94,30 +94,41 @@ describe('ResourcePlanningPage', () => {
 
     render(<ResourcePlanningPage />)
 
-    expect(await screen.findByText(/available only for owner, admin, or manager roles/i)).toBeTruthy()
-    expect(screen.queryByText('Alice Johnson')).toBeNull()
+    expect(screen.getByRole('heading', { name: 'Consultant Allocation' })).toBeInTheDocument()
+    expect(
+      await screen.findByText(/available only for owner, admin, or manager roles/i),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('table')).not.toBeInTheDocument()
+    expect(screen.queryByText('Alice Johnson')).not.toBeInTheDocument()
   })
 
   it('renders consultant allocation and overbooked status', async () => {
     render(<ResourcePlanningPage />)
 
-    expect(await screen.findByText('Alice Johnson')).toBeTruthy()
-    expect(screen.getAllByText('Apollo').length).toBeGreaterThan(0)
-    expect(screen.getByText('45h')).toBeTruthy()
-    expect(screen.getByText('3h')).toBeTruthy()
-    expect(screen.getByText('113%')).toBeTruthy()
-    expect(screen.getAllByText('Overbooked').length).toBeGreaterThan(0)
+    const aliceCell = await screen.findByText('Alice Johnson')
+    const aliceRow = aliceCell.closest('tr')
+    expect(aliceRow).not.toBeNull()
+
+    const row = within(aliceRow as HTMLElement)
+    expect(row.getByText('Apollo')).toBeInTheDocument()
+    expect(row.getByText('Hermes')).toBeInTheDocument()
+    expect(row.getByText('45h')).toBeInTheDocument()
+    expect(row.getByText('3h')).toBeInTheDocument()
+    expect(row.getByText('113%')).toBeInTheDocument()
+    expect(row.getByText('Overbooked')).toBeInTheDocument()
   })
 
   it('filters consultants by status when summary card is clicked', async () => {
     render(<ResourcePlanningPage />)
 
     await screen.findByText('Alice Johnson')
-    expect(screen.getByText('Bob Smith')).toBeTruthy()
-    fireEvent.click(screen.getAllByText('Overbooked')[0])
+    expect(screen.getByText('Bob Smith')).toBeInTheDocument()
 
-    expect(screen.getByText('Alice Johnson')).toBeTruthy()
-    expect(screen.queryByText('Bob Smith')).toBeNull()
+    fireEvent.click(screen.getAllByText('Overbooked')[0].closest('article') as HTMLElement)
+
+    expect(screen.getByText('Alice Johnson')).toBeInTheDocument()
+    expect(screen.queryByText('Bob Smith')).not.toBeInTheDocument()
+    expect(screen.getByRole('combobox', { name: 'Filter by status' })).toHaveValue('overbooked')
   })
 
   it('sums weekly allocation across multiple active projects for the same consultant', async () => {
@@ -158,9 +169,15 @@ describe('ResourcePlanningPage', () => {
 
     render(<ResourcePlanningPage />)
 
-    expect(await screen.findByText('Alice Johnson')).toBeTruthy()
-    expect(screen.getByText('80h')).toBeTruthy()
-    expect(screen.getByText('200%')).toBeTruthy()
-    expect(screen.getAllByText('Overbooked').length).toBeGreaterThan(0)
+    const aliceCell = await screen.findByText('Alice Johnson')
+    const aliceRow = aliceCell.closest('tr')
+    expect(aliceRow).not.toBeNull()
+
+    const row = within(aliceRow as HTMLElement)
+    expect(row.getByText('Apollo')).toBeInTheDocument()
+    expect(row.getByText('Hermes')).toBeInTheDocument()
+    expect(row.getByText('80h')).toBeInTheDocument()
+    expect(row.getByText('200%')).toBeInTheDocument()
+    expect(row.getByText('Overbooked')).toBeInTheDocument()
   })
 })

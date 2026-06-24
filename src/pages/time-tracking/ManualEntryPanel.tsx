@@ -42,18 +42,18 @@ export function ManualEntryPanel({
   return (
     <article className="rounded-xl border border-slate-200 bg-white p-4">
       <h3 className="text-sm font-semibold text-slate-900">Manual Time Entry</h3>
-      <p className="mt-1 text-xs text-slate-500">Add hours manually and link them to a project and optional task.</p>
+      <p className="mt-1 text-xs text-slate-500">Add hours manually and link them to a project and task.</p>
 
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <label className="block sm:col-span-2">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Task (optional)</span>
+          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Task</span>
           <select
             value={manualTaskId}
             onChange={(event) => onManualTaskIdChange(event.target.value)}
             disabled={!activeProjectId}
             className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
           >
-            <option value="">Unlinked</option>
+            <option value="" disabled>Select a task</option>
             {projectTasks.map((task) => (
               <option key={task.id} value={task.id}>
                 {task.title}
@@ -119,7 +119,7 @@ export function ManualEntryPanel({
         <button
           type="button"
           onClick={onSubmit}
-          disabled={isLoading || !activeProjectId}
+          disabled={isLoading || !activeProjectId || !manualTaskId}
           className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {editingEntryId ? 'Update entry' : 'Save manual entry'}

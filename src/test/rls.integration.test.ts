@@ -1,101 +1,236 @@
-import { describe, expect, it } from 'vitest'
-import { hasProjectPermission } from '../shared/utils/permissions'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '../lib/database.types'
 
-/**
- * RLS (Row Level Security) Policy Verification Tests
- *
- * These tests verify that Row Level Security policies in the Supabase database
- * are correctly configured to prevent unauthorized access.
- *
- * CRITICAL: These tests help catch data leak vulnerabilities before they reach production.
- * They ensure permission boundaries are enforced at the database layer, not just app layer.
- * 
- * NOTE: Full RLS verification requires actual Supabase connection (see MANUAL VERIFICATION CHECKLIST below).
- * These tests verify app-layer permission enforcement that maps to RLS policies.
- */
+type TestClient = SupabaseClient<Database>
 
-describe('RLS Policy Verification - App Layer Permission Mapping', () => {
-  describe('Project Task Access Boundary', () => {
-    it('admin role cannot delete projects (enforced by permission system)', () => {
-      // This permission check maps to RLS policy: only owners can delete
-      expect(hasProjectPermission('admin', 'project.delete')).toBe(false)
-      expect(hasProjectPermission('owner', 'project.delete')).toBe(true)
+const supabaseUrl = process.env.VITE_SUPABASE_URL
+const publishableKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY
+const serviceRoleKey = process.env.VITE_SUPABASE_SERVICE_ROLE_KEY
+const ownerEmail = process.env.VITE_RLS_OWNER_EMAIL
+const ownerPassword = process.env.VITE_RLS_OWNER_PASSWORD
+const adminEmail = process.env.VITE_RLS_ADMIN_EMAIL
+const adminPassword = process.env.VITE_RLS_ADMIN_PASSWORD
+
+const hasRlsEnv = Boolean(
+  supabaseUrl &&
+    publishableKey &&
+    serviceRoleKey &&
+    ownerEmail &&
+    ownerPassword &&
+    adminEmail &&
+    adminPassword,
+)
+
+const describeRls = hasRlsEnv ? describe : describe.skip
+
+function createTestClient(apiKey: string): TestClient {
+  return createClient<Database>(supabaseUrl!, apiKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  })
+}
+
+async function signIn(email: string, password: string): Promise<TestClient> {
+  const client = createTestClient(publishableKey!)
+  const { error } = await client.auth.signInWithPassword({ email, password })
+
+  if (error) {
+    throw error
+  }
+
+  return client
+}
+
+describeRls('Supabase RLS integration', () => {
+  let adminClient: TestClient
+  let ownerClient: TestClient
+  let projectAdminClient: TestClient
+
+  let ownerId: string
+  let projectAdminId: string
+  let visibleProjectId: string
+  let hiddenProjectId: string
+  let taskId: string
+
+  beforeAll(async () => {
+    adminClient = createTestClient(serviceRoleKey!)
+
+    ownerClient = await signIn(ownerEmail!, ownerPassword!)
+    projectAdminClient = await signIn(adminEmail!, adminPassword!)
+
+    const ownerUser = await ownerClient.auth.getUser()
+    const projectAdminUser = await projectAdminClient.auth.getUser()
+
+    if (!ownerUser.data.user?.id || !projectAdminUser.data.user?.id) {
+      throw new Error('RLS test users must be able to authenticate')
+    }
+
+    ownerId = ownerUser.data.user.id
+    projectAdminId = projectAdminUser.data.user.id
+
+    const seedSuffix = Date.now()
+
+    const { data: visibleProject, error: visibleProjectError } = await adminClient
+      .from('projects')
+      .insert({
+        name: `RLS Visible ${seedSuffix}`,
+        owner_id: ownerId,
+        status: 'active',
+      })
+      .select('id')
+      .single()
+
+    if (visibleProjectError || !visibleProject) {
+      throw visibleProjectError ?? new Error('Failed to seed visible project')
+    }
+
+    visibleProjectId = visibleProject.id
+
+    const { data: hiddenProject, error: hiddenProjectError } = await adminClient
+      .from('projects')
+      .insert({
+        name: `RLS Hidden ${seedSuffix}`,
+        owner_id: ownerId,
+        status: 'active',
+      })
+      .select('id')
+      .single()
+
+    if (hiddenProjectError || !hiddenProject) {
+      throw hiddenProjectError ?? new Error('Failed to seed hidden project')
+    }
+
+    hiddenProjectId = hiddenProject.id
+
+    const { error: memberInsertError } = await adminClient.from('project_members').insert({
+      project_id: visibleProjectId,
+      user_id: projectAdminId,
+      role: 'admin',
     })
 
-    it('member role has limited permissions', () => {
-      // Members can only invite, manage own tasks, delete own tasks
-      expect(hasProjectPermission('member', 'task.assign')).toBe(false)
-      expect(hasProjectPermission('member', 'task.manage.own')).toBe(true)
-    })
+    if (memberInsertError) {
+      throw memberInsertError
+    }
+
+    const { data: task, error: taskError } = await ownerClient
+      .from('tasks')
+      .insert({
+        project_id: visibleProjectId,
+        title: `RLS Task ${seedSuffix}`,
+        created_by: ownerId,
+        status: 'todo',
+        priority: 'medium',
+      })
+      .select('id')
+      .single()
+
+    if (taskError || !task) {
+      throw taskError ?? new Error('Failed to seed task')
+    }
+
+    taskId = task.id
   })
 
-  describe('Owner vs Admin Permissions', () => {
-    it('admin cannot manage arbitrary members (only owner can update roles)', () => {
-      // Owner has member.role.update, admin may or may not
-      expect(hasProjectPermission('owner', 'member.role.update')).toBe(true)
-    })
+  afterAll(async () => {
+    if (!hasRlsEnv) {
+      return
+    }
 
-    it('owner has all permissions including delete and member management', () => {
-      // Owner role has all critical permissions
-      expect(hasProjectPermission('owner', 'project.delete')).toBe(true)
-      expect(hasProjectPermission('owner', 'member.role.update')).toBe(true)
-      expect(hasProjectPermission('owner', 'project.manage')).toBe(true)
-      expect(hasProjectPermission('owner', 'task.assign')).toBe(true)
-    })
+    await adminClient.from('time_entries').delete().in('project_id', [visibleProjectId, hiddenProjectId])
+    await adminClient.from('tasks').delete().eq('project_id', visibleProjectId)
+    await adminClient.from('project_members').delete().eq('project_id', visibleProjectId)
+    await adminClient.from('projects').delete().in('id', [visibleProjectId, hiddenProjectId])
+
+    await ownerClient.auth.signOut()
+    await projectAdminClient.auth.signOut()
   })
 
-  describe('Member Task Assignment Boundaries', () => {
-    it('member cannot assign tasks (only managers can)', () => {
-      // Members can manage their own tasks but not assign others
-      expect(hasProjectPermission('member', 'task.assign')).toBe(false)
-      expect(hasProjectPermission('manager', 'task.assign')).toBe(true)
-    })
+  it('hides authenticated-only project data from anonymous clients', async () => {
+    const anonymousClient = createTestClient(publishableKey!)
 
-    it('member can only manage and delete own tasks', () => {
-      // Members have manage.own and delete.own permission but not any
-      expect(hasProjectPermission('member', 'task.manage.own')).toBe(true)
-      expect(hasProjectPermission('member', 'task.delete.own')).toBe(true)
-      expect(hasProjectPermission('member', 'task.manage.any')).toBe(false)
-      expect(hasProjectPermission('member', 'task.delete.any')).toBe(false)
-    })
+    const { data, error } = await anonymousClient
+      .from('projects')
+      .select('id,name')
+      .in('id', [visibleProjectId, hiddenProjectId])
+
+    expect(error).toBeNull()
+    expect(data ?? []).toHaveLength(0)
   })
 
-  describe('Project State and Access', () => {
-    it('admin can manage and complete project but not delete', () => {
-      // Admin has manage and complete permission but not delete permission
-      expect(hasProjectPermission('admin', 'project.manage')).toBe(true)
-      expect(hasProjectPermission('admin', 'project.complete')).toBe(true)
-      expect(hasProjectPermission('admin', 'project.delete')).toBe(false)
+  it('shows project members only the projects they belong to', async () => {
+    const { data, error } = await projectAdminClient
+      .from('projects')
+      .select('id,name')
+      .in('id', [visibleProjectId, hiddenProjectId])
+
+    expect(error).toBeNull()
+    expect(data).toEqual([
+      expect.objectContaining({
+        id: visibleProjectId,
+      }),
+    ])
+  })
+
+  it('prevents project admin from deleting an owner-owned project at DB level', async () => {
+    const { data, error } = await projectAdminClient
+      .from('projects')
+      .delete()
+      .eq('id', visibleProjectId)
+      .select('id')
+
+    expect(error).toBeNull()
+    expect(data ?? []).toHaveLength(0)
+
+    const { data: projectStillExists, error: existsError } = await adminClient
+      .from('projects')
+      .select('id')
+      .eq('id', visibleProjectId)
+      .single()
+
+    expect(existsError).toBeNull()
+    expect(projectStillExists?.id).toBe(visibleProjectId)
+  })
+
+  it('prevents project admin from inserting a time entry for another user', async () => {
+    const { error } = await projectAdminClient.from('time_entries').insert({
+      user_id: ownerId,
+      project_id: visibleProjectId,
+      task_id: taskId,
+      entry_date: '2026-06-24',
+      minutes_spent: 60,
+      is_billable: true,
+      notes: 'Should be blocked by RLS',
     })
 
-    it('manager has task management permissions', () => {
-      // Managers can manage any tasks and delete any tasks
-      expect(hasProjectPermission('manager', 'task.manage.any')).toBe(true)
-      expect(hasProjectPermission('manager', 'task.delete.any')).toBe(true)
-      expect(hasProjectPermission('manager', 'task.assign')).toBe(true)
+    expect(error).not.toBeNull()
+    expect(error?.message.toLowerCase()).toContain('row-level security')
+  })
+
+  it('allows project admin to insert a time entry only for themselves in a joined project', async () => {
+    const { data, error } = await projectAdminClient
+      .from('time_entries')
+      .insert({
+        user_id: projectAdminId,
+        project_id: visibleProjectId,
+        task_id: taskId,
+        entry_date: '2026-06-24',
+        minutes_spent: 45,
+        is_billable: false,
+        notes: 'RLS happy path',
+      })
+      .select('id,user_id,project_id,task_id,minutes_spent')
+      .single()
+
+    expect(error).toBeNull()
+    expect(data).toMatchObject({
+      user_id: projectAdminId,
+      project_id: visibleProjectId,
+      task_id: taskId,
+      minutes_spent: 45,
     })
   })
 })
-
-/**
- * MANUAL RLS VERIFICATION CHECKLIST
- * 
- * Before deploying to production, manually verify these RLS policies:
- * 
- * ☐ projects table - member can't select projects they're not part of
- * ☐ tasks table - member can't see tasks from other projects  
- * ☐ project_members table - member can't see membership list of other projects
- * ☐ time_entries table - member can only see their own entries
- * ☐ estimates table - member can't see estimates from other projects
- * ☐ project_members - admin cannot update other members' roles (only owner)
- * ☐ projects - admin cannot delete project (only owner)
- * ☐ completed projects - no updates allowed (read-only)
- * ☐ anonymous access - all tables reject unauthenticated queries
- * ☐ cross-project task dependencies - cannot create links to other projects
- * 
- * Test RLS policies by:
- * 1. Connect to Supabase with API key (not anon)
- * 2. Set JWT token to different user IDs
- * 3. Verify data filtering and modification denials
- * 4. Check audit logs for denied attempts
- */

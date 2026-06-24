@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TimeTrackingPage } from './TimeTrackingPage'
 import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
@@ -70,27 +70,15 @@ describe('TimeTrackingPage', () => {
     expect(screen.getByText('Allowed range: 2026-06-01 - 2026-06-30')).toBeInTheDocument()
   })
 
-  it('creates a manual time entry and refreshes workspace metrics', async () => {
-    const workspace = createWorkspace()
-    mockUseWorkspace.mockReturnValue(workspace)
+  it('keeps manual save disabled until a task is selected', async () => {
+    mockUseWorkspace.mockReturnValue(createWorkspace())
 
     render(<TimeTrackingPage />)
 
-    fireEvent.click(screen.getByText('Save manual entry'))
-
-    await waitFor(() => {
-      expect(mockCreateTimeEntry).toHaveBeenCalledWith(
-        expect.objectContaining({
-          projectId: 'p1',
-          hoursSpent: 1,
-          isBillable: true,
-        }),
-      )
-    })
-
-    await waitFor(() => {
-      expect(workspace.loadDashboardPreview).toHaveBeenCalled()
-    })
+    const manualPanel = within(screen.getByText('Manual Time Entry').closest('article') as HTMLElement)
+    expect(manualPanel.getByRole('combobox', { name: 'Task' })).toHaveValue('')
+    expect(manualPanel.getByRole('button', { name: 'Save manual entry' })).toBeDisabled()
+    expect(mockCreateTimeEntry).not.toHaveBeenCalled()
   })
 
   it('disables manual save when there is no selected project', async () => {
@@ -295,8 +283,14 @@ describe('TimeTrackingPage', () => {
       expect(screen.getByDisplayValue('500.00')).toBeInTheDocument()
     })
 
+    const manualEntryPanel = screen.getByText('Manual Time Entry').closest('article') as HTMLElement
+    const manualPanel = within(manualEntryPanel)
+
+    expect(manualPanel.getByRole('button', { name: 'Update entry' })).toBeDisabled()
+    fireEvent.change(manualPanel.getByRole('combobox', { name: 'Task' }), { target: { value: 't1' } })
+
     fireEvent.change(screen.getByDisplayValue('500.00'), { target: { value: '2' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Update entry' }))
+    fireEvent.click(manualPanel.getByRole('button', { name: 'Update entry' }))
 
     await waitFor(() => {
       expect(mockUpdateTimeEntry).toHaveBeenCalledWith(
@@ -304,7 +298,7 @@ describe('TimeTrackingPage', () => {
         expect.objectContaining({
           projectId: 'p1',
           hoursSpent: 2,
-          taskId: undefined,
+          taskId: 't1',
           entryDate: '2026-06-05',
         }),
       )
@@ -318,18 +312,16 @@ describe('TimeTrackingPage', () => {
     })
   })
 
-  it('prevents manual entry with non-positive hours', async () => {
-    const workspace = createWorkspace()
-    mockUseWorkspace.mockReturnValue(workspace)
+  it('keeps manual save blocked when no task is selected even if hours change', async () => {
+    mockUseWorkspace.mockReturnValue(createWorkspace())
 
     render(<TimeTrackingPage />)
 
-    fireEvent.change(screen.getByLabelText('Hours'), { target: { value: '0' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Save manual entry' }))
+    const manualPanel = within(screen.getByText('Manual Time Entry').closest('article') as HTMLElement)
 
-    await waitFor(() => {
-      expect(workspace.setStatus).toHaveBeenCalledWith('Hours must be greater than 0')
-    })
+    fireEvent.change(manualPanel.getByLabelText('Hours'), { target: { value: '0' } })
+
+    expect(manualPanel.getByRole('button', { name: 'Save manual entry' })).toBeDisabled()
     expect(mockCreateTimeEntry).not.toHaveBeenCalled()
   })
 

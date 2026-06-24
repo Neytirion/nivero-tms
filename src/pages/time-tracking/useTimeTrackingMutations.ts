@@ -37,6 +37,11 @@ export function useTimeTrackingMutations(input: UseTimeTrackingMutationsInput) {
       return
     }
 
+    if (!formInput.manualTaskId) {
+      input.setStatus('Select a task before logging time')
+      return
+    }
+
     const parsedHours = Number.parseFloat(formInput.manualHours)
     if (!Number.isFinite(parsedHours) || parsedHours <= 0) {
       input.setStatus('Hours must be greater than 0')

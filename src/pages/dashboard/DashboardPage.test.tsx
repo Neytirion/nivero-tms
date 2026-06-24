@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DashboardPage } from './DashboardPage'
 import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
@@ -72,26 +72,40 @@ describe('DashboardPage', () => {
   it('renders portfolio summary cards and project health', () => {
     render(<DashboardPage />)
 
-    expect(screen.getByText('Portfolio Overview')).toBeTruthy()
-    expect(screen.getByText('Active Projects')).toBeTruthy()
-    expect(screen.getByText('Total Tasks')).toBeTruthy()
-    expect(screen.getByText('Logged Hours')).toBeTruthy()
-    expect(screen.getAllByText('Apollo').length).toBeGreaterThan(0)
-    expect(screen.getByText('Risk: Red')).toBeTruthy()
-    expect(screen.getByText('80% · Hours: 120 / 100')).toBeTruthy()
-    expect(screen.getAllByText(/Start:/).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/Planned End:/).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/Forecast:/).length).toBeGreaterThan(0)
-    expect(screen.getAllByText(/Budget:/).length).toBeGreaterThan(0)
+    expect(screen.getByRole('heading', { name: 'Portfolio Overview' })).toBeInTheDocument()
+    expect(screen.getByText('Active Projects')).toBeInTheDocument()
+    expect(screen.getByText('Total Tasks')).toBeInTheDocument()
+    expect(screen.getByText('Logged Hours')).toBeInTheDocument()
+    expect(screen.getByText('Total Projects:')).toBeInTheDocument()
+    expect(screen.getByText('Active:')).toBeInTheDocument()
+    expect(screen.getByText('Completed:')).toBeInTheDocument()
+    expect(screen.getByText('Risks:')).toBeInTheDocument()
+
+    const projectHealthSection = screen.getByRole('heading', { name: 'Project Health' }).closest('section')
+    expect(projectHealthSection).not.toBeNull()
+
+    const apolloHealthCard = screen.getByText('Risk: Red').closest('article')
+    expect(apolloHealthCard).not.toBeNull()
+
+    const card = within(apolloHealthCard as HTMLElement)
+    expect(card.getByText('Apollo')).toBeInTheDocument()
+    expect(card.getByText('80% · Hours: 120 / 100')).toBeInTheDocument()
+    expect(card.getByText(/Start:/)).toBeInTheDocument()
+    expect(card.getByText(/Planned End:/)).toBeInTheDocument()
+    expect(card.getByText(/Forecast:/)).toBeInTheDocument()
+    expect(card.getByText(/Budget:/)).toBeInTheDocument()
   })
 
   it('shows only open tasks assigned to current user in My Tasks', () => {
     render(<DashboardPage />)
 
-    expect(screen.getByText('My Tasks')).toBeTruthy()
-    expect(screen.getByText(/Implement API/)).toBeTruthy()
-    expect(screen.queryByText(/Write docs/)).toBeNull()
-    expect(screen.getByText('Current project: Apollo')).toBeTruthy()
+    const myTasksSection = screen.getByRole('heading', { name: 'My Tasks' }).closest('section')
+    expect(myTasksSection).not.toBeNull()
+
+    const section = within(myTasksSection as HTMLElement)
+    expect(section.getByText('Current project: Apollo')).toBeInTheDocument()
+    expect(section.getByText(/Implement API/)).toBeInTheDocument()
+    expect(section.queryByText(/Write docs/)).not.toBeInTheDocument()
   })
 
   it('shows consultant summary when user has no manager access', () => {
@@ -115,11 +129,14 @@ describe('DashboardPage', () => {
 
     render(<DashboardPage />)
 
-    expect(screen.getByText('Consultant dashboard: assigned tasks, due dates, and your tracked task hours.')).toBeTruthy()
-    expect(screen.getByText('My Open Tasks')).toBeTruthy()
-    expect(screen.getByText('Due This Week')).toBeTruthy()
-    expect(screen.getByText('My Tracked Task Hours')).toBeTruthy()
-    expect(screen.queryByText('Project Health')).toBeNull()
+    expect(
+      screen.getByText('Consultant dashboard: assigned tasks, due dates, and your tracked task hours.'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('My Open Tasks')).toBeInTheDocument()
+    expect(screen.getByText('Due This Week')).toBeInTheDocument()
+    expect(screen.getByText('My Tracked Task Hours')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Project Health' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Project Manager' })).not.toBeInTheDocument()
   })
 
   it('shows member tasks from all projects with priority and due date', async () => {
@@ -164,11 +181,17 @@ describe('DashboardPage', () => {
 
     render(<DashboardPage />)
 
-    expect(await screen.findByText(/API integration/)).toBeTruthy()
-    expect(screen.getByText(/QA checklist/)).toBeTruthy()
-    expect(screen.getByText('All projects assigned to me')).toBeTruthy()
-    expect(screen.getByText(/Priority: high/)).toBeTruthy()
-    expect(screen.getAllByText('Apollo').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Hermes').length).toBeGreaterThan(0)
+    expect(await screen.findByText(/API integration/)).toBeInTheDocument()
+
+    const myTasksSection = screen.getByText('All projects assigned to me').closest('section')
+    expect(myTasksSection).not.toBeNull()
+
+    const section = within(myTasksSection as HTMLElement)
+    expect(section.getByText(/QA checklist/)).toBeInTheDocument()
+    expect(section.getByText('All projects assigned to me')).toBeInTheDocument()
+    expect(section.getByText(/Priority: high/)).toBeInTheDocument()
+    expect(section.getByText(/Priority: medium/)).toBeInTheDocument()
+    expect(section.getByRole('heading', { name: 'Apollo' })).toBeInTheDocument()
+    expect(section.getByRole('heading', { name: 'Hermes' })).toBeInTheDocument()
   })
 })

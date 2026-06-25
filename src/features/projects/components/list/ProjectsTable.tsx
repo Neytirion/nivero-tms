@@ -4,7 +4,9 @@ import { deriveProgress, deriveRisk } from '../../utils/project-metrics'
 
 interface ProjectsTableProps {
   searchValue: string
+  selectedCustomer: string | null
   onSearchChange: (value: string) => void
+  onSelectCustomer: (value: string | null) => void
   onSearchSubmit: () => void
   isLoading: boolean
   onOpenCreateProject?: () => void
@@ -20,7 +22,9 @@ interface ProjectsTableProps {
 
 export function ProjectsTable({
   searchValue,
+  selectedCustomer,
   onSearchChange,
+  onSelectCustomer,
   onSearchSubmit,
   isLoading,
   onOpenCreateProject,
@@ -107,6 +111,20 @@ export function ProjectsTable({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex flex-col gap-2">
           <h3 className="section-title">Projects</h3>
+          {selectedCustomer ? (
+            <div className="flex items-center gap-2 text-xs text-slate-600">
+              <span className="rounded-full border border-cyan-200 bg-cyan-50 px-2 py-1 font-semibold text-cyan-800">
+                Customer: {selectedCustomer}
+              </span>
+              <button
+                type="button"
+                onClick={() => onSelectCustomer(null)}
+                className="rounded-md border border-slate-300 bg-white px-2 py-1 font-semibold uppercase tracking-wide text-slate-600 hover:bg-slate-100"
+              >
+                Clear
+              </button>
+            </div>
+          ) : null}
           <form
             className="flex w-full max-w-full items-center gap-2"
             onSubmit={(event) => {
@@ -220,7 +238,23 @@ export function ProjectsTable({
                         {risk}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-slate-700">{project.customer_name ?? 'Not set'}</td>
+                    <td className="px-3 py-2 text-slate-700">
+                      {project.customer_name ? (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation()
+                            onSelectCustomer(project.customer_name ?? null)
+                          }}
+                          className="rounded-md border border-transparent px-1 py-0.5 text-left font-medium text-cyan-800 underline decoration-cyan-300 underline-offset-2 hover:border-cyan-200 hover:bg-cyan-50"
+                          title={`Filter by customer: ${project.customer_name}`}
+                        >
+                          {project.customer_name}
+                        </button>
+                      ) : (
+                        'Not set'
+                      )}
+                    </td>
                     <td className="px-3 py-2 text-slate-700">
                       {(project.actual_hours ?? 0).toFixed(1)} / {(project.estimated_hours ?? 0).toFixed(1)}
                     </td>

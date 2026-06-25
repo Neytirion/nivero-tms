@@ -63,8 +63,10 @@ export function useProjectsPageController() {
   // Filters: search and tab selection
   const {
     searchValue,
+    selectedCustomer,
     activeTab,
     setSearchValue,
+    setSelectedCustomer,
     applySearch,
     setActiveTab,
     filteredProjects,
@@ -210,7 +212,9 @@ export function useProjectsPageController() {
 
     // Filters
     searchValue,
+    selectedCustomer,
     setSearchValue,
+    setSelectedCustomer,
     applySearch,
     filteredProjects,
     activeTab,

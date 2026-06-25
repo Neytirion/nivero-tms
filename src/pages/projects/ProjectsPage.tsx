@@ -15,7 +15,9 @@ export function ProjectsPage() {
     completedProjects,
     riskProjects,
     searchValue,
+    selectedCustomer,
     setSearchValue,
+    setSelectedCustomer,
     applySearch,
     filteredProjects,
     isCreateModalOpen,
@@ -57,7 +59,9 @@ export function ProjectsPage() {
 
       <ProjectsTable
         searchValue={searchValue}
+        selectedCustomer={selectedCustomer}
         onSearchChange={setSearchValue}
+        onSelectCustomer={setSelectedCustomer}
         onSearchSubmit={applySearch}
         isLoading={isLoading}
         onOpenCreateProject={() => setIsCreateModalOpen(true)}

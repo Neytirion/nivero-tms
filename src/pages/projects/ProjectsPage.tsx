@@ -6,6 +6,7 @@ export function ProjectsPage() {
   const {
     status,
     isLoading,
+    projects,
     tasks,
     projectMembers,
     selectedProject,
@@ -27,6 +28,7 @@ export function ProjectsPage() {
     incompleteTaskCount,
     searchValue,
     setSearchValue,
+    applySearch,
     filteredProjects,
     activeTab,
     setActiveTab,
@@ -91,9 +93,11 @@ export function ProjectsPage() {
       <ProjectsTable
         searchValue={searchValue}
         onSearchChange={setSearchValue}
+        onSearchSubmit={applySearch}
         isLoading={isLoading}
         onOpenCreateProject={() => setIsCreateModalOpen(true)}
         onRefresh={() => void loadDashboardPreview()}
+        allProjects={projects}
         projects={filteredProjects}
         selectedProjectId={selectedProjectId}
         onSelectProject={(projectId) => void selectProject(projectId)}

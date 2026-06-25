@@ -66,6 +66,7 @@ export function useProjectsPageController() {
     searchValue,
     activeTab,
     setSearchValue,
+    applySearch,
     setActiveTab,
     filteredProjects,
   } = useProjectsPageFilters(projects)
@@ -222,6 +223,7 @@ export function useProjectsPageController() {
     // Filters
     searchValue,
     setSearchValue,
+    applySearch,
     filteredProjects,
     activeTab,
     setActiveTab,

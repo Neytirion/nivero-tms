@@ -4,9 +4,11 @@ import { deriveProgress, deriveRisk } from '../../utils/project-metrics'
 interface ProjectsTableProps {
   searchValue: string
   onSearchChange: (value: string) => void
+  onSearchSubmit: () => void
   isLoading: boolean
   onOpenCreateProject?: () => void
   onRefresh: () => void | Promise<void>
+  allProjects: ProjectPreview[]
   projects: ProjectPreview[]
   selectedProjectId: string | null
   onSelectProject: (projectId: string) => void | Promise<void>
@@ -18,9 +20,11 @@ interface ProjectsTableProps {
 export function ProjectsTable({
   searchValue,
   onSearchChange,
+  onSearchSubmit,
   isLoading,
   onOpenCreateProject,
   onRefresh,
+  allProjects,
   projects,
   selectedProjectId,
   onSelectProject,
@@ -28,18 +32,93 @@ export function ProjectsTable({
   canManageProject,
   onDeleteProject,
 }: ProjectsTableProps) {
+  const normalizedQuery = searchValue.trim().toLowerCase()
+
+  const deduplicatedSuggestions = Array.from(
+    allProjects
+      .flatMap((project) => [project.name, project.customer_name ?? ''])
+      .map((value) => value.trim())
+      .filter((value) => value.length > 0)
+      .reduce((acc, value) => {
+        const key = value.toLowerCase()
+
+        if (!acc.has(key)) {
+          acc.set(key, value)
+        }
+
+        return acc
+      }, new Map<string, string>())
+      .values(),
+  )
+
+  const suggestionValues = deduplicatedSuggestions
+    .filter((value) => {
+      if (!normalizedQuery) {
+        return true
+      }
+
+      return value.toLowerCase().includes(normalizedQuery)
+    })
+    .sort((left, right) => {
+      const leftLower = left.toLowerCase()
+      const rightLower = right.toLowerCase()
+
+      const rank = (value: string) => {
+        if (!normalizedQuery) {
+          return 3
+        }
+        if (value === normalizedQuery) {
+          return 0
+        }
+        if (value.startsWith(normalizedQuery)) {
+          return 1
+        }
+        return 2
+      }
+
+      const rankDiff = rank(leftLower) - rank(rightLower)
+      if (rankDiff !== 0) {
+        return rankDiff
+      }
+
+      return left.localeCompare(right)
+    })
+    .slice(0, 8)
+
   return (
     <section className="page-section">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="section-title">Projects</h3>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-2">
+          <h3 className="section-title">Projects</h3>
+          <form
+            className="flex w-full max-w-full items-center gap-2"
+            onSubmit={(event) => {
+              event.preventDefault()
+              onSearchSubmit()
+            }}
+          >
+            <input
+              type="search"
+              value={searchValue}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Search by project, customer, description..."
+              list="projects-search-suggestions"
+              className="w-[320px] max-w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
+            />
+            <datalist id="projects-search-suggestions">
+              {suggestionValues.map((value) => (
+                <option key={value} value={value} />
+              ))}
+            </datalist>
+            <button
+              type="submit"
+              className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"
+            >
+              Search
+            </button>
+          </form>
+        </div>
         <div className="flex items-center gap-2">
-          <input
-            type="search"
-            value={searchValue}
-            onChange={(event) => onSearchChange(event.target.value)}
-            placeholder="Search by project, customer, description..."
-            className="w-[320px] max-w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
-          />
           <button
             type="button"
             onClick={() => void onRefresh()}

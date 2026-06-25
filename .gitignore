@@ -28,3 +28,6 @@ dist-ssr
 
 # Supabase local CLI metadata
 supabase/.temp/
+
+# Local lint output artifact
+lint-results.json

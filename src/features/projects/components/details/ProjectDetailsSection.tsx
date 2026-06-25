@@ -1,6 +1,6 @@
 import type { ProjectPreview, TaskPreview } from '../../../../lib/pm'
 import type { ProjectRoleName } from '../../../../shared/utils/permissions'
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { EstimatesTab } from '../estimates'
 import { ProjectCollaborationTab } from './ProjectCollaborationTab'
 import { TeamAccessSection } from './TeamAccessSection'
@@ -131,6 +131,24 @@ export function ProjectDetailsSection({
     })
   }, [tasks])
 
+  const [isTabLoading, setIsTabLoading] = useState(false)
+
+  useEffect(() => {
+    if (!selectedProject) {
+      setIsTabLoading(false)
+      return
+    }
+
+    setIsTabLoading(true)
+    const timeoutId = window.setTimeout(() => {
+      setIsTabLoading(false)
+    }, 180)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [activeTab, selectedProject?.id])
+
   return (
     <section className="page-section">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -192,7 +210,13 @@ export function ProjectDetailsSection({
             ))}
           </div>
 
-          {activeTab === 'overview' ? (
+          {isTabLoading ? (
+            <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+              Loading module...
+            </div>
+          ) : null}
+
+          {!isTabLoading && activeTab === 'overview' ? (
             <ProjectOverviewTab
               selectedProject={selectedProject}
               tasks={tasks}
@@ -201,7 +225,7 @@ export function ProjectDetailsSection({
             />
           ) : null}
 
-          {activeTab === 'team' ? (
+          {!isTabLoading && activeTab === 'team' ? (
             <div className="mt-4">
               <TeamAccessSection
                 isEmbedded
@@ -225,7 +249,7 @@ export function ProjectDetailsSection({
             </div>
           ) : null}
 
-          {activeTab === 'settings' ? (
+          {!isTabLoading && activeTab === 'settings' ? (
             <ProjectSettingsTab
               settingsName={settingsName}
               onSettingsNameChange={onSettingsNameChange}
@@ -247,15 +271,15 @@ export function ProjectDetailsSection({
             />
           ) : null}
 
-          {activeTab === 'tasks' ? (
+          {!isTabLoading && activeTab === 'tasks' ? (
             <ProjectTasksTab sortedTasks={sortedTasks} />
           ) : null}
 
-          {activeTab === 'estimates' ? (
+          {!isTabLoading && activeTab === 'estimates' ? (
             <EstimatesTab projectId={selectedProject.id} canEdit={canEditSelectedProject} />
           ) : null}
 
-          {activeTab === 'collaboration' ? (
+          {!isTabLoading && activeTab === 'collaboration' ? (
             <ProjectCollaborationTab projectId={selectedProject.id} canEdit={canEditSelectedProject} />
           ) : null}
 

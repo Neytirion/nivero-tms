@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
 import { useProjectForm } from '../../features/projects/hooks/useProjectForm.ts'
 import { useProjectsPageFilters } from './useProjectsPageFilters'
@@ -169,17 +168,6 @@ export function useProjectsPageController() {
     canDeleteProject,
     canInviteToProject,
   })
-
-  // Sync selected project when URL changes
-  useEffect(() => {
-    if (!selectedProjectId) {
-      return
-    }
-
-    void selectProject(selectedProjectId)
-    // Intentionally track selected project only to refresh members/tasks snapshot on page entry.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedProjectId])
 
   // Wrapper handlers with form reset
   const inviteMemberHandler = async () => {

@@ -1,48 +1,23 @@
-import { ConfirmDialog } from '../../shared/components'
-import { CreateProjectWithAiModal, ProjectDetailsSection, ProjectsSummaryCards, ProjectsTable } from '../../features/projects/components'
+import { useNavigate } from 'react-router-dom'
+import { CreateProjectWithAiModal, ProjectsSummaryCards, ProjectsTable } from '../../features/projects/components'
 import { useProjectsPageController } from './useProjectsPageController'
 
 export function ProjectsPage() {
+  const navigate = useNavigate()
+
   const {
     status,
     isLoading,
     projects,
-    tasks,
-    projectMembers,
-    selectedProject,
     selectedProjectId,
-    myRoleInSelectedProject,
-    canManageProject,
-    canDeleteSelectedProject,
-    canManageMemberRoles,
-    canInviteToSelectedProject,
-    canAssignAdminRole,
-    canAssignManagerRole,
-    effectiveMemberRole,
     totalProjects,
     activeProjects,
     completedProjects,
     riskProjects,
-    teamMemberNames,
-    projectManagerName,
-    incompleteTaskCount,
     searchValue,
     setSearchValue,
     applySearch,
     filteredProjects,
-    activeTab,
-    setActiveTab,
-    memberEmail,
-    setMemberEmail,
-    setMemberRole,
-    pendingRoleByUserId,
-    updatePendingRole,
-    isCompleteConfirmOpen,
-    setIsCompleteConfirmOpen,
-    isSaveSettingsConfirmOpen,
-    setIsSaveSettingsConfirmOpen,
-    isDeleteConfirmOpen,
-    setIsDeleteConfirmOpen,
     isCreateModalOpen,
     setIsCreateModalOpen,
     projectName,
@@ -55,20 +30,10 @@ export function ProjectsPage() {
     setProjectEndDate,
     canSubmit,
     reset,
-    currentSettingsDraft,
-    updateSettingsDraft,
     createProjectHandler,
     createProjectFromAiDraftHandler,
-    inviteMemberHandler,
-    completeProjectHandler,
-    saveProjectSettings,
-    deleteSelectedProjectHandler,
-    updateMemberRoleHandler,
     loadDashboardPreview,
-    selectProject,
   } = useProjectsPageController()
-
-  const canEditSelectedProject = selectedProject ? canManageProject(selectedProject.id) : false
 
   return (
     <div className="space-y-5">
@@ -100,86 +65,10 @@ export function ProjectsPage() {
         allProjects={projects}
         projects={filteredProjects}
         selectedProjectId={selectedProjectId}
-        onSelectProject={(projectId) => void selectProject(projectId)}
+        onSelectProject={(projectId) => navigate(`/app/projects/${projectId}`)}
         onOpenProjectSettings={(projectId: string) => {
-          setActiveTab('settings')
-          return selectProject(projectId)
+          navigate(`/app/projects/${projectId}?tab=settings`)
         }}
-      />
-
-      <ProjectDetailsSection
-        selectedProject={selectedProject}
-        selectedProjectId={selectedProjectId}
-        myRoleInSelectedProject={myRoleInSelectedProject}
-        isLoading={isLoading}
-        canManageProject={canManageProject}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        settingsName={currentSettingsDraft.name}
-        onSettingsNameChange={(value) => updateSettingsDraft({ name: value })}
-        settingsDescription={currentSettingsDraft.description}
-        onSettingsDescriptionChange={(value) => updateSettingsDraft({ description: value })}
-        settingsCustomerName={currentSettingsDraft.customerName}
-        onSettingsCustomerNameChange={(value) => updateSettingsDraft({ customerName: value })}
-        settingsStartDate={currentSettingsDraft.startDate}
-        onSettingsStartDateChange={(value) => updateSettingsDraft({ startDate: value })}
-        settingsDeadline={currentSettingsDraft.deadline}
-        onSettingsDeadlineChange={(value) => updateSettingsDraft({ deadline: value })}
-        settingsBudgetAmount={currentSettingsDraft.budgetAmount}
-        onSettingsBudgetAmountChange={(value) => updateSettingsDraft({ budgetAmount: value })}
-        canEditSelectedProject={canEditSelectedProject}
-        canDeleteSelectedProject={canDeleteSelectedProject}
-        canManageMemberRoles={canManageMemberRoles}
-        tasks={tasks}
-        incompleteTaskCount={incompleteTaskCount}
-        teamMemberNames={teamMemberNames}
-        projectManagerName={projectManagerName}
-        canInviteToSelectedProject={canInviteToSelectedProject}
-        memberEmail={memberEmail}
-        onMemberEmailChange={setMemberEmail}
-        memberRole={effectiveMemberRole}
-        onMemberRoleChange={setMemberRole}
-        canAssignAdminRole={canAssignAdminRole}
-        canAssignManagerRole={canAssignManagerRole}
-        onInviteMember={inviteMemberHandler}
-        projectMembers={projectMembers}
-        pendingRoleByUserId={pendingRoleByUserId}
-        onPendingRoleChange={updatePendingRole}
-        selectedProjectOwnerId={selectedProject?.owner_id}
-        onSaveRole={updateMemberRoleHandler}
-        onOpenDeleteConfirm={() => setIsDeleteConfirmOpen(true)}
-        onOpenCompleteConfirm={() => setIsCompleteConfirmOpen(true)}
-        onOpenSaveSettingsConfirm={() => setIsSaveSettingsConfirmOpen(true)}
-      />
-
-      <ConfirmDialog
-        isOpen={isCompleteConfirmOpen}
-        title="Complete project"
-        description={`Mark "${selectedProject?.name ?? ''}" as completed? You can keep viewing it in the list.`}
-        confirmText="Complete project"
-        tone="success"
-        onCancel={() => setIsCompleteConfirmOpen(false)}
-        onConfirm={completeProjectHandler}
-      />
-
-      <ConfirmDialog
-        isOpen={isSaveSettingsConfirmOpen}
-        title="Save project settings"
-        description={`Save changes for "${selectedProject?.name ?? ''}"?`}
-        confirmText="Save settings"
-        tone="success"
-        onCancel={() => setIsSaveSettingsConfirmOpen(false)}
-        onConfirm={saveProjectSettings}
-      />
-
-      <ConfirmDialog
-        isOpen={isDeleteConfirmOpen}
-        title="Delete project"
-        description={`Delete "${selectedProject?.name ?? ''}"? This action cannot be undone.`}
-        confirmText="Delete project"
-        tone="danger"
-        onCancel={() => setIsDeleteConfirmOpen(false)}
-        onConfirm={deleteSelectedProjectHandler}
       />
 
       <CreateProjectWithAiModal

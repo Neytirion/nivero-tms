@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { ProjectsPage } from './ProjectsPage'
 import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
 import { useProjectForm } from '../../features/projects/hooks/useProjectForm.ts'
@@ -15,26 +16,49 @@ vi.mock('../../features/projects/hooks/useProjectForm.ts', () => ({
 
 vi.mock('../../features/projects/components', () => ({
   ProjectsSummaryCards: () => <div>summary-cards</div>,
-  ProjectsTable: () => <div>projects-table</div>,
-  CreateProjectModal: () => null,
-  CreateProjectWithAiModal: () => null,
-  ProjectDetailsSection: (props: {
-    onInviteMember: () => void
-    onMemberEmailChange: (value: string) => void
+  ProjectsTable: (props: {
+    onSelectProject: (projectId: string) => void
+    onOpenProjectSettings?: (projectId: string) => void
   }) => (
     <div>
-      <button type="button" onClick={() => props.onMemberEmailChange('member@example.com')}>
-        Set member email
+      <button type="button" onClick={() => props.onSelectProject('p1')}>
+        Open project
       </button>
-      <button type="button" onClick={props.onInviteMember}>
-        Invite member
+      <button type="button" onClick={() => props.onOpenProjectSettings?.('p1')}>
+        Open project settings
       </button>
     </div>
   ),
+  CreateProjectModal: () => null,
+  CreateProjectWithAiModal: () => null,
 }))
 
 const mockUseWorkspace = vi.mocked(useWorkspace)
 const mockUseProjectForm = vi.mocked(useProjectForm)
+
+function LocationProbe() {
+  const location = useLocation()
+  return <div data-testid="location">{`${location.pathname}${location.search}`}</div>
+}
+
+function renderProjectsPage(initialPath = '/app/projects') {
+  return render(
+    <MemoryRouter initialEntries={[initialPath]}>
+      <Routes>
+        <Route
+          path="/app/projects"
+          element={
+            <>
+              <ProjectsPage />
+              <LocationProbe />
+            </>
+          }
+        />
+        <Route path="/app/projects/:projectId" element={<LocationProbe />} />
+      </Routes>
+    </MemoryRouter>,
+  )
+}
 
 function mockProjectForm() {
   mockUseProjectForm.mockReturnValue({
@@ -56,50 +80,47 @@ describe('ProjectsPage', () => {
     mockProjectForm()
   })
 
-  it('refreshes selected project snapshot on page load', async () => {
+  it('does not auto-reload selected project on list page load', () => {
     const workspace = createWorkspaceState({
       selectedProjectId: 'p1',
       projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
     })
     mockUseWorkspace.mockReturnValue(workspace)
 
-    render(<ProjectsPage />)
+    renderProjectsPage()
 
-    await waitFor(() => {
-      expect(workspace.selectProject).toHaveBeenCalledWith('p1')
-    })
+    expect(workspace.selectProject).not.toHaveBeenCalled()
   })
 
-  it('requires selected project before inviting members', () => {
-    const workspace = createWorkspaceState({
-      selectedProjectId: null,
-    })
-    mockUseWorkspace.mockReturnValue(workspace)
-
-    render(<ProjectsPage />)
-
-    fireEvent.click(screen.getByText('Invite member'))
-
-    expect(workspace.setStatus).toHaveBeenCalledWith('Select a project before inviting members')
-  })
-
-  it('invites selected member email with current role', async () => {
+  it('navigates to project details when row is selected', async () => {
     const workspace = createWorkspaceState({
       selectedProjectId: 'p1',
       projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
-      canInviteToProject: vi.fn(() => true),
-      getProjectRole: vi.fn(() => 'owner' as const),
-      currentUserId: 'owner-1',
     })
     mockUseWorkspace.mockReturnValue(workspace)
 
-    render(<ProjectsPage />)
+    renderProjectsPage()
 
-    fireEvent.click(screen.getByText('Set member email'))
-    fireEvent.click(screen.getByText('Invite member'))
+    fireEvent.click(screen.getByText('Open project'))
 
     await waitFor(() => {
-      expect(workspace.inviteMemberToSelectedProjectByEmail).toHaveBeenCalledWith('member@example.com', 'member')
+      expect(screen.getByTestId('location').textContent).toBe('/app/projects/p1')
+    })
+  })
+
+  it('navigates to settings tab when settings action is selected', async () => {
+    const workspace = createWorkspaceState({
+      selectedProjectId: 'p1',
+      projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
+    })
+    mockUseWorkspace.mockReturnValue(workspace)
+
+    renderProjectsPage()
+
+    fireEvent.click(screen.getByText('Open project settings'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location').textContent).toBe('/app/projects/p1?tab=settings')
     })
   })
 })

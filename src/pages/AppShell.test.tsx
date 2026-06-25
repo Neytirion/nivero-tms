@@ -55,6 +55,8 @@ describe('AppShell', () => {
     )
 
     expect(screen.getByText('Resources')).toBeTruthy()
+    expect(screen.getByText('Nivero PM Tool')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Open profile' })).toBeTruthy()
     expect(screen.getByLabelText('Select current project')).toBeTruthy()
   })
 })

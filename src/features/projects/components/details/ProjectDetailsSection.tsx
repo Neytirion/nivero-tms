@@ -135,10 +135,10 @@ export function ProjectDetailsSection({
 
   useEffect(() => {
     if (!selectedProject) {
-      setIsTabLoading(false)
       return
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsTabLoading(true)
     const timeoutId = window.setTimeout(() => {
       setIsTabLoading(false)
@@ -147,7 +147,7 @@ export function ProjectDetailsSection({
     return () => {
       window.clearTimeout(timeoutId)
     }
-  }, [activeTab, selectedProject?.id])
+  }, [activeTab, selectedProject])
 
   return (
     <section className="page-section">

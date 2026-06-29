@@ -97,9 +97,11 @@ export function ProjectsTable({
 
   useEffect(() => {
     if (currentPage > totalPages) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentPage(totalPages)
     }
-  }, [currentPage, totalPages])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalPages])
 
   const visibleProjects = useMemo(() => {
     const start = (currentPage - 1) * pageSize

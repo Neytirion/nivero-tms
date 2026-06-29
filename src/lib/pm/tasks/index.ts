@@ -10,22 +10,29 @@ import {
   getTaskProjectId,
 } from '../helpers'
 import { hasProjectEstimateVersion } from '../estimates'
+import { getProjectUseEstimates } from '../projects'
 import { isExecutionTaskStatus, isTaskClosedStatus } from '../../../shared/utils/task-status.ts'
 
 export async function createTask(input: CreateTaskInput) {
   await assertProjectEditable(input.projectId, 'create task')
 
-  const hasEstimateVersion = await hasProjectEstimateVersion(input.projectId)
-  if (!hasEstimateVersion) {
-    throw new Error('Cannot create task: create estimate version v1 first')
-  }
+  // Check if this project uses estimates module
+  const projectUseEstimates = await getProjectUseEstimates(input.projectId)
 
-  if (input.estimateHours === undefined || input.estimateHours === null) {
-    throw new Error('Estimated hours is required')
-  }
+  // If project requires estimates, check for estimate version
+  if (projectUseEstimates) {
+    const hasEstimateVersion = await hasProjectEstimateVersion(input.projectId)
+    if (!hasEstimateVersion) {
+      throw new Error('Cannot create task: create estimate version v1 first')
+    }
 
-  if (!Number.isFinite(input.estimateHours) || input.estimateHours < 0) {
-    throw new Error('Estimated hours must be a number greater than or equal to 0')
+    if (input.estimateHours === undefined || input.estimateHours === null) {
+      throw new Error('Estimated hours is required')
+    }
+
+    if (!Number.isFinite(input.estimateHours) || input.estimateHours < 0) {
+      throw new Error('Estimated hours must be a number greater than or equal to 0')
+    }
   }
 
   await assertTaskWorkPackageValid(input.projectId, input.workPackageId)

@@ -20,6 +20,7 @@ function createProject(overrides: Partial<ProjectPreview> = {}): ProjectPreview 
     status: 'active',
     completed_at: null,
     deadline_at: '2026-10-15',
+    use_estimates: false,
     created_at: '2026-05-20T09:00:00Z',
     ...overrides,
   }

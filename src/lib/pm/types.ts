@@ -29,6 +29,7 @@ export type ProjectPreview = Pick<
   | 'status'
   | 'completed_at'
   | 'deadline_at'
+  | 'use_estimates'
   | 'created_at'
 >
 
@@ -129,6 +130,7 @@ export interface UpdateProjectInput {
   deadline_at?: string
   start_date?: string
   budget_amount?: number
+  use_estimates?: boolean
 }
 
 export interface CreateTaskInput {

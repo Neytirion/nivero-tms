@@ -9,6 +9,7 @@ interface SettingsDraftState {
   startDate: string
   deadline: string
   budgetAmount: string
+  useEstimates: boolean
 }
 
 export interface UseProjectsSettingsFormReturn {
@@ -33,6 +34,7 @@ export function useProjectsSettingsForm(
     startDate: '',
     deadline: '',
     budgetAmount: '',
+    useEstimates: false,
   })
 
   // Compute current draft based on selected project and unsaved changes
@@ -55,6 +57,7 @@ export function useProjectsSettingsForm(
       startDate: selectedProject.start_date ?? '',
       deadline: selectedProject.end_date ?? selectedProject.deadline_at ?? '',
       budgetAmount: selectedProject.budget_amount != null ? String(selectedProject.budget_amount) : '',
+      useEstimates: selectedProject.use_estimates ?? false,
     }
   }, [selectedProject, settingsDraft])
 
@@ -76,6 +79,7 @@ export function useProjectsSettingsForm(
             startDate: selectedProject.start_date ?? '',
             deadline: selectedProject.end_date ?? selectedProject.deadline_at ?? '',
             budgetAmount: selectedProject.budget_amount != null ? String(selectedProject.budget_amount) : '',
+            useEstimates: selectedProject.use_estimates ?? false,
           }
 
     setSettingsDraft({
@@ -93,6 +97,7 @@ export function useProjectsSettingsForm(
       startDate: '',
       deadline: '',
       budgetAmount: '',
+      useEstimates: false,
     })
   }
 

@@ -1,5 +1,5 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react'
-import { getProjectTaskWorkPackages, hasProjectEstimateVersion, type WorkPackagePreview } from '../../lib/pm'
+import { getProjectTaskWorkPackages, getProjectUseEstimates, hasProjectEstimateVersion, type WorkPackagePreview } from '../../lib/pm'
 
 interface UseTaskWorkPackagesLoaderInput {
   selectedProjectId: string | null
@@ -23,13 +23,18 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
       setHasEstimateVersion(null)
 
       try {
-        const [nextWorkPackages, hasVersion] = await Promise.all([
-          getProjectTaskWorkPackages(selectedProjectId),
-          hasProjectEstimateVersion(selectedProjectId),
-        ])
+        const nextWorkPackages = await getProjectTaskWorkPackages(selectedProjectId)
+        const useEstimates = await getProjectUseEstimates(selectedProjectId)
+
+        // If project doesn't use estimates, allow task creation (hasEstimateVersion = true)
+        // If project uses estimates, check for estimate version
+        let canCreateTasks = true
+        if (useEstimates) {
+          canCreateTasks = await hasProjectEstimateVersion(selectedProjectId)
+        }
 
         setWorkPackages(nextWorkPackages)
-        setHasEstimateVersion(hasVersion)
+        setHasEstimateVersion(canCreateTasks)
         setTaskWorkPackageId((prev) =>
           nextWorkPackages.some((item: Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours'>) => item.id === prev)
             ? prev
@@ -37,7 +42,7 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
         )
       } catch {
         setWorkPackages([])
-        setHasEstimateVersion(false)
+        setHasEstimateVersion(true)
         setTaskWorkPackageId('')
       }
     }

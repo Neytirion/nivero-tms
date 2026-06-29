@@ -27,6 +27,7 @@ export interface Database {
           status: string | null
           completed_at: string | null
           deadline_at: string | null
+          use_estimates: boolean
           created_at: string | null
         }
         Insert: {
@@ -46,6 +47,7 @@ export interface Database {
           status?: string | null
           completed_at?: string | null
           deadline_at?: string | null
+          use_estimates?: boolean
           created_at?: string | null
         }
         Update: {
@@ -65,6 +67,7 @@ export interface Database {
           status?: string | null
           completed_at?: string | null
           deadline_at?: string | null
+          use_estimates?: boolean
           created_at?: string | null
         }
         Relationships: [

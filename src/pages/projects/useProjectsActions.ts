@@ -17,6 +17,7 @@ export interface UseProjectsActionsInput {
     startDate: string
     deadline: string
     budgetAmount: string
+    useEstimates: boolean
   }
   setStatus: (status: string) => void
   canSubmit: boolean
@@ -36,6 +37,7 @@ export interface UseProjectsActionsInput {
       startDate?: string
       deadlineAt?: string
       budgetAmount?: string
+      useEstimates?: boolean
     },
   ) => Promise<boolean>
   removeProject: (projectId: string) => Promise<void>
@@ -198,6 +200,7 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
         startDate: currentSettingsDraft.startDate || undefined,
         deadlineAt: currentSettingsDraft.deadline || undefined,
         budgetAmount: currentSettingsDraft.budgetAmount || undefined,
+        useEstimates: currentSettingsDraft.useEstimates,
       })
 
       if (wasSaved) {

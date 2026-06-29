@@ -4,6 +4,7 @@ const mocks = vi.hoisted(() => ({
   from: vi.fn(),
   getUser: vi.fn(),
   hasProjectEstimateVersion: vi.fn(),
+  getProjectUseEstimates: vi.fn(),
   assertProjectEditable: vi.fn(),
   assertTaskDependencyValid: vi.fn(),
   assertTaskDueDateWithinProjectRange: vi.fn(),
@@ -26,6 +27,10 @@ vi.mock('../estimates', () => ({
   hasProjectEstimateVersion: mocks.hasProjectEstimateVersion,
 }))
 
+vi.mock('../projects', () => ({
+  getProjectUseEstimates: mocks.getProjectUseEstimates,
+}))
+
 vi.mock('../helpers', () => ({
   assertProjectEditable: mocks.assertProjectEditable,
   assertTaskDependencyValid: mocks.assertTaskDependencyValid,
@@ -43,6 +48,7 @@ describe('pm.tasks', () => {
     mocks.from.mockReset()
     mocks.getUser.mockReset()
     mocks.hasProjectEstimateVersion.mockReset()
+    mocks.getProjectUseEstimates.mockReset()
     mocks.assertProjectEditable.mockReset()
     mocks.assertTaskDependencyValid.mockReset()
     mocks.assertTaskDueDateWithinProjectRange.mockReset()
@@ -53,6 +59,7 @@ describe('pm.tasks', () => {
 
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
     mocks.hasProjectEstimateVersion.mockResolvedValue(true)
+    mocks.getProjectUseEstimates.mockResolvedValue(false)
     mocks.assertProjectEditable.mockResolvedValue(undefined)
     mocks.assertTaskDependencyValid.mockResolvedValue(null)
     mocks.assertTaskDueDateWithinProjectRange.mockResolvedValue(undefined)
@@ -63,6 +70,7 @@ describe('pm.tasks', () => {
   })
 
   it('blocks task creation when estimate version is missing', async () => {
+    mocks.getProjectUseEstimates.mockResolvedValue(true)
     mocks.hasProjectEstimateVersion.mockResolvedValue(false)
 
     await expect(

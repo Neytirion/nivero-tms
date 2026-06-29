@@ -7,7 +7,7 @@ export async function getMyProjects() {
   const { data, error } = await supabase
     .from('projects')
     .select(
-      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,created_at',
+      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at',
     )
     .order('created_at', { ascending: false })
 
@@ -86,9 +86,10 @@ export async function createProject(input: CreateProjectInput) {
       budget_amount: input.budgetAmount ?? null,
       deadline_at: input.endDate ?? null,
       owner_id: userData.user.id,
+      use_estimates: false,
     })
     .select(
-      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,created_at',
+      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at',
     )
     .single()
 
@@ -132,6 +133,7 @@ export async function updateProject(projectId: string, patch: UpdateProjectInput
       : {}),
     ...(patch.start_date !== undefined ? { start_date: patch.start_date || null } : {}),
     ...(patch.budget_amount !== undefined ? { budget_amount: patch.budget_amount } : {}),
+    ...(patch.use_estimates !== undefined ? { use_estimates: patch.use_estimates } : {}),
   }
 
   const { data, error } = await supabase
@@ -139,7 +141,7 @@ export async function updateProject(projectId: string, patch: UpdateProjectInput
     .update(updatePayload)
     .eq('id', projectId)
     .select(
-      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,created_at',
+      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at',
     )
     .maybeSingle()
 
@@ -179,7 +181,7 @@ export async function completeProject(projectId: string) {
     })
     .eq('id', projectId)
     .select(
-      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,created_at',
+      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at',
     )
     .maybeSingle()
 
@@ -192,4 +194,22 @@ export async function completeProject(projectId: string) {
   }
 
   return data satisfies ProjectPreview
+}
+
+export async function getProjectUseEstimates(projectId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('use_estimates')
+    .eq('id', projectId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  if (!data) {
+    throw new Error('Project not found')
+  }
+
+  return data.use_estimates ?? false
 }

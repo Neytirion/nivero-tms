@@ -137,6 +137,8 @@ export function ProjectDetailsPage() {
         onSettingsDeadlineChange={(value) => updateSettingsDraft({ deadline: value })}
         settingsBudgetAmount={currentSettingsDraft.budgetAmount}
         onSettingsBudgetAmountChange={(value) => updateSettingsDraft({ budgetAmount: value })}
+        settingsUseEstimates={currentSettingsDraft.useEstimates}
+        onSettingsUseEstimatesChange={(value) => updateSettingsDraft({ useEstimates: value })}
         canEditSelectedProject={canEditSelectedProject}
         canDeleteSelectedProject={canDeleteSelectedProject}
         canManageMemberRoles={canManageMemberRoles}

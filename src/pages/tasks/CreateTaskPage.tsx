@@ -7,7 +7,6 @@ export function CreateTaskPage() {
   const navigate = useNavigate()
 
   const {
-    status,
     isLoading,
     selectedProject,
     selectedProjectId,
@@ -74,13 +73,6 @@ export function CreateTaskPage() {
           <h1 className="text-3xl font-bold text-slate-900">Create Task</h1>
           <p className="mt-2 text-slate-600">Add a new task to your project</p>
         </div>
-
-        {/* Status message */}
-        {status && (
-          <div className="mb-4 rounded-lg border border-slate-200 bg-white px-4 py-2">
-            <p className="text-sm text-slate-700">{status}</p>
-          </div>
-        )}
 
         {/* Main Card */}
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">

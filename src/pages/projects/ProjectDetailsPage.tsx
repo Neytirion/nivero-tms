@@ -24,6 +24,7 @@ export function ProjectDetailsPage() {
     status,
     isLoading,
     tasks,
+    projects,
     projectMembers,
     selectedProject,
     selectedProjectId,
@@ -67,6 +68,13 @@ export function ProjectDetailsPage() {
       return
     }
 
+    // If project was deleted or doesn't exist in the projects list, redirect to projects page
+    const projectExists = projects.some((p) => p.id === projectId)
+    if (!projectExists) {
+      navigate('/app/projects', { replace: true })
+      return
+    }
+
     if (selectedProjectId === projectId) {
       return
     }
@@ -74,7 +82,7 @@ export function ProjectDetailsPage() {
     void selectProject(projectId)
     // selectProject reference is intentionally omitted to avoid rerun loops from unstable function identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, projectId, selectedProjectId])
+  }, [navigate, projectId, selectedProjectId, projects])
 
   useEffect(() => {
     const requestedTab = parseTab(searchParams.get('tab'))

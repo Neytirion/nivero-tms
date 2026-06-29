@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { TimeTrackingPage } from './TimeTrackingPage'
 import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
 import { createTimeEntry, deleteTimeEntry, getProjectTasks, getTimeEntries, updateTimeEntry } from '../../lib/pm'
@@ -59,7 +60,11 @@ describe('TimeTrackingPage', () => {
   it('shows project date constraints on manual entry date field', async () => {
     mockUseWorkspace.mockReturnValue(createWorkspace())
 
-    render(<TimeTrackingPage />)
+    render(
+      <MemoryRouter>
+        <TimeTrackingPage />
+      </MemoryRouter>,
+    )
 
     const todayValue = new Date().toISOString().slice(0, 10)
     const dateInput = (await screen.findAllByDisplayValue(todayValue)).find(
@@ -73,7 +78,11 @@ describe('TimeTrackingPage', () => {
   it('keeps manual save disabled until a task is selected', async () => {
     mockUseWorkspace.mockReturnValue(createWorkspace())
 
-    render(<TimeTrackingPage />)
+    render(
+      <MemoryRouter>
+        <TimeTrackingPage />
+      </MemoryRouter>,
+    )
 
     const manualPanel = within(screen.getByText('Manual Time Entry').closest('article') as HTMLElement)
     expect(manualPanel.getByRole('combobox', { name: 'Task' })).toHaveValue('')
@@ -85,7 +94,11 @@ describe('TimeTrackingPage', () => {
     const workspace = createWorkspace(null)
     mockUseWorkspace.mockReturnValue(workspace)
 
-    render(<TimeTrackingPage />)
+    render(
+      <MemoryRouter>
+        <TimeTrackingPage />
+      </MemoryRouter>,
+    )
 
     expect(screen.getByRole('button', { name: 'Save manual entry' })).toBeDisabled()
   })
@@ -108,7 +121,11 @@ describe('TimeTrackingPage', () => {
       },
     ] as never)
 
-    render(<TimeTrackingPage />)
+    render(
+      <MemoryRouter>
+        <TimeTrackingPage />
+      </MemoryRouter>,
+    )
 
     expect((await screen.findAllByText('My task')).length).toBeGreaterThan(0)
     expect(screen.queryByText('Other user task')).not.toBeInTheDocument()
@@ -147,7 +164,11 @@ describe('TimeTrackingPage', () => {
       },
     ] as never)
 
-    render(<TimeTrackingPage />)
+    render(
+      <MemoryRouter>
+        <TimeTrackingPage />
+      </MemoryRouter>,
+    )
 
     expect((await screen.findAllByText('Shared task title')).length).toBeGreaterThan(0)
     expect(screen.queryByText('t2')).not.toBeInTheDocument()
@@ -178,7 +199,11 @@ describe('TimeTrackingPage', () => {
       },
     ] as never)
 
-    render(<TimeTrackingPage />)
+    render(
+      <MemoryRouter>
+        <TimeTrackingPage />
+      </MemoryRouter>,
+    )
 
     expect((await screen.findAllByText('Loading project...')).length).toBeGreaterThan(0)
     expect(screen.queryByText('p2')).not.toBeInTheDocument()
@@ -243,7 +268,11 @@ describe('TimeTrackingPage', () => {
       },
     ] as never)
 
-    render(<TimeTrackingPage />)
+    render(
+      <MemoryRouter>
+        <TimeTrackingPage />
+      </MemoryRouter>,
+    )
 
     expect((await screen.findAllByText('Hermes task')).length).toBeGreaterThan(0)
     expect(screen.queryByText('t2')).not.toBeInTheDocument()
@@ -268,7 +297,11 @@ describe('TimeTrackingPage', () => {
       },
     ] as never)
 
-    render(<TimeTrackingPage />)
+    render(
+      <MemoryRouter>
+        <TimeTrackingPage />
+      </MemoryRouter>,
+    )
 
     expect((await screen.findAllByText('bad log')).length).toBeGreaterThan(0)
 
@@ -315,7 +348,11 @@ describe('TimeTrackingPage', () => {
   it('keeps manual save blocked when no task is selected even if hours change', async () => {
     mockUseWorkspace.mockReturnValue(createWorkspace())
 
-    render(<TimeTrackingPage />)
+    render(
+      <MemoryRouter>
+        <TimeTrackingPage />
+      </MemoryRouter>,
+    )
 
     const manualPanel = within(screen.getByText('Manual Time Entry').closest('article') as HTMLElement)
 
@@ -330,7 +367,11 @@ describe('TimeTrackingPage', () => {
     mockUseWorkspace.mockReturnValue(workspace)
     mockGetTimeEntries.mockRejectedValueOnce(new Error('network down'))
 
-    render(<TimeTrackingPage />)
+    render(
+      <MemoryRouter>
+        <TimeTrackingPage />
+      </MemoryRouter>,
+    )
 
     await waitFor(() => {
       expect(workspace.setStatus).toHaveBeenCalledWith('Time entries load error: network down')

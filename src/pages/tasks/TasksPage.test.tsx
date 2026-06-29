@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { TasksPage } from './TasksPage'
 import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
 import { useTaskForm } from '../../features/tasks/hooks/useTaskForm.ts'
@@ -77,7 +78,11 @@ describe('TasksPage', () => {
     })
     mockUseWorkspace.mockReturnValue(workspace)
 
-    render(<TasksPage />)
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    )
 
     await waitFor(() => {
       expect(workspace.selectProject).toHaveBeenCalledWith('p1')
@@ -92,7 +97,11 @@ describe('TasksPage', () => {
     })
     mockUseWorkspace.mockReturnValue(workspace)
 
-    render(<TasksPage />)
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    )
 
     const createButton = screen.getByRole('button', { name: 'Create task' })
     await waitFor(() => {
@@ -127,7 +136,11 @@ describe('TasksPage', () => {
     })
     mockUseWorkspace.mockReturnValue(workspace)
 
-    render(<TasksPage />)
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    )
 
     await waitFor(() => {
       expect(lastKanbanProps).not.toBeNull()
@@ -148,7 +161,11 @@ describe('TasksPage', () => {
     })
     mockUseWorkspace.mockReturnValue(workspace)
 
-    render(<TasksPage />)
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    )
 
     expect(await screen.findByText(/create estimate version v1/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Create task' })).toBeDisabled()
@@ -162,7 +179,11 @@ describe('TasksPage', () => {
     })
     mockUseWorkspace.mockReturnValue(workspace)
 
-    render(<TasksPage />)
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    )
 
     const createButton = screen.getByRole('button', { name: 'Create task' })
     await waitFor(() => {
@@ -204,7 +225,11 @@ describe('TasksPage', () => {
     })
     mockUseWorkspace.mockReturnValue(workspace)
 
-    render(<TasksPage />)
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    )
 
     expect(await screen.findByText('Alice Johnson')).toBeInTheDocument()
     expect(screen.getByText('bob@example.com')).toBeInTheDocument()
@@ -239,7 +264,11 @@ describe('TasksPage', () => {
     })
     mockUseWorkspace.mockReturnValue(workspace)
 
-    render(<TasksPage />)
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    )
 
     fireEvent.click(screen.getByRole('button', { name: 'Calendar' }))
 
@@ -262,7 +291,11 @@ describe('TasksPage', () => {
     })
     mockUseWorkspace.mockReturnValue(workspace)
 
-    render(<TasksPage />)
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    )
 
     await waitFor(() => {
       expect(lastKanbanProps).not.toBeNull()

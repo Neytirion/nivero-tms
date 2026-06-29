@@ -77,8 +77,8 @@ export function TaskDetailsPage() {
   const assigneeLabel = task.assigned_to ? assigneeLabelByUserId[task.assigned_to] : 'Unassigned'
   const workPackageLabel = task.work_package_id ? workPackageLabelById[task.work_package_id] : 'Not linked'
   const blockedByLabel = task.blocked_by_task_id ? dependencyLabelByTaskId[task.blocked_by_task_id] : undefined
-  const isLocked = !canManageTask(task.id)
-  const canDelete = canDeleteTaskInView(task.id)
+  const isLocked = !canManageTask(task)
+  const canDelete = canDeleteTaskInView(task)
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4">

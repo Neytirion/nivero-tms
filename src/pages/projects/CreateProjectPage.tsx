@@ -60,10 +60,10 @@ export function CreateProjectPage() {
     setIsLoading(true)
     try {
       await addProject({
-        name: draft.name,
-        customerName: draft.customer || undefined,
-        startDate: draft.startDate || undefined,
-        endDate: draft.endDate || undefined,
+        name: draft.project.name,
+        customerName: draft.project.customer_name || undefined,
+        startDate: draft.project.start_date || undefined,
+        endDate: draft.project.end_date || undefined,
       })
       reset()
       setIsAiGeneratorOpen(false)

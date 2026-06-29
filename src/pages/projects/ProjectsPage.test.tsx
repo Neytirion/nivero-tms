@@ -18,14 +18,10 @@ vi.mock('../../features/projects/components', () => ({
   ProjectsSummaryCards: () => <div>summary-cards</div>,
   ProjectsTable: (props: {
     onSelectProject: (projectId: string) => void
-    onOpenProjectSettings?: (projectId: string) => void
   }) => (
     <div>
       <button type="button" onClick={() => props.onSelectProject('p1')}>
         Open project
-      </button>
-      <button type="button" onClick={() => props.onOpenProjectSettings?.('p1')}>
-        Open project settings
       </button>
     </div>
   ),
@@ -105,22 +101,6 @@ describe('ProjectsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toBe('/app/projects/p1')
-    })
-  })
-
-  it('navigates to settings tab when settings action is selected', async () => {
-    const workspace = createWorkspaceState({
-      selectedProjectId: 'p1',
-      projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
-    })
-    mockUseWorkspace.mockReturnValue(workspace)
-
-    renderProjectsPage()
-
-    fireEvent.click(screen.getByText('Open project settings'))
-
-    await waitFor(() => {
-      expect(screen.getByTestId('location').textContent).toBe('/app/projects/p1?tab=settings')
     })
   })
 })

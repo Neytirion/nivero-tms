@@ -14,9 +14,6 @@ interface ProjectsTableProps {
   projects: ProjectPreview[]
   selectedProjectId: string | null
   onSelectProject: (projectId: string) => void | Promise<void>
-  onOpenProjectSettings?: (projectId: string) => void | Promise<void>
-  canManageProject?: (projectId: string) => boolean
-  onDeleteProject?: (projectId: string) => void | Promise<void>
 }
 
 export function ProjectsTable({
@@ -30,9 +27,6 @@ export function ProjectsTable({
   projects,
   selectedProjectId,
   onSelectProject,
-  onOpenProjectSettings,
-  canManageProject,
-  onDeleteProject,
 }: ProjectsTableProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 15
@@ -175,13 +169,12 @@ export function ProjectsTable({
               <th className="px-3 py-2">Risk</th>
               <th className="px-3 py-2">Customer</th>
               <th className="px-3 py-2">Hours</th>
-              <th className="px-3 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {projects.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-3 py-6 text-center text-slate-500">
+                <td colSpan={6} className="px-3 py-6 text-center text-slate-500">
                   No matching projects
                 </td>
               </tr>
@@ -247,33 +240,6 @@ export function ProjectsTable({
                     </td>
                     <td className="px-3 py-2 text-slate-700">
                       {(project.actual_hours ?? 0).toFixed(1)} / {(project.estimated_hours ?? 0).toFixed(1)}
-                    </td>
-                    <td className="px-3 py-2">
-                      {onOpenProjectSettings ? (
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            void onOpenProjectSettings(project.id)
-                          }}
-                          className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200"
-                        >
-                          Settings
-                        </button>
-                      ) : canManageProject && onDeleteProject && canManageProject(project.id) ? (
-                        <button
-                          type="button"
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            void onDeleteProject(project.id)
-                          }}
-                          className="rounded-md bg-rose-100 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-200"
-                        >
-                          Delete
-                        </button>
-                      ) : (
-                        <span className="text-xs text-slate-400">-</span>
-                      )}
                     </td>
                   </tr>
                 )

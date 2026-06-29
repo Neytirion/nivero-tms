@@ -68,9 +68,6 @@ export function ProjectsPage() {
         projects={filteredProjects}
         selectedProjectId={selectedProjectId}
         onSelectProject={(projectId) => navigate(`/app/projects/${projectId}`)}
-        onOpenProjectSettings={(projectId: string) => {
-          navigate(`/app/projects/${projectId}?tab=settings`)
-        }}
       />
     </div>
   )

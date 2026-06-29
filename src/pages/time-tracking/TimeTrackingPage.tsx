@@ -6,8 +6,11 @@ import { TimerPanel } from './TimerPanel'
 import { MyLogsSection } from './MyLogsSection'
 import { WeeklyOverviewSection } from './WeeklyOverviewSection'
 import { useTimeTrackingController } from './useTimeTrackingController'
+import { useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 export function TimeTrackingPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const { projects, selectedProjectId, currentUserId, status, setStatus, isLoading, loadDashboardPreview } = useWorkspace()
   const {
     entries,
@@ -53,6 +56,7 @@ export function TimeTrackingPage() {
     cancelEditEntry,
     beginEditEntry,
     deleteEntryHandler,
+    resetFilters,
   } = useTimeTrackingController({
     projects,
     selectedProjectId,
@@ -60,6 +64,17 @@ export function TimeTrackingPage() {
     setStatus,
     loadDashboardPreview,
   })
+
+  // Reset filters when refresh signal is detected
+  useEffect(() => {
+    if (searchParams.has('refresh')) {
+      resetFilters()
+      // Remove the refresh parameter from URL
+      const newParams = new URLSearchParams(searchParams)
+      newParams.delete('refresh')
+      setSearchParams(newParams, { replace: true })
+    }
+  }, [searchParams, resetFilters, setSearchParams])
 
   return (
     <div className="space-y-5">

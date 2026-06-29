@@ -1,9 +1,11 @@
-import { useNavigate } from 'react-router-dom'
+import { useEffect } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { CreateProjectWithAiModal, ProjectsSummaryCards, ProjectsTable } from '../../features/projects/components'
 import { useProjectsPageController } from './useProjectsPageController'
 
 export function ProjectsPage() {
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const {
     status,
@@ -19,6 +21,7 @@ export function ProjectsPage() {
     setSearchValue,
     setSelectedCustomer,
     applySearch,
+    resetFilters,
     filteredProjects,
     isCreateModalOpen,
     setIsCreateModalOpen,
@@ -36,6 +39,17 @@ export function ProjectsPage() {
     createProjectFromAiDraftHandler,
     loadDashboardPreview,
   } = useProjectsPageController()
+
+  // Reset filters when refresh signal is detected
+  useEffect(() => {
+    if (searchParams.has('refresh')) {
+      resetFilters()
+      // Remove the refresh parameter from URL
+      const newParams = new URLSearchParams(searchParams)
+      newParams.delete('refresh')
+      setSearchParams(newParams, { replace: true })
+    }
+  }, [searchParams, resetFilters, setSearchParams])
 
   return (
     <div className="space-y-5">

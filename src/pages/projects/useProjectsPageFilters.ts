@@ -10,6 +10,7 @@ export interface UseProjectsPageFiltersReturn {
   setSelectedCustomer: (value: string | null) => void
   applySearch: () => void
   setActiveTab: (tab: DetailsTab) => void
+  resetFilters: () => void
   filteredProjects: ProjectPreview[]
 }
 
@@ -47,6 +48,12 @@ export function useProjectsPageFilters(projects: ProjectPreview[]): UseProjectsP
     setAppliedSearchValue(searchValue)
   }
 
+  const resetFilters = () => {
+    setSearchValue('')
+    setAppliedSearchValue('')
+    setSelectedCustomer(null)
+  }
+
   return {
     searchValue,
     selectedCustomer,
@@ -55,6 +62,7 @@ export function useProjectsPageFilters(projects: ProjectPreview[]): UseProjectsP
     setSelectedCustomer,
     applySearch,
     setActiveTab,
+    resetFilters,
     filteredProjects,
   }
 }

@@ -37,7 +37,7 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
     input
 
   // Filters: project, week, edit mode
-  const { activeProjectId, editingEntryId, weekAnchorDate, entryToDelete, setActiveProjectId, setEditingEntryId, setWeekAnchorDate, setEntryToDelete } =
+  const { activeProjectId, editingEntryId, weekAnchorDate, entryToDelete, setActiveProjectId, setEditingEntryId, setWeekAnchorDate, setEntryToDelete, resetFilters } =
     useTimeTrackingFilters(selectedProjectId)
 
   // Manual entry form
@@ -238,5 +238,6 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
     cancelEditEntry,
     beginEditEntry: handleBeginEditEntry,
     reloadCurrentWeek,
+    resetFilters,
   }
 }

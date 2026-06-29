@@ -10,6 +10,7 @@ export interface UseTimeTrackingFiltersReturn {
   setEditingEntryId: (id: string | null) => void
   setWeekAnchorDate: (date: string) => void
   setEntryToDelete: (entry: TimeEntryPreview | null) => void
+  resetFilters: () => void
 }
 
 /**
@@ -26,6 +27,18 @@ export function useTimeTrackingFilters(
   })
   const [entryToDelete, setEntryToDelete] = useState<TimeEntryPreview | null>(null)
 
+  const getDefaultWeekAnchorDate = () => {
+    const date = new Date()
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  }
+
+  const resetFilters = () => {
+    setActiveProjectId(initialProjectId ?? '')
+    setEditingEntryId(null)
+    setWeekAnchorDate(getDefaultWeekAnchorDate())
+    setEntryToDelete(null)
+  }
+
   return {
     activeProjectId,
     editingEntryId,
@@ -35,5 +48,6 @@ export function useTimeTrackingFilters(
     setEditingEntryId,
     setWeekAnchorDate,
     setEntryToDelete,
+    resetFilters,
   }
 }

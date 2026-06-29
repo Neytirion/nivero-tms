@@ -1,8 +1,12 @@
 import { TaskLogTimeModal } from '../../features/tasks/components'
 import { CreateTaskSection, TaskViewsSection } from '.'
 import { useTasksPageController } from './useTasksPageController'
+import { useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
 export function TasksPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+
   const {
     status,
     isLoading,
@@ -65,7 +69,19 @@ export function TasksPage() {
     submitTaskLogTime,
     shiftCalendarMonth,
     selectProject,
+    resetPageState,
   } = useTasksPageController()
+
+  // Reset page state when refresh signal is detected
+  useEffect(() => {
+    if (searchParams.has('refresh')) {
+      resetPageState()
+      // Remove the refresh parameter from URL
+      const newParams = new URLSearchParams(searchParams)
+      newParams.delete('refresh')
+      setSearchParams(newParams, { replace: true })
+    }
+  }, [searchParams, resetPageState, setSearchParams])
 
   const visibleProjectMembers = selectedProject ? projectMembers : []
 

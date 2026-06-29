@@ -1,5 +1,5 @@
 import type { User } from '@supabase/supabase-js'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { WorkspaceProvider, useWorkspace } from '../features/dashboard/workspace-context.tsx'
 
 const baseNavItems = [
@@ -23,6 +23,7 @@ export function AppShell({ user }: AppShellProps) {
 
 function AppShellLayout({ user }: AppShellProps) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { projects, selectedProjectId, selectProject, isLoading, getProjectRole } = useWorkspace()
 
   const avatarUrl = (user.user_metadata.avatar_url as string | undefined) ?? ''
@@ -38,6 +39,19 @@ function AppShellLayout({ user }: AppShellProps) {
         { to: '/app/resources', label: 'Resources' },
       ]
     : baseNavItems
+
+  // Handle navigation with refresh support
+  const handleNavigation = (to: string) => {
+    const currentPath = location.pathname
+    const isAlreadyOnPage = currentPath === to
+    
+    if (isAlreadyOnPage) {
+      // Add refresh signal to URL to trigger filter reset
+      navigate(`${to}?refresh=1`)
+    } else {
+      navigate(to)
+    }
+  }
 
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_0%_0%,_#cffafe_0%,_#ecfeff_16%,_#f8fafc_56%,_#f1f5f9_100%)]">
@@ -82,21 +96,23 @@ function AppShellLayout({ user }: AppShellProps) {
                         Active Modules
                       </p>
                       <nav className="space-y-2">
-                        {activeNavItems.map((item) => (
-                          <NavLink
-                            key={item.to}
-                            to={item.to}
-                            className={({ isActive }) =>
-                              `block rounded-xl border px-3 py-2 ${
+                        {activeNavItems.map((item) => {
+                          const isActive = location.pathname === item.to
+                          return (
+                            <button
+                              key={item.to}
+                              type="button"
+                              onClick={() => handleNavigation(item.to)}
+                              className={`w-full text-left block rounded-xl border px-3 py-2 ${
                                 isActive
                                   ? 'border-[#7fb070] bg-[#f4fbf1] text-slate-900 shadow-sm'
                                   : 'border-[#bad6b2] bg-white/70 text-slate-700 hover:border-[#8fbe83] hover:bg-[#f4fbf1]'
-                              }`
-                            }
-                          >
-                            <p className="text-sm font-semibold">{item.label}</p>
-                          </NavLink>
-                        ))}
+                              }`}
+                            >
+                              <p className="text-sm font-semibold">{item.label}</p>
+                            </button>
+                          )
+                        })}
                       </nav>
                     </div>
                   </div>

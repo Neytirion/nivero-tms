@@ -168,6 +168,15 @@ export function useTasksPageController() {
     setCalendarMonth((prev) => shiftCalendarMonthValue(prev, direction))
   }
 
+  const resetPageState = () => {
+    reset()
+    setTaskViewMode('board')
+    setCalendarMonth(new Date().toISOString().slice(0, 7))
+    setDragTaskId(null)
+    setLogTimeTask(null)
+    setHasAttemptedSubmit(false)
+  }
+
   return {
     status,
     isLoading,
@@ -230,5 +239,6 @@ export function useTasksPageController() {
     submitTaskLogTime,
     shiftCalendarMonth,
     selectProject,
+    resetPageState,
   }
 }

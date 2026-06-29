@@ -75,6 +75,7 @@ export function ProjectOverviewTab({
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Project Info</p>
             <div className="mt-2 space-y-1.5 text-sm text-slate-700">
               <p><span className="font-semibold text-slate-900">Customer:</span> {selectedProject.customer_name ?? 'Not set'}</p>
+              <p><span className="font-semibold text-slate-900">Description:</span> {selectedProject.description ?? 'Not set'}</p>
               <p>
                 <span className="font-semibold text-slate-900">Project Manager:</span>{' '}
                 {projectManagerName ?? (selectedProject.project_manager_id ? 'Assigned' : 'Not set')}

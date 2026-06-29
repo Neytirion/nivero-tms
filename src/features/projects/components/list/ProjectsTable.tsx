@@ -200,7 +200,6 @@ export function ProjectsTable({
                   >
                     <td className="px-3 py-2">
                       <p className="font-semibold text-slate-900">{project.name}</p>
-                      <p className="text-xs text-slate-500">{project.description || 'No description'}</p>
                     </td>
                     <td className="px-3 py-2">
                       <span

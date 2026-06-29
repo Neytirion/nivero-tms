@@ -62,7 +62,6 @@ export function ProjectsList({
                       </span>
                     ) : null}
                   </div>
-                  <p className="text-xs text-slate-500">{project.description || 'No description'}</p>
                   <p className="mt-1 text-[11px] text-slate-500">
                     Created: {formatDate(project.created_at)} | Deadline: {formatDate(project.deadline_at)}
                   </p>

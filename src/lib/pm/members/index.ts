@@ -16,7 +16,9 @@ export async function getProjectMembers(projectId: string) {
   if (error) {
     // If access is denied (e.g., project being deleted), return empty array instead of throwing
     if (error.message.includes('Access denied') || error.message.includes('denied')) {
-      console.warn(`Access denied to project members list for project ${projectId}:`, error.message)
+      if (import.meta.env.DEV) {
+        console.debug(`[getProjectMembers] Access denied for project ${projectId}. Returning empty array.`)
+      }
       return []
     }
     throw new Error(error.message)

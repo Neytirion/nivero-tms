@@ -23,6 +23,7 @@ type TaskViewsSectionProps = {
   onUpdateTaskDueDate: (taskId: string, dueDate: string) => void
   onDeleteTask: (taskId: string) => void
   onLogTime: (task: TaskPreview | null) => void
+  onTaskClick?: (taskId: string) => void
   canManageTask: (task: TaskPreview) => boolean
   canDeleteTask: (task: TaskPreview) => boolean
   projectStartDate: string
@@ -49,6 +50,7 @@ export function TaskViewsSection({
   onUpdateTaskDueDate,
   onDeleteTask,
   onLogTime,
+  onTaskClick,
   canManageTask,
   canDeleteTask,
   projectStartDate,
@@ -99,6 +101,7 @@ export function TaskViewsSection({
           onUpdateTaskDueDate={onUpdateTaskDueDate}
           onDeleteTask={onDeleteTask}
           onLogTime={onLogTime}
+          onTaskClick={onTaskClick}
           canManageTask={canManageTask}
           canDeleteTask={canDeleteTask}
           projectStartDate={projectStartDate}

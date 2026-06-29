@@ -22,6 +22,7 @@ interface KanbanColumnProps {
   onDeleteTask: (taskId: string) => void | Promise<void>
   onDragTaskStart: (taskId: string) => void
   onLogTime: (task: TaskPreview) => void
+  onTaskClick?: (taskId: string) => void
   canManageTask: (task: TaskPreview) => boolean
   canDeleteTask: (task: TaskPreview) => boolean
   projectStartDate?: string
@@ -44,6 +45,7 @@ export function KanbanColumn({
   onDeleteTask,
   onDragTaskStart,
   onLogTime,
+  onTaskClick,
   canManageTask,
   canDeleteTask,
   projectStartDate,
@@ -98,6 +100,7 @@ export function KanbanColumn({
               onUpdateDueDate={onUpdateTaskDueDate ?? (() => undefined)}
               onDelete={onDeleteTask}
               onLogTime={onLogTime}
+              onTaskClick={onTaskClick}
               isLocked={!canManageTask(task)}
               canDelete={canDeleteTask(task)}
               projectStartDate={projectStartDate}

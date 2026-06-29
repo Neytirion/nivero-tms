@@ -2,9 +2,10 @@ import { TaskLogTimeModal } from '../../features/tasks/components'
 import { CreateTaskSection, TaskViewsSection } from '.'
 import { useTasksPageController } from './useTasksPageController'
 import { useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 
 export function TasksPage() {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const {
@@ -203,6 +204,7 @@ export function TasksPage() {
         onLogTime={(task) => {
           setLogTimeTask(task)
         }}
+        onTaskClick={(taskId) => navigate(`/app/tasks/${taskId}`)}
         canManageTask={canManageTask}
         canDeleteTask={canDeleteTaskInView}
         projectStartDate={projectStartDate}

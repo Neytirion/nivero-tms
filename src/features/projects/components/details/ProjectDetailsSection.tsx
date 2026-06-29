@@ -53,6 +53,7 @@ interface ProjectDetailsSectionProps {
   onOpenDeleteConfirm?: () => void
   onOpenCompleteConfirm: () => void
   onOpenSaveSettingsConfirm: () => void
+  onTaskClick?: (taskId: string) => void
 }
 
 export function ProjectDetailsSection({
@@ -98,6 +99,7 @@ export function ProjectDetailsSection({
   onOpenDeleteConfirm,
   onOpenCompleteConfirm,
   onOpenSaveSettingsConfirm,
+  onTaskClick,
 }: ProjectDetailsSectionProps) {
   const sortedTasks = useMemo(() => {
     const statusOrder: Record<string, number> = {
@@ -272,7 +274,7 @@ export function ProjectDetailsSection({
           ) : null}
 
           {!isTabLoading && activeTab === 'tasks' ? (
-            <ProjectTasksTab sortedTasks={sortedTasks} />
+            <ProjectTasksTab sortedTasks={sortedTasks} onTaskClick={onTaskClick} />
           ) : null}
 
           {!isTabLoading && activeTab === 'estimates' ? (

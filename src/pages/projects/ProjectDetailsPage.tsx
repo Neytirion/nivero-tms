@@ -160,6 +160,7 @@ export function ProjectDetailsPage() {
         onOpenDeleteConfirm={() => setIsDeleteConfirmOpen(true)}
         onOpenCompleteConfirm={() => setIsCompleteConfirmOpen(true)}
         onOpenSaveSettingsConfirm={() => setIsSaveSettingsConfirmOpen(true)}
+        onTaskClick={(taskId) => navigate(`/app/tasks/${taskId}`)}
       />
 
       <ConfirmDialog

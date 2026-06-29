@@ -17,6 +17,7 @@ interface TaskCardProps {
   onUpdateDueDate?: (taskId: string, dueDate: string) => void | Promise<void>
   onDelete: (taskId: string) => void | Promise<void>
   onLogTime: (task: TaskPreview) => void
+  onTaskClick?: (taskId: string) => void
   isLocked: boolean
   canDelete: boolean
   projectStartDate?: string
@@ -48,6 +49,7 @@ export function TaskCard({
   onUpdateDueDate,
   onDelete,
   onLogTime,
+  onTaskClick,
   isLocked,
   canDelete,
   projectStartDate,
@@ -79,7 +81,12 @@ export function TaskCard({
           : 'border-slate-200 bg-white transition-colors hover:border-cyan-200'
       }`}
     >
-      <p className="text-sm font-semibold text-slate-900">{task.title}</p>
+      <button
+        onClick={() => onTaskClick?.(task.id)}
+        className="w-full text-left text-sm font-semibold text-slate-900 hover:text-blue-600 transition-colors"
+      >
+        {task.title}
+      </button>
       <p className="mt-1 text-xs text-slate-500">{task.description || 'No description'}</p>
       <div className="mt-2 flex flex-wrap items-center gap-1">
         <span

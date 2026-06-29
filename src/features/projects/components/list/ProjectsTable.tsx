@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { ProjectPreview } from '../../../../lib/pm'
 import { deriveProgress, deriveRisk } from '../../utils/project-metrics'
 
@@ -94,12 +94,17 @@ export function ProjectsTable({
     .slice(0, 8)
 
   const totalPages = Math.max(1, Math.ceil(projects.length / pageSize))
-  const boundedCurrentPage = Math.min(currentPage, totalPages)
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages)
+    }
+  }, [currentPage, totalPages])
 
   const visibleProjects = useMemo(() => {
-    const start = (boundedCurrentPage - 1) * pageSize
+    const start = (currentPage - 1) * pageSize
     return projects.slice(start, start + pageSize)
-  }, [boundedCurrentPage, projects])
+  }, [currentPage, projects])
 
   return (
     <section className="page-section">
@@ -291,21 +296,21 @@ export function ProjectsTable({
       {projects.length > pageSize ? (
         <div className="mt-3 flex flex-col items-center justify-center gap-2 text-sm text-slate-600">
           <p>
-            Page {boundedCurrentPage} of {totalPages}
+            Page {currentPage} of {totalPages}
           </p>
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setCurrentPage((page) => Math.max(1, Math.min(page, totalPages) - 1))}
-              disabled={boundedCurrentPage === 1}
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage === 1}
               className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Previous
             </button>
             <button
               type="button"
-              onClick={() => setCurrentPage((page) => Math.min(totalPages, Math.min(page, totalPages) + 1))}
-              disabled={boundedCurrentPage === totalPages}
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={currentPage === totalPages}
               className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Next

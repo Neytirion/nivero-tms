@@ -1,6 +1,6 @@
 import type { ProjectPreview, TaskPreview } from '../../../../lib/pm'
 import type { ProjectRoleName } from '../../../../shared/utils/permissions'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { EstimatesTab } from '../estimates'
 import { ProjectCollaborationTab } from './ProjectCollaborationTab'
 import { TeamAccessSection } from './TeamAccessSection'
@@ -132,33 +132,22 @@ export function ProjectDetailsSection({
   }, [tasks])
 
   const [isTabLoading, setIsTabLoading] = useState(false)
-  const tabSwitchTimeoutRef = useRef<number | null>(null)
 
-  const handleTabChange = (nextTab: DetailsTab) => {
-    if (nextTab === activeTab || isTabLoading) {
+  useEffect(() => {
+    if (!selectedProject) {
+      setIsTabLoading(false)
       return
     }
 
-    if (tabSwitchTimeoutRef.current !== null) {
-      window.clearTimeout(tabSwitchTimeoutRef.current)
-      tabSwitchTimeoutRef.current = null
-    }
-
     setIsTabLoading(true)
-    tabSwitchTimeoutRef.current = window.setTimeout(() => {
-      onTabChange(nextTab)
+    const timeoutId = window.setTimeout(() => {
       setIsTabLoading(false)
-      tabSwitchTimeoutRef.current = null
     }, 180)
-  }
 
-  useEffect(() => {
     return () => {
-      if (tabSwitchTimeoutRef.current !== null) {
-        window.clearTimeout(tabSwitchTimeoutRef.current)
-      }
+      window.clearTimeout(timeoutId)
     }
-  }, [])
+  }, [activeTab, selectedProject?.id])
 
   return (
     <section className="page-section">
@@ -209,7 +198,7 @@ export function ProjectDetailsSection({
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => handleTabChange(tab.key as DetailsTab)}
+                onClick={() => onTabChange(tab.key as DetailsTab)}
                 className={`rounded-lg border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
                   activeTab === tab.key
                     ? 'border-cyan-300 bg-cyan-100 text-cyan-900'

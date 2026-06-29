@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { CreateProjectWithAiModal, ProjectsSummaryCards, ProjectsTable } from '../../features/projects/components'
+import { ProjectsSummaryCards, ProjectsTable } from '../../features/projects/components'
 import { useProjectsPageController } from './useProjectsPageController'
 
 export function ProjectsPage() {
@@ -23,20 +23,6 @@ export function ProjectsPage() {
     applySearch,
     resetFilters,
     filteredProjects,
-    isCreateModalOpen,
-    setIsCreateModalOpen,
-    projectName,
-    setProjectName,
-    projectCustomer,
-    setProjectCustomer,
-    projectStartDate,
-    setProjectStartDate,
-    projectEndDate,
-    setProjectEndDate,
-    canSubmit,
-    reset,
-    createProjectHandler,
-    createProjectFromAiDraftHandler,
   } = useProjectsPageController()
 
   // Reset filters when refresh signal is detected
@@ -77,33 +63,13 @@ export function ProjectsPage() {
         onSelectCustomer={setSelectedCustomer}
         onSearchSubmit={applySearch}
         isLoading={isLoading}
-        onOpenCreateProject={() => setIsCreateModalOpen(true)}
+        onOpenCreateProject={() => navigate('/app/projects/create')}
         allProjects={projects}
         projects={filteredProjects}
         selectedProjectId={selectedProjectId}
         onSelectProject={(projectId) => navigate(`/app/projects/${projectId}`)}
         onOpenProjectSettings={(projectId: string) => {
           navigate(`/app/projects/${projectId}?tab=settings`)
-        }}
-      />
-
-      <CreateProjectWithAiModal
-        isOpen={isCreateModalOpen}
-        projectName={projectName}
-        projectCustomer={projectCustomer}
-        projectStartDate={projectStartDate}
-        projectEndDate={projectEndDate}
-        isLoading={isLoading}
-        canSubmit={canSubmit}
-        onProjectNameChange={setProjectName}
-        onProjectCustomerChange={setProjectCustomer}
-        onProjectStartDateChange={setProjectStartDate}
-        onProjectEndDateChange={setProjectEndDate}
-        onCreate={createProjectHandler}
-        onCreateFromAiDraft={createProjectFromAiDraftHandler}
-        onClose={() => {
-          setIsCreateModalOpen(false)
-          reset()
         }}
       />
     </div>

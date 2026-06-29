@@ -6,6 +6,7 @@ import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage.tsx'
 import { ProfilePage } from './pages/profile/ProfilePage.tsx'
 import { ProjectsPage } from './pages/projects/ProjectsPage.tsx'
 import { ProjectDetailsPage } from './pages/projects/ProjectDetailsPage.tsx'
+import { CreateProjectPage } from './pages/projects/CreateProjectPage.tsx'
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage.tsx'
 import { TasksPage } from './pages/tasks/TasksPage.tsx'
 import { TimeTrackingPage } from './pages/time-tracking/TimeTrackingPage.tsx'
@@ -41,6 +42,7 @@ function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="profile" element={<ProfilePage user={user!} />} />
           <Route path="projects" element={<ProjectsPage />} />
+          <Route path="projects/create" element={<CreateProjectPage />} />
           <Route path="projects/:projectId" element={<ProjectDetailsPage />} />
           <Route path="tasks" element={<TasksPage />} />
           <Route path="time-tracking" element={<TimeTrackingPage />} />

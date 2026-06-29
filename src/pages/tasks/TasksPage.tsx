@@ -1,5 +1,5 @@
 import { TaskLogTimeModal } from '../../features/tasks/components'
-import { CreateTaskSection, TaskViewsSection } from '.'
+import { TaskViewsSection } from '.'
 import { useTasksPageController } from './useTasksPageController'
 import { useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
@@ -12,13 +12,9 @@ export function TasksPage() {
     status,
     isLoading,
     selectedProject,
-    selectedProjectId,
     myRoleInSelectedProject,
-    isMemberInSelectedProject,
-    projects,
-    tasks,
     projectMembers,
-    hasEstimateVersion,
+    tasks,
     taskViewMode,
     setTaskViewMode,
     dragTaskId,
@@ -30,46 +26,20 @@ export function TasksPage() {
     canDeleteTaskInView,
     projectStartDate,
     projectEndDate,
-    isProjectMissing,
-    isTaskTitleMissing,
-    isEstimateHoursMissingOrInvalid,
-    isWorkPackageMissing,
-    missingRequiredFields,
-    hasAttemptedSubmit,
-    taskTitle,
-    setTaskTitle,
-    taskDescription,
-    setTaskDescription,
-    taskEstimateHours,
-    setTaskEstimateHours,
-    taskPriority,
-    setTaskPriority,
-    taskDueDate,
-    setTaskDueDate,
-    taskWorkPackageId,
-    setTaskWorkPackageId,
-    taskBlockedByTaskId,
-    setTaskBlockedByTaskId,
-    taskAssigneeId,
-    setTaskAssigneeId,
-    workPackages,
-    dependencyOptions,
+    hasEstimateVersion,
     assigneeLabelByUserId,
     dependencyLabelByTaskId,
     workPackageLabelById,
     assigneeOptions,
-    canSubmit,
     logTimeTask,
     setLogTimeTask,
     calendarMeta,
-    createTaskHandler,
     moveTaskToStatus,
     assignTaskHandler,
     updateTaskDueDateHandler,
     removeTask,
     submitTaskLogTime,
     shiftCalendarMonth,
-    selectProject,
     resetPageState,
   } = useTasksPageController()
 
@@ -136,47 +106,26 @@ export function TasksPage() {
         )}
       </section>
 
-      <CreateTaskSection
-        hasEstimateVersion={hasEstimateVersion}
-        selectedProjectId={selectedProjectId}
-        isMemberInSelectedProject={isMemberInSelectedProject}
-        projects={projects}
-        selectedProject={selectedProject}
-        isProjectMissing={isProjectMissing}
-        isTaskTitleMissing={isTaskTitleMissing}
-        isEstimateHoursMissingOrInvalid={isEstimateHoursMissingOrInvalid}
-        isWorkPackageMissing={isWorkPackageMissing}
-        taskTitle={taskTitle}
-        taskDescription={taskDescription}
-        taskEstimateHours={taskEstimateHours}
-        taskPriority={taskPriority}
-        taskDueDate={taskDueDate}
-        taskWorkPackageId={taskWorkPackageId}
-        taskBlockedByTaskId={taskBlockedByTaskId}
-        taskAssigneeId={taskAssigneeId}
-        projectStartDate={projectStartDate}
-        projectEndDate={projectEndDate}
-        workPackages={workPackages}
-        dependencyOptions={dependencyOptions}
-        canAssignAssignee={canAssignAssignee}
-        projectMembers={projectMembers}
-        missingRequiredFields={missingRequiredFields}
-        hasAttemptedSubmit={hasAttemptedSubmit}
-        isLoading={isLoading}
-        canSubmit={canSubmit}
-        onSelectProject={(projectId) => {
-          void selectProject(projectId)
-        }}
-        onTaskTitleChange={setTaskTitle}
-        onTaskDescriptionChange={setTaskDescription}
-        onTaskEstimateHoursChange={setTaskEstimateHours}
-        onTaskPriorityChange={setTaskPriority}
-        onTaskDueDateChange={setTaskDueDate}
-        onTaskWorkPackageIdChange={setTaskWorkPackageId}
-        onTaskBlockedByTaskIdChange={setTaskBlockedByTaskId}
-        onTaskAssigneeIdChange={setTaskAssigneeId}
-        onCreateTask={createTaskHandler}
-      />
+      <section className="page-section bg-slate-50/70">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="section-title">Create Task</h3>
+            <p className="section-subtitle">Add a new task to your project</p>
+          </div>
+          <button
+            onClick={() => navigate('/app/tasks/create')}
+            disabled={!selectedProject || hasEstimateVersion === false}
+            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Create task
+          </button>
+        </div>
+        {selectedProject && hasEstimateVersion === false && (
+          <p className="mt-2 text-sm text-slate-600">
+            Create estimate version v1 in Project Details → Estimates before creating tasks.
+          </p>
+        )}
+      </section>
 
       <TaskViewsSection
         taskViewMode={taskViewMode}

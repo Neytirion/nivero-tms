@@ -10,6 +10,7 @@ import { CreateProjectPage } from './pages/projects/CreateProjectPage.tsx'
 import { ResetPasswordPage } from './pages/auth/ResetPasswordPage.tsx'
 import { TasksPage } from './pages/tasks/TasksPage.tsx'
 import { TaskDetailsPage } from './pages/tasks/TaskDetailsPage.tsx'
+import { CreateTaskPage } from './pages/tasks/CreateTaskPage.tsx'
 import { TimeTrackingPage } from './pages/time-tracking/TimeTrackingPage.tsx'
 import { ResourcePlanningPage } from './pages/resource-planning/ResourcePlanningPage.tsx'
 import { useAuthSession } from './features/auth/useAuthSession.ts'
@@ -46,6 +47,7 @@ function App() {
           <Route path="projects/create" element={<CreateProjectPage />} />
           <Route path="projects/:projectId" element={<ProjectDetailsPage />} />
           <Route path="tasks" element={<TasksPage />} />
+          <Route path="tasks/create" element={<CreateTaskPage />} />
           <Route path="tasks/:taskId" element={<TaskDetailsPage />} />
           <Route path="time-tracking" element={<TimeTrackingPage />} />
           <Route path="resources" element={<ResourcePlanningPage />} />

@@ -10,7 +10,6 @@ interface ProjectsTableProps {
   onSearchSubmit: () => void
   isLoading: boolean
   onOpenCreateProject?: () => void
-  onRefresh: () => void | Promise<void>
   allProjects: ProjectPreview[]
   projects: ProjectPreview[]
   selectedProjectId: string | null
@@ -26,9 +25,7 @@ export function ProjectsTable({
   onSearchChange,
   onSelectCustomer,
   onSearchSubmit,
-  isLoading,
   onOpenCreateProject,
-  onRefresh,
   allProjects,
   projects,
   selectedProjectId,
@@ -156,14 +153,6 @@ export function ProjectsTable({
           </form>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => void onRefresh()}
-            disabled={isLoading}
-            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Refresh
-          </button>
           {onOpenCreateProject ? (
             <button
               type="button"

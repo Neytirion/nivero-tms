@@ -37,7 +37,6 @@ export function ProjectsPage() {
     reset,
     createProjectHandler,
     createProjectFromAiDraftHandler,
-    loadDashboardPreview,
   } = useProjectsPageController()
 
   // Reset filters when refresh signal is detected
@@ -79,7 +78,6 @@ export function ProjectsPage() {
         onSearchSubmit={applySearch}
         isLoading={isLoading}
         onOpenCreateProject={() => setIsCreateModalOpen(true)}
-        onRefresh={() => void loadDashboardPreview()}
         allProjects={projects}
         projects={filteredProjects}
         selectedProjectId={selectedProjectId}

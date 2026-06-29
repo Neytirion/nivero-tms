@@ -9,31 +9,22 @@ import type {
 import { assertProjectEditable } from '../helpers'
 
 export async function getProjectMembers(projectId: string) {
-  // Suppress console.error during RPC call to prevent HTTP 400 errors from being logged
-  // when RLS policy denies access (e.g., during project deletion)
-  const originalError = console.error
-  console.error = () => {}
+  const { data, error } = await supabase.rpc('get_project_members_with_profile', {
+    p_project_id: projectId,
+  })
 
-  try {
-    const { data, error } = await supabase.rpc('get_project_members_with_profile', {
-      p_project_id: projectId,
-    })
-
-    if (error) {
-      // If access is denied (e.g., project being deleted), return empty array instead of throwing
-      if (error.message.includes('Access denied') || error.message.includes('denied')) {
-        if (import.meta.env.DEV) {
-          console.debug(`[getProjectMembers] Access denied for project ${projectId}. Returning empty array.`)
-        }
-        return []
+  if (error) {
+    // If access is denied (e.g., project being deleted), return empty array instead of throwing
+    if (error.message.includes('Access denied') || error.message.includes('denied')) {
+      if (import.meta.env.DEV) {
+        console.debug(`[getProjectMembers] Access denied for project ${projectId}. Returning empty array.`)
       }
-      throw new Error(error.message)
+      return []
     }
-
-    return data satisfies ProjectMemberListItem[]
-  } finally {
-    console.error = originalError
+    throw new Error(error.message)
   }
+
+  return data satisfies ProjectMemberListItem[]
 }
 
 export async function addProjectMember(input: AddProjectMemberInput) {

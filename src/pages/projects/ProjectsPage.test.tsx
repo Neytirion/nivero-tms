@@ -64,6 +64,8 @@ function mockProjectForm() {
     setProjectDescription: vi.fn(),
     projectCustomer: '',
     setProjectCustomer: vi.fn(),
+    projectBudgetAmount: '',
+    setProjectBudgetAmount: vi.fn(),
     projectStartDate: '',
     setProjectStartDate: vi.fn(),
     projectEndDate: '',

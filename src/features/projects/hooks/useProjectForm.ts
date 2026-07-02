@@ -4,6 +4,7 @@ export function useProjectForm() {
   const [projectName, setProjectName] = useState('')
   const [projectDescription, setProjectDescription] = useState('')
   const [projectCustomer, setProjectCustomer] = useState('')
+  const [projectBudgetAmount, setProjectBudgetAmount] = useState('')
   const [projectStartDate, setProjectStartDateState] = useState('')
   const [projectEndDate, setProjectEndDateState] = useState('')
 
@@ -46,6 +47,7 @@ export function useProjectForm() {
     setProjectName('')
     setProjectDescription('')
     setProjectCustomer('')
+    setProjectBudgetAmount('')
     setProjectStartDateState('')
     setProjectEndDateState('')
   }
@@ -57,6 +59,8 @@ export function useProjectForm() {
     setProjectDescription,
     projectCustomer,
     setProjectCustomer,
+    projectBudgetAmount,
+    setProjectBudgetAmount,
     projectStartDate,
     setProjectStartDate,
     projectEndDate,

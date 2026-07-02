@@ -42,6 +42,7 @@ export function createProjectActions(config: ProjectActionsConfig) {
     startDate?: string
     endDate?: string
     estimatedHours?: number
+    budgetAmount?: number
   }) => {
     config.setIsLoading(true)
 

@@ -3,6 +3,36 @@ import type { ProjectPreview, TaskPreview } from '../../../../../lib/pm'
 import { downloadClientBrief, type ClientBriefExportFormat } from '../../../utils/client-brief'
 import { deriveProgress, deriveRisk, formatDate } from '../../../utils/project-metrics'
 
+function parseIsoDateToUtcTime(value: string): number | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+
+  if (!match) {
+    return null
+  }
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+
+  return Date.UTC(year, month - 1, day)
+}
+
+function getDurationDays(startDate: string | null, endDate: string | null): number | null {
+  if (!startDate || !endDate) {
+    return null
+  }
+
+  const startTime = parseIsoDateToUtcTime(startDate)
+  const endTime = parseIsoDateToUtcTime(endDate)
+
+  if (startTime === null || endTime === null || endTime < startTime) {
+    return null
+  }
+
+  const dayInMs = 24 * 60 * 60 * 1000
+  return Math.floor((endTime - startTime) / dayInMs) + 1
+}
+
 interface ProjectOverviewTabProps {
   selectedProject: ProjectPreview
   tasks: TaskPreview[]
@@ -18,6 +48,7 @@ export function ProjectOverviewTab({
 }: ProjectOverviewTabProps) {
   const [exportFormat, setExportFormat] = useState<ClientBriefExportFormat>('pdf')
   const [isExporting, setIsExporting] = useState(false)
+  const durationDays = getDurationDays(selectedProject.start_date, selectedProject.end_date)
 
   const exportClientBrief = async () => {
     setIsExporting(true)
@@ -67,6 +98,12 @@ export function ProjectOverviewTab({
             <div className="mt-2 space-y-1.5 text-sm text-slate-700">
               <p><span className="font-semibold text-slate-900">Start:</span> {formatDate(selectedProject.start_date)}</p>
               <p><span className="font-semibold text-slate-900">End:</span> {formatDate(selectedProject.end_date)}</p>
+              <p>
+                <span className="font-semibold text-slate-900">Duration:</span>{' '}
+                {durationDays !== null
+                  ? `${durationDays} day${durationDays === 1 ? '' : 's'}`
+                  : 'Not set'}
+              </p>
               <p><span className="font-semibold text-slate-900">Created:</span> {formatDate(selectedProject.created_at)}</p>
             </div>
           </div>

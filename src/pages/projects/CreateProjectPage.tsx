@@ -48,6 +48,8 @@ export function CreateProjectPage() {
     setProjectDescription,
     projectCustomer,
     setProjectCustomer,
+    projectBudgetAmount,
+    setProjectBudgetAmount,
     projectStartDate,
     setProjectStartDate,
     projectEndDate,
@@ -90,6 +92,10 @@ export function CreateProjectPage() {
         name: projectName.trim(),
         description: projectDescription.trim() || undefined,
         customerName: projectCustomer.trim() || undefined,
+        budgetAmount:
+          projectBudgetAmount.trim().length > 0 && Number.isFinite(Number(projectBudgetAmount))
+            ? Number(projectBudgetAmount)
+            : undefined,
         startDate: projectStartDate || undefined,
         endDate: projectEndDate || undefined,
       })
@@ -240,6 +246,21 @@ export function CreateProjectPage() {
                       required
                       min={projectStartDate || undefined}
                       className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    />
+                  </label>
+
+                  <label className="block sm:col-span-2">
+                    <span className="mb-2 block text-sm font-semibold text-slate-700">
+                      Budget Amount
+                    </span>
+                    <input
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      value={projectBudgetAmount}
+                      onChange={(event) => setProjectBudgetAmount(event.target.value)}
+                      placeholder="e.g. 50000"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     />
                   </label>
                 </div>

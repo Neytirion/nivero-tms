@@ -12,6 +12,22 @@ interface SettingsDraftState {
   useEstimates: boolean
 }
 
+function normalizeDateRange(draft: SettingsDraftState): SettingsDraftState {
+  if (!draft.startDate || !draft.deadline) {
+    return draft
+  }
+
+  // Dates are stored in ISO format (YYYY-MM-DD), so lexical comparison is valid.
+  if (draft.deadline < draft.startDate) {
+    return {
+      ...draft,
+      deadline: draft.startDate,
+    }
+  }
+
+  return draft
+}
+
 export interface UseProjectsSettingsFormReturn {
   settingsDraft: SettingsDraftState
   currentSettingsDraft: SettingsDraftState
@@ -82,10 +98,12 @@ export function useProjectsSettingsForm(
             useEstimates: selectedProject.use_estimates ?? false,
           }
 
-    setSettingsDraft({
+    const nextDraft = normalizeDateRange({
       ...baseDraft,
       ...patch,
     })
+
+    setSettingsDraft(nextDraft)
   }
 
   const resetSettingsDraft = () => {

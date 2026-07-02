@@ -1,12 +1,21 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTasksPageController } from './useTasksPageController'
 import { useEffect, useState } from 'react'
 import { TaskCommentsPanel } from '../../features/tasks/components/comments'
 
 export function TaskDetailsPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { taskId } = useParams<{ taskId: string }>()
   const [isCommentsOpen, setIsCommentsOpen] = useState(false)
+
+  const backTo =
+    typeof location.state === 'object' &&
+    location.state !== null &&
+    'backTo' in location.state &&
+    typeof location.state.backTo === 'string'
+      ? location.state.backTo
+      : '/app/tasks'
 
   const {
     tasks,
@@ -28,9 +37,9 @@ export function TaskDetailsPage() {
 
   useEffect(() => {
     if (!task && taskId) {
-      navigate('/app/tasks', { replace: true })
+      navigate(backTo, { replace: true })
     }
-  }, [task, taskId, navigate])
+  }, [task, taskId, navigate, backTo])
 
   if (!task) {
     return (
@@ -86,7 +95,7 @@ export function TaskDetailsPage() {
         {/* Header */}
         <div className="mb-6">
           <button
-            onClick={() => navigate('/app/tasks')}
+            onClick={() => navigate(backTo)}
             className="mb-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
           >
             ← Back to Tasks
@@ -222,7 +231,7 @@ export function TaskDetailsPage() {
                   type="button"
                   onClick={async () => {
                     await removeTask(task.id)
-                    navigate('/app/tasks')
+                    navigate(backTo)
                   }}
                   className="rounded-lg bg-rose-100 px-4 py-2 text-sm font-medium text-rose-700 hover:bg-rose-200"
                 >

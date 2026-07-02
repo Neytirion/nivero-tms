@@ -9,11 +9,17 @@ import { useGenerateProject } from './useGenerateProject'
 
 interface AiProjectGeneratorModalProps {
   isOpen: boolean
+  variant?: 'modal' | 'inline'
   onClose: () => void
   onConfirm: (draft: AiProjectDraft) => Promise<void>
 }
 
-export function AiProjectGeneratorModal({ isOpen, onClose, onConfirm }: AiProjectGeneratorModalProps) {
+export function AiProjectGeneratorModal({
+  isOpen,
+  variant = 'modal',
+  onClose,
+  onConfirm,
+}: AiProjectGeneratorModalProps) {
   const [inputText, setInputText] = useState('')
   const [isConfirming, setIsConfirming] = useState(false)
   const [draftEdits, setDraftEdits] = useState<AiProjectDraft | null>(null)
@@ -135,9 +141,23 @@ export function AiProjectGeneratorModal({ isOpen, onClose, onConfirm }: AiProjec
     onClose()
   }
 
+  const isInline = variant === 'inline'
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg">
+    <div
+      className={
+        isInline
+          ? 'rounded-xl border border-slate-200 bg-slate-50 p-4'
+          : 'fixed inset-0 z-50 flex items-center justify-center bg-black/50'
+      }
+    >
+      <div
+        className={
+          isInline
+            ? 'space-y-4'
+            : 'max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg bg-white p-6 shadow-lg'
+        }
+      >
         <h2 className="mb-4 text-2xl font-bold">Generate Project with AI</h2>
 
         {!effectiveDraft ? (
@@ -183,12 +203,6 @@ export function AiProjectGeneratorModal({ isOpen, onClose, onConfirm }: AiProjec
                 className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-white font-medium hover:bg-blue-500 disabled:bg-gray-300 disabled:cursor-not-allowed"
               >
                 {isLoading ? 'Generating...' : 'Generate with AI'}
-              </button>
-              <button
-                onClick={handleClose}
-                className="rounded-lg border border-gray-300 px-4 py-2 font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
               </button>
             </div>
           </div>

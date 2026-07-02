@@ -9,7 +9,6 @@ export function CreateProjectPage() {
   const navigate = useNavigate()
   const { addProject, setStatus } = useWorkspace()
   const [mode, setMode] = useState<'manual' | 'ai'>('manual')
-  const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const {
@@ -66,7 +65,6 @@ export function CreateProjectPage() {
         endDate: draft.project.end_date || undefined,
       })
       reset()
-      setIsAiGeneratorOpen(false)
       navigate('/app/projects')
     } catch (error) {
       setStatus(
@@ -178,17 +176,12 @@ export function CreateProjectPage() {
 
             {/* AI mode info */}
             {mode === 'ai' && (
-              <div className="rounded-lg bg-blue-50 p-6 text-center">
-                <div className="inline-block rounded-full bg-blue-100 p-3 mb-4">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <p className="font-semibold text-blue-900">Generate Project with AI</p>
-                <p className="mt-2 text-sm text-blue-700">
-                  Click "Generate Project" to open the AI generator and describe your project. The AI will create a structured project plan for you.
-                </p>
-              </div>
+              <AiProjectGeneratorModal
+                isOpen
+                variant="inline"
+                onClose={() => setMode('manual')}
+                onConfirm={handleCreateFromAiDraft}
+              />
             )}
           </div>
 
@@ -211,30 +204,10 @@ export function CreateProjectPage() {
               >
                 {isLoading ? 'Creating...' : 'Create Project'}
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setIsAiGeneratorOpen(true)}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-75 hover:bg-blue-500"
-              >
-                Generate Project
-              </button>
-            )}
+            ) : null}
           </div>
         </div>
       </div>
-
-      {/* AI Generator Modal */}
-      {isAiGeneratorOpen && (
-        <AiProjectGeneratorModal
-          isOpen={isAiGeneratorOpen}
-          onClose={() => {
-            setIsAiGeneratorOpen(false)
-            setMode('manual')
-          }}
-          onConfirm={handleCreateFromAiDraft}
-        />
-      )}
     </div>
   )
 }

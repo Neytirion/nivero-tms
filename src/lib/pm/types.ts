@@ -116,6 +116,7 @@ export type ProjectDocumentPreview = Pick<
 
 export interface CreateProjectInput {
   name: string
+  description?: string
   customerName?: string
   startDate?: string
   endDate?: string

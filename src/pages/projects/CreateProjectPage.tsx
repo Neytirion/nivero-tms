@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AiProjectGeneratorModal } from '../../features/projects/ai'
 import { useProjectForm } from '../../features/projects/hooks/useProjectForm'
@@ -7,22 +7,37 @@ import type { AiProjectDraft } from '../../lib/ai'
 
 export function CreateProjectPage() {
   const navigate = useNavigate()
-  const { addProject, setStatus } = useWorkspace()
+  const { addProject, setStatus, projects } = useWorkspace()
   const [mode, setMode] = useState<'manual' | 'ai'>('manual')
   const [isLoading, setIsLoading] = useState(false)
 
   const {
     projectName,
     setProjectName,
+    projectDescription,
+    setProjectDescription,
     projectCustomer,
     setProjectCustomer,
     projectStartDate,
     setProjectStartDate,
     projectEndDate,
     setProjectEndDate,
+    dateRangeError,
     canSubmit,
     reset,
   } = useProjectForm()
+
+  const customerSuggestions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          projects
+            .map((project) => project.customer_name?.trim())
+            .filter((customerName): customerName is string => Boolean(customerName)),
+        ),
+      ).sort((a, b) => a.localeCompare(b)),
+    [projects],
+  )
 
   const handleClose = () => {
     reset()
@@ -38,6 +53,7 @@ export function CreateProjectPage() {
     try {
       await addProject({
         name: projectName.trim(),
+        description: projectDescription.trim() || undefined,
         customerName: projectCustomer.trim() || undefined,
         startDate: projectStartDate || undefined,
         endDate: projectEndDate || undefined,
@@ -60,6 +76,7 @@ export function CreateProjectPage() {
     try {
       await addProject({
         name: draft.project.name,
+        description: draft.project.description || undefined,
         customerName: draft.project.customer_name || undefined,
         startDate: draft.project.start_date || undefined,
         endDate: draft.project.end_date || undefined,
@@ -137,9 +154,28 @@ export function CreateProjectPage() {
                     </span>
                     <input
                       type="text"
+                      list="project-customer-suggestions"
                       value={projectCustomer}
                       onChange={(event) => setProjectCustomer(event.target.value)}
                       placeholder="ABC Ltd"
+                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    />
+                    <datalist id="project-customer-suggestions">
+                      {customerSuggestions.map((customerName) => (
+                        <option key={customerName} value={customerName} />
+                      ))}
+                    </datalist>
+                  </label>
+
+                  <label className="block sm:col-span-2">
+                    <span className="mb-2 block text-sm font-semibold text-slate-700">
+                      Description
+                    </span>
+                    <textarea
+                      value={projectDescription}
+                      onChange={(event) => setProjectDescription(event.target.value)}
+                      placeholder="Optional: project goals, scope, key constraints..."
+                      rows={4}
                       className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     />
                   </label>
@@ -153,6 +189,7 @@ export function CreateProjectPage() {
                       value={projectStartDate}
                       onChange={(event) => setProjectStartDate(event.target.value)}
                       required
+                      max={projectEndDate || undefined}
                       className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                     />
                   </label>
@@ -171,6 +208,10 @@ export function CreateProjectPage() {
                     />
                   </label>
                 </div>
+
+                {dateRangeError ? (
+                  <p className="text-sm text-rose-600">{dateRangeError}</p>
+                ) : null}
               </div>
             )}
 

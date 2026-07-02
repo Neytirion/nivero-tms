@@ -78,6 +78,7 @@ export async function createProject(input: CreateProjectInput) {
     .from('projects')
     .insert({
       name: input.name,
+      description: input.description?.trim() ? input.description : null,
       customer_name: input.customerName ?? null,
       project_manager_id: userData.user.id,
       start_date: input.startDate ?? null,

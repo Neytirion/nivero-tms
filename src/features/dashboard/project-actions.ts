@@ -37,6 +37,7 @@ interface ProjectActionsConfig {
 export function createProjectActions(config: ProjectActionsConfig) {
   const addProject = async (input: {
     name: string
+    description?: string
     customerName?: string
     startDate?: string
     endDate?: string

@@ -54,16 +54,16 @@ describe('TaskDetailsPage', () => {
       canAssignAssignee: false,
       canManageTask: vi.fn(() => true),
       canDeleteTaskInView: vi.fn(() => false),
-      projectStartDate: null,
-      projectEndDate: null,
+      projectStartDate: '',
+      projectEndDate: '',
       assigneeLabelByUserId: {},
       workPackageLabelById: {},
       dependencyLabelByTaskId: {},
-      assigneeOptions: null,
+      assigneeOptions: [],
       assignTaskHandler: vi.fn(async () => undefined),
       updateTaskDueDateHandler: vi.fn(async () => undefined),
       removeTask: vi.fn(async () => undefined),
-    })
+    } as unknown as ReturnType<typeof useTasksPageController>)
   })
 
   it('navigates back to passed origin path', async () => {
@@ -95,16 +95,16 @@ describe('TaskDetailsPage', () => {
       canAssignAssignee: false,
       canManageTask: vi.fn(() => true),
       canDeleteTaskInView: vi.fn(() => false),
-      projectStartDate: null,
-      projectEndDate: null,
+      projectStartDate: '',
+      projectEndDate: '',
       assigneeLabelByUserId: {},
       workPackageLabelById: {},
       dependencyLabelByTaskId: {},
-      assigneeOptions: null,
+      assigneeOptions: [],
       assignTaskHandler: vi.fn(async () => undefined),
       updateTaskDueDateHandler: vi.fn(async () => undefined),
       removeTask: vi.fn(async () => undefined),
-    })
+    } as unknown as ReturnType<typeof useTasksPageController>)
 
     renderTaskDetails({
       pathname: '/app/tasks/t1',

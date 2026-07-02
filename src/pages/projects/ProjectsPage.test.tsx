@@ -60,12 +60,15 @@ function mockProjectForm() {
   mockUseProjectForm.mockReturnValue({
     projectName: '',
     setProjectName: vi.fn(),
+    projectDescription: '',
+    setProjectDescription: vi.fn(),
     projectCustomer: '',
     setProjectCustomer: vi.fn(),
     projectStartDate: '',
     setProjectStartDate: vi.fn(),
     projectEndDate: '',
     setProjectEndDate: vi.fn(),
+    dateRangeError: null,
     canSubmit: false,
     reset: vi.fn(),
   })

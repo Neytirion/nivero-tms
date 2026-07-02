@@ -5,6 +5,36 @@ import { useProjectForm } from '../../features/projects/hooks/useProjectForm'
 import { useWorkspace } from '../../features/dashboard/workspace-context'
 import type { AiProjectDraft } from '../../lib/ai'
 
+function parseIsoDateToUtcTime(value: string): number | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+
+  if (!match) {
+    return null
+  }
+
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+
+  return Date.UTC(year, month - 1, day)
+}
+
+function getDurationDays(startDate: string, endDate: string): number | null {
+  if (!startDate || !endDate) {
+    return null
+  }
+
+  const startTime = parseIsoDateToUtcTime(startDate)
+  const endTime = parseIsoDateToUtcTime(endDate)
+
+  if (startTime === null || endTime === null || endTime < startTime) {
+    return null
+  }
+
+  const dayInMs = 24 * 60 * 60 * 1000
+  return Math.floor((endTime - startTime) / dayInMs) + 1
+}
+
 export function CreateProjectPage() {
   const navigate = useNavigate()
   const { addProject, setStatus, projects } = useWorkspace()
@@ -37,6 +67,11 @@ export function CreateProjectPage() {
         ),
       ).sort((a, b) => a.localeCompare(b)),
     [projects],
+  )
+
+  const durationDays = useMemo(
+    () => getDurationDays(projectStartDate, projectEndDate),
+    [projectStartDate, projectEndDate],
   )
 
   const handleClose = () => {
@@ -208,6 +243,13 @@ export function CreateProjectPage() {
                     />
                   </label>
                 </div>
+
+                <p className="text-sm text-slate-600">
+                  Duration:{' '}
+                  {durationDays !== null
+                    ? `${durationDays} day${durationDays === 1 ? '' : 's'}`
+                    : 'Set valid start and end dates to calculate'}
+                </p>
 
                 {dateRangeError ? (
                   <p className="text-sm text-rose-600">{dateRangeError}</p>

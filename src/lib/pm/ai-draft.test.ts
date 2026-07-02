@@ -1,7 +1,12 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { supabase } from '../supabase'
 import { createProjectFromAiDraft } from '../ai/ai-mapper'
 import type { AiProjectDraft } from '../ai/ai.types'
+
+const aiDraftTestEmail = process.env.VITE_AI_DRAFT_TEST_EMAIL
+const aiDraftTestPassword = process.env.VITE_AI_DRAFT_TEST_PASSWORD
+const hasAiDraftEnv = Boolean(aiDraftTestEmail && aiDraftTestPassword)
+const describeAiDraft = hasAiDraftEnv ? describe : describe.skip
 
 /**
  * Integration tests for atomic project creation from AI draft
@@ -11,23 +16,37 @@ import type { AiProjectDraft } from '../ai/ai.types'
  * - Partial failures result in complete rollback
  * - Task-to-work-package linking is correct
  */
-describe('createProjectFromAiDraft (atomic flow)', () => {
+describeAiDraft('createProjectFromAiDraft (atomic flow)', () => {
   let testAuthUser: string | null = null
 
-  beforeEach(async () => {
-    // Get current authenticated user
+  beforeAll(async () => {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: aiDraftTestEmail!,
+      password: aiDraftTestPassword!,
+    })
+
+    if (signInError) {
+      throw signInError
+    }
+
     const { data: userData, error: userError } = await supabase.auth.getUser()
     if (userError || !userData.user?.id) {
-      console.warn('Skipping test: not authenticated')
-      return
+      throw userError ?? new Error('AI draft integration tests require authenticated user')
     }
+
     testAuthUser = userData.user.id
   })
 
-  it('creates complete project structure from valid AI draft', async () => {
-    if (!testAuthUser) {
+  afterAll(async () => {
+    if (!hasAiDraftEnv) {
       return
     }
+
+    await supabase.auth.signOut()
+  })
+
+  it('creates complete project structure from valid AI draft', async () => {
+    expect(testAuthUser).toBeTruthy()
 
     const draft: AiProjectDraft = {
       project: {
@@ -159,9 +178,7 @@ describe('createProjectFromAiDraft (atomic flow)', () => {
   })
 
   it('rejects draft with missing project name', async () => {
-    if (!testAuthUser) {
-      return
-    }
+    expect(testAuthUser).toBeTruthy()
 
     const invalidDraft: AiProjectDraft = {
       project: {
@@ -194,9 +211,7 @@ describe('createProjectFromAiDraft (atomic flow)', () => {
   })
 
   it('maintains atomicity on partial failures', async () => {
-    if (!testAuthUser) {
-      return
-    }
+    expect(testAuthUser).toBeTruthy()
 
     // Draft with invalid structure to trigger server-side failure
     const draftWithInvalidTasks: AiProjectDraft = {

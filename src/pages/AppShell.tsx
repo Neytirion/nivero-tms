@@ -27,7 +27,7 @@ export function AppShell({ user }: AppShellProps) {
 function AppShellLayout({ user }: AppShellProps) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { projects, selectedProjectId, selectProject, isLoading, getProjectRole } = useWorkspace()
+  const { projects, selectedProjectId, getProjectRole } = useWorkspace()
 
   const avatarUrl = (user.user_metadata.avatar_url as string | undefined) ?? ''
   const fullName = (user.user_metadata.full_name as string | undefined) ?? ''
@@ -71,30 +71,19 @@ function AppShellLayout({ user }: AppShellProps) {
 
                 <div className="flex min-h-0 flex-1 flex-col">
                   <div className="min-h-0 flex-1 overflow-y-auto pr-1">
-                    <div className="rounded-xl border border-[#bad6b2] bg-white/80 p-3">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5f7b57]">Current Project</p>
-                      <select
-                        aria-label="Select current project"
-                        value={selectedProjectId ?? ''}
-                        onChange={(event) => {
-                          if (!event.target.value) return
-                          void selectProject(event.target.value)
-                        }}
-                        disabled={projects.length === 0 || isLoading}
-                        className="mt-2 w-full rounded-lg border border-[#bad6b2] bg-white px-2.5 py-2 text-sm text-slate-800 outline-none disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        {projects.length === 0 ? (
-                          <option value="">No projects available</option>
-                        ) : null}
-                        {projects.map((project) => (
-                          <option key={project.id} value={project.id}>
-                            {project.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="mt-4 pb-4">
+                    {(() => {
+                      const currentProject = projects.find((p) => p.id === selectedProjectId)
+                      return currentProject ? (
+                        <div className="rounded-xl border border-[#bad6b2] bg-white/80 p-3 mb-4">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5f7b57]">Current Project</p>
+                          <p className="mt-1.5 text-sm font-semibold text-slate-900 truncate">{currentProject.name.slice(0, 64)}</p>
+                          {currentProject.customer_name ? (
+                            <p className="mt-0.5 text-xs text-slate-500 truncate">{currentProject.customer_name.slice(0, 64)}</p>
+                          ) : null}
+                        </div>
+                      ) : null
+                    })()}
+                    <div className="pb-4">
                       <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5f7b57]">
                         Active Modules
                       </p>

@@ -1,11 +1,15 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ProjectsSummaryCards, ProjectsTable } from '../../features/projects/components'
+import { deriveRisk } from '../../features/projects/utils/project-metrics'
 import { useProjectsPageController } from './useProjectsPageController'
+
+type ProjectSummaryFilter = 'all' | 'active' | 'completed' | 'risks'
 
 export function ProjectsPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [summaryFilter, setSummaryFilter] = useState<ProjectSummaryFilter>('all')
 
   const {
     status,
@@ -25,10 +29,31 @@ export function ProjectsPage() {
     filteredProjects,
   } = useProjectsPageController()
 
+  const visibleProjects = useMemo(() => {
+    if (summaryFilter === 'all') {
+      return filteredProjects
+    }
+
+    if (summaryFilter === 'active') {
+      return filteredProjects.filter((project) => (project.status ?? '').toLowerCase() !== 'completed')
+    }
+
+    if (summaryFilter === 'completed') {
+      return filteredProjects.filter((project) => (project.status ?? '').toLowerCase() === 'completed')
+    }
+
+    return filteredProjects.filter((project) => deriveRisk(project) === 'Red')
+  }, [filteredProjects, summaryFilter])
+
+  const handleSummaryFilterChange = (filter: ProjectSummaryFilter) => {
+    setSummaryFilter((current) => (current === filter ? 'all' : filter))
+  }
+
   // Reset filters when refresh signal is detected
   useEffect(() => {
     if (searchParams.has('refresh')) {
       resetFilters()
+      setSummaryFilter('all')
       // Remove the refresh parameter from URL
       const newParams = new URLSearchParams(searchParams)
       newParams.delete('refresh')
@@ -54,6 +79,8 @@ export function ProjectsPage() {
         activeProjects={activeProjects}
         completedProjects={completedProjects}
         riskProjects={riskProjects}
+        activeFilter={summaryFilter}
+        onFilterChange={handleSummaryFilterChange}
       />
 
       <ProjectsTable
@@ -65,7 +92,7 @@ export function ProjectsPage() {
         isLoading={isLoading}
         onOpenCreateProject={() => navigate('/app/projects/create')}
         allProjects={projects}
-        projects={filteredProjects}
+        projects={visibleProjects}
         selectedProjectId={selectedProjectId}
         onSelectProject={(projectId) => navigate(`/app/projects/${projectId}`)}
       />

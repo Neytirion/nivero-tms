@@ -15,11 +15,31 @@ vi.mock('../../features/projects/hooks/useProjectForm.ts', () => ({
 }))
 
 vi.mock('../../features/projects/components', () => ({
-  ProjectsSummaryCards: () => <div>summary-cards</div>,
+  ProjectsSummaryCards: (props: {
+    activeFilter: string
+    onFilterChange: (filter: string) => void
+  }) => (
+    <div>
+      <button type="button" onClick={() => props.onFilterChange('active')}>
+        Active filter
+      </button>
+      <button type="button" onClick={() => props.onFilterChange('active')}>
+        Active filter again
+      </button>
+      <span data-testid="active-filter">{props.activeFilter}</span>
+    </div>
+  ),
   ProjectsTable: (props: {
+    projects: Array<{ id: string; name: string }>
     onSelectProject: (projectId: string) => void
   }) => (
     <div>
+      <div data-testid="project-count">{props.projects.length}</div>
+      <ul>
+        {props.projects.map((project) => (
+          <li key={project.id}>{project.name}</li>
+        ))}
+      </ul>
       <button type="button" onClick={() => props.onSelectProject('p1')}>
         Open project
       </button>
@@ -96,11 +116,31 @@ describe('ProjectsPage', () => {
   it('navigates to project details when row is selected', async () => {
     const workspace = createWorkspaceState({
       selectedProjectId: 'p1',
-      projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
+      projects: [
+        createProjectPreview({ id: 'p1', name: 'Apollo', status: 'active', risk_status: 'red' }),
+        createProjectPreview({ id: 'p2', name: 'Beacon', status: 'completed', risk_status: 'green' }),
+      ],
     })
     mockUseWorkspace.mockReturnValue(workspace)
 
     renderProjectsPage()
+
+    expect(screen.getByTestId('project-count').textContent).toBe('2')
+
+    fireEvent.click(screen.getByText('Active filter'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('active-filter').textContent).toBe('active')
+      expect(screen.getByTestId('project-count').textContent).toBe('1')
+      expect(screen.getByText('Apollo')).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByText('Active filter again'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('active-filter').textContent).toBe('all')
+      expect(screen.getByTestId('project-count').textContent).toBe('2')
+    })
 
     fireEvent.click(screen.getByText('Open project'))
 

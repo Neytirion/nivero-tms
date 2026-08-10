@@ -24,7 +24,7 @@ describe('AppShell', () => {
     mockUseWorkspace.mockReturnValue({
       projects: [{ id: 'p1', name: 'Project One' }],
       selectedProjectId: 'p1',
-      selectProject: vi.fn(async () => undefined),
+      selectProject: vi.fn(),
       isLoading: false,
       getProjectRole: () => 'member',
     })
@@ -45,7 +45,7 @@ describe('AppShell', () => {
     mockUseWorkspace.mockReturnValue({
       projects: [{ id: 'p1', name: 'Project One' }],
       selectedProjectId: 'p1',
-      selectProject: vi.fn(async () => undefined),
+      selectProject: vi.fn(),
       isLoading: false,
       getProjectRole: () => 'manager',
     })
@@ -64,7 +64,7 @@ describe('AppShell', () => {
 
   describe('navigation behavior', () => {
     it('calls selectProject when user changes selected project', async () => {
-      const selectProject = vi.fn(async () => undefined)
+      const selectProject = vi.fn()
       mockUseWorkspace.mockReturnValue({
         projects: [
           { id: 'p1', name: 'Project One' },
@@ -95,7 +95,7 @@ describe('AppShell', () => {
           { id: 'p3', name: 'Gamma Project' },
         ],
         selectedProjectId: 'p1',
-        selectProject: vi.fn(async () => undefined),
+        selectProject: vi.fn(),
         isLoading: false,
         getProjectRole: () => 'manager',
       })
@@ -127,7 +127,7 @@ describe('AppShell', () => {
         mockUseWorkspace.mockReturnValue({
           projects: [{ id: 'p1', name: 'Project One' }],
           selectedProjectId: 'p1',
-          selectProject: vi.fn(async () => undefined),
+          selectProject: vi.fn(),
           isLoading: false,
           getProjectRole: () => role,
         })
@@ -147,3 +147,4 @@ describe('AppShell', () => {
     })
   })
 })
+

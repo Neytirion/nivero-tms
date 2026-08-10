@@ -6,17 +6,13 @@ import {
   updateProject,
   type TaskPreview,
   type ProjectPreview,
-  type ProjectMemberListItem,
 } from '../../lib/pm'
 import { isTaskClosedStatus } from '../../shared/utils/task-status.ts'
 
 type SetStatus = (value: string | ((prev: string) => string)) => void
 type SetIsLoading = (value: boolean | ((prev: boolean) => boolean)) => void
 type SetProjects = (value: ProjectPreview[] | ((prev: ProjectPreview[]) => ProjectPreview[])) => void
-type SetTasks = (value: TaskPreview[] | ((prev: TaskPreview[]) => TaskPreview[])) => void
 type SetSelectedProjectId = (value: string | null | ((prev: string | null) => string | null)) => void
-type SetProjectMembers =
-  (value: ProjectMemberListItem[] | ((prev: ProjectMemberListItem[]) => ProjectMemberListItem[])) => void
 
 interface ProjectActionsConfig {
   projects: ProjectPreview[]
@@ -24,14 +20,11 @@ interface ProjectActionsConfig {
   setStatus: SetStatus
   setIsLoading: SetIsLoading
   setProjects: SetProjects
-  setTasks: SetTasks
   setSelectedProjectId: SetSelectedProjectId
-  setProjectMembers: SetProjectMembers
   ensureProjectEditable: (projectId: string | null | undefined, action: string) => boolean
   canManageProject: (projectId: string) => boolean
   canDeleteProject: (projectId: string) => boolean
   isProjectCompleted: (projectId: string | null | undefined) => boolean
-  loadTasksByProject: (projectId: string) => Promise<TaskPreview[]>
 }
 
 export function createProjectActions(config: ProjectActionsConfig) {
@@ -50,8 +43,7 @@ export function createProjectActions(config: ProjectActionsConfig) {
       const createdProject = await createProject(input)
       config.setProjects((prev) => [createdProject, ...prev])
       config.setSelectedProjectId(createdProject.id)
-      config.setTasks([])
-      config.setProjectMembers([])
+      // Tasks context reacts to selectedProjectId change and loads (empty) tasks automatically
       config.setStatus(`Project created: ${createdProject.name}`)
     } catch (error) {
       if (error instanceof Error && error.message.includes('row-level security policy')) {
@@ -124,14 +116,9 @@ export function createProjectActions(config: ProjectActionsConfig) {
       config.setProjects(nextProjects)
 
       if (config.selectedProjectId === projectId) {
-        if (nextProjects.length > 0) {
-          const nextProjectId = nextProjects[0].id
-          await config.loadTasksByProject(nextProjectId)
-        } else {
-          config.setTasks([])
-          config.setProjectMembers([])
-          config.setSelectedProjectId(null)
-        }
+        const nextProjectId = nextProjects.length > 0 ? nextProjects[0].id : null
+        // Tasks context reacts to selectedProjectId change automatically
+        config.setSelectedProjectId(nextProjectId)
       }
 
       config.setStatus('Project deleted')
@@ -162,7 +149,7 @@ export function createProjectActions(config: ProjectActionsConfig) {
 
     try {
       const latestTasks = await getProjectTasks(config.selectedProjectId)
-      config.setTasks(latestTasks)
+      // Validate all tasks are complete — read-only, tasks context state not mutated
 
       const incompleteTasksCount = latestTasks.filter((task: TaskPreview) => !isTaskClosedStatus(task.status)).length
       if (incompleteTasksCount > 0) {

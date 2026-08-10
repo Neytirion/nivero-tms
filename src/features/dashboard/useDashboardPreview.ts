@@ -1,13 +1,10 @@
 import { useState } from 'react'
-import { createMemberActions } from './member-actions'
 import { createProjectActions } from './project-actions'
 import { createProjectSyncActions } from './project-sync'
-import { createTaskActions } from './task-actions'
 import { useAccessControl } from './useAccessControl'
 import { useWorkspaceAuth } from './useWorkspaceAuth'
 import {
   getMyProjects,
-  type ProjectMemberListItem,
   type ProjectPreview,
   type TaskPreview,
 } from '../../lib/pm'
@@ -16,8 +13,6 @@ export function useDashboardPreview() {
   const [status, setStatus] = useState('Click the button to load dashboard data')
   const [isLoading, setIsLoading] = useState(false)
   const [projects, setProjects] = useState<ProjectPreview[]>([])
-  const [tasks, setTasks] = useState<TaskPreview[]>([])
-  const [projectMembers, setProjectMembers] = useState<ProjectMemberListItem[]>([])
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
 
   // Auth management - separated into its own hook
@@ -26,15 +21,8 @@ export function useDashboardPreview() {
   const {
     applyProjectMetricsFromTasks,
     hydrateProjectsWithTaskMetrics,
-    loadTasksByProject,
     reloadProjectsOnly,
-    refreshProjectSnapshot,
-  } = createProjectSyncActions({
-    setProjects,
-    setTasks,
-    setProjectMembers,
-    setSelectedProjectId,
-  })
+  } = createProjectSyncActions({ setProjects })
 
   // Access control - memoized permission checks
   const accessControl = useAccessControl({
@@ -61,30 +49,8 @@ export function useDashboardPreview() {
       setStatus(`Cannot ${action}: project is completed and read-only`)
       return false
     }
-
     return true
   }
-
-  const {
-    inviteMemberToSelectedProjectByEmail,
-    changeSelectedProjectMemberRole,
-    getSelectedProjectMemberUnfinishedTasksCount,
-    removeSelectedProjectMember,
-  } = createMemberActions({
-    selectedProjectId,
-    currentUserId: auth.currentUserId,
-    projectMembers,
-    setStatus,
-    setIsLoading,
-    setProjectMembers,
-    setTasks,
-    ensureProjectEditable,
-    canInviteToProject,
-    canUpdateProjectMemberRoles,
-    canRemoveProjectMembers,
-    applyProjectMetricsFromTasks,
-    reloadProjectsOnly,
-  })
 
   const {
     addProject,
@@ -97,40 +63,28 @@ export function useDashboardPreview() {
     setStatus,
     setIsLoading,
     setProjects,
-    setTasks,
     setSelectedProjectId,
-    setProjectMembers,
     ensureProjectEditable,
     canManageProject,
     canDeleteProject,
     isProjectCompleted,
-    loadTasksByProject,
   })
 
-  const {
-    addTask,
-    editTask,
-    removeTask,
-  } = createTaskActions({
-    selectedProjectId,
-    tasks,
-    setStatus,
-    setIsLoading,
-    setTasks,
-    ensureProjectEditable,
-    canAssignTasksInProject,
-    canManageTask,
-    canDeleteTask,
-    refreshProjectSnapshot,
-    reloadProjectsOnly,
-  })
+  /**
+   * Called by WorkspaceTasksContext after any task mutation to keep project
+   * metrics (progress_percent, actual_hours, risk_status) in sync.
+   */
+  const refreshAfterTaskChange = async (projectId: string, tasks: TaskPreview[]) => {
+    applyProjectMetricsFromTasks(projectId, tasks)
+    await reloadProjectsOnly()
+    applyProjectMetricsFromTasks(projectId, tasks)
+  }
 
   const loadDashboardPreview = async () => {
     setIsLoading(true)
-    setStatus('Loading projects and tasks...')
+    setStatus('Loading projects...')
 
     try {
-      // Load auth data
       await auth.loadAuth()
       if (auth.error) {
         throw new Error(auth.error)
@@ -141,8 +95,6 @@ export function useDashboardPreview() {
       setProjects(nextProjectsWithMetrics)
 
       if (nextProjectsWithMetrics.length === 0) {
-        setTasks([])
-        setProjectMembers([])
         setSelectedProjectId(null)
         setStatus('No projects found. Create your first project in the database.')
         setIsLoading(false)
@@ -154,38 +106,24 @@ export function useDashboardPreview() {
           ? selectedProjectId
           : nextProjectsWithMetrics[0].id
 
-      const nextTasks = await loadTasksByProject(targetProjectId)
-
-      setStatus(
-        `Loaded: ${nextProjectsWithMetrics.length} project(s), ${nextTasks.length} task(s) in selected project`,
-      )
+      setSelectedProjectId(targetProjectId)
+      setStatus(`Loaded ${nextProjectsWithMetrics.length} project(s)`)
     } catch (error) {
       setStatus(error instanceof Error ? `Error: ${error.message}` : 'Unknown error')
       setProjects([])
-      setTasks([])
-      setProjectMembers([])
       setSelectedProjectId(null)
     }
 
     setIsLoading(false)
   }
 
-  const selectProject = async (projectId: string) => {
-    setIsLoading(true)
-
-    try {
-      const nextTasks = await loadTasksByProject(projectId)
-      setStatus(`Loaded ${nextTasks.length} task(s) for selected project`)
-    } catch (error) {
-      setStatus(error instanceof Error ? `Error: ${error.message}` : 'Unknown error')
-    }
-
-    setIsLoading(false)
+  const selectProject = (projectId: string) => {
+    // Tasks context reacts to selectedProjectId change and loads tasks automatically
+    setSelectedProjectId(projectId)
   }
+
   const resetDashboardPreview = () => {
     setProjects([])
-    setTasks([])
-    setProjectMembers([])
     setSelectedProjectId(null)
     setStatus('Click the button to load dashboard data')
   }
@@ -194,9 +132,8 @@ export function useDashboardPreview() {
     status,
     setStatus,
     isLoading,
+    setIsLoading,
     projects,
-    tasks,
-    projectMembers,
     selectedProjectId,
     currentUserId: auth.currentUserId,
     getProjectRole,
@@ -206,21 +143,18 @@ export function useDashboardPreview() {
     canInviteToProject,
     canUpdateProjectMemberRoles,
     canRemoveProjectMembers,
+    canManageTask,
+    canDeleteTask,
+    ensureProjectEditable,
+    refreshAfterTaskChange,
     loadDashboardPreview,
     selectProject,
     addProject,
     editProject,
     removeProject,
-    addTask,
-    editTask,
-    removeTask,
-    inviteMemberToSelectedProjectByEmail,
-    changeSelectedProjectMemberRole,
-    getSelectedProjectMemberUnfinishedTasksCount,
-    removeSelectedProjectMember,
     completeSelectedProject,
-    canManageTask,
-    canDeleteTask,
     resetDashboardPreview,
   }
 }
+
+

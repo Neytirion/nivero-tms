@@ -3,20 +3,18 @@ import { supabase } from '../../lib/supabase'
 
 type SetStatus = (value: string | ((prev: string) => string)) => void
 type SetIsLoading = (value: boolean | ((prev: boolean) => boolean)) => void
-type SetTasks = (value: TaskPreview[] | ((prev: TaskPreview[]) => TaskPreview[])) => void
 
 interface TaskActionsConfig {
   selectedProjectId: string | null
   tasks: TaskPreview[]
   setStatus: SetStatus
   setIsLoading: SetIsLoading
-  setTasks: SetTasks
   ensureProjectEditable: (projectId: string | null | undefined, action: string) => boolean
   canAssignTasksInProject: (projectId: string) => boolean
   canManageTask: (task: TaskPreview) => boolean
   canDeleteTask: (task: TaskPreview) => boolean
-  refreshProjectSnapshot: (projectId: string) => Promise<TaskPreview[]>
-  reloadProjectsOnly: () => Promise<unknown>
+  /** Reload tasks + members and refresh project metrics — called after any task mutation */
+  reloadTasksAndMembers: (projectId: string) => Promise<void>
 }
 
 export function createTaskActions(config: TaskActionsConfig) {
@@ -78,7 +76,7 @@ export function createTaskActions(config: TaskActionsConfig) {
         dueDate: input.dueDate,
       })
 
-      await config.refreshProjectSnapshot(config.selectedProjectId)
+      await config.reloadTasksAndMembers(config.selectedProjectId)
       config.setStatus(`Task created: ${createdTask.title}`)
     } catch (error) {
       if (error instanceof Error && error.message.includes('row-level security policy')) {
@@ -138,9 +136,7 @@ export function createTaskActions(config: TaskActionsConfig) {
 
       const projectIdToRefresh = updatedTask.project_id ?? targetTask?.project_id ?? config.selectedProjectId
       if (projectIdToRefresh) {
-        await config.refreshProjectSnapshot(projectIdToRefresh)
-      } else {
-        config.setTasks((prev) => prev.map((task) => (task.id === taskId ? updatedTask : task)))
+        await config.reloadTasksAndMembers(projectIdToRefresh)
       }
 
       config.setStatus(`Task updated: ${updatedTask.title}`)
@@ -165,10 +161,7 @@ export function createTaskActions(config: TaskActionsConfig) {
       await deleteTask(taskId)
 
       if (config.selectedProjectId) {
-        await config.refreshProjectSnapshot(config.selectedProjectId)
-      } else {
-        config.setTasks((prev) => prev.filter((task) => task.id !== taskId))
-        await config.reloadProjectsOnly()
+        await config.reloadTasksAndMembers(config.selectedProjectId)
       }
 
       config.setStatus('Task deleted')

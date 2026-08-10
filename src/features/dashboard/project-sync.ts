@@ -1,24 +1,15 @@
 import { calculateProjectMetrics } from './project-metrics'
 import {
   getMyProjects,
-  getProjectMembers,
   getProjectTasks,
-  type ProjectMemberListItem,
   type ProjectPreview,
   type TaskPreview,
 } from '../../lib/pm'
 
 type SetProjects = (value: ProjectPreview[] | ((prev: ProjectPreview[]) => ProjectPreview[])) => void
-type SetTasks = (value: TaskPreview[] | ((prev: TaskPreview[]) => TaskPreview[])) => void
-type SetProjectMembers =
-  (value: ProjectMemberListItem[] | ((prev: ProjectMemberListItem[]) => ProjectMemberListItem[])) => void
-type SetSelectedProjectId = (value: string | null | ((prev: string | null) => string | null)) => void
 
 interface ProjectSyncConfig {
   setProjects: SetProjects
-  setTasks: SetTasks
-  setProjectMembers: SetProjectMembers
-  setSelectedProjectId: SetSelectedProjectId
 }
 
 export function createProjectSyncActions(config: ProjectSyncConfig) {
@@ -62,18 +53,6 @@ export function createProjectSyncActions(config: ProjectSyncConfig) {
     return projectsWithMetrics
   }
 
-  const loadTasksByProject = async (projectId: string) => {
-    const [nextTasks, nextMembers] = await Promise.all([
-      getProjectTasks(projectId),
-      getProjectMembers(projectId),
-    ])
-    config.setTasks(nextTasks)
-    config.setProjectMembers(nextMembers)
-    config.setSelectedProjectId(projectId)
-    applyProjectMetricsFromTasks(projectId, nextTasks)
-    return nextTasks
-  }
-
   const reloadProjectsOnly = async () => {
     const nextProjects = await getMyProjects()
     const nextProjectsWithMetrics = await hydrateProjectsWithTaskMetrics(nextProjects)
@@ -81,18 +60,9 @@ export function createProjectSyncActions(config: ProjectSyncConfig) {
     return nextProjectsWithMetrics
   }
 
-  const refreshProjectSnapshot = async (projectId: string) => {
-    const nextTasks = await loadTasksByProject(projectId)
-    await reloadProjectsOnly()
-    applyProjectMetricsFromTasks(projectId, nextTasks)
-    return nextTasks
-  }
-
   return {
     applyProjectMetricsFromTasks,
     hydrateProjectsWithTaskMetrics,
-    loadTasksByProject,
     reloadProjectsOnly,
-    refreshProjectSnapshot,
   }
 }

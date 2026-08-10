@@ -1,10 +1,8 @@
 import {
   getProjectMemberUnfinishedTasksCount,
   getProjectMembers,
-  getProjectTasks,
   inviteProjectMemberByEmail,
   removeProjectMember,
-  type TaskPreview,
   updateProjectMemberRole,
   type ProjectMemberListItem,
 } from '../../lib/pm'
@@ -13,7 +11,6 @@ type SetStatus = (value: string | ((prev: string) => string)) => void
 type SetIsLoading = (value: boolean | ((prev: boolean) => boolean)) => void
 type SetProjectMembers =
   (value: ProjectMemberListItem[] | ((prev: ProjectMemberListItem[]) => ProjectMemberListItem[])) => void
-type SetTasks = (value: TaskPreview[] | ((prev: TaskPreview[]) => TaskPreview[])) => void
 
 interface MemberActionsConfig {
   selectedProjectId: string | null
@@ -22,13 +19,12 @@ interface MemberActionsConfig {
   setStatus: SetStatus
   setIsLoading: SetIsLoading
   setProjectMembers: SetProjectMembers
-  setTasks: SetTasks
   ensureProjectEditable: (projectId: string | null | undefined, action: string) => boolean
   canInviteToProject: (projectId: string) => boolean
   canUpdateProjectMemberRoles: (projectId: string) => boolean
   canRemoveProjectMembers: (projectId: string) => boolean
-  applyProjectMetricsFromTasks: (projectId: string, projectTasks: TaskPreview[]) => void
-  reloadProjectsOnly: () => Promise<unknown>
+  /** Reload tasks + members and refresh project metrics — called after member removal */
+  reloadTasksAndMembers: (projectId: string) => Promise<void>
 }
 
 export function createMemberActions(config: MemberActionsConfig) {
@@ -152,14 +148,7 @@ export function createMemberActions(config: MemberActionsConfig) {
         unassignUnfinishedTasks,
       })
 
-      const [nextMembers, nextTasks] = await Promise.all([
-        getProjectMembers(config.selectedProjectId),
-        getProjectTasks(config.selectedProjectId),
-      ])
-      config.setProjectMembers(nextMembers)
-      config.setTasks(nextTasks)
-      config.applyProjectMetricsFromTasks(config.selectedProjectId, nextTasks)
-      await config.reloadProjectsOnly()
+      await config.reloadTasksAndMembers(config.selectedProjectId)
       config.setStatus('Member removed from project')
     } catch (error) {
       config.setStatus(error instanceof Error ? `Remove member error: ${error.message}` : 'Unknown error')

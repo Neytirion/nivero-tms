@@ -39,7 +39,7 @@ interface UseTaskControllerActionsInput {
   setHasAttemptedSubmit: (value: boolean) => void
   logTimeTask: TaskPreview | null
   setLogTimeTask: (task: TaskPreview | null) => void
-  selectProject: (projectId: string) => Promise<void>
+  reloadCurrentTasks: () => Promise<void>
 }
 
 export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
@@ -161,7 +161,7 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
       notes: comment,
     })
 
-    await input.selectProject(input.selectedProjectId)
+    await input.reloadCurrentTasks()
     input.setStatus(`Time logged for task: ${input.logTimeTask.title}`)
     input.setLogTimeTask(null)
   }

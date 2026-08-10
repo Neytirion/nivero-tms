@@ -54,6 +54,7 @@ export function useTasksPageController() {
     canAssignTasksInProject,
     canManageTask,
     canDeleteTask,
+    reloadCurrentTasks,
   } = useWorkspace()
 
   const selectedProject = useMemo(
@@ -129,7 +130,7 @@ export function useTasksPageController() {
       setHasAttemptedSubmit,
       logTimeTask,
       setLogTimeTask,
-      selectProject,
+      reloadCurrentTasks,
     })
 
   const assigneeLabelByUserId = projectMembers.reduce<Record<string, string>>((acc, member) => {

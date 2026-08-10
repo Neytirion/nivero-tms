@@ -35,7 +35,7 @@ function App() {
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route
           path="/auth"
-          element={user ? <Navigate to="/app/dashboard" replace /> : <AuthPage />}
+          element={user ? <Navigate to="/app/projects" replace /> : <AuthPage />}
         />
         <Route
           path="/app"
@@ -51,13 +51,13 @@ function App() {
           <Route path="tasks/:taskId" element={<TaskDetailsPage />} />
           <Route path="time-tracking" element={<TimeTrackingPage />} />
           <Route path="resources" element={<ResourcePlanningPage />} />
-          <Route index element={<Navigate to="/app/dashboard" replace />} />
+          <Route index element={<Navigate to="/app/projects" replace />} />
         </Route>
         <Route
           path="/profile"
-          element={<Navigate to={user ? '/app/dashboard' : '/auth'} replace />}
+          element={<Navigate to={user ? '/app/projects' : '/auth'} replace />}
         />
-        <Route path="*" element={<Navigate to={user ? '/app/dashboard' : '/auth'} replace />} />
+        <Route path="*" element={<Navigate to={user ? '/app/projects' : '/auth'} replace />} />
       </Routes>
     </BrowserRouter>
   )

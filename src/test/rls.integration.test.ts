@@ -233,4 +233,72 @@ describeRls('Supabase RLS integration', () => {
       minutes_spent: 45,
     })
   })
+
+  it('prevents project admin from updating member roles at DB level', async () => {
+    // After our security fix, only the project owner should be able to update roles.
+    // An admin updating their own membership role directly via DB should be blocked by RLS.
+    const { data, error } = await projectAdminClient
+      .from('project_members')
+      .update({ role: 'manager' })
+      .eq('project_id', visibleProjectId)
+      .eq('user_id', projectAdminId)
+      .select('role')
+
+    // Either an RLS error is thrown OR the update returns 0 rows (silently blocked)
+    const wasBlocked = error !== null || (data ?? []).length === 0
+    expect(wasBlocked).toBe(true)
+
+    // Verify the role did not change in the database
+    const { data: current } = await adminClient
+      .from('project_members')
+      .select('role')
+      .eq('project_id', visibleProjectId)
+      .eq('user_id', projectAdminId)
+      .single()
+
+    expect(current?.role).toBe('admin')
+  })
+
+  it('prevents non-member from reading tasks in a project they do not belong to', async () => {
+    const { data, error } = await projectAdminClient
+      .from('tasks')
+      .select('id')
+      .eq('project_id', hiddenProjectId)
+
+    expect(error).toBeNull()
+    // projectAdmin is not a member of hiddenProject — should see 0 tasks
+    expect(data ?? []).toHaveLength(0)
+  })
+
+  it('prevents non-member from inserting a task into a project they do not belong to', async () => {
+    const { error } = await projectAdminClient
+      .from('tasks')
+      .insert({
+        project_id: hiddenProjectId,
+        title: 'Unauthorized task',
+        created_by: projectAdminId,
+        status: 'todo',
+        priority: 'medium',
+      })
+
+    expect(error).not.toBeNull()
+  })
+
+  it('allows project owner to update member roles at DB level', async () => {
+    // Owner should be the only one able to change roles
+    const { error } = await ownerClient
+      .from('project_members')
+      .update({ role: 'member' })
+      .eq('project_id', visibleProjectId)
+      .eq('user_id', projectAdminId)
+
+    expect(error).toBeNull()
+
+    // Restore role for subsequent tests
+    await adminClient
+      .from('project_members')
+      .update({ role: 'admin' })
+      .eq('project_id', visibleProjectId)
+      .eq('user_id', projectAdminId)
+  })
 })

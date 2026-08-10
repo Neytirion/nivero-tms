@@ -5,8 +5,8 @@ import {
   type ProjectMemberListItem,
   type TaskPreview,
 } from '../../lib/pm'
-import { createTaskActions } from './task-actions'
-import { createMemberActions } from './member-actions'
+import { useTaskActions } from './useTaskActions'
+import { useMemberActions } from './useMemberActions'
 
 export interface WorkspaceTasksDeps {
   selectedProjectId: string | null
@@ -112,7 +112,7 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deps.selectedProjectId])
 
-  const { addTask, editTask, removeTask } = createTaskActions({
+  const { addTask, editTask, removeTask } = useTaskActions({
     selectedProjectId: deps.selectedProjectId,
     tasks,
     setStatus: deps.setStatus,
@@ -129,7 +129,7 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
     changeSelectedProjectMemberRole,
     getSelectedProjectMemberUnfinishedTasksCount,
     removeSelectedProjectMember,
-  } = createMemberActions({
+  } = useMemberActions({
     selectedProjectId: deps.selectedProjectId,
     currentUserId: deps.currentUserId,
     projectMembers,

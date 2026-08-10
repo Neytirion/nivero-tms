@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createProjectActions } from './project-actions'
+import { useProjectActions } from './useProjectActions'
 import { createProjectSyncActions } from './project-sync'
 import { useAccessControl } from './useAccessControl'
 import { useWorkspaceAuth } from './useWorkspaceAuth'
@@ -92,7 +92,7 @@ export function useDashboardPreview() {
     editProject,
     removeProject,
     completeSelectedProject,
-  } = createProjectActions({
+  } = useProjectActions({
     projects,
     selectedProjectId,
     setStatus,

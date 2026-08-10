@@ -3,13 +3,20 @@ import type { CreateProjectInput, ProjectMemberPreview, ProjectPreview, TaskPrev
 import { assertProjectEditable } from '../helpers'
 import { isTaskClosedStatus } from '../../../shared/utils/task-status.ts'
 
+const PROJECT_FIELDS =
+  'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at'
+
+const TASK_FIELDS =
+  'id,work_package_id,title,description,status,priority,assigned_to,created_by,estimate_hours,actual_hours,blocked_by_task_id,due_date,project_id,created_at'
+
+export const TASKS_PAGE_SIZE = 100
+
 export async function getMyProjects() {
   const { data, error } = await supabase
     .from('projects')
-    .select(
-      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at',
-    )
+    .select(PROJECT_FIELDS)
     .order('created_at', { ascending: false })
+    .limit(200)
 
   if (error) {
     throw new Error(error.message)
@@ -44,15 +51,37 @@ export async function getMyProjectMemberships() {
 export async function getProjectTasks(projectId: string) {
   const { data, error } = await supabase
     .from('tasks')
-    .select('id,work_package_id,title,description,status,priority,assigned_to,created_by,estimate_hours,actual_hours,blocked_by_task_id,due_date,project_id,created_at')
+    .select(TASK_FIELDS)
     .eq('project_id', projectId)
     .order('created_at', { ascending: false })
+    .limit(TASKS_PAGE_SIZE)
 
   if (error) {
     throw new Error(error.message)
   }
 
   return data satisfies TaskPreview[]
+}
+
+export async function getProjectTasksPage(
+  projectId: string,
+  page: number,
+): Promise<{ data: TaskPreview[]; totalCount: number }> {
+  const from = page * TASKS_PAGE_SIZE
+  const to = from + TASKS_PAGE_SIZE - 1
+
+  const { data, error, count } = await supabase
+    .from('tasks')
+    .select(TASK_FIELDS, { count: 'exact' })
+    .eq('project_id', projectId)
+    .order('created_at', { ascending: false })
+    .range(from, to)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return { data: (data ?? []) satisfies TaskPreview[], totalCount: count ?? 0 }
 }
 
 export async function createProject(input: CreateProjectInput) {

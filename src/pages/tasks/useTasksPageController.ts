@@ -55,6 +55,9 @@ export function useTasksPageController() {
     canManageTask,
     canDeleteTask,
     reloadCurrentTasks,
+    hasMoreTasks,
+    tasksTotalCount,
+    loadMoreTasks,
   } = useWorkspace()
 
   const selectedProject = useMemo(
@@ -240,6 +243,9 @@ export function useTasksPageController() {
     submitTaskLogTime,
     shiftCalendarMonth,
     selectProject,
+    hasMoreTasks,
+    tasksTotalCount,
+    loadMoreTasks,
     resetPageState,
   }
 }

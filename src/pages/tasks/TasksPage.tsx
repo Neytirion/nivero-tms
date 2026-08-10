@@ -9,7 +9,6 @@ export function TasksPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const {
-    status,
     isLoading,
     selectedProject,
     myRoleInSelectedProject,
@@ -40,6 +39,9 @@ export function TasksPage() {
     removeTask,
     submitTaskLogTime,
     shiftCalendarMonth,
+    hasMoreTasks,
+    tasksTotalCount,
+    loadMoreTasks,
     resetPageState,
   } = useTasksPageController()
 
@@ -64,7 +66,6 @@ export function TasksPage() {
         <p className="mt-2 text-sm text-slate-600">
           Drag and drop tasks between Backlog, To Do, In Progress, Review, and Done.
         </p>
-        <p className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">{status}</p>
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
@@ -171,6 +172,24 @@ export function TasksPage() {
         onSubmit={submitTaskLogTime}
         isSubmitting={isLoading}
       />
+
+      {hasMoreTasks && (
+        <section className="page-section">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-500">
+              Showing {tasks.length} of {tasksTotalCount} tasks
+            </p>
+            <button
+              type="button"
+              onClick={() => void loadMoreTasks()}
+              disabled={isLoading}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+            >
+              Load more tasks
+            </button>
+          </div>
+        </section>
+      )}
     </div>
   )
 }

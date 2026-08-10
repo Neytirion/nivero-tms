@@ -1,6 +1,7 @@
 import type { User } from '@supabase/supabase-js'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { WorkspaceProvider, useWorkspace } from '../features/dashboard/workspace-context.tsx'
+import { ToastProvider } from '../shared/components'
 
 const baseNavItems = [
   { to: '/app/dashboard', label: 'Dashboard' },
@@ -15,9 +16,11 @@ interface AppShellProps {
 
 export function AppShell({ user }: AppShellProps) {
   return (
-    <WorkspaceProvider>
-      <AppShellLayout user={user} />
-    </WorkspaceProvider>
+    <ToastProvider>
+      <WorkspaceProvider>
+        <AppShellLayout user={user} />
+      </WorkspaceProvider>
+    </ToastProvider>
   )
 }
 

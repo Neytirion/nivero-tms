@@ -38,7 +38,8 @@ describe('pm.projects', () => {
   })
 
   it('loads projects list', async () => {
-    const order = vi.fn().mockResolvedValue({ data: [{ id: 'p1', name: 'Apollo' }], error: null })
+    const limit = vi.fn().mockResolvedValue({ data: [{ id: 'p1', name: 'Apollo' }], error: null })
+    const order = vi.fn().mockReturnValue({ limit })
     const select = vi.fn().mockReturnValue({ order })
     mocks.from.mockReturnValue({ select })
 

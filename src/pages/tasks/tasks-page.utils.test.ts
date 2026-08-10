@@ -1,31 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import type { TaskPreview } from '../../lib/pm'
 import {
   buildCalendarMeta,
   getTaskPriorityBadgeClass,
   normalizeTaskStatus,
   shiftMonthValue,
 } from './tasks-page.utils'
-
-function createTaskPreview(overrides: Partial<TaskPreview> = {}): TaskPreview {
-  return {
-    id: 'task-1',
-    work_package_id: null,
-    title: 'Task',
-    description: null,
-    status: 'todo',
-    priority: 'medium',
-    assigned_to: null,
-    created_by: 'user-1',
-    estimate_hours: 2,
-    actual_hours: 0,
-    blocked_by_task_id: null,
-    due_date: null,
-    project_id: 'project-1',
-    created_at: '2026-06-01T00:00:00.000Z',
-    ...overrides,
-  }
-}
+import { createTaskPreview } from '../../test/workspace-factory'
 
 describe('tasks-page.utils', () => {
   it('normalizes task status aliases', () => {

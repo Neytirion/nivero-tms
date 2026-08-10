@@ -21,7 +21,6 @@ export function ProjectDetailsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const {
-    status,
     isLoading,
     tasks,
     projects,
@@ -111,7 +110,6 @@ export function ProjectDetailsPage() {
             <p className="mt-2 text-sm text-slate-600">Review project health, tasks, estimates, collaboration, team access, and settings.</p>
           </div>
         </div>
-        <p className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">{status}</p>
       </section>
 
       <ProjectDetailsSection

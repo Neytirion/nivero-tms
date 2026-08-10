@@ -11,7 +11,7 @@ import { useSearchParams } from 'react-router-dom'
 
 export function TimeTrackingPage() {
   const [searchParams, setSearchParams] = useSearchParams()
-  const { projects, selectedProjectId, currentUserId, status, setStatus, isLoading, loadDashboardPreview } = useWorkspace()
+  const { projects, selectedProjectId, currentUserId, setStatus, isLoading, loadDashboardPreview } = useWorkspace()
   const {
     entries,
     isEntriesLoading,
@@ -84,7 +84,6 @@ export function TimeTrackingPage() {
         <p className="mt-2 text-sm text-slate-600">
           Manual entries, timer-based tracking, and weekly timesheet overview.
         </p>
-        <p className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">{status}</p>
       </section>
 
       <TimeTrackingFilters

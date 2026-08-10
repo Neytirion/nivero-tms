@@ -12,7 +12,6 @@ export function ProjectsPage() {
   const [summaryFilter, setSummaryFilter] = useState<ProjectSummaryFilter>('all')
 
   const {
-    status,
     isLoading,
     projects,
     selectedProjectId,
@@ -71,7 +70,6 @@ export function ProjectsPage() {
             <p className="mt-2 text-sm text-slate-600">Create, filter, and drill down into project health, tasks, estimates, and team access.</p>
           </div>
         </div>
-        <p className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700">{status}</p>
       </section>
 
       <ProjectsSummaryCards

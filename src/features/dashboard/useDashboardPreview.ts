@@ -3,17 +3,52 @@ import { createProjectActions } from './project-actions'
 import { createProjectSyncActions } from './project-sync'
 import { useAccessControl } from './useAccessControl'
 import { useWorkspaceAuth } from './useWorkspaceAuth'
+import { useToast } from '../../shared/components'
 import {
   getMyProjects,
   type ProjectPreview,
   type TaskPreview,
 } from '../../lib/pm'
 
+/** Messages that represent transient loading state — not shown as toasts */
+function isLoadingMessage(message: string) {
+  return (
+    message.startsWith('Loading') ||
+    message.startsWith('Loaded') ||
+    message.startsWith('Click') ||
+    message.startsWith('No projects found')
+  )
+}
+
+function classifyToastType(message: string): 'success' | 'error' {
+  const lower = message.toLowerCase()
+  if (
+    lower.includes('error') ||
+    lower.includes('permission denied') ||
+    lower.includes('cannot ') ||
+    lower.includes('user with this email') ||
+    lower.includes('rls block')
+  ) {
+    return 'error'
+  }
+  return 'success'
+}
+
 export function useDashboardPreview() {
-  const [status, setStatus] = useState('Click the button to load dashboard data')
+  const { showToast } = useToast()
+  const [status, setStatusRaw] = useState('Click the button to load dashboard data')
   const [isLoading, setIsLoading] = useState(false)
   const [projects, setProjects] = useState<ProjectPreview[]>([])
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null)
+
+  /** Wrapper: stores status for loading messages, fires toast for action results */
+  const setStatus = (value: string | ((prev: string) => string)) => {
+    const message = typeof value === 'function' ? value(status) : value
+    setStatusRaw(message)
+    if (!isLoadingMessage(message)) {
+      showToast(message, classifyToastType(message))
+    }
+  }
 
   // Auth management - separated into its own hook
   const auth = useWorkspaceAuth()

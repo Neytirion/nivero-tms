@@ -1,5 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
-import { getProjectMembers, getProjectTasks, type ProjectMemberListItem, type TaskPreview } from '../../lib/pm'
+import {
+  getProjectMembers,
+  getProjectTasksPage,
+  type ProjectMemberListItem,
+  type TaskPreview,
+} from '../../lib/pm'
 import { createTaskActions } from './task-actions'
 import { createMemberActions } from './member-actions'
 
@@ -23,27 +28,52 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
   const [tasks, setTasks] = useState<TaskPreview[]>([])
   const [projectMembers, setProjectMembers] = useState<ProjectMemberListItem[]>([])
   const [isTasksLoading, setIsTasksLoading] = useState(false)
+  const [tasksTotalCount, setTasksTotalCount] = useState(0)
+  const [tasksPage, setTasksPage] = useState(0)
+
+  const hasMoreTasks = tasks.length < tasksTotalCount
 
   // Stable ref so callbacks inside task/member actions always see the latest deps
   const depsRef = useRef(deps)
   depsRef.current = deps
 
-  // Reload tasks + members for a given project, then notify projects domain
+  // Reload tasks + members for a given project (page 0), then notify projects domain
   const reloadTasksAndMembers = async (projectId: string) => {
-    const [nextTasks, nextMembers] = await Promise.all([
-      getProjectTasks(projectId),
+    const [{ data: nextTasks, totalCount }, nextMembers] = await Promise.all([
+      getProjectTasksPage(projectId, 0),
       getProjectMembers(projectId),
     ])
     setTasks(nextTasks)
     setProjectMembers(nextMembers)
+    setTasksTotalCount(totalCount)
+    setTasksPage(0)
     await depsRef.current.refreshAfterTaskChange(projectId, nextTasks)
   }
 
-  // Reactive load: whenever selected project changes, load its tasks + members
+  // Load the next page of tasks (appended to existing)
+  const loadMoreTasks = async () => {
+    if (!deps.selectedProjectId || !hasMoreTasks || isTasksLoading) return
+    const nextPage = tasksPage + 1
+    setIsTasksLoading(true)
+    try {
+      const { data: moreTasks } = await getProjectTasksPage(deps.selectedProjectId, nextPage)
+      setTasks((prev) => [...prev, ...moreTasks])
+      setTasksPage(nextPage)
+    } catch (error) {
+      depsRef.current.setStatus(
+        error instanceof Error ? `Error loading more tasks: ${error.message}` : 'Unknown error',
+      )
+    }
+    setIsTasksLoading(false)
+  }
+
+  // Reactive load: whenever selected project changes, load its first page of tasks + members
   useEffect(() => {
     if (!deps.selectedProjectId) {
       setTasks([])
       setProjectMembers([])
+      setTasksTotalCount(0)
+      setTasksPage(0)
       return
     }
 
@@ -52,13 +82,15 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
     const load = async () => {
       setIsTasksLoading(true)
       try {
-        const [nextTasks, nextMembers] = await Promise.all([
-          getProjectTasks(deps.selectedProjectId!),
+        const [{ data: nextTasks, totalCount }, nextMembers] = await Promise.all([
+          getProjectTasksPage(deps.selectedProjectId!, 0),
           getProjectMembers(deps.selectedProjectId!),
         ])
         if (!cancelled) {
           setTasks(nextTasks)
           setProjectMembers(nextMembers)
+          setTasksTotalCount(totalCount)
+          setTasksPage(0)
         }
       } catch (error) {
         if (!cancelled) {
@@ -115,6 +147,9 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
     tasks,
     projectMembers,
     isTasksLoading,
+    tasksTotalCount,
+    hasMoreTasks,
+    loadMoreTasks,
     addTask,
     editTask,
     removeTask,

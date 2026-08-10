@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useLayoutEffect, useRef } from 'react'
 import { createTask, deleteTask, updateTask, type TaskPreview } from '../../lib/pm'
 import { supabase } from '../../lib/supabase'
 
@@ -24,7 +24,9 @@ interface TaskActionsDeps {
  */
 export function useTaskActions(deps: TaskActionsDeps) {
   const depsRef = useRef(deps)
-  depsRef.current = deps
+  useLayoutEffect(() => {
+    depsRef.current = deps
+  })
 
   const addTask = useCallback(
     async (input: {

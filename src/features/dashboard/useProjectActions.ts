@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useLayoutEffect, useRef } from 'react'
 import {
   completeProject,
   createProject,
@@ -34,7 +34,9 @@ interface ProjectActionsDeps {
  */
 export function useProjectActions(deps: ProjectActionsDeps) {
   const depsRef = useRef(deps)
-  depsRef.current = deps
+  useLayoutEffect(() => {
+    depsRef.current = deps
+  })
 
   const addProject = useCallback(
     async (input: {

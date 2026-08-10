@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import {
   getProjectMembers,
   getProjectTasksPage,
@@ -35,7 +35,9 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
 
   // Stable ref so callbacks inside task/member actions always see the latest deps
   const depsRef = useRef(deps)
-  depsRef.current = deps
+  useLayoutEffect(() => {
+    depsRef.current = deps
+  })
 
   // Reload tasks + members for a given project (page 0), then notify projects domain
   const reloadTasksAndMembers = async (projectId: string) => {
@@ -70,6 +72,8 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
   // Reactive load: whenever selected project changes, load its first page of tasks + members
   useEffect(() => {
     if (!deps.selectedProjectId) {
+      // Reset when no project selected — dep is selectedProjectId only, no infinite loop risk
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTasks([])
       setProjectMembers([])
       setTasksTotalCount(0)
@@ -109,7 +113,6 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
     return () => {
       cancelled = true
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deps.selectedProjectId])
 
   const { addTask, editTask, removeTask } = useTaskActions({

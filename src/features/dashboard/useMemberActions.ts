@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useLayoutEffect, useRef } from 'react'
 import {
   getProjectMemberUnfinishedTasksCount,
   getProjectMembers,
@@ -33,7 +33,9 @@ interface MemberActionsDeps {
  */
 export function useMemberActions(deps: MemberActionsDeps) {
   const depsRef = useRef(deps)
-  depsRef.current = deps
+  useLayoutEffect(() => {
+    depsRef.current = deps
+  })
 
   const inviteMemberToSelectedProjectByEmail = useCallback(
     async (email: string, role = 'member') => {

@@ -52,6 +52,8 @@ export function ProjectsPage() {
   useEffect(() => {
     if (searchParams.has('refresh')) {
       resetFilters()
+      // Reset filter on URL refresh signal — dep is searchParams only, no infinite loop risk
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSummaryFilter('all')
       // Remove the refresh parameter from URL
       const newParams = new URLSearchParams(searchParams)

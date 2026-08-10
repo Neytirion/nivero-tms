@@ -115,4 +115,41 @@ describe('dashboard/access-control', () => {
     expect(access.canManageTask(othersTask)).toBe(false)
     expect(access.canDeleteTask(othersTask)).toBe(false)
   })
+
+  it('allows only owner to update member roles', () => {
+    const project = createProjectPreview({ owner_id: 'owner-1' })
+
+    const ownerAccess = createAccessControl({
+      projects: [project],
+      currentUserId: 'owner-1',
+      membershipRoleByProjectId: {},
+    })
+    const adminAccess = createAccessControl({
+      projects: [project],
+      currentUserId: 'admin-1',
+      membershipRoleByProjectId: { 'project-1': 'admin' },
+    })
+    const managerAccess = createAccessControl({
+      projects: [project],
+      currentUserId: 'manager-1',
+      membershipRoleByProjectId: { 'project-1': 'manager' },
+    })
+
+    expect(ownerAccess.canUpdateProjectMemberRoles('project-1')).toBe(true)
+    expect(adminAccess.canUpdateProjectMemberRoles('project-1')).toBe(false)
+    expect(managerAccess.canUpdateProjectMemberRoles('project-1')).toBe(false)
+  })
+
+  it('allows admin to remove members even without role-update permission', () => {
+    const project = createProjectPreview({ owner_id: 'owner-1' })
+
+    const adminAccess = createAccessControl({
+      projects: [project],
+      currentUserId: 'admin-1',
+      membershipRoleByProjectId: { 'project-1': 'admin' },
+    })
+
+    expect(adminAccess.canRemoveProjectMembers('project-1')).toBe(true)
+    expect(adminAccess.canUpdateProjectMemberRoles('project-1')).toBe(false)
+  })
 })

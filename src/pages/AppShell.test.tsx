@@ -37,8 +37,8 @@ describe('AppShell', () => {
 
     // ✅ Check BEHAVIOR: Resources menu is hidden for members
     expect(screen.queryByText('Resources')).toBeNull()
-    // ✅ But project selector is still available
-    expect(screen.getByLabelText('Select current project')).toBeTruthy()
+    // ✅ Current project name is displayed read-only
+    expect(screen.getByText('Project One')).toBeTruthy()
   })
 
   it('shows Resources navigation for manager role', () => {
@@ -59,11 +59,12 @@ describe('AppShell', () => {
     expect(screen.getByText('Resources')).toBeTruthy()
     expect(screen.getByText('Nivero PM Tool')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Open profile' })).toBeTruthy()
-    expect(screen.getByLabelText('Select current project')).toBeTruthy()
+    // ✅ Current project name shown read-only (no interactive selector)
+    expect(screen.getByText('Project One')).toBeTruthy()
   })
 
   describe('navigation behavior', () => {
-    it('calls selectProject when user changes selected project', async () => {
+    it('shows current project name in sidebar', async () => {
       const selectProject = vi.fn()
       mockUseWorkspace.mockReturnValue({
         projects: [
@@ -82,12 +83,11 @@ describe('AppShell', () => {
         </MemoryRouter>,
       )
 
-      // ✅ Check BEHAVIOR: Project selector is available
-      const projectSelector = screen.getByLabelText('Select current project')
-      expect(projectSelector).toBeTruthy()
+      // ✅ Check BEHAVIOR: Current project name is displayed
+      expect(screen.getByText('Project One')).toBeTruthy()
     })
 
-    it('displays all project options in selector', async () => {
+    it('displays selected project name in sidebar', async () => {
       mockUseWorkspace.mockReturnValue({
         projects: [
           { id: 'p1', name: 'Alpha Project' },
@@ -106,10 +106,11 @@ describe('AppShell', () => {
         </MemoryRouter>,
       )
 
-      // ✅ Check BEHAVIOR: All projects appear in UI
+      // ✅ Check BEHAVIOR: Selected project name shown in sidebar
       expect(screen.getByText('Alpha Project')).toBeTruthy()
-      expect(screen.getByText('Beta Project')).toBeTruthy()
-      expect(screen.getByText('Gamma Project')).toBeTruthy()
+      // Non-selected projects are not shown in sidebar
+      expect(screen.queryByText('Beta Project')).toBeNull()
+      expect(screen.queryByText('Gamma Project')).toBeNull()
     })
 
     it('hides Resources menu when not manager', () => {

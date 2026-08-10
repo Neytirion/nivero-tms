@@ -1,12 +1,11 @@
 import type { ProjectPreview, TaskPreview } from '../../../../lib/pm'
 import type { ProjectRoleName } from '../../../../shared/utils/permissions'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { EstimatesTab } from '../estimates'
 import { ProjectCollaborationTab } from './ProjectCollaborationTab'
 import { TeamAccessSection } from './TeamAccessSection'
 import { ProjectOverviewTab } from './tabs/ProjectOverviewTab'
 import { ProjectSettingsTab } from './tabs/ProjectSettingsTab'
-import { ProjectTasksTab } from './tabs/ProjectTasksTab'
 
 export type DetailsTab = 'overview' | 'tasks' | 'estimates' | 'collaboration' | 'team' | 'settings'
 
@@ -56,6 +55,7 @@ interface ProjectDetailsSectionProps {
   onOpenCompleteConfirm: () => void
   onOpenSaveSettingsConfirm: () => void
   onTaskClick?: (taskId: string) => void
+  onNavigateToTasks?: () => void
 }
 
 export function ProjectDetailsSection({
@@ -103,40 +103,8 @@ export function ProjectDetailsSection({
   onOpenDeleteConfirm,
   onOpenCompleteConfirm,
   onOpenSaveSettingsConfirm,
-  onTaskClick,
+  onNavigateToTasks,
 }: ProjectDetailsSectionProps) {
-  const sortedTasks = useMemo(() => {
-    const statusOrder: Record<string, number> = {
-      backlog: 0,
-      todo: 1,
-      in_progress: 2,
-      review: 3,
-      done: 4,
-      completed: 4,
-    }
-
-    return [...tasks].sort((left, right) => {
-      const leftStatus = (left.status ?? 'todo').toLowerCase()
-      const rightStatus = (right.status ?? 'todo').toLowerCase()
-
-      const leftRank = statusOrder[leftStatus] ?? 2
-      const rightRank = statusOrder[rightStatus] ?? 2
-
-      if (leftRank !== rightRank) {
-        return leftRank - rightRank
-      }
-
-      const leftDue = left.due_date ?? '9999-12-31'
-      const rightDue = right.due_date ?? '9999-12-31'
-
-      if (leftDue !== rightDue) {
-        return leftDue.localeCompare(rightDue)
-      }
-
-      return left.title.localeCompare(right.title)
-    })
-  }, [tasks])
-
   const [isTabLoading, setIsTabLoading] = useState(false)
 
   useEffect(() => {
@@ -204,7 +172,7 @@ export function ProjectDetailsSection({
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => onTabChange(tab.key as DetailsTab)}
+                onClick={() => tab.key === 'tasks' ? onNavigateToTasks?.() : onTabChange(tab.key as DetailsTab)}
                 className={`rounded-lg border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
                   activeTab === tab.key
                     ? 'border-cyan-300 bg-cyan-100 text-cyan-900'
@@ -277,10 +245,6 @@ export function ProjectDetailsSection({
               onOpenSaveSettingsConfirm={onOpenSaveSettingsConfirm}
               onOpenDeleteConfirm={onOpenDeleteConfirm}
             />
-          ) : null}
-
-          {!isTabLoading && activeTab === 'tasks' ? (
-            <ProjectTasksTab sortedTasks={sortedTasks} onTaskClick={onTaskClick} />
           ) : null}
 
           {!isTabLoading && activeTab === 'estimates' ? (

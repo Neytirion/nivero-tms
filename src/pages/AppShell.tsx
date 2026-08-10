@@ -6,7 +6,6 @@ import { ToastProvider } from '../shared/components'
 const baseNavItems = [
   { to: '/app/projects', label: 'Projects' },
   { to: '/app/dashboard', label: 'Dashboard' },
-  { to: '/app/tasks', label: 'Tasks' },
   { to: '/app/time-tracking', label: 'Time Tracking' },
 ]
 

@@ -4,7 +4,7 @@ import { assertProjectEditable } from '../helpers'
 import { isTaskClosedStatus } from '../../../shared/utils/task-status.ts'
 
 const PROJECT_FIELDS =
-  'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at'
+  'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at,updated_at'
 
 const TASK_FIELDS =
   'id,work_package_id,title,description,status,priority,assigned_to,created_by,estimate_hours,actual_hours,blocked_by_task_id,due_date,project_id,created_at'
@@ -118,9 +118,7 @@ export async function createProject(input: CreateProjectInput) {
       owner_id: userData.user.id,
       use_estimates: false,
     })
-    .select(
-      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at',
-    )
+    .select(PROJECT_FIELDS)
     .single()
 
   if (error) {
@@ -170,9 +168,7 @@ export async function updateProject(projectId: string, patch: UpdateProjectInput
     .from('projects')
     .update(updatePayload)
     .eq('id', projectId)
-    .select(
-      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at',
-    )
+    .select(PROJECT_FIELDS)
     .maybeSingle()
 
   if (error) {
@@ -210,9 +206,7 @@ export async function completeProject(projectId: string) {
       completed_at: new Date().toISOString(),
     })
     .eq('id', projectId)
-    .select(
-      'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at',
-    )
+    .select(PROJECT_FIELDS)
     .maybeSingle()
 
   if (error) {

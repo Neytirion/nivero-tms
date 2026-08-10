@@ -14,7 +14,7 @@ export interface Database {
           id: string
           name: string
           description: string | null
-          owner_id: string | null
+          owner_id: string
           customer_name: string | null
           project_manager_id: string | null
           start_date: string | null
@@ -29,12 +29,13 @@ export interface Database {
           deadline_at: string | null
           use_estimates: boolean
           created_at: string | null
+          updated_at: string
         }
         Insert: {
           id?: string
           name: string
           description?: string | null
-          owner_id?: string | null
+          owner_id: string
           customer_name?: string | null
           project_manager_id?: string | null
           start_date?: string | null
@@ -49,12 +50,13 @@ export interface Database {
           deadline_at?: string | null
           use_estimates?: boolean
           created_at?: string | null
+          updated_at?: string
         }
         Update: {
           id?: string
           name?: string
           description?: string | null
-          owner_id?: string | null
+          owner_id?: string
           customer_name?: string | null
           project_manager_id?: string | null
           start_date?: string | null
@@ -69,6 +71,7 @@ export interface Database {
           deadline_at?: string | null
           use_estimates?: boolean
           created_at?: string | null
+          updated_at?: string
         }
         Relationships: [
           {

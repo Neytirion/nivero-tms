@@ -22,6 +22,7 @@ export function createProjectPreview(overrides: Partial<ProjectPreview> = {}): P
     deadline_at: null,
     use_estimates: false,
     created_at: '2026-06-01T00:00:00.000Z',
+    updated_at: '2026-06-01T00:00:00.000Z',
     ...overrides,
   }
 }

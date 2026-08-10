@@ -31,6 +31,7 @@ export type ProjectPreview = Pick<
   | 'deadline_at'
   | 'use_estimates'
   | 'created_at'
+  | 'updated_at'
 >
 
 export type TaskPreview = Pick<

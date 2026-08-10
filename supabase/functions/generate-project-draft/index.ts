@@ -140,7 +140,7 @@ Deno.serve(async (req: Request) => {
 
   try {
     // Parse input
-    const { text } = await req.json()
+    const { text, currentDate, timezone } = await req.json()
 
     if (!text || typeof text !== 'string' || text.trim().length === 0) {
       return jsonResponse(
@@ -189,14 +189,17 @@ Deno.serve(async (req: Request) => {
     }
 
     // Call OpenAI
-    const today = new Date()
-    const todayIso = today.toISOString().split('T')[0]
+    const todayIso = (typeof currentDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(currentDate))
+      ? currentDate
+      : new Date().toISOString().split('T')[0]
+    const timezoneInfo = (typeof timezone === 'string' && timezone.length > 0) ? timezone : 'UTC'
     
     const prompt = `
 You are a project management assistant. Based on the user's description, generate a structured project plan.
 
-IMPORTANT: Today's date is ${todayIso}. When the user mentions a duration (e.g., "4 months", "3 weeks"), calculate dates from today.
+IMPORTANT: Today's date is ${todayIso} (user timezone: ${timezoneInfo}). When the user mentions a duration (e.g., "4 months", "3 weeks") or a relative time (e.g., "next week", "in 2 weeks"), calculate dates from today.
 For example, if the user says "4 months" and today is ${todayIso}, the end date should be approximately 4 months from today.
+If the user says "start next week", the start_date should be 7 days from ${todayIso}.
 
 Return ONLY valid JSON (no markdown, no extra text) matching this exact structure:
 {

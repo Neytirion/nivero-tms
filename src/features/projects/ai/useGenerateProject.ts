@@ -55,8 +55,11 @@ export function useGenerateProject() {
 
     try {
       // Call Supabase Edge Function
+      const now = new Date()
+      const currentDate = now.toLocaleDateString('en-CA') // YYYY-MM-DD in local timezone
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
       const { data, error } = await supabase.functions.invoke('generate-project-draft', {
-        body: { text: text.trim() },
+        body: { text: text.trim(), currentDate, timezone },
       })
 
       if (error) {

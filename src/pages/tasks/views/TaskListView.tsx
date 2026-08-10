@@ -6,6 +6,7 @@ interface TaskListViewProps {
   assigneeLabelByUserId: Record<string, string>
   workPackageLabelById: Record<string, string>
   dependencyLabelByTaskId: Record<string, string>
+  onTaskClick?: (taskId: string) => void
 }
 
 export function TaskListView({
@@ -13,6 +14,7 @@ export function TaskListView({
   assigneeLabelByUserId,
   workPackageLabelById,
   dependencyLabelByTaskId,
+  onTaskClick,
 }: TaskListViewProps) {
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200">
@@ -37,8 +39,12 @@ export function TaskListView({
             </tr>
           ) : (
             tasks.map((task) => (
-              <tr key={task.id} className="border-t border-slate-100">
-                <td className="px-3 py-2 text-slate-800">{task.title}</td>
+              <tr
+                key={task.id}
+                className={`border-t border-slate-100 ${onTaskClick ? 'cursor-pointer hover:bg-slate-50' : ''}`}
+                onClick={() => onTaskClick?.(task.id)}
+              >
+                <td className="px-3 py-2 font-medium text-slate-800">{task.title}</td>
                 <td className="px-3 py-2 text-slate-600">
                   {task.work_package_id ? workPackageLabelById[task.work_package_id] ?? task.work_package_id : 'Not linked'}
                 </td>

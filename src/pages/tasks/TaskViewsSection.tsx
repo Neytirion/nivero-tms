@@ -115,6 +115,7 @@ export function TaskViewsSection({
           assigneeLabelByUserId={assigneeLabelByUserId}
           workPackageLabelById={workPackageLabelById}
           dependencyLabelByTaskId={dependencyLabelByTaskId}
+          onTaskClick={onTaskClick}
         />
       ) : null}
 

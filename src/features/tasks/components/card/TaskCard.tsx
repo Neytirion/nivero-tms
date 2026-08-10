@@ -75,18 +75,16 @@ export function TaskCard({
 
   return (
     <article
-      className={`rounded-xl border p-3 shadow-sm ${
+      onClick={() => onTaskClick?.(task.id)}
+      className={`rounded-2xl border-3 p-3 shadow-sm transition-shadow ${onTaskClick ? 'cursor-pointer' : ''} ${
         isLocked
           ? 'border-amber-200 bg-amber-50/80 text-slate-500'
-          : 'border-slate-200 bg-white transition-colors hover:border-cyan-200'
+          : 'border-indigo-200 bg-white transition-colors hover:border-indigo-400 hover:shadow-md'
       }`}
     >
-      <button
-        onClick={() => onTaskClick?.(task.id)}
-        className="w-full text-left text-sm font-semibold text-slate-900 hover:text-blue-600 transition-colors"
-      >
+      <p className="w-full text-left text-sm font-semibold text-slate-900">
         {task.title}
-      </button>
+      </p>
       <p className="mt-1 text-xs text-slate-500">{task.description || 'No description'}</p>
       <div className="mt-2 flex flex-wrap items-center gap-1">
         <span
@@ -116,6 +114,7 @@ export function TaskCard({
           <select
             value={task.assigned_to ?? ''}
             onChange={(event) => void onAssignTask(task.id, event.target.value)}
+            onClick={(e) => e.stopPropagation()}
             className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-800 outline-none focus:border-slate-500"
           >
             <option value="">Unassigned</option>
@@ -140,6 +139,7 @@ export function TaskCard({
             min={projectStartDate || undefined}
             max={projectEndDate || undefined}
             onChange={(event) => void onUpdateDueDate(task.id, event.target.value)}
+            onClick={(e) => e.stopPropagation()}
             className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-800 outline-none focus:border-slate-500"
           />
         </div>
@@ -149,7 +149,7 @@ export function TaskCard({
         <div className="mt-2 flex flex-wrap gap-1">
           <button
             type="button"
-            onClick={() => onLogTime(task)}
+            onClick={(e) => { e.stopPropagation(); onLogTime(task) }}
             className="rounded-md bg-cyan-100 px-2 py-1 text-xs font-medium text-cyan-800 hover:bg-cyan-200"
           >
             Log time
@@ -157,7 +157,7 @@ export function TaskCard({
           {canDelete ? (
             <button
               type="button"
-              onClick={() => void onDelete(task.id)}
+              onClick={(e) => { e.stopPropagation(); void onDelete(task.id) }}
               className="rounded-md bg-rose-100 px-2 py-1 text-xs font-medium text-rose-700 hover:bg-rose-200"
             >
               Delete
@@ -169,7 +169,7 @@ export function TaskCard({
       <div className="mt-2 flex flex-wrap gap-1">
         <button
           type="button"
-          onClick={() => setIsCommentsOpen((prev) => !prev)}
+          onClick={(e) => { e.stopPropagation(); setIsCommentsOpen((prev) => !prev) }}
           className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-200"
         >
           {isCommentsOpen ? 'Hide comments' : `Comments (${commentsCount})`}

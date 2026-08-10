@@ -4,8 +4,8 @@ import { WorkspaceProvider, useWorkspace } from '../features/dashboard/workspace
 import { ToastProvider } from '../shared/components'
 
 const baseNavItems = [
-  { to: '/app/dashboard', label: 'Dashboard' },
   { to: '/app/projects', label: 'Projects' },
+  { to: '/app/dashboard', label: 'Dashboard' },
   { to: '/app/tasks', label: 'Tasks' },
   { to: '/app/time-tracking', label: 'Time Tracking' },
 ]

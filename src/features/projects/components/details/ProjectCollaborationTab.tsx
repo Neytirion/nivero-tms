@@ -172,8 +172,8 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
       <div className="flex gap-1 border-b border-slate-200 pb-0">
         {([
           { key: 'comments', label: 'Comments', count: comments.length },
-          { key: 'wiki',     label: 'Wiki' },
-          { key: 'files',    label: 'Files' },
+          { key: 'wiki',     label: 'Wiki',     count: null },
+          { key: 'files',    label: 'Files',    count: null },
           { key: 'activity', label: 'Activity', count: events.length },
         ] as const).map(({ key, label, count }) => (
           <button
@@ -187,7 +187,7 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
             }`}
           >
             {label}
-            {count !== undefined && count > 0 && (
+            {count != null && count > 0 && (
               <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
                 activeSection === key ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'
               }`}>{count}</span>

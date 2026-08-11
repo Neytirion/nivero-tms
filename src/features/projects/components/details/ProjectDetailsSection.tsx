@@ -138,21 +138,6 @@ export function ProjectDetailsSection({
             <p className="mt-1 text-xs text-cyan-700">Your role: {myRoleInSelectedProject}</p>
           ) : null}
         </div>
-        <button
-          type="button"
-          onClick={onOpenCompleteConfirm}
-          disabled={
-            isLoading ||
-            !selectedProjectId ||
-            !selectedProject ||
-            (incompleteTaskCount ?? 0) > 0 ||
-            (selectedProject.status ?? '').toLowerCase() === 'completed' ||
-            !canManageProject(selectedProjectId)
-          }
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Complete project
-        </button>
       </div>
 
       {!selectedProject ? (
@@ -218,9 +203,13 @@ export function ProjectDetailsSection({
               onSettingsUseEstimatesChange={onSettingsUseEstimatesChange}
               canEditSelectedProject={canEditSelectedProject}
               canDeleteSelectedProject={canDeleteSelectedProject}
+              canCompleteSelectedProject={selectedProjectId ? canManageProject(selectedProjectId) : false}
+              incompleteTaskCount={incompleteTaskCount}
+              isProjectCompleted={(selectedProject?.status ?? '').toLowerCase() === 'completed'}
               isLoading={isLoading}
               onOpenSaveSettingsConfirm={onOpenSaveSettingsConfirm}
               onOpenDeleteConfirm={onOpenDeleteConfirm}
+              onOpenCompleteConfirm={onOpenCompleteConfirm}
             />
           ) : null}
 

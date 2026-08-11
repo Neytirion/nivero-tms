@@ -15,9 +15,13 @@ interface ProjectSettingsTabProps {
   onSettingsUseEstimatesChange: (value: boolean) => void
   canEditSelectedProject: boolean
   canDeleteSelectedProject?: boolean
+  canCompleteSelectedProject?: boolean
+  incompleteTaskCount?: number
+  isProjectCompleted?: boolean
   isLoading: boolean
   onOpenSaveSettingsConfirm: () => void
   onOpenDeleteConfirm?: () => void
+  onOpenCompleteConfirm?: () => void
 }
 
 function parseIsoDateToUtcTime(value: string): number | null {
@@ -67,9 +71,13 @@ export function ProjectSettingsTab({
   onSettingsUseEstimatesChange,
   canEditSelectedProject,
   canDeleteSelectedProject,
+  canCompleteSelectedProject,
+  incompleteTaskCount,
+  isProjectCompleted,
   isLoading,
   onOpenSaveSettingsConfirm,
   onOpenDeleteConfirm,
+  onOpenCompleteConfirm,
 }: ProjectSettingsTabProps) {
   const durationDays = getDurationDays(settingsStartDate, settingsDeadline)
 
@@ -184,6 +192,16 @@ export function ProjectSettingsTab({
         >
           Save settings
         </button>
+        {onOpenCompleteConfirm ? (
+          <button
+            type="button"
+            onClick={onOpenCompleteConfirm}
+            disabled={isLoading || !canCompleteSelectedProject || (incompleteTaskCount ?? 0) > 0 || isProjectCompleted}
+            className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Complete project
+          </button>
+        ) : null}
         {onOpenDeleteConfirm ? (
           <button
             type="button"

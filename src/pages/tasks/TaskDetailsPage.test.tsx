@@ -72,7 +72,7 @@ describe('TaskDetailsPage', () => {
       state: { backTo: '/app/projects/p1?tab=tasks' },
     })
 
-    fireEvent.click(screen.getByRole('button', { name: /back to tasks/i }))
+    fireEvent.click(screen.getByRole('button', { name: /back to project/i }))
 
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toBe('/app/projects/p1?tab=tasks')

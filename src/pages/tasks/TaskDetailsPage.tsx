@@ -98,7 +98,7 @@ export function TaskDetailsPage() {
             onClick={() => navigate(backTo)}
             className="mb-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
           >
-            ← Back to Tasks
+            {backTo.startsWith('/app/projects/') ? '← Back to Project Details' : '← Back to Tasks'}
           </button>
           <h1 className="text-3xl font-bold text-slate-900">{task.title}</h1>
           <p className="mt-2 text-slate-600">{task.description || 'No description'}</p>

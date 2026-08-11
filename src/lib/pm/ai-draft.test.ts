@@ -18,6 +18,7 @@ const describeAiDraft = hasAiDraftEnv ? describe : describe.skip
  */
 describeAiDraft('createProjectFromAiDraft (atomic flow)', () => {
   let testAuthUser: string | null = null
+  const createdProjectIds: string[] = []
 
   beforeAll(async () => {
     const { error: signInError } = await supabase.auth.signInWithPassword({
@@ -40,6 +41,10 @@ describeAiDraft('createProjectFromAiDraft (atomic flow)', () => {
   afterAll(async () => {
     if (!hasAiDraftEnv) {
       return
+    }
+
+    if (createdProjectIds.length > 0) {
+      await supabase.from('projects').delete().in('id', createdProjectIds)
     }
 
     await supabase.auth.signOut()
@@ -106,6 +111,7 @@ describeAiDraft('createProjectFromAiDraft (atomic flow)', () => {
 
     // Execute atomic project creation
     const result = await createProjectFromAiDraft(draft)
+    if (result.projectId) createdProjectIds.push(result.projectId)
 
     // Verify result structure
     expect(result).toBeDefined()
@@ -240,6 +246,7 @@ describeAiDraft('createProjectFromAiDraft (atomic flow)', () => {
     }
 
     const result = await createProjectFromAiDraft(draftWithInvalidTasks)
+    if (result.projectId) createdProjectIds.push(result.projectId)
 
     // If creation succeeds, verify complete structure exists
     if (result.success) {

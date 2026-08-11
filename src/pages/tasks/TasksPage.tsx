@@ -1,7 +1,7 @@
 import { TaskLogTimeModal } from '../../features/tasks/components'
 import { TaskViewsSection } from '.'
 import { useTasksPageController } from './useTasksPageController'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 
 export function TasksPage() {
@@ -58,14 +58,16 @@ export function TasksPage() {
   }, [searchParams, resetPageState, setSearchParams])
 
   const visibleProjectMembers = selectedProject ? projectMembers : []
+  const [isMembersOpen, setIsMembersOpen] = useState(false)
 
   return (
     <div className="space-y-5">
       <section className="page-section bg-[linear-gradient(120deg,rgba(14,116,144,0.08),rgba(16,185,129,0.06))]">
         {selectedProjectId && (
           <button
+            type="button"
             onClick={() => navigate(`/app/projects/${selectedProjectId}`)}
-            className="mb-3 text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="mb-3 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
           >
             ← Back to Project Details
           </button>
@@ -78,41 +80,57 @@ export function TasksPage() {
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Your Project Role</p>
-        <p className="mt-1 text-base font-semibold text-slate-900">
-          {selectedProject && myRoleInSelectedProject
-            ? `${myRoleInSelectedProject} in ${selectedProject.name}`
-            : 'Select a project to see your role.'}
-        </p>
-      </section>
-
-      <section className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 px-3 py-2.5">
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-[11px] font-medium tracking-[0.12em] text-slate-500">Project Members</p>
-          {selectedProject ? (
-            <span className="rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-500">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Your Project Role</p>
+            <p className="mt-0.5 text-sm font-semibold text-slate-900 truncate">
+              {selectedProject && myRoleInSelectedProject
+                ? `${myRoleInSelectedProject} in ${selectedProject.name}`
+                : 'Select a project to see your role.'}
+            </p>
+          </div>
+          {selectedProject && (
+            <button
+              onClick={() => setIsMembersOpen((v) => !v)}
+              className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors"
+            >
+              <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5 6a5 5 0 0 1 10 0H3Z" />
+              </svg>
               {visibleProjectMembers.length}
-            </span>
-          ) : null}
+              <svg
+                className={`h-3 w-3 transition-transform ${isMembersOpen ? 'rotate-180' : ''}`}
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path d="M4.5 6.5 8 10l3.5-3.5" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
         </div>
 
-        {!selectedProject ? (
-          <p className="mt-1 text-xs text-slate-500">Select a project to see members.</p>
-        ) : visibleProjectMembers.length === 0 ? (
-          <p className="mt-1 text-xs text-slate-500">No members found in this project yet.</p>
-        ) : (
-          <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
-            {visibleProjectMembers.map((member) => {
-              const memberName = member.full_name || member.email || member.user_id || 'Unknown member'
-
-              return (
-                <li key={member.member_id} className="rounded-md border border-slate-200 bg-white/80 px-2.5 py-1.5">
-                  <p className="text-xs font-medium text-slate-700">{memberName}</p>
-                  <p className="text-[11px] uppercase tracking-wide text-slate-400">{member.role}</p>
-                </li>
-              )
-            })}
-          </ul>
+        {isMembersOpen && selectedProject && (
+          <div className="mt-3 border-t border-slate-100 pt-3">
+            {visibleProjectMembers.length === 0 ? (
+              <p className="text-xs text-slate-500">No members found in this project yet.</p>
+            ) : (
+              <ul className="flex flex-wrap gap-2">
+                {visibleProjectMembers.map((member) => {
+                  const memberName = member.full_name || member.email || member.user_id || 'Unknown'
+                  const initials = memberName.slice(0, 2).toUpperCase()
+                  return (
+                    <li key={member.member_id} className="flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-50 py-1 pl-1 pr-2.5">
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
+                        {initials}
+                      </span>
+                      <span className="text-xs font-medium text-slate-700">{memberName}</span>
+                      <span className="text-[10px] uppercase tracking-wide text-slate-400">{member.role}</span>
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </div>
         )}
       </section>
 

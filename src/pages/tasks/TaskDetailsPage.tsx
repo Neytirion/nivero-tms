@@ -95,8 +95,9 @@ export function TaskDetailsPage() {
         {/* Header */}
         <div className="mb-6">
           <button
+            type="button"
             onClick={() => navigate(backTo)}
-            className="mb-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="mb-4 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
           >
             {backTo.startsWith('/app/projects/') ? '← Back to Project Details' : '← Back to Tasks'}
           </button>

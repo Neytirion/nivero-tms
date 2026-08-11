@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ProjectDetailsSection } from '../../features/projects/components'
 import type { DetailsTab } from '../../features/projects/components'
@@ -83,13 +83,16 @@ export function ProjectDetailsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, projectId, selectedProjectId, projects])
 
+  const activeTabRef = useRef(activeTab)
+  activeTabRef.current = activeTab
+
   useEffect(() => {
     const requestedTab = parseTab(searchParams.get('tab'))
 
-    if (requestedTab && requestedTab !== activeTab) {
+    if (requestedTab && requestedTab !== activeTabRef.current) {
       setActiveTab(requestedTab)
     }
-  }, [activeTab, searchParams, setActiveTab])
+  }, [searchParams, setActiveTab])
 
   const canEditSelectedProject = selectedProject ? canManageProject(selectedProject.id) : false
 

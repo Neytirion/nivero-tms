@@ -65,7 +65,7 @@ export function ProjectDetailsSection({
   isLoading,
   canManageProject,
   activeTab,
-  onTabChange,
+  // onTabChange and onNavigateToTasks handled by ProjectDetailsPage sidebar
   settingsName,
   onSettingsNameChange,
   settingsDescription,
@@ -103,7 +103,6 @@ export function ProjectDetailsSection({
   onOpenDeleteConfirm,
   onOpenCompleteConfirm,
   onOpenSaveSettingsConfirm,
-  onNavigateToTasks,
 }: ProjectDetailsSectionProps) {
   const [isTabLoading, setIsTabLoading] = useState(false)
 

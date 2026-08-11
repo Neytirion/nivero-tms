@@ -175,3 +175,85 @@ export async function createTaskComment(input: { projectId: string; taskId: stri
 
   return createdComment
 }
+
+export async function getProjectComments(projectId: string) {
+  const { data, error } = await supabase
+    .from('comments')
+    .select('id,project_id,task_id,user_id,message,created_at')
+    .eq('project_id', projectId)
+    .is('task_id', null)
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data satisfies CommentPreview[]
+}
+
+export async function createProjectComment(input: { projectId: string; message: string }) {
+  await assertProjectEditable(input.projectId, 'create project comment')
+
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  if (userError) throw new Error(userError.message)
+  if (!userData.user) throw new Error('User is not authenticated')
+
+  const actorId = userData.user.id
+  const message = input.message.trim()
+
+  const { data, error } = await supabase
+    .from('comments')
+    .insert({ project_id: input.projectId, task_id: null, user_id: actorId, message })
+    .select('id,project_id,task_id,user_id,message,created_at')
+    .single()
+
+  if (error) throw new Error(error.message)
+
+  const createdComment = data satisfies CommentPreview
+
+  await recordProjectActivityEvent({
+    projectId: input.projectId,
+    actorUserId: actorId,
+    eventType: 'comment.created',
+    entityType: 'comment',
+    entityId: createdComment.id,
+    payload: { messagePreview: message.slice(0, 120) },
+  })
+
+  const mentionHandles = getMentionHandlesFromMessage(message)
+  if (mentionHandles.length > 0) {
+    const projectMembers = await getProjectMembers(input.projectId)
+    const mentionRows = mentionHandles.flatMap((handle) => {
+      const matched = projectMembers.filter((m) =>
+        buildMemberMentionCandidates(m).includes(handle),
+      )
+      return matched
+        .filter((m) => m.user_id && m.user_id !== actorId)
+        .map((m) => ({
+          project_id: input.projectId,
+          comment_id: createdComment.id,
+          task_id: null as string | null,
+          mentioned_user_id: m.user_id as string,
+          mentioned_by_user_id: actorId,
+        }))
+    })
+
+    if (mentionRows.length > 0) {
+      await supabase.from('comment_mentions').insert(mentionRows)
+      await Promise.all(
+        mentionRows.map((mention) =>
+          recordProjectActivityEvent({
+            projectId: input.projectId,
+            actorUserId: actorId,
+            eventType: 'comment.mentioned',
+            entityType: 'comment_mention',
+            entityId: createdComment.id,
+            payload: { commentId: createdComment.id, mentionedUserId: mention.mentioned_user_id },
+          }),
+        ),
+      )
+    }
+  }
+
+  return createdComment
+}

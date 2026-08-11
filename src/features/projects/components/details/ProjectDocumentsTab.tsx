@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { ConfirmDialog } from '../../../../shared/components'
 import {
   deleteProjectDocument,
   getProjectDocuments,
@@ -31,6 +32,7 @@ export function ProjectDocumentsTab({ projectId, canEdit, membersByUserId = {}, 
   const [isLoading, setIsLoading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
+  const [pendingDeleteDocument, setPendingDeleteDocument] = useState<ProjectDocumentPreview | null>(null)
 
   const loadDocuments = async () => {
     setIsLoading(true)
@@ -53,14 +55,19 @@ export function ProjectDocumentsTab({ projectId, canEdit, membersByUserId = {}, 
   }, [projectId])
 
   const deleteDocument = async (doc: ProjectDocumentPreview) => {
-    if (!window.confirm(`Delete "${doc.name}"? This cannot be undone.`)) return
+    setPendingDeleteDocument(doc)
+  }
+
+  const confirmDeleteDocument = async () => {
+    if (!pendingDeleteDocument) return
     setDeleteError(null)
     try {
-      await deleteProjectDocument(doc.id, doc.file_url)
-      setDocuments((prev) => prev.filter((d) => d.id !== doc.id))
+      await deleteProjectDocument(pendingDeleteDocument.id, pendingDeleteDocument.file_url)
+      setDocuments((prev) => prev.filter((d) => d.id !== pendingDeleteDocument.id))
     } catch (error) {
       setDeleteError(error instanceof Error ? error.message : 'Delete failed')
     }
+    setPendingDeleteDocument(null)
   }
 
   const uploadDocument = async (file: File | null) => {
@@ -140,6 +147,16 @@ export function ProjectDocumentsTab({ projectId, canEdit, membersByUserId = {}, 
           </a>
         ))}
       </div>
+
+      <ConfirmDialog
+        isOpen={Boolean(pendingDeleteDocument)}
+        title="Delete document"
+        description={`Delete "${pendingDeleteDocument?.name ?? ''}"? This cannot be undone.`}
+        confirmText="Delete"
+        tone="danger"
+        onCancel={() => setPendingDeleteDocument(null)}
+        onConfirm={confirmDeleteDocument}
+      />
     </div>
   )
 }

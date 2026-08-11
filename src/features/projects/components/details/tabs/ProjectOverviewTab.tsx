@@ -127,10 +127,10 @@ export function ProjectOverviewTab({
             <p className="mt-3 text-sm text-slate-500">No members yet</p>
           ) : (
             <ul className="mt-3 space-y-1.5">
-              {teamMemberNames.map((name) => {
+              {teamMemberNames.map((name, index) => {
                 const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
                 return (
-                  <li key={name} className="flex items-center gap-2.5">
+                  <li key={index} className="flex items-center gap-2.5">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[11px] font-bold text-blue-700">
                       {initials}
                     </span>

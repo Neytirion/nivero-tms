@@ -92,7 +92,9 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
   const [lastReadAt, setLastReadAt] = useState<string | null>(() =>
     localStorage.getItem(`collab_lastRead_${projectId}`),
   )
+  const [currentActivityPage, setCurrentActivityPage] = useState(1)
   const commentsEndRef = useRef<HTMLDivElement>(null)
+  const activityItemsPerPage = 10
 
   const membersByUserId = useMemo(
     () => members.reduce<Record<string, string>>((acc, m) => {
@@ -195,12 +197,19 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
           { key: 'comments', label: 'Comments', count: unreadCount > 0 ? unreadCount : null, isNew: unreadCount > 0 },
           { key: 'wiki',     label: 'Wiki',     count: null, isNew: false },
           { key: 'files',    label: 'Files',    count: null, isNew: false },
-          { key: 'activity', label: 'Activity', count: events.length > 0 ? events.length : null, isNew: false },
+          { key: 'activity', label: 'Activity', count: null, isNew: false },
         ] as const).map(({ key, label, count, isNew }) => (
           <button
             key={key}
             type="button"
-            onClick={() => key === 'comments' ? handleCommentsTabClick() : setActiveSection(key)}
+            onClick={() => {
+              if (key === 'comments') {
+                handleCommentsTabClick()
+              } else {
+                if (key === 'activity') setCurrentActivityPage(1)
+                setActiveSection(key)
+              }
+            }}
             className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
               activeSection === key
                 ? 'border-slate-900 text-slate-900'
@@ -382,22 +391,52 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
               ) : events.length === 0 ? (
                 <p className="text-sm text-slate-400">No activity yet</p>
               ) : (
-                events.map((event) => (
-                  <div key={event.id} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-500">
-                      {getActorLabel(event.actor_user_id, membersByUserId).slice(0, 2).toUpperCase()}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm text-slate-800">
-                        <span className="font-semibold text-slate-900">{getActorLabel(event.actor_user_id, membersByUserId)}</span>
-                        {' '}{formatActivityLabel(event)}
-                      </p>
-                      <p className="mt-0.5 text-[11px] text-slate-400">{timeAgo(event.created_at)}</p>
+                (() => {
+                  const startIdx = (currentActivityPage - 1) * activityItemsPerPage
+                  const endIdx = startIdx + activityItemsPerPage
+                  const paginatedEvents = events.slice(startIdx, endIdx)
+                  return paginatedEvents.map((event) => (
+                    <div key={event.id} className="flex items-start gap-3">
+                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-500">
+                        {getActorLabel(event.actor_user_id, membersByUserId).slice(0, 2).toUpperCase()}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-slate-800">
+                          <span className="font-semibold text-slate-900">{getActorLabel(event.actor_user_id, membersByUserId)}</span>
+                          {' '}{formatActivityLabel(event)}
+                        </p>
+                        <p className="mt-0.5 text-[11px] text-slate-400">{timeAgo(event.created_at)}</p>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))
+                })()
               )}
             </div>
+            {events.length > activityItemsPerPage && (
+              <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3">
+                <p className="text-xs text-slate-500">
+                  {events.length > 0 ? `${Math.min((currentActivityPage - 1) * activityItemsPerPage + 1, events.length)}–${Math.min(currentActivityPage * activityItemsPerPage, events.length)} of ${events.length}` : '0'}
+                </p>
+                <div className="flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentActivityPage(Math.max(1, currentActivityPage - 1))}
+                    disabled={currentActivityPage === 1}
+                    className="rounded border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentActivityPage(currentActivityPage + 1)}
+                    disabled={currentActivityPage * activityItemsPerPage >= events.length}
+                    className="rounded border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

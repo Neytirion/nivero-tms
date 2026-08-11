@@ -26,7 +26,6 @@ function formatFileSize(sizeBytes: number | null) {
 export function ProjectDocumentsTab({ projectId, canEdit }: ProjectDocumentsTabProps) {
   const [documents, setDocuments] = useState<ProjectDocumentPreview[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [status, setStatus] = useState('')
 
   const loadDocuments = async () => {
     setIsLoading(true)
@@ -34,9 +33,8 @@ export function ProjectDocumentsTab({ projectId, canEdit }: ProjectDocumentsTabP
     try {
       const data = await getProjectDocuments(projectId)
       setDocuments(data)
-      setStatus(`Loaded ${data.length} document(s)`)
     } catch (error) {
-      setStatus(error instanceof Error ? `Load documents error: ${error.message}` : 'Load documents error')
+      console.error('Load documents error:', error)
     }
 
     setIsLoading(false)
@@ -62,9 +60,8 @@ export function ProjectDocumentsTab({ projectId, canEdit }: ProjectDocumentsTabP
         file,
       })
       await loadDocuments()
-      setStatus(`Uploaded: ${file.name}`)
     } catch (error) {
-      setStatus(error instanceof Error ? `Upload error: ${error.message}` : 'Upload error')
+      console.error('Upload error:', error)
       setIsLoading(false)
     }
   }
@@ -87,8 +84,6 @@ export function ProjectDocumentsTab({ projectId, canEdit }: ProjectDocumentsTabP
           />
         </label>
       </div>
-
-      <p className="mt-2 text-xs text-slate-500">{status}</p>
 
       <div className="mt-3 space-y-2">
         {documents.length === 0 ? <p className="text-sm text-slate-500">No documents yet</p> : null}

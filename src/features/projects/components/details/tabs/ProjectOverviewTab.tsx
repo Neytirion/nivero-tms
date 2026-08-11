@@ -95,8 +95,8 @@ export function ProjectOverviewTab({
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Risk</p>
           <p className={`mt-1 text-2xl font-bold capitalize ${
-            deriveRisk(selectedProject) === 'high' ? 'text-rose-600' :
-            deriveRisk(selectedProject) === 'medium' ? 'text-amber-500' : 'text-emerald-600'
+            deriveRisk(selectedProject) === 'Red' ? 'text-rose-600' :
+            deriveRisk(selectedProject) === 'Amber' ? 'text-amber-500' : 'text-emerald-600'
           }`}>{deriveRisk(selectedProject)}</p>
           <p className="mt-2 text-xs text-slate-500">{selectedProject.status ?? 'active'}</p>
         </div>

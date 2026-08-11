@@ -16,17 +16,24 @@ interface ProjectCollaborationTabProps {
 
 function formatActivityLabel(event: ActivityEventPreview) {
   switch (event.event_type) {
-    case 'comment.created':
-      return 'Comment added'
-    case 'comment.mentioned':
-      return 'Mentioned a teammate'
-    case 'document.uploaded':
-      return 'Document uploaded'
-    case 'wiki.updated':
-      return 'Wiki updated'
-    default:
-      return event.event_type
+    case 'comment.created': return 'added a comment'
+    case 'comment.mentioned': return 'mentioned a teammate'
+    case 'document.uploaded': return 'uploaded a document'
+    case 'wiki.updated': return 'updated the wiki'
+    default: return event.event_type
   }
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  const days = Math.floor(hrs / 24)
+  if (days < 7) return `${days}d ago`
+  return new Date(dateStr).toLocaleDateString()
 }
 
 function getActorLabel(
@@ -42,7 +49,6 @@ function getActorLabel(
 
 export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollaborationTabProps) {
   const [isLoading, setIsLoading] = useState(false)
-  const [status, setStatus] = useState('')
   const [members, setMembers] = useState<ProjectMemberListItem[]>([])
   const [events, setEvents] = useState<ActivityEventPreview[]>([])
   const [wikiTitle, setWikiTitle] = useState('Project Wiki')
@@ -58,23 +64,6 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
       }, {}),
     [members],
   )
-
-  const mentionHints = useMemo(() => {
-    return members
-      .map((member) => {
-        if (member.email) {
-          return `@${member.email.split('@')[0]}`
-        }
-
-        if (member.full_name) {
-          return `@${member.full_name.toLowerCase().replace(/\s+/g, '.')}`
-        }
-
-        return null
-      })
-      .filter((item): item is string => Boolean(item))
-      .slice(0, 6)
-  }, [members])
 
   const loadData = async () => {
     setIsLoading(true)
@@ -97,9 +86,8 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
         setWikiContent('')
       }
 
-      setStatus('Collaboration data loaded')
     } catch (error) {
-      setStatus(error instanceof Error ? `Collaboration load error: ${error.message}` : 'Collaboration load error')
+      console.error('Collaboration load error:', error)
     }
 
     setIsLoading(false)
@@ -125,9 +113,8 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
         content: wikiContent,
       })
       await loadData()
-      setStatus('Wiki saved')
     } catch (error) {
-      setStatus(error instanceof Error ? `Wiki save error: ${error.message}` : 'Wiki save error')
+      console.error('Wiki save error:', error)
       setIsLoading(false)
     }
   }
@@ -147,15 +134,7 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
           </button>
         </div>
 
-        <div className="mt-2 space-y-2">
-          <input
-            type="text"
-            value={wikiTitle}
-            onChange={(event) => setWikiTitle(event.target.value)}
-            disabled={!canEdit || isLoading}
-            placeholder="Wiki title"
-            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-          />
+        <div className="mt-2">
           <textarea
             value={wikiContent}
             onChange={(event) => setWikiContent(event.target.value)}
@@ -182,17 +161,13 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
                 <span className="font-semibold text-slate-900">{getActorLabel(event.actor_user_id, membersByUserId)}</span>{' '}
                 {formatActivityLabel(event)}
               </p>
-              <p className="mt-0.5 text-[11px] text-slate-500">{new Date(event.created_at).toLocaleString()}</p>
+              <p className="mt-0.5 text-[11px] text-slate-400">{timeAgo(event.created_at)}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="rounded-xl border border-cyan-100 bg-cyan-50 px-3 py-2 text-xs text-cyan-800">
-        Mentions: use handles like {mentionHints.length > 0 ? mentionHints.join(', ') : '@teammate'} in task comments.
-      </div>
 
-      <p className="text-xs text-slate-500">{status}</p>
     </div>
   )
 }

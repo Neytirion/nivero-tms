@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ProjectDetailsSection } from '../../features/projects/components'
 import type { DetailsTab } from '../../features/projects/components'
@@ -84,7 +84,9 @@ export function ProjectDetailsPage() {
   }, [navigate, projectId, selectedProjectId, projects])
 
   const activeTabRef = useRef(activeTab)
-  activeTabRef.current = activeTab
+  useLayoutEffect(() => {
+    activeTabRef.current = activeTab
+  })
 
   useEffect(() => {
     const requestedTab = parseTab(searchParams.get('tab'))

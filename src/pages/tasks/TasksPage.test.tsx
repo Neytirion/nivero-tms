@@ -225,6 +225,9 @@ describe('TasksPage', () => {
       </MemoryRouter>,
     )
 
+    expect(await screen.findByRole('button', { name: /toggle members/i })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /toggle members/i }))
+
     expect(await screen.findByText('Alice Johnson')).toBeInTheDocument()
     expect(screen.getByText('bob@example.com')).toBeInTheDocument()
     expect(screen.getByText('owner')).toBeInTheDocument()

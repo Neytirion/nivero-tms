@@ -91,6 +91,7 @@ export function TasksPage() {
           </div>
           {selectedProject && (
             <button
+              aria-label="Toggle members"
               onClick={() => setIsMembersOpen((v) => !v)}
               className="flex shrink-0 items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-medium text-slate-600 hover:bg-slate-100 transition-colors"
             >

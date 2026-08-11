@@ -89,6 +89,9 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
   const [wikiDraft, setWikiDraft] = useState('')
   const [isEditingWiki, setIsEditingWiki] = useState(false)
   const [isSavingWiki, setIsSavingWiki] = useState(false)
+  const [lastReadAt, setLastReadAt] = useState<string | null>(() =>
+    localStorage.getItem(`collab_lastRead_${projectId}`),
+  )
   const commentsEndRef = useRef<HTMLDivElement>(null)
 
   const membersByUserId = useMemo(
@@ -128,6 +131,9 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
   }, [projectId])
 
   const deleteCommentHandler = async (commentId: string) => {
+    if (!window.confirm('Are you sure you want to delete this comment?')) {
+      return
+    }
     try {
       await deleteComment(commentId)
       setComments((prev) => prev.filter((c) => c.id !== commentId))
@@ -166,20 +172,35 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
 
   const [activeSection, setActiveSection] = useState<'comments' | 'wiki' | 'files' | 'activity'>('comments')
 
+  const unreadCount = lastReadAt
+    ? comments.filter((c) => c.created_at > lastReadAt && c.user_id !== currentUserId).length
+    : 0
+
+  const markAsRead = () => {
+    const now = new Date().toISOString()
+    localStorage.setItem(`collab_lastRead_${projectId}`, now)
+    setLastReadAt(now)
+  }
+
+  const handleCommentsTabClick = () => {
+    setActiveSection('comments')
+    markAsRead()
+  }
+
   return (
     <div className="mt-4">
       {/* Inner sub-nav */}
       <div className="flex gap-1 border-b border-slate-200 pb-0">
         {([
-          { key: 'comments', label: 'Comments', count: comments.length },
-          { key: 'wiki',     label: 'Wiki',     count: null },
-          { key: 'files',    label: 'Files',    count: null },
-          { key: 'activity', label: 'Activity', count: events.length },
-        ] as const).map(({ key, label, count }) => (
+          { key: 'comments', label: 'Comments', count: unreadCount > 0 ? unreadCount : null, isNew: unreadCount > 0 },
+          { key: 'wiki',     label: 'Wiki',     count: null, isNew: false },
+          { key: 'files',    label: 'Files',    count: null, isNew: false },
+          { key: 'activity', label: 'Activity', count: events.length > 0 ? events.length : null, isNew: false },
+        ] as const).map(({ key, label, count, isNew }) => (
           <button
             key={key}
             type="button"
-            onClick={() => setActiveSection(key)}
+            onClick={() => key === 'comments' ? handleCommentsTabClick() : setActiveSection(key)}
             className={`flex items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
               activeSection === key
                 ? 'border-slate-900 text-slate-900'
@@ -189,60 +210,74 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
             {label}
             {count != null && count > 0 && (
               <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-                activeSection === key ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'
+                isNew ? 'bg-blue-600 text-white' : activeSection === key ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'
               }`}>{count}</span>
             )}
           </button>
         ))}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 flex flex-col" style={{ height: 'calc(100vh - 300px)' }}>
         {/* Comments */}
         {activeSection === 'comments' && (
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <div className="max-h-96 space-y-3 overflow-y-auto">
+          <div className="relative flex flex-1 flex-col rounded-xl border border-slate-200 bg-white">
+            <div className="flex-1 overflow-y-auto space-y-2 p-3 pb-48">
               {isLoading ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   {[1, 2].map((i) => (
                     <div key={i} className="flex gap-2.5">
-                      <div className="h-7 w-7 animate-pulse rounded-full bg-slate-200" />
+                      <div className="h-6 w-6 animate-pulse rounded-full bg-slate-200" />
                       <div className="flex-1 space-y-1 pt-1">
-                        <div className="h-3 w-1/3 animate-pulse rounded bg-slate-200" />
-                        <div className="h-3 w-2/3 animate-pulse rounded bg-slate-200" />
+                        <div className="h-2.5 w-1/3 animate-pulse rounded bg-slate-200" />
+                        <div className="h-2.5 w-2/3 animate-pulse rounded bg-slate-200" />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : comments.length === 0 ? (
-                <p className="text-sm text-slate-400">No comments yet. Be the first to comment.</p>
+                <p className="text-sm text-slate-400">No comments yet.</p>
               ) : (
                 comments.map((c) => {
+                  const isOwn = c.user_id === currentUserId
                   const name = getActorLabel(c.user_id, membersByUserId)
                   const initials = name.slice(0, 2).toUpperCase()
+                  const isUnread = lastReadAt ? c.created_at > lastReadAt && !isOwn : false
                   return (
-                    <div key={c.id} className="group flex gap-2.5">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
-                        {initials}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-xs font-semibold text-slate-800">{name}</span>
-                          <span className="text-[10px] text-slate-400">{timeAgo(c.created_at)}</span>
-                        </div>
-                        <p className="mt-0.5 text-sm text-slate-700"><CommentText message={c.message} /></p>
-                      </div>
-                      {c.user_id === currentUserId && (
-                        <button
-                          type="button"
-                          onClick={() => void deleteCommentHandler(c.id)}
-                          className="ml-1 shrink-0 rounded p-1 text-slate-300 opacity-0 transition hover:bg-slate-100 hover:text-rose-500 group-hover:opacity-100"
-                          title="Delete comment"
-                        >
-                          <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M6 2h4a1 1 0 0 1 1 1H5a1 1 0 0 1 1-1ZM3 4h10l-1 10H4L3 4Zm3 2v6h1V6H6Zm3 0v6h1V6H9Z" />
-                          </svg>
-                        </button>
+                    <div key={c.id} className={`group flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}>
+                      {!isOwn && (
+                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[9px] font-bold text-slate-500">
+                          {initials}
+                        </span>
                       )}
+                      <div className={`min-w-0 max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
+                        {!isOwn && (
+                          <div className="mb-0.5 flex items-baseline gap-1.5">
+                            <span className="text-[11px] font-semibold text-slate-600">{name}</span>
+                            <span className="text-[10px] text-slate-400">{timeAgo(c.created_at)}</span>
+                            {isUnread && <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />}
+                          </div>
+                        )}
+                        <div className={`relative rounded-2xl px-3 py-1.5 text-sm ${
+                          isOwn
+                            ? 'rounded-tr-sm bg-slate-900 text-white'
+                            : 'rounded-tl-sm bg-slate-100 text-slate-800'
+                        }`}>
+                          <CommentText message={c.message} />
+                          {isOwn && (
+                            <button
+                              type="button"
+                              onClick={() => void deleteCommentHandler(c.id)}
+                              className="absolute -left-6 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-300 opacity-0 transition hover:text-rose-500 group-hover:opacity-100"
+                              title="Delete"
+                            >
+                              <svg className="h-3 w-3" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M6 2h4a1 1 0 0 1 1 1H5a1 1 0 0 1 1-1ZM3 4h10l-1 10H4L3 4Zm3 2v6h1V6H6Zm3 0v6h1V6H9Z" />
+                              </svg>
+                            </button>
+                          )}
+                        </div>
+                        {isOwn && <span className="mt-0.5 text-[10px] text-slate-400">{timeAgo(c.created_at)}</span>}
+                      </div>
                     </div>
                   )
                 })
@@ -250,12 +285,12 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
               <div ref={commentsEndRef} />
             </div>
 
-            <div className="mt-3 border-t border-slate-100 pt-3">
+            <div className="absolute bottom-0 left-0 right-0 flex-shrink-0 border-t border-slate-100 bg-white p-3">
               <textarea
                 value={commentDraft}
                 onChange={(e) => setCommentDraft(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) void submitComment() }}
-                placeholder="Write a comment… (Ctrl+Enter to send)"
+                onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); void submitComment() } }}
+                placeholder="Write a comment… (Enter to send, Shift+Enter for new line)"
                 rows={2}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
               />
@@ -276,8 +311,8 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
 
         {/* Wiki */}
         {activeSection === 'wiki' && (
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-col rounded-xl border border-slate-200 bg-white p-4">
+            <div className="flex shrink-0 items-center justify-between gap-2">
               <p className="text-xs text-slate-500">Project knowledge, decisions, links, and runbooks.</p>
               <div className="flex gap-1.5">
                 {isEditingWiki ? (
@@ -301,35 +336,39 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
               </div>
             </div>
 
-            {isLoading ? (
-              <div className="mt-3 space-y-2">
-                <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
-                <div className="h-3 w-4/5 animate-pulse rounded bg-slate-200" />
-                <div className="h-3 w-3/5 animate-pulse rounded bg-slate-200" />
-              </div>
-            ) : isEditingWiki ? (
-              <textarea value={wikiDraft} onChange={(e) => setWikiDraft(e.target.value)}
-                disabled={isSavingWiki} rows={14}
-                placeholder="Write project knowledge, decisions, links, and runbooks…"
-                className="mt-3 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:opacity-60" />
-            ) : wikiContent ? (
-              <p className="mt-3 whitespace-pre-wrap text-sm text-slate-700">{wikiContent}</p>
-            ) : (
-              <p className="mt-3 text-sm italic text-slate-400">No wiki content yet.{canEdit ? ' Click Edit to start.' : ''}</p>
-            )}
+            <div className="flex-1 overflow-y-auto">
+              {isLoading ? (
+                <div className="mt-3 space-y-2">
+                  <div className="h-3 w-full animate-pulse rounded bg-slate-200" />
+                  <div className="h-3 w-4/5 animate-pulse rounded bg-slate-200" />
+                  <div className="h-3 w-3/5 animate-pulse rounded bg-slate-200" />
+                </div>
+              ) : isEditingWiki ? (
+                <textarea value={wikiDraft} onChange={(e) => setWikiDraft(e.target.value)}
+                  disabled={isSavingWiki}
+                  placeholder="Write project knowledge, decisions, links, and runbooks…"
+                  className="mt-3 w-full h-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:opacity-60" />
+              ) : wikiContent ? (
+                <p className="mt-3 whitespace-pre-wrap text-sm text-slate-700">{wikiContent}</p>
+              ) : (
+                <p className="mt-3 text-sm italic text-slate-400">No wiki content yet.{canEdit ? ' Click Edit to start.' : ''}</p>
+              )}
+            </div>
           </div>
         )}
 
         {/* Files */}
         {activeSection === 'files' && (
-          <ProjectDocumentsTab projectId={projectId} canEdit={canEdit} />
+          <div className="rounded-xl border border-slate-200 bg-white">
+            <ProjectDocumentsTab projectId={projectId} canEdit={canEdit} membersByUserId={membersByUserId} currentUserId={currentUserId} />
+          </div>
         )}
 
         {/* Activity */}
         {activeSection === 'activity' && (
-          <div className="rounded-xl border border-slate-200 bg-white p-4">
-            <p className="text-xs text-slate-500">Recent actions in this project</p>
-            <div className="mt-3 space-y-3">
+          <div className="flex flex-col rounded-xl border border-slate-200 bg-white p-4">
+            <p className="shrink-0 text-xs text-slate-500">Recent actions in this project</p>
+            <div className="mt-3 flex-1 overflow-y-auto space-y-3">
               {isLoading ? (
                 [1, 2, 3].map((i) => (
                   <div key={i} className="flex items-center gap-3">

@@ -134,21 +134,6 @@ export function ProjectDetailsPage() {
             </div>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => setIsCompleteConfirmOpen(true)}
-          disabled={
-            isLoading ||
-            !selectedProjectId ||
-            !selectedProject ||
-            (incompleteTaskCount ?? 0) > 0 ||
-            (selectedProject?.status ?? '').toLowerCase() === 'completed' ||
-            !canManageProject(selectedProjectId ?? '')
-          }
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Complete project
-        </button>
       </div>
 
       {/* Content + sidebar nav */}

@@ -96,3 +96,19 @@ export async function uploadProjectDocument(input: UploadProjectDocumentInput) {
 
   return toDocumentPreviewWithAccessUrl(data satisfies ProjectDocumentPreview)
 }
+
+export async function deleteProjectDocument(documentId: string, filePath: string) {
+  // filePath is the storage object name (not a full URL)
+  if (!filePath.startsWith('http://') && !filePath.startsWith('https://')) {
+    await supabase.storage.from('project-documents').remove([filePath])
+  }
+
+  const { error } = await supabase
+    .from('project_documents')
+    .delete()
+    .eq('id', documentId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}

@@ -162,30 +162,6 @@ export function ProjectDetailsSection({
         </p>
       ) : (
         <>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {[
-              { key: 'overview', label: 'Overview' },
-              { key: 'collaboration', label: 'Collaboration' },
-              { key: 'tasks', label: 'Tasks' },
-              { key: 'estimates', label: 'Estimates' },
-              { key: 'team', label: 'Team Access' },
-              { key: 'settings', label: 'Settings' },
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                type="button"
-                onClick={() => tab.key === 'tasks' ? onNavigateToTasks?.() : onTabChange(tab.key as DetailsTab)}
-                className={`rounded-lg border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
-                  activeTab === tab.key
-                    ? 'border-cyan-300 bg-cyan-100 text-cyan-900'
-                    : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
           {isTabLoading ? (
             <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
               Loading module...

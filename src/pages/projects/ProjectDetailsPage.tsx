@@ -7,11 +7,17 @@ import { useProjectsPageController } from './useProjectsPageController'
 
 const detailsTabs: DetailsTab[] = ['overview', 'collaboration', 'tasks', 'estimates', 'team', 'settings']
 
-function parseTab(value: string | null): DetailsTab | null {
-  if (!value) {
-    return null
-  }
+const tabConfig: { key: DetailsTab | 'tasks'; label: string; icon: string }[] = [
+  { key: 'overview',      label: 'Overview',      icon: '▦' },
+  { key: 'collaboration', label: 'Collaboration',  icon: '◈' },
+  { key: 'tasks',         label: 'Tasks',          icon: '✓' },
+  { key: 'estimates',     label: 'Estimates',      icon: '≈' },
+  { key: 'team',          label: 'Team Access',    icon: '◉' },
+  { key: 'settings',      label: 'Settings',       icon: '⚙' },
+]
 
+function parseTab(value: string | null): DetailsTab | null {
+  if (!value) return null
   return detailsTabs.includes(value as DetailsTab) ? (value as DetailsTab) : null
 }
 
@@ -66,20 +72,13 @@ export function ProjectDetailsPage() {
       navigate('/app/projects', { replace: true })
       return
     }
-
-    // If project was deleted or doesn't exist in the projects list, redirect to projects page
     const projectExists = projects.some((p) => p.id === projectId)
     if (!projectExists) {
       navigate('/app/projects', { replace: true })
       return
     }
-
-    if (selectedProjectId === projectId) {
-      return
-    }
-
+    if (selectedProjectId === projectId) return
     void selectProject(projectId)
-    // selectProject reference is intentionally omitted to avoid rerun loops from unstable function identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigate, projectId, selectedProjectId, projects])
 
@@ -90,7 +89,6 @@ export function ProjectDetailsPage() {
 
   useEffect(() => {
     const requestedTab = parseTab(searchParams.get('tab'))
-
     if (requestedTab && requestedTab !== activeTabRef.current) {
       setActiveTab(requestedTab)
     }
@@ -98,82 +96,151 @@ export function ProjectDetailsPage() {
 
   const canEditSelectedProject = selectedProject ? canManageProject(selectedProject.id) : false
 
+  const handleTabClick = (key: string) => {
+    if (key === 'tasks') {
+      navigate('/app/tasks')
+      return
+    }
+    const tab = key as DetailsTab
+    setActiveTab(tab)
+    setSearchParams(tab === 'overview' ? {} : { tab })
+  }
+
   return (
-    <div className="space-y-5">
-      <section className="page-section bg-[linear-gradient(120deg,rgba(14,116,144,0.08),rgba(2,132,199,0.03))]">
-        <div className="flex flex-wrap items-start gap-3">
-          <div className="space-y-2">
-            <button
-              type="button"
-              onClick={() => navigate('/app/projects')}
-              className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-            >
-              Back to projects
-            </button>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Projects</p>
-            <h2 className="mt-1 text-2xl font-bold text-slate-900">Project Details</h2>
-            <p className="mt-2 text-sm text-slate-600">Review project health, tasks, estimates, collaboration, team access, and settings.</p>
+    <div className="space-y-4">
+      {/* Compact header */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-1">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/app/projects')}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            ← Projects
+          </button>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">
+              {selectedProject ? selectedProject.name : '—'}
+            </h1>
+            <div className="flex items-center gap-2">
+              {selectedProject && (
+                <span className="text-xs text-slate-400 capitalize">{selectedProject.status ?? 'active'}</span>
+              )}
+              {myRoleInSelectedProject && (
+                <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-cyan-800">
+                  {myRoleInSelectedProject}
+                </span>
+              )}
+            </div>
           </div>
         </div>
-      </section>
+        <button
+          type="button"
+          onClick={() => setIsCompleteConfirmOpen(true)}
+          disabled={
+            isLoading ||
+            !selectedProjectId ||
+            !selectedProject ||
+            (incompleteTaskCount ?? 0) > 0 ||
+            (selectedProject?.status ?? '').toLowerCase() === 'completed' ||
+            !canManageProject(selectedProjectId ?? '')
+          }
+          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          Complete project
+        </button>
+      </div>
 
-      <ProjectDetailsSection
-        selectedProject={selectedProject}
-        selectedProjectId={selectedProjectId}
-        myRoleInSelectedProject={myRoleInSelectedProject}
-        isLoading={isLoading}
-        canManageProject={canManageProject}
-        activeTab={activeTab}
-        onTabChange={(tab) => {
-          setActiveTab(tab)
-          setSearchParams(tab === 'overview' ? {} : { tab })
-        }}
-        settingsName={currentSettingsDraft.name}
-        onSettingsNameChange={(value) => updateSettingsDraft({ name: value })}
-        settingsDescription={currentSettingsDraft.description}
-        onSettingsDescriptionChange={(value) => updateSettingsDraft({ description: value })}
-        settingsCustomerName={currentSettingsDraft.customerName}
-        onSettingsCustomerNameChange={(value) => updateSettingsDraft({ customerName: value })}
-        settingsStartDate={currentSettingsDraft.startDate}
-        onSettingsStartDateChange={(value) => updateSettingsDraft({ startDate: value })}
-        settingsDeadline={currentSettingsDraft.deadline}
-        onSettingsDeadlineChange={(value) => updateSettingsDraft({ deadline: value })}
-        settingsBudgetAmount={currentSettingsDraft.budgetAmount}
-        onSettingsBudgetAmountChange={(value) => updateSettingsDraft({ budgetAmount: value })}
-        settingsUseEstimates={currentSettingsDraft.useEstimates}
-        onSettingsUseEstimatesChange={(value) => updateSettingsDraft({ useEstimates: value })}
-        canEditSelectedProject={canEditSelectedProject}
-        canDeleteSelectedProject={canDeleteSelectedProject}
-        canManageMemberRoles={canManageMemberRoles}
-        tasks={tasks}
-        incompleteTaskCount={incompleteTaskCount}
-        teamMemberNames={teamMemberNames}
-        projectManagerName={projectManagerName}
-        canInviteToSelectedProject={canInviteToSelectedProject}
-        memberEmail={memberEmail}
-        onMemberEmailChange={setMemberEmail}
-        memberRole={effectiveMemberRole}
-        onMemberRoleChange={setMemberRole}
-        canAssignAdminRole={canAssignAdminRole}
-        canAssignManagerRole={canAssignManagerRole}
-        onInviteMember={inviteMemberHandler}
-        projectMembers={projectMembers}
-        pendingRoleByUserId={pendingRoleByUserId}
-        onPendingRoleChange={updatePendingRole}
-        selectedProjectOwnerId={selectedProject?.owner_id}
-        onSaveRole={updateMemberRoleHandler}
-        onOpenDeleteConfirm={() => setIsDeleteConfirmOpen(true)}
-        onOpenCompleteConfirm={() => setIsCompleteConfirmOpen(true)}
-        onOpenSaveSettingsConfirm={() => setIsSaveSettingsConfirmOpen(true)}
-        onNavigateToTasks={() => navigate('/app/tasks')}
-        onTaskClick={(taskId) =>
-          navigate(`/app/tasks/${taskId}`, {
-            state: {
-              backTo: `/app/projects/${projectId}?tab=tasks`,
-            },
-          })
-        }
-      />
+      {/* Content + sidebar nav */}
+      <div className="flex gap-4 items-start">
+        {/* Content */}
+        <div className="min-w-0 flex-1">
+          <ProjectDetailsSection
+            selectedProject={selectedProject}
+            selectedProjectId={selectedProjectId}
+            myRoleInSelectedProject={myRoleInSelectedProject}
+            isLoading={isLoading}
+            canManageProject={canManageProject}
+            activeTab={activeTab}
+            onTabChange={(tab) => {
+              setActiveTab(tab)
+              setSearchParams(tab === 'overview' ? {} : { tab })
+            }}
+            settingsName={currentSettingsDraft.name}
+            onSettingsNameChange={(value) => updateSettingsDraft({ name: value })}
+            settingsDescription={currentSettingsDraft.description}
+            onSettingsDescriptionChange={(value) => updateSettingsDraft({ description: value })}
+            settingsCustomerName={currentSettingsDraft.customerName}
+            onSettingsCustomerNameChange={(value) => updateSettingsDraft({ customerName: value })}
+            settingsStartDate={currentSettingsDraft.startDate}
+            onSettingsStartDateChange={(value) => updateSettingsDraft({ startDate: value })}
+            settingsDeadline={currentSettingsDraft.deadline}
+            onSettingsDeadlineChange={(value) => updateSettingsDraft({ deadline: value })}
+            settingsBudgetAmount={currentSettingsDraft.budgetAmount}
+            onSettingsBudgetAmountChange={(value) => updateSettingsDraft({ budgetAmount: value })}
+            settingsUseEstimates={currentSettingsDraft.useEstimates}
+            onSettingsUseEstimatesChange={(value) => updateSettingsDraft({ useEstimates: value })}
+            canEditSelectedProject={canEditSelectedProject}
+            canDeleteSelectedProject={canDeleteSelectedProject}
+            canManageMemberRoles={canManageMemberRoles}
+            tasks={tasks}
+            incompleteTaskCount={incompleteTaskCount}
+            teamMemberNames={teamMemberNames}
+            projectManagerName={projectManagerName}
+            canInviteToSelectedProject={canInviteToSelectedProject}
+            memberEmail={memberEmail}
+            onMemberEmailChange={setMemberEmail}
+            memberRole={effectiveMemberRole}
+            onMemberRoleChange={setMemberRole}
+            canAssignAdminRole={canAssignAdminRole}
+            canAssignManagerRole={canAssignManagerRole}
+            onInviteMember={inviteMemberHandler}
+            projectMembers={projectMembers}
+            pendingRoleByUserId={pendingRoleByUserId}
+            onPendingRoleChange={updatePendingRole}
+            selectedProjectOwnerId={selectedProject?.owner_id}
+            onSaveRole={updateMemberRoleHandler}
+            onOpenDeleteConfirm={() => setIsDeleteConfirmOpen(true)}
+            onOpenCompleteConfirm={() => setIsCompleteConfirmOpen(true)}
+            onOpenSaveSettingsConfirm={() => setIsSaveSettingsConfirmOpen(true)}
+            onNavigateToTasks={() => navigate('/app/tasks')}
+            onTaskClick={(taskId) =>
+              navigate(`/app/tasks/${taskId}`, {
+                state: { backTo: `/app/projects/${projectId}?tab=tasks` },
+              })
+            }
+          />
+        </div>
+
+        {/* Right sidebar nav */}
+        <nav className="sticky top-4 w-44 shrink-0 rounded-xl border border-slate-200 bg-white py-2">
+          <p className="px-3 pb-1.5 pt-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Navigate</p>
+          {tabConfig.map(({ key, label, icon }) => {
+            const isActive = key !== 'tasks' && activeTab === key
+            const isExternal = key === 'tasks'
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={() => handleTabClick(key)}
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-left text-sm transition-colors ${
+                  isActive
+                    ? 'bg-slate-100 font-semibold text-slate-900'
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'
+                }`}
+              >
+                <span className="w-4 shrink-0 text-center text-sm leading-none">{icon}</span>
+                <span className="flex-1">{label}</span>
+                {isExternal && (
+                  <svg className="h-3 w-3 shrink-0 opacity-40" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M9 1h6v6l-2-2-4 4-1-1 4-4-3-3ZM3 3h4v2H5v6h6v-2h2v4H3V3Z" />
+                  </svg>
+                )}
+              </button>
+            )
+          })}
+        </nav>
+      </div>
 
       <ConfirmDialog
         isOpen={isCompleteConfirmOpen}
@@ -184,7 +251,6 @@ export function ProjectDetailsPage() {
         onCancel={() => setIsCompleteConfirmOpen(false)}
         onConfirm={completeProjectHandler}
       />
-
       <ConfirmDialog
         isOpen={isSaveSettingsConfirmOpen}
         title="Save project settings"
@@ -194,7 +260,6 @@ export function ProjectDetailsPage() {
         onCancel={() => setIsSaveSettingsConfirmOpen(false)}
         onConfirm={saveProjectSettings}
       />
-
       <ConfirmDialog
         isOpen={isDeleteConfirmOpen}
         title="Delete project"

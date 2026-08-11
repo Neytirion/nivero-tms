@@ -110,6 +110,7 @@ export function ProjectOverviewTab({
             {[
               { label: 'Customer', value: selectedProject.customer_name ?? 'Not set' },
               { label: 'Manager', value: projectManagerName ?? (selectedProject.project_manager_id ? 'Assigned' : 'Not set') },
+              { label: 'Budget', value: selectedProject.budget_amount != null ? `$${selectedProject.budget_amount.toLocaleString()}` : 'Not set' },
               { label: 'Created', value: formatDate(selectedProject.created_at) },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-baseline justify-between gap-2 border-b border-slate-100 pb-2 last:border-0 last:pb-0">
@@ -118,9 +119,6 @@ export function ProjectOverviewTab({
               </div>
             ))}
           </dl>
-          {selectedProject.description && (
-            <p className="mt-3 rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-600">{selectedProject.description}</p>
-          )}
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-4">

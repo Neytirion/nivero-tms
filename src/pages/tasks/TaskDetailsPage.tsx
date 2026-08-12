@@ -2,12 +2,14 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTasksPageController } from './useTasksPageController'
 import { useEffect, useState } from 'react'
 import { TaskCommentsPanel } from '../../features/tasks/components/comments'
+import { UserProfileDialog, type UserProfilePreview } from '../../shared/components'
 
 export function TaskDetailsPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { taskId } = useParams<{ taskId: string }>()
   const [isCommentsOpen, setIsCommentsOpen] = useState(false)
+  const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
 
   const backTo =
     typeof location.state === 'object' &&
@@ -28,6 +30,7 @@ export function TaskDetailsPage() {
     workPackageLabelById,
     dependencyLabelByTaskId,
     assigneeOptions,
+    projectMembers,
     assignTaskHandler,
     updateTaskDueDateHandler,
     removeTask,
@@ -83,11 +86,32 @@ export function TaskDetailsPage() {
 
   const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'
   const dueDateInputValue = task.due_date?.slice(0, 10) ?? ''
+  const assigneeUserId = task.assigned_to ?? task.created_by
   const assigneeLabel = task.assigned_to ? assigneeLabelByUserId[task.assigned_to] : 'Unassigned'
   const workPackageLabel = task.work_package_id ? workPackageLabelById[task.work_package_id] : 'Not linked'
   const blockedByLabel = task.blocked_by_task_id ? dependencyLabelByTaskId[task.blocked_by_task_id] : undefined
   const isLocked = !canManageTask(task)
   const canDelete = canDeleteTaskInView(task)
+
+  const openUserProfile = (userId: string) => {
+    const member = projectMembers.find((candidate) => candidate.user_id === userId)
+
+    if (member) {
+      setSelectedProfile({
+        userId: member.user_id,
+        fullName: member.full_name,
+        email: member.email,
+        role: member.role,
+        joinedAt: member.joined_at,
+      })
+      return
+    }
+
+    setSelectedProfile({
+      userId,
+      fullName: assigneeLabelByUserId[userId] ?? userId,
+    })
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4">
@@ -172,7 +196,19 @@ export function TaskDetailsPage() {
                   ))}
                 </select>
               ) : (
-                <p className="text-slate-600">{assigneeLabel}</p>
+                <p className="text-slate-600">
+                  {assigneeUserId ? (
+                    <button
+                      type="button"
+                      onClick={() => openUserProfile(assigneeUserId)}
+                      className="text-cyan-700 underline-offset-2 hover:underline"
+                    >
+                      {assigneeLabel}
+                    </button>
+                  ) : (
+                    assigneeLabel
+                  )}
+                </p>
               )}
             </div>
 
@@ -243,6 +279,12 @@ export function TaskDetailsPage() {
           ) : null}
         </div>
       </div>
+
+      <UserProfileDialog
+        isOpen={Boolean(selectedProfile)}
+        profile={selectedProfile}
+        onClose={() => setSelectedProfile(null)}
+      />
     </div>
   )
 }

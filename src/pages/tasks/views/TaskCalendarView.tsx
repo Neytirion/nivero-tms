@@ -10,6 +10,7 @@ interface TaskCalendarViewProps {
   calendarMeta: CalendarMeta
   assigneeLabelByUserId: Record<string, string>
   dependencyLabelByTaskId: Record<string, string>
+  onOpenUserProfile: (userId: string) => void
 }
 
 function getTaskStatusBadgeClass(status: TaskPreview['status']) {
@@ -56,6 +57,7 @@ export function TaskCalendarView({
   calendarMeta,
   assigneeLabelByUserId,
   dependencyLabelByTaskId,
+  onOpenUserProfile,
 }: TaskCalendarViewProps) {
   const todayKey = new Date().toISOString().slice(0, 10)
   const dueTasksThisMonth = tasks.filter((task) => task.due_date?.slice(0, 7) === calendarMonth)
@@ -187,7 +189,14 @@ export function TaskCalendarView({
                       </div>
                       {task.assigned_to ? (
                         <p className="mt-1 truncate text-[9px] text-slate-600">
-                          Assignee: {assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to}
+                          Assignee:{' '}
+                          <button
+                            type="button"
+                            onClick={() => onOpenUserProfile(task.assigned_to as string)}
+                            className="font-medium text-cyan-700 underline-offset-2 hover:underline"
+                          >
+                            {assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to}
+                          </button>
                         </p>
                       ) : null}
                       <div className="mt-1 flex flex-wrap items-center gap-1">

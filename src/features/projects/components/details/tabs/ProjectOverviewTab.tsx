@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import type { ProjectPreview, TaskPreview } from '../../../../../lib/pm'
+import type { ProjectMemberListItem, ProjectPreview, TaskPreview } from '../../../../../lib/pm'
+import { UserProfileDialog, type UserProfilePreview } from '../../../../../shared/components'
 import { downloadClientBrief, type ClientBriefExportFormat } from '../../../utils/client-brief'
 import { deriveProgress, deriveRisk, formatDate } from '../../../utils/project-metrics'
 
@@ -38,6 +39,7 @@ interface ProjectOverviewTabProps {
   tasks: TaskPreview[]
   projectManagerName?: string
   teamMemberNames: string[]
+  projectMembers: ProjectMemberListItem[]
 }
 
 export function ProjectOverviewTab({
@@ -45,9 +47,11 @@ export function ProjectOverviewTab({
   tasks,
   projectManagerName,
   teamMemberNames,
+  projectMembers,
 }: ProjectOverviewTabProps) {
   const [exportFormat, setExportFormat] = useState<ClientBriefExportFormat>('pdf')
   const [isExporting, setIsExporting] = useState(false)
+  const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
   const durationDays = getDurationDays(selectedProject.start_date, selectedProject.end_date)
 
   const exportClientBrief = async () => {
@@ -123,18 +127,42 @@ export function ProjectOverviewTab({
 
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Team</p>
-          {teamMemberNames.length === 0 ? (
+          {projectMembers.length === 0 && teamMemberNames.length === 0 ? (
             <p className="mt-3 text-sm text-slate-500">No members yet</p>
           ) : (
             <ul className="mt-3 space-y-1.5">
-              {teamMemberNames.map((name, index) => {
-                const initials = name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
+              {(projectMembers.length > 0
+                ? projectMembers.map((member) => ({
+                  key: member.member_id,
+                  name: member.full_name ?? member.email ?? member.user_id,
+                  profile: {
+                    userId: member.user_id,
+                    fullName: member.full_name,
+                    email: member.email,
+                    role: member.role,
+                    joinedAt: member.joined_at,
+                  } satisfies UserProfilePreview,
+                }))
+                : teamMemberNames.map((name, index) => ({
+                  key: `${name}-${index}`,
+                  name,
+                  profile: {
+                    fullName: name,
+                  } satisfies UserProfilePreview,
+                }))).map((member) => {
+                const initials = member.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
                 return (
-                  <li key={index} className="flex items-center gap-2.5">
+                  <li key={member.key} className="flex items-center gap-2.5">
                     <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[11px] font-bold text-blue-700">
                       {initials}
                     </span>
-                    <span className="text-sm font-medium text-slate-700">{name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProfile(member.profile)}
+                      className="truncate text-left text-sm font-medium text-slate-700 underline-offset-2 hover:text-cyan-700 hover:underline"
+                    >
+                      {member.name}
+                    </button>
                   </li>
                 )
               })}
@@ -165,6 +193,12 @@ export function ProjectOverviewTab({
           {isExporting ? 'Exporting...' : `Export ${exportFormat.toUpperCase()}`}
         </button>
       </div>
+
+      <UserProfileDialog
+        isOpen={Boolean(selectedProfile)}
+        profile={selectedProfile}
+        onClose={() => setSelectedProfile(null)}
+      />
     </div>
   )
 }

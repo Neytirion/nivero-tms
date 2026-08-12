@@ -10,6 +10,7 @@ interface KanbanColumnProps {
   assigneeLabelByUserId: Record<string, string>
   workPackageLabelById?: Record<string, string>
   dependencyLabelByTaskId?: Record<string, string>
+  onOpenUserProfile: (userId: string) => void
   assigneeOptions?: Array<{
     userId: string
     label: string
@@ -36,6 +37,7 @@ export function KanbanColumn({
   assigneeLabelByUserId,
   workPackageLabelById,
   dependencyLabelByTaskId,
+  onOpenUserProfile,
   assigneeOptions,
   canAssignAssignee,
   onDropTask,
@@ -77,6 +79,7 @@ export function KanbanColumn({
             {/** For member-created unassigned tasks, show creator as effective assignee in UI. */}
             <TaskCard
               task={task}
+              assigneeUserId={task.assigned_to ?? task.created_by}
               assigneeLabel={
                 task.assigned_to
                   ? assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to
@@ -101,6 +104,7 @@ export function KanbanColumn({
               onDelete={onDeleteTask}
               onLogTime={onLogTime}
               onTaskClick={onTaskClick}
+              onOpenUserProfile={onOpenUserProfile}
               isLocked={!canManageTask(task)}
               canDelete={canDeleteTask(task)}
               projectStartDate={projectStartDate}

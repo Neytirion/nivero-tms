@@ -37,6 +37,7 @@ interface ProjectDetailsSectionProps {
   tasks: TaskPreview[]
   incompleteTaskCount?: number
   teamMemberNames: string[]
+  projectMembers: import('../../../../lib/pm').ProjectMemberListItem[]
   projectManagerName?: string
   canInviteToSelectedProject: boolean
   memberEmail: string
@@ -46,7 +47,6 @@ interface ProjectDetailsSectionProps {
   canAssignAdminRole: boolean
   canAssignManagerRole?: boolean
   onInviteMember: () => void | Promise<void>
-  projectMembers: import('../../../../lib/pm').ProjectMemberListItem[]
   pendingRoleByUserId: Record<string, string>
   onPendingRoleChange: (userId: string, role: string) => void
   selectedProjectOwnerId: string | null | undefined
@@ -158,6 +158,7 @@ export function ProjectDetailsSection({
               tasks={tasks}
               projectManagerName={projectManagerName}
               teamMemberNames={teamMemberNames}
+              projectMembers={projectMembers}
             />
           ) : null}
 

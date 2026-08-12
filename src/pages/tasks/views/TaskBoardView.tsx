@@ -9,6 +9,7 @@ interface TaskBoardViewProps {
   assigneeLabelByUserId: Record<string, string>
   workPackageLabelById: Record<string, string>
   dependencyLabelByTaskId: Record<string, string>
+  onOpenUserProfile: (userId: string) => void
   assigneeOptions: AssigneeOption[]
   canAssignAssignee: boolean
   dragTaskId: string | null
@@ -30,6 +31,7 @@ export function TaskBoardView({
   assigneeLabelByUserId,
   workPackageLabelById,
   dependencyLabelByTaskId,
+  onOpenUserProfile,
   assigneeOptions,
   canAssignAssignee,
   dragTaskId,
@@ -61,6 +63,7 @@ export function TaskBoardView({
               assigneeLabelByUserId={assigneeLabelByUserId}
               workPackageLabelById={workPackageLabelById}
               dependencyLabelByTaskId={dependencyLabelByTaskId}
+              onOpenUserProfile={onOpenUserProfile}
               assigneeOptions={assigneeOptions}
               canAssignAssignee={canAssignAssignee}
               onDragOver={(event) => event.preventDefault()}

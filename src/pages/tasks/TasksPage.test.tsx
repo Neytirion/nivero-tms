@@ -269,7 +269,8 @@ describe('TasksPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Calendar' }))
 
-    expect(await screen.findByText('Assignee: Bob Smith')).toBeInTheDocument()
+    expect(await screen.findByText('Assignee:')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Bob Smith' })).toBeInTheDocument()
   })
 
   it('updates due date for existing task from board view', async () => {

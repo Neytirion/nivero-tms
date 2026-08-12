@@ -1,7 +1,9 @@
 import { TaskLogTimeModal } from '../../features/tasks/components'
 import { TaskViewsSection } from '.'
+import type { ProjectMemberListItem } from '../../lib/pm'
+import { UserProfileDialog, type UserProfilePreview } from '../../shared/components'
 import { useTasksPageController } from './useTasksPageController'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 
 export function TasksPage() {
@@ -59,6 +61,37 @@ export function TasksPage() {
 
   const visibleProjectMembers = selectedProject ? projectMembers : []
   const [isMembersOpen, setIsMembersOpen] = useState(false)
+  const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
+
+  const membersByUserId = useMemo(
+    () => projectMembers.reduce<Record<string, ProjectMemberListItem>>((acc, member) => {
+      if (member.user_id) {
+        acc[member.user_id] = member
+      }
+      return acc
+    }, {}),
+    [projectMembers],
+  )
+
+  const openUserProfile = (userId: string) => {
+    const member = membersByUserId[userId]
+
+    if (member) {
+      setSelectedProfile({
+        userId: member.user_id,
+        fullName: member.full_name,
+        email: member.email,
+        role: member.role,
+        joinedAt: member.joined_at,
+      })
+      return
+    }
+
+    setSelectedProfile({
+      userId,
+      fullName: assigneeLabelByUserId[userId] ?? userId,
+    })
+  }
 
   return (
     <div className="space-y-5">
@@ -124,7 +157,17 @@ export function TasksPage() {
                       <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
                         {initials}
                       </span>
-                      <span className="text-xs font-medium text-slate-700">{memberName}</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (member.user_id) {
+                            openUserProfile(member.user_id)
+                          }
+                        }}
+                        className="text-xs font-medium text-slate-700 underline-offset-2 hover:text-cyan-700 hover:underline"
+                      >
+                        {memberName}
+                      </button>
                       <span className="text-[10px] uppercase tracking-wide text-slate-400">{member.role}</span>
                     </li>
                   )
@@ -163,6 +206,7 @@ export function TasksPage() {
         assigneeLabelByUserId={assigneeLabelByUserId}
         workPackageLabelById={workPackageLabelById}
         dependencyLabelByTaskId={dependencyLabelByTaskId}
+        onOpenUserProfile={openUserProfile}
         assigneeOptions={assigneeOptions}
         canAssignAssignee={canAssignAssignee}
         dragTaskId={dragTaskId}
@@ -199,6 +243,12 @@ export function TasksPage() {
         onClose={() => setLogTimeTask(null)}
         onSubmit={submitTaskLogTime}
         isSubmitting={isLoading}
+      />
+
+      <UserProfileDialog
+        isOpen={Boolean(selectedProfile)}
+        profile={selectedProfile}
+        onClose={() => setSelectedProfile(null)}
       />
 
       {hasMoreTasks && (

@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import type { ProjectMemberListItem } from '../../../../lib/pm'
+import { UserProfileDialog, type UserProfilePreview } from '../../../../shared/components'
 
 interface TeamAccessSectionProps {
   isEmbedded?: boolean
@@ -41,6 +43,8 @@ export function TeamAccessSection({
   selectedProjectOwnerId,
   onSaveRole,
 }: TeamAccessSectionProps) {
+  const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
+
   return (
     <section className={isEmbedded ? 'rounded-xl border border-slate-200 bg-slate-50 p-3' : 'page-section bg-slate-50/70'}>
       <h3 className="section-title">Team Access</h3>
@@ -96,7 +100,19 @@ export function TeamAccessSection({
               className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
             >
               <div>
-                <p className="text-sm font-medium text-slate-800">{member.full_name ?? 'Unknown user'}</p>
+                <button
+                  type="button"
+                  onClick={() => setSelectedProfile({
+                    userId: member.user_id,
+                    fullName: member.full_name,
+                    email: member.email,
+                    role: member.role,
+                    joinedAt: member.joined_at,
+                  })}
+                  className="text-left text-sm font-medium text-slate-800 underline-offset-2 hover:text-cyan-700 hover:underline"
+                >
+                  {member.full_name ?? member.email ?? 'Unknown user'}
+                </button>
                 <p className="mt-0.5 text-xs text-slate-500">{member.email ?? 'No email'}</p>
               </div>
               {canManageMemberRoles && member.user_id ? (
@@ -129,6 +145,12 @@ export function TeamAccessSection({
           ))}
         </div>
       </div>
+
+      <UserProfileDialog
+        isOpen={Boolean(selectedProfile)}
+        profile={selectedProfile}
+        onClose={() => setSelectedProfile(null)}
+      />
     </section>
   )
 }

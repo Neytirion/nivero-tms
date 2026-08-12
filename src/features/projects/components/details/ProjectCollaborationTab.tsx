@@ -12,7 +12,7 @@ import {
   type ProjectMemberListItem,
 } from '../../../../lib/pm'
 import { supabase } from '../../../../lib/supabase'
-import { ConfirmDialog } from '../../../../shared/components'
+import { ConfirmDialog, UserProfileDialog, type UserProfilePreview } from '../../../../shared/components'
 import { ProjectDocumentsTab } from './ProjectDocumentsTab'
 
 interface ProjectCollaborationTabProps {
@@ -84,6 +84,7 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
   const [events, setEvents] = useState<ActivityEventPreview[]>([])
   const [comments, setComments] = useState<CommentPreview[]>([])
   const [pendingDeleteComment, setPendingDeleteComment] = useState<CommentPreview | null>(null)
+  const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
   const [commentDraft, setCommentDraft] = useState('')
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [wikiTitle, setWikiTitle] = useState('Project Wiki')
@@ -194,6 +195,30 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
     markAsRead()
   }
 
+  const openProfileByUserId = (userId: string | null) => {
+    if (!userId) {
+      return
+    }
+
+    const member = members.find((candidate) => candidate.user_id === userId)
+
+    if (!member) {
+      setSelectedProfile({
+        userId,
+        fullName: membersByUserId[userId] ?? userId,
+      })
+      return
+    }
+
+    setSelectedProfile({
+      userId: member.user_id,
+      fullName: member.full_name,
+      email: member.email,
+      role: member.role,
+      joinedAt: member.joined_at,
+    })
+  }
+
   return (
     <div className="mt-4">
       {/* Inner sub-nav */}
@@ -259,14 +284,25 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
                   return (
                     <div key={c.id} className={`group flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}>
                       {!isOwn && (
-                        <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[9px] font-bold text-slate-500">
+                        <button
+                          type="button"
+                          onClick={() => openProfileByUserId(c.user_id)}
+                          className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[9px] font-bold text-slate-500 transition hover:bg-slate-200"
+                          title="Open member profile"
+                        >
                           {initials}
-                        </span>
+                        </button>
                       )}
                       <div className={`min-w-0 max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
                         {!isOwn && (
                           <div className="mb-0.5 flex items-baseline gap-1.5">
-                            <span className="text-[11px] font-semibold text-slate-600">{name}</span>
+                            <button
+                              type="button"
+                              onClick={() => openProfileByUserId(c.user_id)}
+                              className="text-[11px] font-semibold text-slate-600 underline-offset-2 hover:text-cyan-700 hover:underline"
+                            >
+                              {name}
+                            </button>
                             <span className="text-[10px] text-slate-400">{timeAgo(c.created_at)}</span>
                             {isUnread && <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />}
                           </div>
@@ -402,12 +438,23 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
                   const paginatedEvents = events.slice(startIdx, endIdx)
                   return paginatedEvents.map((event) => (
                     <div key={event.id} className="flex items-start gap-3">
-                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-500">
+                      <button
+                        type="button"
+                        onClick={() => openProfileByUserId(event.actor_user_id)}
+                        className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-500 transition hover:bg-slate-200"
+                        title="Open member profile"
+                      >
                         {getActorLabel(event.actor_user_id, membersByUserId).slice(0, 2).toUpperCase()}
-                      </span>
+                      </button>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm text-slate-800">
-                          <span className="font-semibold text-slate-900">{getActorLabel(event.actor_user_id, membersByUserId)}</span>
+                          <button
+                            type="button"
+                            onClick={() => openProfileByUserId(event.actor_user_id)}
+                            className="font-semibold text-slate-900 underline-offset-2 hover:text-cyan-700 hover:underline"
+                          >
+                            {getActorLabel(event.actor_user_id, membersByUserId)}
+                          </button>
                           {' '}{formatActivityLabel(event)}
                         </p>
                         <p className="mt-0.5 text-[11px] text-slate-400">{timeAgo(event.created_at)}</p>
@@ -454,6 +501,12 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
         tone="danger"
         onCancel={() => setPendingDeleteComment(null)}
         onConfirm={deleteCommentHandler}
+      />
+
+      <UserProfileDialog
+        isOpen={Boolean(selectedProfile)}
+        profile={selectedProfile}
+        onClose={() => setSelectedProfile(null)}
       />
     </div>
   )

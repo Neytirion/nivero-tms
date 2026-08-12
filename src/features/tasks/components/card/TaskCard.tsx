@@ -5,6 +5,7 @@ import { TaskCommentsPanel } from '../comments'
 
 interface TaskCardProps {
   task: TaskPreview
+  assigneeUserId?: string | null
   assigneeLabel: string
   blockedByLabel?: string
   workPackageLabel?: string
@@ -18,6 +19,7 @@ interface TaskCardProps {
   onDelete: (taskId: string) => void | Promise<void>
   onLogTime: (task: TaskPreview) => void
   onTaskClick?: (taskId: string) => void
+  onOpenUserProfile?: (userId: string) => void
   isLocked: boolean
   canDelete: boolean
   projectStartDate?: string
@@ -40,6 +42,7 @@ function getPriorityBadgeClass(priority: string | null | undefined) {
 
 export function TaskCard({
   task,
+  assigneeUserId,
   assigneeLabel,
   blockedByLabel,
   workPackageLabel,
@@ -50,6 +53,7 @@ export function TaskCard({
   onDelete,
   onLogTime,
   onTaskClick,
+  onOpenUserProfile,
   isLocked,
   canDelete,
   projectStartDate,
@@ -99,7 +103,23 @@ export function TaskCard({
           Due: {dueDate}
         </span>
       </div>
-      <p className="mt-2 text-xs text-slate-500">Assignee: {assigneeLabel}</p>
+      <p className="mt-2 text-xs text-slate-500">
+        Assignee:{' '}
+        {assigneeUserId && onOpenUserProfile ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onOpenUserProfile(assigneeUserId)
+            }}
+            className="font-medium text-cyan-700 underline-offset-2 hover:underline"
+          >
+            {assigneeLabel}
+          </button>
+        ) : (
+          assigneeLabel
+        )}
+      </p>
       <p className="mt-1 text-xs text-slate-500">Work Package: {workPackageLabel ?? 'Not linked'}</p>
       {blockedByLabel ? <p className="mt-1 text-xs text-slate-500">Blocked by: {blockedByLabel}</p> : null}
       <p className="mt-1 text-xs text-slate-500">

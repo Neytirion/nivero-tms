@@ -6,6 +6,7 @@ interface TaskListViewProps {
   assigneeLabelByUserId: Record<string, string>
   workPackageLabelById: Record<string, string>
   dependencyLabelByTaskId: Record<string, string>
+  onOpenUserProfile: (userId: string) => void
   onTaskClick?: (taskId: string) => void
 }
 
@@ -14,6 +15,7 @@ export function TaskListView({
   assigneeLabelByUserId,
   workPackageLabelById,
   dependencyLabelByTaskId,
+  onOpenUserProfile,
   onTaskClick,
 }: TaskListViewProps) {
   return (
@@ -59,11 +61,29 @@ export function TaskListView({
                   </span>
                 </td>
                 <td className="px-3 py-2 text-slate-600">
-                  {task.assigned_to
-                    ? assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to
-                    : task.created_by
-                      ? `${assigneeLabelByUserId[task.created_by] ?? task.created_by} (creator)`
-                      : 'Unassigned'}
+                  {task.assigned_to ? (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onOpenUserProfile(task.assigned_to as string)
+                      }}
+                      className="text-cyan-700 underline-offset-2 hover:underline"
+                    >
+                      {assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to}
+                    </button>
+                  ) : task.created_by ? (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onOpenUserProfile(task.created_by as string)
+                      }}
+                      className="text-cyan-700 underline-offset-2 hover:underline"
+                    >
+                      {(assigneeLabelByUserId[task.created_by] ?? task.created_by)} (creator)
+                    </button>
+                  ) : 'Unassigned'}
                 </td>
                 <td className="px-3 py-2 text-slate-600">
                   {task.blocked_by_task_id

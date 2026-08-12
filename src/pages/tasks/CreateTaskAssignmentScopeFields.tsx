@@ -2,15 +2,17 @@ import type { AssignmentScopeFieldsProps } from './create-task-section.types'
 
 export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProps) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Assignment & Scope</p>
-      <div className="mt-2 space-y-2.5">
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <h4 className="text-sm font-semibold text-slate-900">Assignment & Scope</h4>
+      <p className="mt-1 text-xs text-slate-500">Link the task to estimate scope and optionally set an owner.</p>
+
+      <div className="mt-3 space-y-3">
         <div>
-          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Work Package *</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Work package *</label>
           <select
             value={props.taskWorkPackageId}
             onChange={(event) => props.onTaskWorkPackageIdChange(event.target.value)}
-            className={`h-10 w-full rounded-lg border bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 ${
+            className={`h-9 w-full rounded-lg border bg-white px-2.5 text-sm text-slate-900 outline-none focus:border-slate-500 ${
               props.hasAttemptedSubmit && props.isWorkPackageMissing
                 ? 'border-rose-400 bg-rose-50/40'
                 : 'border-slate-300'
@@ -31,11 +33,11 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
         </div>
 
         <div>
-          <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Blocked by task</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Blocked by task</label>
           <select
             value={props.taskBlockedByTaskId}
             onChange={(event) => props.onTaskBlockedByTaskIdChange(event.target.value)}
-            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
+            className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
           >
             <option value="">None</option>
             {props.dependencyOptions.map((task) => (
@@ -48,11 +50,11 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
 
         {props.canAssignAssignee ? (
           <div>
-            <label className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Assignee</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Assignee</label>
             <select
               value={props.taskAssigneeId}
               onChange={(event) => props.onTaskAssigneeIdChange(event.target.value)}
-              className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
+              className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
             >
               <option value="">Unassigned</option>
               {props.projectMembers.map((member) => (
@@ -62,11 +64,7 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
               ))}
             </select>
           </div>
-        ) : (
-          <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-            Task will be assigned automatically according to your role permissions.
-          </div>
-        )}
+        ) : null}
       </div>
     </div>
   )

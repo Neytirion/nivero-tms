@@ -9,7 +9,6 @@ export type CreateTaskSectionProps = {
   hasEstimateVersion: boolean | null
   selectedProjectId: string | null
   isMemberInSelectedProject: boolean
-  projects: ProjectPreview[]
   selectedProject: ProjectPreview | null
   isProjectMissing: boolean
   isTaskTitleMissing: boolean
@@ -33,7 +32,6 @@ export type CreateTaskSectionProps = {
   hasAttemptedSubmit: boolean
   isLoading: boolean
   canSubmit: boolean
-  onSelectProject: (projectId: string) => void
   onTaskTitleChange: (value: string) => void
   onTaskDescriptionChange: (value: string) => void
   onTaskEstimateHoursChange: (value: string) => void
@@ -46,14 +44,12 @@ export type CreateTaskSectionProps = {
 }
 
 export type CoreTaskFieldsProps = {
-  projects: ProjectPreview[]
-  selectedProjectId: string | null
+  selectedProject: ProjectPreview | null
   hasAttemptedSubmit: boolean
   isProjectMissing: boolean
   isTaskTitleMissing: boolean
   taskTitle: string
   taskDescription: string
-  onSelectProject: (projectId: string) => void
   onTaskTitleChange: (value: string) => void
   onTaskDescriptionChange: (value: string) => void
 }
@@ -95,5 +91,6 @@ export type CreateTaskFooterProps = {
   canSubmit: boolean
   missingRequiredFields: string[]
   isLoading: boolean
+  isCreationBlocked: boolean
   onCreateTask: () => void
 }

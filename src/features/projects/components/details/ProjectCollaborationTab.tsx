@@ -12,6 +12,7 @@ import {
   type ProjectMemberListItem,
 } from '../../../../lib/pm'
 import { supabase } from '../../../../lib/supabase'
+import { ConfirmDialog } from '../../../../shared/components'
 import { ProjectDocumentsTab } from './ProjectDocumentsTab'
 
 interface ProjectCollaborationTabProps {
@@ -82,6 +83,7 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
   const [members, setMembers] = useState<ProjectMemberListItem[]>([])
   const [events, setEvents] = useState<ActivityEventPreview[]>([])
   const [comments, setComments] = useState<CommentPreview[]>([])
+  const [pendingDeleteComment, setPendingDeleteComment] = useState<CommentPreview | null>(null)
   const [commentDraft, setCommentDraft] = useState('')
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [wikiTitle, setWikiTitle] = useState('Project Wiki')
@@ -132,16 +134,19 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId])
 
-  const deleteCommentHandler = async (commentId: string) => {
-    if (!window.confirm('Are you sure you want to delete this comment?')) {
+  const deleteCommentHandler = async () => {
+    if (!pendingDeleteComment) {
       return
     }
+
     try {
-      await deleteComment(commentId)
-      setComments((prev) => prev.filter((c) => c.id !== commentId))
+      await deleteComment(pendingDeleteComment.id)
+      setComments((prev) => prev.filter((c) => c.id !== pendingDeleteComment.id))
     } catch (error) {
       console.error('Delete comment error:', error)
     }
+
+    setPendingDeleteComment(null)
   }
 
   const submitComment = async () => {
@@ -275,7 +280,7 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
                           {isOwn && (
                             <button
                               type="button"
-                              onClick={() => void deleteCommentHandler(c.id)}
+                              onClick={() => setPendingDeleteComment(c)}
                               className="absolute -left-6 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-300 opacity-0 transition hover:text-rose-500 group-hover:opacity-100"
                               title="Delete"
                             >
@@ -440,6 +445,16 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={Boolean(pendingDeleteComment)}
+        title="Delete comment"
+        description="Are you sure you want to delete this comment?"
+        confirmText="Delete"
+        tone="danger"
+        onCancel={() => setPendingDeleteComment(null)}
+        onConfirm={deleteCommentHandler}
+      />
     </div>
   )
 }

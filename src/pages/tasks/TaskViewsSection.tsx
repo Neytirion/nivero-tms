@@ -85,6 +85,7 @@ export function TaskViewsSection({
           dependencyLabelByTaskId={dependencyLabelByTaskId}
           onOpenUserProfile={onOpenUserProfile}
           onTaskClick={onTaskClick}
+          canManageTask={canManageTask}
         />
       ) : null}
     </section>

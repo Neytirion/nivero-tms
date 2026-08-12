@@ -1,4 +1,5 @@
 import type { TaskPreview } from '../../../lib/pm'
+import { useMemo, useState } from 'react'
 import { getTaskPriorityBadgeClass } from '../tasks-page.utils'
 
 interface TaskListViewProps {
@@ -8,6 +9,7 @@ interface TaskListViewProps {
   dependencyLabelByTaskId: Record<string, string>
   onOpenUserProfile: (userId: string) => void
   onTaskClick?: (taskId: string) => void
+  canManageTask: (task: TaskPreview) => boolean
 }
 
 export function TaskListView({
@@ -17,9 +19,94 @@ export function TaskListView({
   dependencyLabelByTaskId,
   onOpenUserProfile,
   onTaskClick,
+  canManageTask,
 }: TaskListViewProps) {
+  const [priorityFilter, setPriorityFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'backlog' | 'todo' | 'in_progress' | 'review' | 'done'>('all')
+  const [accessFilter, setAccessFilter] = useState<'all' | 'editable' | 'view_only'>('all')
+
+  const filteredTasks = useMemo(
+    () => tasks.filter((task) => {
+      if (priorityFilter !== 'all' && (task.priority ?? 'medium').toLowerCase() !== priorityFilter) {
+        return false
+      }
+
+      if (statusFilter !== 'all' && (task.status ?? 'todo') !== statusFilter) {
+        return false
+      }
+
+      if (accessFilter === 'editable' && !canManageTask(task)) {
+        return false
+      }
+
+      if (accessFilter === 'view_only' && canManageTask(task)) {
+        return false
+      }
+
+      return true
+    }),
+    [tasks, priorityFilter, statusFilter, accessFilter, canManageTask],
+  )
+
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200">
+      <div className="flex flex-wrap items-end gap-2 border-b border-slate-200 bg-slate-50/70 px-3 py-2">
+        <label className="flex min-w-[120px] flex-col gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          Priority
+          <select
+            value={priorityFilter}
+            onChange={(event) => setPriorityFilter(event.target.value as 'all' | 'high' | 'medium' | 'low')}
+            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700"
+          >
+            <option value="all">All</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </label>
+
+        <label className="flex min-w-[120px] flex-col gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          Status
+          <select
+            value={statusFilter}
+            onChange={(event) => setStatusFilter(event.target.value as 'all' | 'backlog' | 'todo' | 'in_progress' | 'review' | 'done')}
+            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700"
+          >
+            <option value="all">All</option>
+            <option value="backlog">Backlog</option>
+            <option value="todo">To Do</option>
+            <option value="in_progress">In Progress</option>
+            <option value="review">Review</option>
+            <option value="done">Done</option>
+          </select>
+        </label>
+
+        <label className="flex min-w-[140px] flex-col gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          Access
+          <select
+            value={accessFilter}
+            onChange={(event) => setAccessFilter(event.target.value as 'all' | 'editable' | 'view_only')}
+            className="rounded-md border border-slate-300 bg-white px-2 py-1 text-xs font-medium text-slate-700"
+          >
+            <option value="all">All</option>
+            <option value="editable">Editable</option>
+            <option value="view_only">View only</option>
+          </select>
+        </label>
+
+        <button
+          type="button"
+          onClick={() => {
+            setPriorityFilter('all')
+            setStatusFilter('all')
+            setAccessFilter('all')
+          }}
+          className="ml-auto rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100"
+        >
+          Reset filters
+        </button>
+      </div>
+
       <table className="min-w-full bg-white text-sm">
         <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
           <tr>
@@ -33,14 +120,14 @@ export function TaskListView({
           </tr>
         </thead>
         <tbody>
-          {tasks.length === 0 ? (
+          {filteredTasks.length === 0 ? (
             <tr>
               <td colSpan={7} className="px-3 py-4 text-center text-slate-500">
-                No tasks yet
+                No tasks match current filters
               </td>
             </tr>
           ) : (
-            tasks.map((task) => (
+            filteredTasks.map((task) => (
               <tr
                 key={task.id}
                 className={`border-t border-slate-100 ${onTaskClick ? 'cursor-pointer hover:bg-slate-50' : ''}`}

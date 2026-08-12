@@ -10,14 +10,14 @@ export function getTaskPriorityBadgeClass(priority: string | null | undefined) {
   const normalized = (priority ?? 'medium').toLowerCase()
 
   if (normalized === 'high') {
-    return 'bg-rose-100 text-rose-800 border border-rose-200'
+    return 'bg-rose-50 text-rose-700 border border-rose-100'
   }
 
   if (normalized === 'low') {
-    return 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+    return 'bg-emerald-50 text-emerald-700 border border-emerald-100'
   }
 
-  return 'bg-amber-100 text-amber-800 border border-amber-200'
+  return 'bg-amber-50 text-amber-700 border border-amber-100'
 }
 
 const PRIORITY_RANK: Record<string, number> = {

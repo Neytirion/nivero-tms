@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTaskForm } from '../../features/tasks/hooks/useTaskForm.ts'
+import type { TaskStatus } from '../../features/tasks/constants.ts'
 import {
   type TaskPreview,
 } from '../../lib/pm'
@@ -35,6 +36,8 @@ export function useTasksPageController() {
   const [logTimeTask, setLogTimeTask] = useState<TaskPreview | null>(null)
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [taskViewMode, setTaskViewMode] = useState<TaskViewMode>('board')
+  const [optimisticStatusByTaskId, setOptimisticStatusByTaskId] = useState<Record<string, TaskStatus>>({})
+  const optimisticResetTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   const {
     status,
@@ -107,7 +110,7 @@ export function useTasksPageController() {
 
   const canAssignAssignee = selectedProject ? canAssignTasksInProject(selectedProject.id) : false
 
-  const { createTaskHandler, moveTaskToStatus, assignTaskHandler, updateTaskDueDateHandler, submitTaskLogTime } =
+  const { createTaskHandler, moveTaskToStatus: moveTaskToStatusRemote, assignTaskHandler, updateTaskDueDateHandler, submitTaskLogTime } =
     useTaskControllerActions({
       selectedProjectId,
       hasEstimateVersion,
@@ -135,6 +138,53 @@ export function useTasksPageController() {
       reloadCurrentTasks,
     })
 
+  const tasksWithOptimisticStatus = useMemo(
+    () => tasks.map((task) => {
+      const optimisticStatus = optimisticStatusByTaskId[task.id]
+      if (!optimisticStatus || optimisticStatus === task.status) {
+        return task
+      }
+
+      return {
+        ...task,
+        status: optimisticStatus,
+      }
+    }),
+    [tasks, optimisticStatusByTaskId],
+  )
+
+  useEffect(() => {
+    return () => {
+      Object.values(optimisticResetTimersRef.current).forEach((timerId) => {
+        clearTimeout(timerId)
+      })
+      optimisticResetTimersRef.current = {}
+    }
+  }, [])
+
+  const moveTaskToStatus = async (taskId: string, status: TaskStatus) => {
+    setOptimisticStatusByTaskId((prev) => ({
+      ...prev,
+      [taskId]: status,
+    }))
+
+    const existingTimer = optimisticResetTimersRef.current[taskId]
+    if (existingTimer) {
+      clearTimeout(existingTimer)
+    }
+
+    optimisticResetTimersRef.current[taskId] = setTimeout(() => {
+      setOptimisticStatusByTaskId((prev) => {
+        const next = { ...prev }
+        delete next[taskId]
+        return next
+      })
+      delete optimisticResetTimersRef.current[taskId]
+    }, 3000)
+
+    await moveTaskToStatusRemote(taskId, status)
+  }
+
   const assigneeLabelByUserId = projectMembers.reduce<Record<string, string>>((acc, member) => {
     if (member.user_id) {
       const name = member.full_name || member.email || member.user_id
@@ -158,8 +208,8 @@ export function useTasksPageController() {
     }))
 
   const dependencyOptions = useMemo(
-    () => tasks.map((task) => ({ id: task.id, label: task.title })),
-    [tasks],
+    () => tasksWithOptimisticStatus.map((task) => ({ id: task.id, label: task.title })),
+    [tasksWithOptimisticStatus],
   )
 
   const resetPageState = () => {
@@ -179,7 +229,7 @@ export function useTasksPageController() {
     myRoleInSelectedProject,
     isMemberInSelectedProject,
     projects,
-    tasks,
+    tasks: tasksWithOptimisticStatus,
     projectMembers,
     hasEstimateVersion,
     taskViewMode,

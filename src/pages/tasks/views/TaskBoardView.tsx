@@ -1,7 +1,7 @@
 import { KANBAN_COLUMNS, type TaskStatus } from '../../../features/tasks/constants.ts'
 import { KanbanColumn } from '../../../features/tasks/components'
 import type { TaskPreview } from '../../../lib/pm'
-import { normalizeTaskStatus } from '../tasks-page.utils'
+import { normalizeTaskStatus, sortTasksForBoardColumn } from '../tasks-page.utils'
 
 interface TaskBoardViewProps {
   tasks: TaskPreview[]
@@ -28,7 +28,10 @@ export function TaskBoardView({
     <>
       <div className="grid gap-4 xl:grid-cols-5">
         {KANBAN_COLUMNS.map((column) => {
-          const columnTasks = tasks.filter((task) => normalizeTaskStatus(task.status) === column.key)
+          const columnTasks = sortTasksForBoardColumn(
+            tasks.filter((task) => normalizeTaskStatus(task.status) === column.key),
+            canManageTask,
+          )
 
           return (
             <KanbanColumn

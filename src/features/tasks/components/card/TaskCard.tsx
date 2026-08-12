@@ -83,7 +83,7 @@ export function TaskCard({
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('') || 'U'
   const cardToneClass = isLocked
-    ? 'border-2 border-dashed border-slate-400 bg-slate-200/80 text-slate-600 opacity-90'
+    ? 'border-2 border-dashed border-slate-400 bg-slate-200/80 text-slate-600 opacity-90 hover:border-slate-500 hover:bg-slate-100 hover:shadow-sm'
     : 'border border-l-4 border-sky-200 border-l-sky-400 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-sm hover:border-sky-400 hover:border-l-sky-500 hover:shadow-md'
 
   return (
@@ -95,7 +95,7 @@ export function TaskCard({
         <p className={`line-clamp-2 w-full text-left text-sm font-semibold leading-5 ${isLocked ? 'text-slate-700' : 'text-slate-900'}`}>
           {task.title}
         </p>
-        <span className={`text-xs transition ${isLocked ? 'text-slate-400' : 'text-slate-300 group-hover:text-sky-600'}`}>↗</span>
+        <span className={`text-xs transition ${isLocked ? 'text-slate-400 group-hover:text-slate-600' : 'text-slate-300 group-hover:text-sky-600'}`}>↗</span>
       </div>
 
       {task.description ? (
@@ -143,7 +143,6 @@ export function TaskCard({
             )}
           </p>
         </div>
-        <p className={`text-[10px] font-semibold uppercase tracking-wide ${isLocked ? 'text-slate-500' : 'text-slate-400'}`}>Details</p>
       </div>
     </article>
   )

@@ -3,6 +3,7 @@ import {
   buildCalendarMeta,
   getTaskPriorityBadgeClass,
   normalizeTaskStatus,
+  sortTasksForBoardColumn,
   shiftMonthValue,
 } from './tasks-page.utils'
 import { createTaskPreview } from '../../test/workspace-factory'
@@ -48,5 +49,21 @@ describe('tasks-page.utils', () => {
 
   it('returns null calendar meta for invalid month', () => {
     expect(buildCalendarMeta('2026-13', [])).toBeNull()
+  })
+
+  it('sorts board column tasks by accessibility, priority, and due date', () => {
+    const tasks = [
+      createTaskPreview({ id: 't1', priority: 'medium', due_date: '2026-08-20', created_at: '2026-08-01T10:00:00.000Z' }),
+      createTaskPreview({ id: 't2', priority: 'high', due_date: '2026-08-18', created_at: '2026-08-01T09:00:00.000Z' }),
+      createTaskPreview({ id: 't3', priority: 'high', due_date: '2026-08-25', created_at: '2026-08-01T11:00:00.000Z' }),
+      createTaskPreview({ id: 't4', priority: 'low', due_date: null, created_at: '2026-08-02T11:00:00.000Z' }),
+    ]
+
+    const sorted = sortTasksForBoardColumn(
+      tasks,
+      (task) => task.id !== 't3',
+    )
+
+    expect(sorted.map((task) => task.id)).toEqual(['t2', 't1', 't4', 't3'])
   })
 })

@@ -20,6 +20,55 @@ export function getTaskPriorityBadgeClass(priority: string | null | undefined) {
   return 'bg-amber-100 text-amber-800 border border-amber-200'
 }
 
+const PRIORITY_RANK: Record<string, number> = {
+  high: 0,
+  medium: 1,
+  low: 2,
+}
+
+function getPriorityRank(priority: string | null | undefined) {
+  const normalized = (priority ?? 'medium').toLowerCase()
+  return PRIORITY_RANK[normalized] ?? PRIORITY_RANK.medium
+}
+
+function toDateValue(value: string | null | undefined) {
+  if (!value) {
+    return Number.POSITIVE_INFINITY
+  }
+
+  const parsed = Date.parse(value)
+  if (!Number.isFinite(parsed)) {
+    return Number.POSITIVE_INFINITY
+  }
+
+  return parsed
+}
+
+export function sortTasksForBoardColumn(
+  tasks: TaskPreview[],
+  canManageTask: (task: TaskPreview) => boolean,
+) {
+  return [...tasks].sort((left, right) => {
+    const leftManageRank = canManageTask(left) ? 0 : 1
+    const rightManageRank = canManageTask(right) ? 0 : 1
+    if (leftManageRank !== rightManageRank) {
+      return leftManageRank - rightManageRank
+    }
+
+    const priorityDelta = getPriorityRank(left.priority) - getPriorityRank(right.priority)
+    if (priorityDelta !== 0) {
+      return priorityDelta
+    }
+
+    const dueDateDelta = toDateValue(left.due_date) - toDateValue(right.due_date)
+    if (dueDateDelta !== 0) {
+      return dueDateDelta
+    }
+
+    return Date.parse(right.created_at ?? '') - Date.parse(left.created_at ?? '')
+  })
+}
+
 export function shiftMonthValue(calendarMonth: string, direction: -1 | 1) {
   const [yearText, monthText] = calendarMonth.split('-')
   const year = Number.parseInt(yearText, 10)

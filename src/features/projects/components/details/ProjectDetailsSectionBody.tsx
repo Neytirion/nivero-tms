@@ -1,18 +1,19 @@
 import type { ProjectPreview, TaskPreview } from '../../../../lib/pm'
 import type { ProjectRoleName } from '../../../../shared/utils/permissions'
-import { useEffect, useState } from 'react'
-import { ProjectDetailsSectionBody } from './ProjectDetailsSectionBody'
+import { EstimatesTab } from '../estimates'
+import { ProjectCollaborationTab } from './ProjectCollaborationTab'
+import { TeamAccessSection } from './TeamAccessSection'
+import { ProjectOverviewTab } from './tabs/ProjectOverviewTab'
+import { ProjectSettingsTab } from './tabs/ProjectSettingsTab'
+import type { DetailsTab } from './ProjectDetailsSection'
 
-export type DetailsTab = 'overview' | 'tasks' | 'estimates' | 'collaboration' | 'team' | 'settings'
-
-interface ProjectDetailsSectionProps {
-  selectedProject: ProjectPreview | null
+interface ProjectDetailsSectionBodyProps {
+  selectedProject: ProjectPreview
   selectedProjectId: string | null
   myRoleInSelectedProject?: ProjectRoleName | null
   isLoading: boolean
   canManageProject: (projectId: string) => boolean
   activeTab: DetailsTab
-  onTabChange: (tab: DetailsTab) => void
   settingsName: string
   onSettingsNameChange: (value: string) => void
   settingsDescription: string
@@ -50,18 +51,14 @@ interface ProjectDetailsSectionProps {
   onOpenDeleteConfirm?: () => void
   onOpenCompleteConfirm: () => void
   onOpenSaveSettingsConfirm: () => void
-  onTaskClick?: (taskId: string) => void
-  onNavigateToTasks?: () => void
 }
 
-export function ProjectDetailsSection({
+export function ProjectDetailsSectionBody({
   selectedProject,
   selectedProjectId,
-  myRoleInSelectedProject,
   isLoading,
   canManageProject,
   activeTab,
-  // onTabChange and onNavigateToTasks handled by ProjectDetailsPage sidebar
   settingsName,
   onSettingsNameChange,
   settingsDescription,
@@ -82,6 +79,7 @@ export function ProjectDetailsSection({
   tasks,
   incompleteTaskCount,
   teamMemberNames,
+  projectMembers,
   projectManagerName,
   canInviteToSelectedProject,
   memberEmail,
@@ -91,7 +89,6 @@ export function ProjectDetailsSection({
   canAssignAdminRole,
   canAssignManagerRole,
   onInviteMember,
-  projectMembers,
   pendingRoleByUserId,
   onPendingRoleChange,
   selectedProjectOwnerId,
@@ -99,55 +96,51 @@ export function ProjectDetailsSection({
   onOpenDeleteConfirm,
   onOpenCompleteConfirm,
   onOpenSaveSettingsConfirm,
-}: ProjectDetailsSectionProps) {
-  const [isTabLoading, setIsTabLoading] = useState(false)
-
-  useEffect(() => {
-    if (!selectedProject) {
-      return
-    }
-
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setIsTabLoading(true)
-    const timeoutId = window.setTimeout(() => {
-      setIsTabLoading(false)
-    }, 180)
-
-    return () => {
-      window.clearTimeout(timeoutId)
-    }
-  }, [activeTab, selectedProject])
-
+}: ProjectDetailsSectionBodyProps) {
   return (
-    <section className="page-section">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="text-2xl font-bold text-slate-900">
-            {selectedProject ? selectedProject.name : 'Select a project'}
-          </h3>
-          {selectedProject ? (
-            <p className="mt-0.5 text-sm text-slate-500">{selectedProject.status ?? 'active'}</p>
-          ) : (
-            <p className="mt-0.5 text-sm text-slate-500">Select a project from the table to open details</p>
-          )}
-          {myRoleInSelectedProject ? (
-            <p className="mt-1 text-xs text-cyan-700">Your role: {myRoleInSelectedProject}</p>
-          ) : null}
+    <>
+      {isLoading ? (
+        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
+          Loading module...
         </div>
-      </div>
+      ) : null}
 
-      {!selectedProject ? (
-        <p className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500">
-          No project selected
-        </p>
-      ) : (
-        <ProjectDetailsSectionBody
+      {activeTab === 'overview' ? (
+        <ProjectOverviewTab
           selectedProject={selectedProject}
-          selectedProjectId={selectedProjectId}
-          myRoleInSelectedProject={myRoleInSelectedProject}
-          isLoading={isLoading || isTabLoading}
-          canManageProject={canManageProject}
-          activeTab={activeTab}
+          tasks={tasks}
+          projectManagerName={projectManagerName}
+          teamMemberNames={teamMemberNames}
+          projectMembers={projectMembers}
+        />
+      ) : null}
+
+      {activeTab === 'team' ? (
+        <div className="mt-4">
+          <TeamAccessSection
+            isEmbedded
+            canInviteToSelectedProject={canInviteToSelectedProject}
+            memberEmail={memberEmail}
+            onMemberEmailChange={onMemberEmailChange}
+            memberRole={memberRole}
+            onMemberRoleChange={onMemberRoleChange}
+            canAssignAdminRole={canAssignAdminRole}
+            canAssignManagerRole={canAssignManagerRole}
+            onInviteMember={onInviteMember}
+            isLoading={isLoading}
+            selectedProjectId={selectedProjectId}
+            projectMembers={projectMembers}
+            canManageMemberRoles={canManageMemberRoles}
+            pendingRoleByUserId={pendingRoleByUserId}
+            onPendingRoleChange={onPendingRoleChange}
+            selectedProjectOwnerId={selectedProjectOwnerId}
+            onSaveRole={onSaveRole}
+          />
+        </div>
+      ) : null}
+
+      {activeTab === 'settings' ? (
+        <ProjectSettingsTab
           settingsName={settingsName}
           onSettingsNameChange={onSettingsNameChange}
           settingsDescription={settingsDescription}
@@ -164,29 +157,23 @@ export function ProjectDetailsSection({
           onSettingsUseEstimatesChange={onSettingsUseEstimatesChange}
           canEditSelectedProject={canEditSelectedProject}
           canDeleteSelectedProject={canDeleteSelectedProject}
-          canManageMemberRoles={canManageMemberRoles}
-          tasks={tasks}
+          canCompleteSelectedProject={selectedProjectId ? canManageProject(selectedProjectId) : false}
           incompleteTaskCount={incompleteTaskCount}
-          teamMemberNames={teamMemberNames}
-          projectMembers={projectMembers}
-          projectManagerName={projectManagerName}
-          canInviteToSelectedProject={canInviteToSelectedProject}
-          memberEmail={memberEmail}
-          onMemberEmailChange={onMemberEmailChange}
-          memberRole={memberRole}
-          onMemberRoleChange={onMemberRoleChange}
-          canAssignAdminRole={canAssignAdminRole}
-          canAssignManagerRole={canAssignManagerRole}
-          onInviteMember={onInviteMember}
-          pendingRoleByUserId={pendingRoleByUserId}
-          onPendingRoleChange={onPendingRoleChange}
-          selectedProjectOwnerId={selectedProjectOwnerId}
-          onSaveRole={onSaveRole}
+          isProjectCompleted={(selectedProject?.status ?? '').toLowerCase() === 'completed'}
+          isLoading={isLoading}
+          onOpenSaveSettingsConfirm={onOpenSaveSettingsConfirm}
           onOpenDeleteConfirm={onOpenDeleteConfirm}
           onOpenCompleteConfirm={onOpenCompleteConfirm}
-          onOpenSaveSettingsConfirm={onOpenSaveSettingsConfirm}
         />
-      )}
-    </section>
+      ) : null}
+
+      {activeTab === 'estimates' ? (
+        <EstimatesTab projectId={selectedProject.id} canEdit={canEditSelectedProject} />
+      ) : null}
+
+      {activeTab === 'collaboration' ? (
+        <ProjectCollaborationTab projectId={selectedProject.id} canEdit={canEditSelectedProject} />
+      ) : null}
+    </>
   )
 }

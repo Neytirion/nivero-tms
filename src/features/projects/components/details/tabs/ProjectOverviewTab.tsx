@@ -137,6 +137,7 @@ export function ProjectOverviewTab({
                 ? projectMembers.map((member) => ({
                   key: member.member_id,
                   name: member.full_name ?? member.email ?? member.user_id,
+                  role: member.role,
                   profile: {
                       ...(member.user_id && currentUserProfile?.userId === member.user_id ? currentUserProfile : {}),
                       userId: member.user_id,
@@ -149,6 +150,7 @@ export function ProjectOverviewTab({
                 : teamMemberNames.map((name, index) => ({
                   key: `${name}-${index}`,
                   name,
+                  role: null,
                   profile: {
                     fullName: name,
                   } satisfies UserProfilePreview,
@@ -166,6 +168,11 @@ export function ProjectOverviewTab({
                     >
                       {member.name}
                     </button>
+                    {member.role ? (
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+                        {member.role}
+                      </span>
+                    ) : null}
                   </li>
                 )
               })}

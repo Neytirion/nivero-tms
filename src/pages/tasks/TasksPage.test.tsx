@@ -234,14 +234,14 @@ describe('TasksPage', () => {
     expect(screen.getByText('member')).toBeInTheDocument()
   })
 
-  it('shows task assignee in calendar view', async () => {
+  it('shows task assignee in list view', async () => {
     const workspace = createWorkspaceState({
       selectedProjectId: 'p1',
       projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
       tasks: [
         createTaskPreview({
           id: 't1',
-          title: 'Calendar task',
+          title: 'List task',
           project_id: 'p1',
           assigned_to: 'u2',
           due_date: new Date().toISOString().slice(0, 10),
@@ -267,9 +267,8 @@ describe('TasksPage', () => {
       </MemoryRouter>,
     )
 
-    fireEvent.click(screen.getByRole('button', { name: 'Calendar' }))
+    fireEvent.click(screen.getByRole('button', { name: 'List' }))
 
-    expect(await screen.findByText('Assignee:')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Bob Smith' })).toBeInTheDocument()
   })
 
@@ -373,9 +372,6 @@ describe('TasksPage', () => {
           <TasksPage />
         </MemoryRouter>,
       )
-
-      // ✅ Check BEHAVIOR: Blocking dependency is shown in calendar view
-      fireEvent.click(screen.getByRole('button', { name: 'Calendar' }))
 
       await waitFor(() => {
         // Dependency label should be displayed

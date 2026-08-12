@@ -4,7 +4,6 @@ import {
   type TaskPreview,
 } from '../../lib/pm'
 import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
-import { useTaskCalendarMeta } from './useTaskCalendarMeta'
 import { useTaskControllerActions } from './useTaskControllerActions'
 import { useTaskCreationRequirements } from './useTaskCreationRequirements'
 import { useTaskWorkPackagesLoader } from './useTaskWorkPackagesLoader'
@@ -36,7 +35,6 @@ export function useTasksPageController() {
   const [logTimeTask, setLogTimeTask] = useState<TaskPreview | null>(null)
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [taskViewMode, setTaskViewMode] = useState<TaskViewMode>('board')
-  const [calendarMonth, setCalendarMonth] = useState(new Date().toISOString().slice(0, 7))
 
   const {
     status,
@@ -164,19 +162,9 @@ export function useTasksPageController() {
     [tasks],
   )
 
-  const { calendarMeta, shiftCalendarMonthValue } = useTaskCalendarMeta({
-    calendarMonth,
-    tasks,
-  })
-
-  const shiftCalendarMonth = (direction: -1 | 1) => {
-    setCalendarMonth((prev) => shiftCalendarMonthValue(prev, direction))
-  }
-
   const resetPageState = () => {
     reset()
     setTaskViewMode('board')
-    setCalendarMonth(new Date().toISOString().slice(0, 7))
     setDragTaskId(null)
     setLogTimeTask(null)
     setHasAttemptedSubmit(false)
@@ -198,8 +186,6 @@ export function useTasksPageController() {
     setTaskViewMode,
     dragTaskId,
     setDragTaskId,
-    calendarMonth,
-    setCalendarMonth,
     canAssignAssignee,
     canManageTask,
     canDeleteTaskInView,
@@ -236,14 +222,12 @@ export function useTasksPageController() {
     canSubmit,
     logTimeTask,
     setLogTimeTask,
-    calendarMeta,
     createTaskHandler,
     moveTaskToStatus,
     assignTaskHandler,
     updateTaskDueDateHandler,
     removeTask,
     submitTaskLogTime,
-    shiftCalendarMonth,
     selectProject,
     hasMoreTasks,
     tasksTotalCount,

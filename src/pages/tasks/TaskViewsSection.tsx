@@ -1,11 +1,10 @@
 import type { TaskStatus } from '../../features/tasks/constants.ts'
 import type { TaskPreview } from '../../lib/pm'
 import { TaskBoardView } from './views/TaskBoardView'
-import { TaskCalendarView } from './views/TaskCalendarView'
 import { TaskListView } from './views/TaskListView'
-import type { AssigneeOption, CalendarMeta } from './views/task-view-types'
+import type { AssigneeOption } from './views/task-view-types'
 
-export type TaskViewMode = 'list' | 'board' | 'calendar'
+export type TaskViewMode = 'list' | 'board'
 
 type TaskViewsSectionProps = {
   taskViewMode: TaskViewMode
@@ -29,10 +28,6 @@ type TaskViewsSectionProps = {
   canDeleteTask: (task: TaskPreview) => boolean
   projectStartDate: string
   projectEndDate: string
-  calendarMonth: string
-  onCalendarMonthChange: (month: string) => void
-  onShiftCalendarMonth: (direction: -1 | 1) => void
-  calendarMeta: CalendarMeta
 }
 
 export function TaskViewsSection({
@@ -57,10 +52,6 @@ export function TaskViewsSection({
   canDeleteTask,
   projectStartDate,
   projectEndDate,
-  calendarMonth,
-  onCalendarMonthChange,
-  onShiftCalendarMonth,
-  calendarMeta,
 }: TaskViewsSectionProps) {
   return (
     <section className="page-section">
@@ -70,7 +61,6 @@ export function TaskViewsSection({
           {([
             { key: 'list', label: 'List' },
             { key: 'board', label: 'Board' },
-            { key: 'calendar', label: 'Calendar' },
           ] as const).map((view) => (
             <button
               key={view.key}
@@ -120,19 +110,6 @@ export function TaskViewsSection({
           dependencyLabelByTaskId={dependencyLabelByTaskId}
           onOpenUserProfile={onOpenUserProfile}
           onTaskClick={onTaskClick}
-        />
-      ) : null}
-
-      {taskViewMode === 'calendar' ? (
-        <TaskCalendarView
-          tasks={tasks}
-          calendarMonth={calendarMonth}
-          onCalendarMonthChange={onCalendarMonthChange}
-          onShiftCalendarMonth={onShiftCalendarMonth}
-          calendarMeta={calendarMeta}
-          assigneeLabelByUserId={assigneeLabelByUserId}
-          dependencyLabelByTaskId={dependencyLabelByTaskId}
-          onOpenUserProfile={onOpenUserProfile}
         />
       ) : null}
     </section>

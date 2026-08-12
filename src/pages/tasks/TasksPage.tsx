@@ -22,8 +22,6 @@ export function TasksPage() {
     setTaskViewMode,
     dragTaskId,
     setDragTaskId,
-    calendarMonth,
-    setCalendarMonth,
     canAssignAssignee,
     canManageTask,
     canDeleteTaskInView,
@@ -36,13 +34,11 @@ export function TasksPage() {
     assigneeOptions,
     logTimeTask,
     setLogTimeTask,
-    calendarMeta,
     moveTaskToStatus,
     assignTaskHandler,
     updateTaskDueDateHandler,
     removeTask,
     submitTaskLogTime,
-    shiftCalendarMonth,
     hasMoreTasks,
     tasksTotalCount,
     loadMoreTasks,
@@ -237,10 +233,6 @@ export function TasksPage() {
         canDeleteTask={canDeleteTaskInView}
         projectStartDate={projectStartDate}
         projectEndDate={projectEndDate}
-        calendarMonth={calendarMonth}
-        onCalendarMonthChange={setCalendarMonth}
-        onShiftCalendarMonth={shiftCalendarMonth}
-        calendarMeta={calendarMeta}
       />
 
       <TaskLogTimeModal

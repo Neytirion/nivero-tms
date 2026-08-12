@@ -6,6 +6,7 @@ import { TeamAccessSection } from './TeamAccessSection'
 import { ProjectOverviewTab } from './tabs/ProjectOverviewTab'
 import { ProjectSettingsTab } from './tabs/ProjectSettingsTab'
 import type { DetailsTab } from './ProjectDetailsSection'
+import type { UserProfilePreview } from '../../../../shared/components'
 
 interface ProjectDetailsSectionBodyProps {
   selectedProject: ProjectPreview
@@ -35,6 +36,7 @@ interface ProjectDetailsSectionBodyProps {
   incompleteTaskCount?: number
   teamMemberNames: string[]
   projectMembers: import('../../../../lib/pm').ProjectMemberListItem[]
+  currentUserProfile: UserProfilePreview | null
   projectManagerName?: string
   canInviteToSelectedProject: boolean
   memberEmail: string
@@ -80,6 +82,7 @@ export function ProjectDetailsSectionBody({
   incompleteTaskCount,
   teamMemberNames,
   projectMembers,
+  currentUserProfile,
   projectManagerName,
   canInviteToSelectedProject,
   memberEmail,
@@ -112,6 +115,7 @@ export function ProjectDetailsSectionBody({
           projectManagerName={projectManagerName}
           teamMemberNames={teamMemberNames}
           projectMembers={projectMembers}
+          currentUserProfile={currentUserProfile}
         />
       ) : null}
 
@@ -130,6 +134,7 @@ export function ProjectDetailsSectionBody({
             isLoading={isLoading}
             selectedProjectId={selectedProjectId}
             projectMembers={projectMembers}
+            currentUserProfile={currentUserProfile}
             canManageMemberRoles={canManageMemberRoles}
             pendingRoleByUserId={pendingRoleByUserId}
             onPendingRoleChange={onPendingRoleChange}

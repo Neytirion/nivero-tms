@@ -2,9 +2,12 @@ import { useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '../../lib/supabase'
 
+export const ABOUT_ME_MAX_LENGTH = 160
+
 interface UseProfileDetailsInput {
   user: User
   setStatus: (status: string) => void
+  onProfileSaved?: () => void | Promise<void>
 }
 
 interface ProfileSnapshot {
@@ -62,7 +65,7 @@ export function useProfileDetails(input: UseProfileDetailsInput) {
 
     const nextFullName = fullName.trim()
     const nextDisplayName = displayName.trim()
-    const nextBio = bio.trim()
+    const nextBio = bio.trim().slice(0, ABOUT_ME_MAX_LENGTH)
 
     const updatePayload: {
       data: {
@@ -98,7 +101,11 @@ export function useProfileDetails(input: UseProfileDetailsInput) {
     })
     setIsEditingProfile(false)
     input.setStatus('Profile updated')
-    setIsSavingProfile(false)
+    try {
+      await input.onProfileSaved?.()
+    } finally {
+      setIsSavingProfile(false)
+    }
   }
 
   return {

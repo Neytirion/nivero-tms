@@ -31,6 +31,7 @@ export function TaskDetailsPage() {
     dependencyLabelByTaskId,
     assigneeOptions,
     projectMembers,
+    currentUserProfile,
     assignTaskHandler,
     updateTaskDueDateHandler,
     removeTask,
@@ -94,6 +95,11 @@ export function TaskDetailsPage() {
   const canDelete = canDeleteTaskInView(task)
 
   const openUserProfile = (userId: string) => {
+    if (currentUserProfile?.userId === userId) {
+      setSelectedProfile(currentUserProfile)
+      return
+    }
+
     const member = projectMembers.find((candidate) => candidate.user_id === userId)
 
     if (member) {

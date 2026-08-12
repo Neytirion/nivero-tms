@@ -2,6 +2,7 @@ import type { ProjectPreview, TaskPreview } from '../../../../lib/pm'
 import type { ProjectRoleName } from '../../../../shared/utils/permissions'
 import { useEffect, useState } from 'react'
 import { ProjectDetailsSectionBody } from './ProjectDetailsSectionBody'
+import type { UserProfilePreview } from '../../../../shared/components'
 
 export type DetailsTab = 'overview' | 'tasks' | 'estimates' | 'collaboration' | 'team' | 'settings'
 
@@ -34,6 +35,7 @@ interface ProjectDetailsSectionProps {
   incompleteTaskCount?: number
   teamMemberNames: string[]
   projectMembers: import('../../../../lib/pm').ProjectMemberListItem[]
+  currentUserProfile: UserProfilePreview | null
   projectManagerName?: string
   canInviteToSelectedProject: boolean
   memberEmail: string
@@ -83,6 +85,7 @@ export function ProjectDetailsSection({
   incompleteTaskCount,
   teamMemberNames,
   projectManagerName,
+  currentUserProfile,
   canInviteToSelectedProject,
   memberEmail,
   onMemberEmailChange,
@@ -169,6 +172,7 @@ export function ProjectDetailsSection({
           incompleteTaskCount={incompleteTaskCount}
           teamMemberNames={teamMemberNames}
           projectMembers={projectMembers}
+          currentUserProfile={currentUserProfile}
           projectManagerName={projectManagerName}
           canInviteToSelectedProject={canInviteToSelectedProject}
           memberEmail={memberEmail}

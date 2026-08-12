@@ -4,8 +4,8 @@ import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
 import { supabase } from '../../lib/supabase'
 import { ConfirmDialog } from '../../shared/components'
 import { useAvatarUpload } from './useAvatarUpload'
+import { ABOUT_ME_MAX_LENGTH, useProfileDetails } from './useProfileDetails'
 import { usePasswordChange } from './usePasswordChange'
-import { useProfileDetails } from './useProfileDetails'
 
 interface ProfilePageProps {
   user: User
@@ -13,7 +13,7 @@ interface ProfilePageProps {
 
 export function ProfilePage({ user }: ProfilePageProps) {
   const email = user.email ?? ''
-  const { status, setStatus, resetDashboardPreview } = useWorkspace()
+  const { status, setStatus, loadDashboardPreview, resetDashboardPreview } = useWorkspace()
   const [isSignOutConfirmOpen, setIsSignOutConfirmOpen] = useState(false)
 
   const {
@@ -30,7 +30,11 @@ export function ProfilePage({ user }: ProfilePageProps) {
     startEditingProfile,
     cancelEditingProfile,
     saveProfile,
-  } = useProfileDetails({ user, setStatus })
+  } = useProfileDetails({
+    user,
+    setStatus,
+    onProfileSaved: loadDashboardPreview,
+  })
 
   const { setAvatarFile, isUploadingAvatar, uploadAvatar } = useAvatarUpload({
     userId: user.id,
@@ -64,6 +68,7 @@ export function ProfilePage({ user }: ProfilePageProps) {
 
   const profileName = displayName || fullName || 'Team member'
   const avatarInitial = (profileName || email || '?').charAt(0).toUpperCase()
+  const aboutMeLength = bio.trim().length
 
   return (
     <div className="space-y-5">
@@ -181,9 +186,14 @@ export function ProfilePage({ user }: ProfilePageProps) {
                 onChange={(event) => setBio(event.target.value)}
                 placeholder="A short introduction"
                 rows={3}
+                maxLength={ABOUT_ME_MAX_LENGTH}
                 disabled={!isEditingProfile || isSavingProfile}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
               />
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>Up to {ABOUT_ME_MAX_LENGTH} characters.</span>
+                <span>{aboutMeLength}/{ABOUT_ME_MAX_LENGTH}</span>
+              </div>
             </label>
 
             <label className="space-y-1">

@@ -171,6 +171,7 @@ export function useDashboardPreview() {
     projects,
     selectedProjectId,
     currentUserId: auth.currentUserId,
+    currentUserProfile: auth.currentUserProfile,
     getProjectRole,
     canManageProject,
     canDeleteProject,

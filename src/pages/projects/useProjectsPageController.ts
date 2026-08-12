@@ -46,6 +46,7 @@ export function useProjectsPageController() {
     projectMembers,
     selectedProjectId,
     currentUserId,
+    currentUserProfile,
     getProjectRole,
     canManageProject,
     canDeleteProject,
@@ -191,6 +192,7 @@ export function useProjectsPageController() {
     projectMembers,
     selectedProject,
     selectedProjectId,
+    currentUserProfile,
 
     // Permissions & derived states
     myRoleInSelectedProject,

@@ -15,6 +15,7 @@ interface TeamAccessSectionProps {
   isLoading: boolean
   selectedProjectId: string | null
   projectMembers: ProjectMemberListItem[]
+  currentUserProfile: UserProfilePreview | null
   canManageMemberRoles?: boolean
   pendingRoleByUserId: Record<string, string>
   onPendingRoleChange: (userId: string, role: string) => void
@@ -37,6 +38,7 @@ export function TeamAccessSection({
   isLoading,
   selectedProjectId,
   projectMembers,
+  currentUserProfile,
   canManageMemberRoles = false,
   pendingRoleByUserId,
   onPendingRoleChange,
@@ -44,6 +46,26 @@ export function TeamAccessSection({
   onSaveRole,
 }: TeamAccessSectionProps) {
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
+
+  const resolveProfile = (member: ProjectMemberListItem) => {
+    if (member.user_id && currentUserProfile?.userId === member.user_id) {
+      return {
+        ...currentUserProfile,
+        userId: member.user_id,
+        email: currentUserProfile.email || member.email,
+        role: member.role,
+        joinedAt: member.joined_at ?? currentUserProfile.joinedAt,
+      }
+    }
+
+    return {
+      userId: member.user_id,
+      fullName: member.full_name,
+      email: member.email,
+      role: member.role,
+      joinedAt: member.joined_at,
+    }
+  }
 
   return (
     <section className={isEmbedded ? 'rounded-xl border border-slate-200 bg-slate-50 p-3' : 'page-section bg-slate-50/70'}>
@@ -102,13 +124,7 @@ export function TeamAccessSection({
               <div>
                 <button
                   type="button"
-                  onClick={() => setSelectedProfile({
-                    userId: member.user_id,
-                    fullName: member.full_name,
-                    email: member.email,
-                    role: member.role,
-                    joinedAt: member.joined_at,
-                  })}
+                  onClick={() => setSelectedProfile(resolveProfile(member))}
                   className="text-left text-sm font-medium text-slate-800 underline-offset-2 hover:text-cyan-700 hover:underline"
                 >
                   {member.full_name ?? member.email ?? 'Unknown user'}

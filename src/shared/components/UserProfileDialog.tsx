@@ -2,10 +2,12 @@ import { createPortal } from 'react-dom'
 
 export interface UserProfilePreview {
   userId?: string | null
+  displayName?: string | null
   fullName?: string | null
   email?: string | null
   role?: string | null
   joinedAt?: string | null
+  aboutMe?: string | null
 }
 
 interface UserProfileDialogProps {
@@ -37,8 +39,8 @@ export function UserProfileDialog({ isOpen, profile, onClose }: UserProfileDialo
     return null
   }
 
-  const displayName = profile.fullName || profile.email || profile.userId || 'Unknown user'
-  const initials = displayName
+  const profileName = profile.displayName || profile.fullName || profile.email || profile.userId || 'Unknown user'
+  const initials = profileName
     .split(' ')
     .map((part) => part[0])
     .join('')
@@ -64,7 +66,7 @@ export function UserProfileDialog({ isOpen, profile, onClose }: UserProfileDialo
             {initials || '?'}
           </span>
           <div className="min-w-0">
-            <h3 className="truncate text-base font-semibold text-slate-900">{displayName}</h3>
+            <h3 className="truncate text-base font-semibold text-slate-900">{profileName}</h3>
             <p className="mt-0.5 text-xs uppercase tracking-[0.12em] text-slate-500">Member profile</p>
           </div>
         </div>
@@ -82,11 +84,14 @@ export function UserProfileDialog({ isOpen, profile, onClose }: UserProfileDialo
             <dt className="text-slate-500">Joined</dt>
             <dd className="font-medium text-slate-800">{formatDateTime(profile.joinedAt)}</dd>
           </div>
-          <div className="flex items-center justify-between gap-2">
-            <dt className="text-slate-500">User ID</dt>
-            <dd className="truncate font-mono text-xs text-slate-700">{profile.userId || 'Unknown'}</dd>
-          </div>
         </dl>
+
+        {profile.aboutMe?.trim() ? (
+          <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">About me</p>
+            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{profile.aboutMe.trim()}</p>
+          </div>
+        ) : null}
 
         <div className="mt-5 flex justify-end">
           <button

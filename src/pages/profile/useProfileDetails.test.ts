@@ -15,6 +15,7 @@ vi.mock('../../lib/supabase', () => ({
 }))
 
 import { useProfileDetails } from './useProfileDetails'
+import { ABOUT_ME_MAX_LENGTH } from './useProfileDetails'
 
 function createUser(overrides: Partial<User> = {}): User {
   return {
@@ -115,6 +116,29 @@ describe('useProfileDetails', () => {
     expect(result.current.isEditingProfile).toBe(false)
     expect(result.current.isSavingProfile).toBe(false)
     expect(setStatus).toHaveBeenCalledWith('Profile updated')
+  })
+
+  it('clamps about me to the configured max length when saving', async () => {
+    const setStatus = vi.fn()
+    const { result } = renderHook(() => useProfileDetails({ user: createUser(), setStatus }))
+
+    const longBio = 'a'.repeat(ABOUT_ME_MAX_LENGTH + 25)
+
+    act(() => {
+      result.current.startEditingProfile()
+      result.current.setBio(longBio)
+    })
+
+    await act(async () => {
+      await result.current.saveProfile()
+    })
+
+    expect(mocks.updateUser).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        bio: 'a'.repeat(ABOUT_ME_MAX_LENGTH),
+      }),
+    })
+    expect(result.current.bio).toBe('a'.repeat(ABOUT_ME_MAX_LENGTH))
   })
 
   it('reports save errors and keeps editing mode active', async () => {

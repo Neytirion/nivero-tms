@@ -16,6 +16,7 @@ export function TasksPage() {
     selectedProjectId,
     myRoleInSelectedProject,
     projectMembers,
+    currentUserProfile,
     tasks,
     taskViewMode,
     setTaskViewMode,
@@ -74,6 +75,11 @@ export function TasksPage() {
   )
 
   const openUserProfile = (userId: string) => {
+    if (currentUserProfile?.userId === userId) {
+      setSelectedProfile(currentUserProfile)
+      return
+    }
+
     const member = membersByUserId[userId]
 
     if (member) {

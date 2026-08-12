@@ -40,6 +40,7 @@ interface ProjectOverviewTabProps {
   projectManagerName?: string
   teamMemberNames: string[]
   projectMembers: ProjectMemberListItem[]
+  currentUserProfile: UserProfilePreview | null
 }
 
 export function ProjectOverviewTab({
@@ -48,6 +49,7 @@ export function ProjectOverviewTab({
   projectManagerName,
   teamMemberNames,
   projectMembers,
+  currentUserProfile,
 }: ProjectOverviewTabProps) {
   const [exportFormat, setExportFormat] = useState<ClientBriefExportFormat>('pdf')
   const [isExporting, setIsExporting] = useState(false)
@@ -136,11 +138,12 @@ export function ProjectOverviewTab({
                   key: member.member_id,
                   name: member.full_name ?? member.email ?? member.user_id,
                   profile: {
-                    userId: member.user_id,
-                    fullName: member.full_name,
-                    email: member.email,
-                    role: member.role,
-                    joinedAt: member.joined_at,
+                      ...(member.user_id && currentUserProfile?.userId === member.user_id ? currentUserProfile : {}),
+                      userId: member.user_id,
+                      fullName: member.full_name,
+                      email: currentUserProfile?.userId === member.user_id ? currentUserProfile.email || member.email : member.email,
+                      role: member.role,
+                      joinedAt: member.joined_at ?? currentUserProfile?.joinedAt,
                   } satisfies UserProfilePreview,
                 }))
                 : teamMemberNames.map((name, index) => ({

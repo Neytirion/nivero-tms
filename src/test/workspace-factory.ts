@@ -61,6 +61,7 @@ export function createWorkspaceState(overrides: Partial<WorkspaceState> = {}): W
     loadMoreTasks: vi.fn(async () => undefined),
     selectedProjectId: null,
     currentUserId: null,
+    currentUserProfile: null,
     getProjectRole: vi.fn(() => null),
     canManageProject: vi.fn(() => false),
     canDeleteProject: vi.fn(() => false),

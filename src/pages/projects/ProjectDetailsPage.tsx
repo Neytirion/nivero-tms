@@ -33,6 +33,7 @@ export function ProjectDetailsPage() {
     projectMembers,
     selectedProject,
     selectedProjectId,
+    currentUserProfile,
     myRoleInSelectedProject,
     canManageProject,
     canDeleteSelectedProject,
@@ -172,6 +173,7 @@ export function ProjectDetailsPage() {
             incompleteTaskCount={incompleteTaskCount}
             teamMemberNames={teamMemberNames}
             projectManagerName={projectManagerName}
+            currentUserProfile={currentUserProfile}
             canInviteToSelectedProject={canInviteToSelectedProject}
             memberEmail={memberEmail}
             onMemberEmailChange={setMemberEmail}

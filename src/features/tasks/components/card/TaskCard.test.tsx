@@ -1,17 +1,6 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { TaskCard } from './TaskCard'
-import { getTaskCommentsCount } from '../../../../lib/pm'
-
-vi.mock('../../../../lib/pm', () => ({
-  getTaskCommentsCount: vi.fn(),
-}))
-
-vi.mock('../comments', () => ({
-  TaskCommentsPanel: ({ taskId }: { taskId: string }) => <div>Comments panel for {taskId}</div>,
-}))
-
-const mockGetTaskCommentsCount = vi.mocked(getTaskCommentsCount)
 
 const baseTask = {
   id: 't1',
@@ -27,72 +16,56 @@ const baseTask = {
 
 describe('TaskCard', () => {
   beforeEach(() => {
-    mockGetTaskCommentsCount.mockResolvedValue(3)
+    vi.clearAllMocks()
   })
 
-  it('renders priority styling and comments count', async () => {
+  it('renders compact summary with priority marker', () => {
     render(
       <TaskCard
         task={baseTask}
         assigneeLabel="Alice"
-        onDelete={vi.fn()}
-        onLogTime={vi.fn()}
         isLocked={false}
-        canDelete={true}
       />,
     )
 
-    const priorityBadge = screen.getByText('Priority: high')
-  expect(priorityBadge.getAttribute('data-priority')).toBe('high')
-
-    await waitFor(() => {
-      expect(screen.getByText('Comments (3)')).toBeTruthy()
-    })
+    const priorityBadge = screen.getByText('high')
+    expect(priorityBadge.getAttribute('data-priority')).toBe('high')
+    expect(screen.getByText('Open card for full details')).toBeInTheDocument()
   })
 
-  it('opens comments panel and handles actions', async () => {
-    const onDelete = vi.fn()
-    const onLogTime = vi.fn()
+  it('navigates when card is clicked', () => {
+    const onTaskClick = vi.fn()
 
     render(
       <TaskCard
         task={baseTask}
         assigneeLabel="Alice"
-        onDelete={onDelete}
-        onLogTime={onLogTime}
+        onTaskClick={onTaskClick}
         isLocked={false}
-        canDelete={true}
       />,
     )
 
-    fireEvent.click(screen.getByText('Log time'))
-    expect(onLogTime).toHaveBeenCalledWith(baseTask)
-
-    fireEvent.click(screen.getByText('Delete'))
-    expect(onDelete).toHaveBeenCalledWith('t1')
-
-    fireEvent.click(await screen.findByText('Comments (3)'))
-    expect(screen.getByText('Comments panel for t1')).toBeTruthy()
-    expect(screen.getByText('Hide comments')).toBeTruthy()
+    fireEvent.click(screen.getByText('Implement API'))
+    expect(onTaskClick).toHaveBeenCalledWith('t1')
   })
 
-  it('updates due date for editable task', async () => {
-    const onUpdateDueDate = vi.fn()
+  it('opens user profile from assignee link without triggering card click', () => {
+    const onOpenUserProfile = vi.fn()
+    const onTaskClick = vi.fn()
 
     render(
       <TaskCard
         task={baseTask}
         assigneeLabel="Alice"
-        onUpdateDueDate={onUpdateDueDate}
-        onDelete={vi.fn()}
-        onLogTime={vi.fn()}
+        assigneeUserId="u1"
+        onOpenUserProfile={onOpenUserProfile}
+        onTaskClick={onTaskClick}
         isLocked={false}
-        canDelete={true}
       />,
     )
 
-    fireEvent.change(screen.getByLabelText('Due date'), { target: { value: '2026-06-18' } })
-
-    expect(onUpdateDueDate).toHaveBeenCalledWith('t1', '2026-06-18')
+    fireEvent.click(screen.getByRole('button', { name: 'Alice' }))
+    expect(onOpenUserProfile).toHaveBeenCalledWith('u1')
+    expect(onTaskClick).not.toHaveBeenCalled()
   })
 })

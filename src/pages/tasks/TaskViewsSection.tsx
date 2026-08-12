@@ -2,7 +2,6 @@ import type { TaskStatus } from '../../features/tasks/constants.ts'
 import type { TaskPreview } from '../../lib/pm'
 import { TaskBoardView } from './views/TaskBoardView'
 import { TaskListView } from './views/TaskListView'
-import type { AssigneeOption } from './views/task-view-types'
 
 export type TaskViewMode = 'list' | 'board'
 
@@ -14,20 +13,11 @@ type TaskViewsSectionProps = {
   workPackageLabelById: Record<string, string>
   dependencyLabelByTaskId: Record<string, string>
   onOpenUserProfile: (userId: string) => void
-  assigneeOptions: AssigneeOption[]
-  canAssignAssignee: boolean
   dragTaskId: string | null
   onDragTaskIdChange: (taskId: string | null) => void
   onMoveTaskToStatus: (taskId: string, status: TaskStatus) => void
-  onAssignTask: (taskId: string, userId: string) => void
-  onUpdateTaskDueDate: (taskId: string, dueDate: string) => void
-  onDeleteTask: (taskId: string) => void
-  onLogTime: (task: TaskPreview | null) => void
   onTaskClick?: (taskId: string) => void
   canManageTask: (task: TaskPreview) => boolean
-  canDeleteTask: (task: TaskPreview) => boolean
-  projectStartDate: string
-  projectEndDate: string
 }
 
 export function TaskViewsSection({
@@ -38,20 +28,11 @@ export function TaskViewsSection({
   workPackageLabelById,
   dependencyLabelByTaskId,
   onOpenUserProfile,
-  assigneeOptions,
-  canAssignAssignee,
   dragTaskId,
   onDragTaskIdChange,
   onMoveTaskToStatus,
-  onAssignTask,
-  onUpdateTaskDueDate,
-  onDeleteTask,
-  onLogTime,
   onTaskClick,
   canManageTask,
-  canDeleteTask,
-  projectStartDate,
-  projectEndDate,
 }: TaskViewsSectionProps) {
   return (
     <section className="page-section">
@@ -82,23 +63,12 @@ export function TaskViewsSection({
         <TaskBoardView
           tasks={tasks}
           assigneeLabelByUserId={assigneeLabelByUserId}
-          workPackageLabelById={workPackageLabelById}
-          dependencyLabelByTaskId={dependencyLabelByTaskId}
           onOpenUserProfile={onOpenUserProfile}
-          assigneeOptions={assigneeOptions}
-          canAssignAssignee={canAssignAssignee}
           dragTaskId={dragTaskId}
           onDragTaskIdChange={onDragTaskIdChange}
           onMoveTaskToStatus={onMoveTaskToStatus}
-          onAssignTask={onAssignTask}
-          onUpdateTaskDueDate={onUpdateTaskDueDate}
-          onDeleteTask={onDeleteTask}
-          onLogTime={onLogTime}
           onTaskClick={onTaskClick}
           canManageTask={canManageTask}
-          canDeleteTask={canDeleteTask}
-          projectStartDate={projectStartDate}
-          projectEndDate={projectEndDate}
         />
       ) : null}
 

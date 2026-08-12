@@ -1,4 +1,3 @@
-import { TaskLogTimeModal } from '../../features/tasks/components'
 import { TaskViewsSection } from '.'
 import type { ProjectMemberListItem } from '../../lib/pm'
 import { UserProfileDialog, type UserProfilePreview } from '../../shared/components'
@@ -22,23 +21,12 @@ export function TasksPage() {
     setTaskViewMode,
     dragTaskId,
     setDragTaskId,
-    canAssignAssignee,
     canManageTask,
-    canDeleteTaskInView,
-    projectStartDate,
-    projectEndDate,
     hasEstimateVersion,
     assigneeLabelByUserId,
     dependencyLabelByTaskId,
     workPackageLabelById,
-    assigneeOptions,
-    logTimeTask,
-    setLogTimeTask,
     moveTaskToStatus,
-    assignTaskHandler,
-    updateTaskDueDateHandler,
-    removeTask,
-    submitTaskLogTime,
     hasMoreTasks,
     tasksTotalCount,
     loadMoreTasks,
@@ -209,38 +197,13 @@ export function TasksPage() {
         workPackageLabelById={workPackageLabelById}
         dependencyLabelByTaskId={dependencyLabelByTaskId}
         onOpenUserProfile={openUserProfile}
-        assigneeOptions={assigneeOptions}
-        canAssignAssignee={canAssignAssignee}
         dragTaskId={dragTaskId}
         onDragTaskIdChange={setDragTaskId}
         onMoveTaskToStatus={(taskId, status) => {
           void moveTaskToStatus(taskId, status)
         }}
-        onAssignTask={(taskId, userId) => {
-          void assignTaskHandler(taskId, userId)
-        }}
-        onUpdateTaskDueDate={(taskId, dueDate) => {
-          void updateTaskDueDateHandler(taskId, dueDate)
-        }}
-        onDeleteTask={(taskId) => {
-          void removeTask(taskId)
-        }}
-        onLogTime={(task) => {
-          setLogTimeTask(task)
-        }}
         onTaskClick={(taskId) => navigate(`/app/tasks/${taskId}`)}
         canManageTask={canManageTask}
-        canDeleteTask={canDeleteTaskInView}
-        projectStartDate={projectStartDate}
-        projectEndDate={projectEndDate}
-      />
-
-      <TaskLogTimeModal
-        isOpen={Boolean(logTimeTask)}
-        taskTitle={logTimeTask?.title ?? ''}
-        onClose={() => setLogTimeTask(null)}
-        onSubmit={submitTaskLogTime}
-        isSubmitting={isLoading}
       />
 
       <UserProfileDialog

@@ -2,50 +2,27 @@ import { KANBAN_COLUMNS, type TaskStatus } from '../../../features/tasks/constan
 import { KanbanColumn } from '../../../features/tasks/components'
 import type { TaskPreview } from '../../../lib/pm'
 import { normalizeTaskStatus } from '../tasks-page.utils'
-import type { AssigneeOption } from './task-view-types'
 
 interface TaskBoardViewProps {
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
-  workPackageLabelById: Record<string, string>
-  dependencyLabelByTaskId: Record<string, string>
   onOpenUserProfile: (userId: string) => void
-  assigneeOptions: AssigneeOption[]
-  canAssignAssignee: boolean
   dragTaskId: string | null
   onDragTaskIdChange: (taskId: string | null) => void
   onMoveTaskToStatus: (taskId: string, status: TaskStatus) => void
-  onAssignTask: (taskId: string, userId: string) => void
-  onUpdateTaskDueDate: (taskId: string, dueDate: string) => void
-  onDeleteTask: (taskId: string) => void
-  onLogTime: (task: TaskPreview | null) => void
   onTaskClick?: (taskId: string) => void
   canManageTask: (task: TaskPreview) => boolean
-  canDeleteTask: (task: TaskPreview) => boolean
-  projectStartDate: string
-  projectEndDate: string
 }
 
 export function TaskBoardView({
   tasks,
   assigneeLabelByUserId,
-  workPackageLabelById,
-  dependencyLabelByTaskId,
   onOpenUserProfile,
-  assigneeOptions,
-  canAssignAssignee,
   dragTaskId,
   onDragTaskIdChange,
   onMoveTaskToStatus,
-  onAssignTask,
-  onUpdateTaskDueDate,
-  onDeleteTask,
-  onLogTime,
   onTaskClick,
   canManageTask,
-  canDeleteTask,
-  projectStartDate,
-  projectEndDate,
 }: TaskBoardViewProps) {
   return (
     <>
@@ -61,11 +38,7 @@ export function TaskBoardView({
               label={column.label}
               tasks={columnTasks}
               assigneeLabelByUserId={assigneeLabelByUserId}
-              workPackageLabelById={workPackageLabelById}
-              dependencyLabelByTaskId={dependencyLabelByTaskId}
               onOpenUserProfile={onOpenUserProfile}
-              assigneeOptions={assigneeOptions}
-              canAssignAssignee={canAssignAssignee}
               onDragOver={(event) => event.preventDefault()}
               onDropTask={(status) => {
                 if (dragTaskId) {
@@ -73,16 +46,9 @@ export function TaskBoardView({
                 }
                 onDragTaskIdChange(null)
               }}
-              onAssignTask={onAssignTask}
-              onUpdateTaskDueDate={onUpdateTaskDueDate}
-              onDeleteTask={onDeleteTask}
               onDragTaskStart={onDragTaskIdChange}
-              onLogTime={onLogTime}
               onTaskClick={onTaskClick}
               canManageTask={canManageTask}
-              canDeleteTask={canDeleteTask}
-              projectStartDate={projectStartDate}
-              projectEndDate={projectEndDate}
             />
           )
         })}

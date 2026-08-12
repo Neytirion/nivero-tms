@@ -23,10 +23,12 @@ vi.mock('../../lib/pm', () => ({
 }))
 
 let lastKanbanProps: unknown = null
+let kanbanPropsCalls: unknown[] = []
 
 vi.mock('../../features/tasks/components', () => ({
   KanbanColumn: (props: unknown) => {
     lastKanbanProps = props
+    kanbanPropsCalls.push(props)
     return <div>kanban-column</div>
   },
   TaskLogTimeModal: () => null,
@@ -65,6 +67,7 @@ function mockTaskForm(overrides: Record<string, unknown> = {}) {
 describe('TasksPage', () => {
   beforeEach(() => {
     lastKanbanProps = null
+    kanbanPropsCalls = []
     mockTaskForm()
     mockGetProjectTaskWorkPackages.mockResolvedValue([
       { id: 'wp1', name: 'Backend', estimated_hours: 20 },
@@ -112,7 +115,7 @@ describe('TasksPage', () => {
     })
   })
 
-  it('hides delete action in board view for members', async () => {
+  it('locks task drag for members in board view', async () => {
     const task = createTaskPreview({ id: 't-member', title: 'Member task', project_id: 'p1' })
     const workspace = createWorkspaceState({
       selectedProjectId: 'p1',
@@ -134,10 +137,10 @@ describe('TasksPage', () => {
     })
 
     const firstCallProps = lastKanbanProps as {
-      canDeleteTask: (task: ReturnType<typeof createTaskPreview>) => boolean
+      canManageTask: (task: ReturnType<typeof createTaskPreview>) => boolean
     }
 
-    expect(firstCallProps.canDeleteTask(task)).toBe(false)
+    expect(firstCallProps.canManageTask(task)).toBe(false)
   })
 
   it('disables task creation when estimate version is unavailable', async () => {
@@ -272,7 +275,7 @@ describe('TasksPage', () => {
     expect(screen.getByRole('button', { name: 'Bob Smith' })).toBeInTheDocument()
   })
 
-  it('updates due date for existing task from board view', async () => {
+  it('passes drop handler to board columns', async () => {
     const workspace = createWorkspaceState({
       selectedProjectId: 'p1',
       projects: [createProjectPreview({ id: 'p1', name: 'Apollo', start_date: '2026-06-01', end_date: '2026-06-30' })],
@@ -299,14 +302,10 @@ describe('TasksPage', () => {
     })
 
     const kanbanProps = lastKanbanProps as {
-      onUpdateTaskDueDate: (taskId: string, dueDate: string) => void
+      onDropTask: (status: 'todo' | 'in_progress' | 'review' | 'done' | 'backlog') => void
     }
 
-    kanbanProps.onUpdateTaskDueDate('t1', '2026-06-25')
-
-    await waitFor(() => {
-      expect(workspace.editTask).toHaveBeenCalledWith('t1', { dueDate: '2026-06-25' })
-    })
+    expect(typeof kanbanProps.onDropTask).toBe('function')
   })
 
   describe('task blocking dependencies', () => {
@@ -340,7 +339,7 @@ describe('TasksPage', () => {
       })
     })
 
-    it('displays blocked by information for dependent tasks', async () => {
+    it('passes dependent tasks into board column props', async () => {
       const workspace = createWorkspaceState({
         selectedProjectId: 'p1',
         projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
@@ -378,11 +377,15 @@ describe('TasksPage', () => {
         expect(lastKanbanProps).not.toBeNull()
       })
 
-      // ✅ Dependency info passed to view component
-      const kanbanProps = lastKanbanProps as {
-        dependencyLabelByTaskId: Record<string, string>
-      }
-      expect(kanbanProps.dependencyLabelByTaskId).toBeTruthy()
+      // ✅ Dependent task data is passed down to board columns
+      expect(
+        kanbanPropsCalls.some((columnProps) => {
+          const typed = columnProps as {
+            tasks: Array<{ id: string; blocked_by_task_id?: string | null }>
+          }
+          return typed.tasks.some((task) => task.id === 't2' && task.blocked_by_task_id === 't1')
+        }),
+      ).toBe(true)
     })
 
     it('prevents circular task blocking', async () => {

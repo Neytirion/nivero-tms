@@ -32,7 +32,7 @@ export function KanbanColumn({
     <div
       onDragOver={onDragOver}
       onDrop={() => onDropTask(status)}
-      className="rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)] p-3"
+      className="rounded-xl border border-slate-200 bg-[linear-gradient(180deg,#f8fafc_0%,#f1f5f9_100%)] p-3 shadow-sm"
     >
       <h3 className="text-sm font-semibold text-slate-900">
         {label} ({tasks.length})

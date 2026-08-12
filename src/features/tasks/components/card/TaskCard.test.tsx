@@ -30,7 +30,7 @@ describe('TaskCard', () => {
 
     const priorityBadge = screen.getByText('high')
     expect(priorityBadge.getAttribute('data-priority')).toBe('high')
-    expect(screen.getByText('Open card for full details')).toBeInTheDocument()
+    expect(screen.getByText('Details')).toBeInTheDocument()
   })
 
   it('navigates when card is clicked', () => {

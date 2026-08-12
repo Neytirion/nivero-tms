@@ -35,9 +35,9 @@ export function TaskViewsSection({
   canManageTask,
 }: TaskViewsSectionProps) {
   return (
-    <section className="page-section">
+    <section className="page-section border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-        <h3 className="section-title">Task Views</h3>
+        <h3 className="section-title text-slate-900">Task Views</h3>
         <div className="flex items-center gap-2">
           {([
             { key: 'list', label: 'List' },
@@ -47,10 +47,10 @@ export function TaskViewsSection({
               key={view.key}
               type="button"
               onClick={() => onTaskViewModeChange(view.key)}
-              className={`rounded-md border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide ${
+              className={`rounded-lg border px-3 py-1.5 text-xs font-semibold uppercase tracking-wide transition ${
                 taskViewMode === view.key
-                  ? 'border-cyan-300 bg-cyan-100 text-cyan-900'
-                  : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-100'
+                  ? 'border-sky-300 bg-sky-100 text-sky-900 shadow-sm'
+                  : 'border-slate-300 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50'
               }`}
             >
               {view.label}

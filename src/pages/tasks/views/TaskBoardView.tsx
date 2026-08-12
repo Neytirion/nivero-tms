@@ -26,7 +26,6 @@ export function TaskBoardView({
 }: TaskBoardViewProps) {
   return (
     <>
-      <p className="mb-3 text-xs text-slate-500">Drag card to change task status</p>
       <div className="grid gap-4 xl:grid-cols-5">
         {KANBAN_COLUMNS.map((column) => {
           const columnTasks = tasks.filter((task) => normalizeTaskStatus(task.status) === column.key)

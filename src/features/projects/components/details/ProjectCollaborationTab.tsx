@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createProjectComment,
   deleteComment,
@@ -38,12 +38,19 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
   const [wikiDraft, setWikiDraft] = useState('')
   const [isEditingWiki, setIsEditingWiki] = useState(false)
   const [isSavingWiki, setIsSavingWiki] = useState(false)
+  const [activeSection, setActiveSection] = useState<'comments' | 'wiki' | 'files' | 'activity'>('comments')
   const [lastReadAt, setLastReadAt] = useState<string | null>(() =>
     localStorage.getItem(`collab_lastRead_${projectId}`),
   )
   const [currentActivityPage, setCurrentActivityPage] = useState(1)
   const commentsEndRef = useRef<HTMLDivElement>(null)
   const activityItemsPerPage = 10
+
+  const markAsRead = useCallback(() => {
+    const now = new Date().toISOString()
+    localStorage.setItem(`collab_lastRead_${projectId}`, now)
+    setLastReadAt(now)
+  }, [projectId])
 
   const membersByUserId = useMemo(
     () => members.reduce<Record<string, string>>((acc, m) => {
@@ -56,6 +63,11 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
   const loadData = async () => {
     setIsLoading(true)
     try {
+      const storedLastReadAt = localStorage.getItem(`collab_lastRead_${projectId}`)
+      setLastReadAt(storedLastReadAt)
+      setActiveSection('comments')
+      setCurrentActivityPage(1)
+
       const [{ data: authData }, wiki, activityEvents, projectMembers, projectComments] = await Promise.all([
         supabase.auth.getUser(),
         getProjectWikiPage(projectId),
@@ -69,6 +81,14 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
       setComments(projectComments)
       if (wiki) { setWikiTitle(wiki.title); setWikiContent(wiki.content); setWikiDraft(wiki.content) }
       else { setWikiTitle('Project Wiki'); setWikiContent(''); setWikiDraft('') }
+
+      const unreadOnLoad = storedLastReadAt
+        ? projectComments.filter((comment) => comment.created_at > storedLastReadAt && comment.user_id !== authData.user?.id).length
+        : 0
+
+      if (unreadOnLoad > 0) {
+        markAsRead()
+      }
     } catch (error) {
       console.error('Collaboration load error:', error)
     }
@@ -124,17 +144,9 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
     setIsSavingWiki(false)
   }
 
-  const [activeSection, setActiveSection] = useState<'comments' | 'wiki' | 'files' | 'activity'>('comments')
-
   const unreadCount = lastReadAt
     ? comments.filter((c) => c.created_at > lastReadAt && c.user_id !== currentUserId).length
     : 0
-
-  const markAsRead = () => {
-    const now = new Date().toISOString()
-    localStorage.setItem(`collab_lastRead_${projectId}`, now)
-    setLastReadAt(now)
-  }
 
   const handleCommentsTabClick = () => {
     setActiveSection('comments')

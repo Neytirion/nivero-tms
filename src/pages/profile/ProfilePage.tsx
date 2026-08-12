@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
 import { supabase } from '../../lib/supabase'
+import { ConfirmDialog } from '../../shared/components'
 import { useAvatarUpload } from './useAvatarUpload'
 import { usePasswordChange } from './usePasswordChange'
 import { useProfileDetails } from './useProfileDetails'
@@ -12,6 +14,7 @@ interface ProfilePageProps {
 export function ProfilePage({ user }: ProfilePageProps) {
   const email = user.email ?? ''
   const { status, setStatus, resetDashboardPreview } = useWorkspace()
+  const [isSignOutConfirmOpen, setIsSignOutConfirmOpen] = useState(false)
 
   const {
     fullName,
@@ -55,6 +58,7 @@ export function ProfilePage({ user }: ProfilePageProps) {
       return
     }
 
+    setIsSignOutConfirmOpen(false)
     resetDashboardPreview()
   }
 
@@ -263,11 +267,22 @@ export function ProfilePage({ user }: ProfilePageProps) {
 
       <button
         type="button"
-        onClick={signOut}
+        onClick={() => setIsSignOutConfirmOpen(true)}
         className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-100"
       >
         Sign out
       </button>
+
+      <ConfirmDialog
+        isOpen={isSignOutConfirmOpen}
+        title="Sign out"
+        description="Do you want to sign out?"
+        confirmText="Sign out"
+        cancelText="Cancel"
+        tone="danger"
+        onCancel={() => setIsSignOutConfirmOpen(false)}
+        onConfirm={signOut}
+      />
     </div>
   )
 }

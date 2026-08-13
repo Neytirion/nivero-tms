@@ -132,8 +132,21 @@ export function TaskDetailsPage() {
   const blockedByLabel = task.blocked_by_task_id ? dependencyLabelByTaskId[task.blocked_by_task_id] : undefined
   const isLocked = !canManageTask(task)
   const canDelete = canDeleteTaskInView(task)
-  const progressPct = task.estimate_hours && task.estimate_hours > 0
-    ? Math.min(100, Math.round(((task.actual_hours ?? 0) / task.estimate_hours) * 100))
+
+  const currentUserId = currentUserProfile?.userId ?? null
+  const isAssignee = Boolean(currentUserId && task.assigned_to === currentUserId)
+  const isCreatorOfUnassigned = Boolean(currentUserId && !task.assigned_to && task.created_by === currentUserId)
+  // Time logging is reserved for the person doing the work: the assignee (or the
+  // creator while the task is still unassigned). Managers can edit tasks but do
+  // not log time on someone else's behalf.
+  const canLogTime = (isAssignee || isCreatorOfUnassigned) && !isLocked
+
+  const estimateHours = task.estimate_hours ?? 0
+  const actualHours = task.actual_hours ?? 0
+  const remainingHours = Math.max(0, Math.round((estimateHours - actualHours) * 100) / 100)
+  const isOverBudget = estimateHours > 0 && actualHours > estimateHours
+  const progressPct = estimateHours > 0
+    ? Math.min(100, Math.round((actualHours / estimateHours) * 100))
     : 0
 
   const openUserProfile = (userId: string) => {
@@ -198,6 +211,14 @@ export function TaskDetailsPage() {
               <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getDueToneClass(task.due_date)}`}>
                 Due: {dueDate}
               </span>
+              {isAssignee ? (
+                <span className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+                  <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5 6a5 5 0 0 1 10 0H3Z" />
+                  </svg>
+                  Assigned to you
+                </span>
+              ) : null}
               {isLocked ? (
                 <span className="inline-flex rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
                   View mode
@@ -284,16 +305,40 @@ export function TaskDetailsPage() {
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Effort</h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Time tracking</h2>
+                {canLogTime ? (
+                  <button
+                    type="button"
+                    onClick={() => setLogTimeTask(task)}
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                  >
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                    </svg>
+                    Log time
+                  </button>
+                ) : null}
+              </div>
+
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Estimate</p>
-                  <p className="mt-1 text-xl font-semibold text-slate-900">{task.estimate_hours ?? 0}h</p>
+                  <p className="mt-1 text-xl font-semibold text-slate-900">{estimateHours}h</p>
                 </div>
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Actual</p>
-                  <p className="mt-1 text-xl font-semibold text-slate-900">{task.actual_hours ?? 0}h</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Logged</p>
+                  <p className="mt-1 text-xl font-semibold text-slate-900">{actualHours}h</p>
+                </div>
+
+                <div className={`rounded-xl border p-3 ${isOverBudget ? 'border-rose-200 bg-rose-50' : 'border-slate-200 bg-slate-50'}`}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    {isOverBudget ? 'Over budget' : 'Remaining'}
+                  </p>
+                  <p className={`mt-1 text-xl font-semibold ${isOverBudget ? 'text-rose-700' : 'text-slate-900'}`}>
+                    {isOverBudget ? `+${Math.round((actualHours - estimateHours) * 100) / 100}h` : `${remainingHours}h`}
+                  </p>
                 </div>
               </div>
 
@@ -304,31 +349,29 @@ export function TaskDetailsPage() {
                 </div>
                 <div className="h-2 rounded-full bg-slate-100">
                   <div
-                    className="h-2 rounded-full bg-sky-500 transition-all"
+                    className={`h-2 rounded-full transition-all ${isOverBudget ? 'bg-rose-500' : 'bg-sky-500'}`}
                     style={{ width: `${progressPct}%` }}
                   />
                 </div>
               </div>
+
+              {!canLogTime ? (
+                <p className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
+                  {isAssignee
+                    ? 'Time logging is unavailable while this project is read-only.'
+                    : 'Only the assignee can log time on this task.'}
+                </p>
+              ) : null}
             </div>
           </section>
 
           <aside className="space-y-5">
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Actions</h2>
-              <p className="mt-2 text-xs text-slate-500">Quick actions for this task.</p>
+            {canDelete ? (
+              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Actions</h2>
+                <p className="mt-2 text-xs text-slate-500">Manage this task.</p>
 
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                {!isLocked ? (
-                  <button
-                    type="button"
-                    onClick={() => setLogTimeTask(task)}
-                    className="inline-flex rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
-                  >
-                    Log time
-                  </button>
-                ) : null}
-
-                {canDelete ? (
+                <div className="mt-4 flex flex-wrap items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setIsDeleteConfirmOpen(true)}
@@ -336,9 +379,9 @@ export function TaskDetailsPage() {
                   >
                     Delete task
                   </button>
-                ) : null}
-              </div>
-            </section>
+                </div>
+              </section>
+            ) : null}
 
             <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <div className="flex items-center justify-between gap-3">
@@ -369,7 +412,8 @@ export function TaskDetailsPage() {
               <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Access</h2>
                 <p className="mt-2 text-sm text-slate-600">
-                  You can view task details and comments, but only managers/admins/owners can edit this task.
+                  You have view-only access. Task fields can be changed by the assignee or by
+                  managers, admins, and owners.
                 </p>
               </section>
             ) : null}

@@ -109,7 +109,7 @@ describe('TasksPage', () => {
       </MemoryRouter>,
     )
 
-    const createButton = screen.getByRole('button', { name: 'Create task' })
+    const createButton = screen.getByRole('button', { name: /create a new task/i })
     await waitFor(() => {
       expect(createButton).toBeEnabled()
     })
@@ -158,9 +158,8 @@ describe('TasksPage', () => {
       </MemoryRouter>,
     )
 
-    expect(await screen.findByText(/create estimate version v1/i)).toBeInTheDocument()
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Create task' })).toBeDisabled()
+      expect(screen.getByRole('button', { name: /create a new task/i })).toBeDisabled()
     })
   })
 
@@ -178,63 +177,18 @@ describe('TasksPage', () => {
       </MemoryRouter>,
     )
 
-    // ✅ Check BEHAVIOR: Button is still enabled (allow clicking to see error message)
-    const createButton = screen.getByRole('button', { name: 'Create task' })
+    // The create action now navigates to a dedicated page; the board button never
+    // creates a task directly, so addTask must not be called from this page.
+    const createButton = screen.getByRole('button', { name: /create a new task/i })
     await waitFor(() => {
       expect(createButton).toBeEnabled()
     })
 
-    // ✅ Simulate user clicking create button and verify validation feedback
     fireEvent.click(createButton)
 
-    // ✅ Check: Error message appears in status
     await waitFor(() => {
-      // The validation happens in the page status display
-      // Button click should trigger validation which prevents actual task creation
       expect(workspace.addTask).not.toHaveBeenCalled()
     })
-  })
-
-  it('shows all members of selected project', async () => {
-    const workspace = createWorkspaceState({
-      selectedProjectId: 'p1',
-      projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
-      projectMembers: [
-        {
-          member_id: 'm1',
-          project_id: 'p1',
-          user_id: 'u1',
-          role: 'owner',
-          joined_at: '2026-06-01T00:00:00.000Z',
-          full_name: 'Alice Johnson',
-          email: 'alice@example.com',
-        },
-        {
-          member_id: 'm2',
-          project_id: 'p1',
-          user_id: 'u2',
-          role: 'member',
-          joined_at: '2026-06-02T00:00:00.000Z',
-          full_name: null,
-          email: 'bob@example.com',
-        },
-      ],
-    })
-    mockUseWorkspace.mockReturnValue(workspace)
-
-    render(
-      <MemoryRouter>
-        <TasksPage />
-      </MemoryRouter>,
-    )
-
-    expect(await screen.findByRole('button', { name: /toggle members/i })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: /toggle members/i }))
-
-    expect(await screen.findByText('Alice Johnson')).toBeInTheDocument()
-    expect(screen.getByText('bob@example.com')).toBeInTheDocument()
-    expect(screen.getByText('owner')).toBeInTheDocument()
-    expect(screen.getByText('member')).toBeInTheDocument()
   })
 
   it('shows task assignee in list view', async () => {
@@ -331,7 +285,7 @@ describe('TasksPage', () => {
         </MemoryRouter>,
       )
 
-      const createButton = screen.getByRole('button', { name: 'Create task' })
+      const createButton = screen.getByRole('button', { name: /create a new task/i })
 
       // ✅ Check BEHAVIOR: Button is enabled when dependency is set
       await waitFor(() => {

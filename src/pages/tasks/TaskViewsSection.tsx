@@ -39,9 +39,6 @@ export function TaskViewsSection({
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h3 className="section-title text-slate-900">Task Views</h3>
-          {taskViewMode === 'board' ? (
-            <p className="text-[11px] text-slate-500">Order: editable first, then priority, then nearest due date.</p>
-          ) : null}
         </div>
         <div className="flex items-center gap-2">
           {([

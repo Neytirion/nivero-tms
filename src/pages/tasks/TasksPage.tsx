@@ -92,10 +92,9 @@ export function TasksPage() {
           </button>
         )}
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Kanban Board</p>
-        <h2 className="mt-1 text-2xl font-bold text-slate-900">Execution Pipeline</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          Drag and drop tasks between Backlog, To Do, In Progress, Review, and Done.
-        </p>
+        <h2 className="mt-1 text-2xl font-bold text-slate-900">
+          {selectedProject?.name || 'Select a project'}
+        </h2>
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white px-4 py-3">

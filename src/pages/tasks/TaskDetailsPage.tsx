@@ -65,30 +65,6 @@ export function TaskDetailsPage() {
     return value.charAt(0).toUpperCase() + value.slice(1)
   }
 
-  function getDueToneClass(dueDateRaw: string | null | undefined) {
-    if (!dueDateRaw) {
-      return 'bg-slate-100 text-slate-600 border border-slate-200'
-    }
-
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    const dueDate = new Date(dueDateRaw)
-    dueDate.setHours(0, 0, 0, 0)
-
-    const dayDiff = Math.floor((dueDate.getTime() - today.getTime()) / 86400000)
-
-    if (dayDiff < 0) {
-      return 'bg-rose-50 text-rose-700 border border-rose-100'
-    }
-
-    if (dayDiff <= 2) {
-      return 'bg-amber-50 text-amber-700 border border-amber-100'
-    }
-
-    return 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-  }
-
   const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'
   const dueDateInputValue = task.due_date?.slice(0, 10) ?? ''
   const assigneeUserId = task.assigned_to ?? task.created_by
@@ -151,6 +127,24 @@ export function TaskDetailsPage() {
     await editTask(taskId, { priority })
   }
 
+  const updateTaskDescriptionHandler = async (taskId: string, description: string) => {
+    await editTask(taskId, { description })
+  }
+
+  const getDaysUntilDue = (dueDateRaw: string | null | undefined) => {
+    if (!dueDateRaw) return null
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const dueDate = new Date(dueDateRaw)
+    dueDate.setHours(0, 0, 0, 0)
+    const days = Math.ceil((dueDate.getTime() - today.getTime()) / 86400000)
+    return days
+  }
+
+  const daysUntilDue = getDaysUntilDue(task.due_date)
+  const isDueSoon = daysUntilDue !== null && daysUntilDue <= 3 && daysUntilDue >= 0
+  const isOverdue = daysUntilDue !== null && daysUntilDue < 0
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="border-b border-slate-200 bg-white">
@@ -177,15 +171,24 @@ export function TaskDetailsPage() {
             </div>
           </div>
 
-          {task.description && (
-            <p className="max-w-3xl text-sm leading-6 text-slate-600">{task.description}</p>
-          )}
+          {/* Description */}
+          <div className="mt-6">
+            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Description</label>
+            {!isLocked ? (
+              <textarea
+                value={task.description ?? ''}
+                onChange={(event) => void updateTaskDescriptionHandler(task.id, event.target.value)}
+                placeholder="Add description..."
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-base leading-6 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+                rows={5}
+              />
+            ) : (
+              <p className="text-base leading-6 text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg border border-slate-200 p-4">{task.description || 'No description'}</p>
+            )}
+          </div>
 
           {/* Badges row */}
           <div className="mt-4 flex flex-wrap items-center gap-3">
-            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getDueToneClass(task.due_date)}`}>
-              📅 {dueDate}
-            </span>
             {isAssignee && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
                 <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
@@ -224,7 +227,23 @@ export function TaskDetailsPage() {
                       className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
                     />
                   ) : (
-                    <p className="mt-2 text-sm text-slate-700 font-medium">{dueDate}</p>
+                    <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                      <p className="text-sm text-slate-700 font-medium">{dueDate}</p>
+                      {daysUntilDue !== null && (
+                        <p className={`text-xs mt-1 ${isOverdue ? 'text-rose-600 font-medium' : isDueSoon ? 'text-amber-600' : 'text-slate-500'}`}>
+                          {isOverdue
+                            ? `${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) === 1 ? '' : 's'} overdue`
+                            : `${daysUntilDue} day${daysUntilDue === 1 ? '' : 's'} remaining`}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {!isLocked && task.due_date && daysUntilDue !== null && (
+                    <p className={`text-xs mt-2 ${isOverdue ? 'text-rose-600 font-medium' : isDueSoon ? 'text-amber-600' : 'text-slate-500'}`}>
+                      {isOverdue
+                        ? `${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) === 1 ? '' : 's'} overdue`
+                        : `${daysUntilDue} day${daysUntilDue === 1 ? '' : 's'} remaining`}
+                    </p>
                   )}
                 </div>
 
@@ -245,7 +264,7 @@ export function TaskDetailsPage() {
                       ))}
                     </select>
                   ) : (
-                    <div className="mt-2">
+                    <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                       {assigneeUserId ? (
                         <button
                           type="button"
@@ -263,14 +282,18 @@ export function TaskDetailsPage() {
 
                 {/* Work Package */}
                 <div>
-                  <p className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Work package</p>
-                  <p className="mt-2 text-sm text-slate-700 font-medium">{workPackageLabel}</p>
+                  <p className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Work package</p>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p className="text-sm text-slate-700 font-medium">{workPackageLabel}</p>
+                  </div>
                 </div>
 
                 {/* Blocked By */}
                 <div>
-                  <p className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Blocked by</p>
-                  <p className="mt-2 text-sm text-slate-700 font-medium">{blockedByLabel ?? 'None'}</p>
+                  <p className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Blocked by</p>
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                    <p className="text-sm text-slate-700 font-medium">{blockedByLabel ?? 'None'}</p>
+                  </div>
                 </div>
 
                 {/* Status */}

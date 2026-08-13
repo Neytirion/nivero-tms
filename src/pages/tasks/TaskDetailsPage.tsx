@@ -12,6 +12,7 @@ export function TaskDetailsPage() {
   const [isCommentsOpen, setIsCommentsOpen] = useState(true)
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
+  const [estimateHoursDraft, setEstimateHoursDraft] = useState('0')
 
   const backTo =
     typeof location.state === 'object' &&
@@ -52,6 +53,15 @@ export function TaskDetailsPage() {
     }
   }, [task, taskId, navigate, backTo])
 
+  useEffect(() => {
+    if (!task) {
+      return
+    }
+
+    const estimateHours = task.estimate_hours ?? 0
+    setEstimateHoursDraft(String(estimateHours))
+  }, [task?.id, task?.estimate_hours])
+
   if (!task) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
@@ -87,7 +97,6 @@ export function TaskDetailsPage() {
   const canLogTime = (isAssignee || isCreatorOfUnassigned) && !isLocked
 
   const estimateHours = task.estimate_hours ?? 0
-  const [estimateHoursDraft, setEstimateHoursDraft] = useState(() => String(estimateHours))
   const actualHours = task.actual_hours ?? 0
   const remainingHours = Math.max(0, Math.round((estimateHours - actualHours) * 100) / 100)
   const isOverBudget = estimateHours > 0 && actualHours > estimateHours
@@ -95,10 +104,6 @@ export function TaskDetailsPage() {
   const progressPct = estimateHours > 0
     ? Math.min(100, Math.round((actualHours / estimateHours) * 100))
     : 0
-
-  useEffect(() => {
-    setEstimateHoursDraft(String(estimateHours))
-  }, [task.id, estimateHours])
 
   const openUserProfile = (userId: string) => {
     if (currentUserProfile?.userId === userId) {

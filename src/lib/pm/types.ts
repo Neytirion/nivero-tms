@@ -104,6 +104,7 @@ export interface UserMentionPreview {
   mention: CommentMentionPreview
   comment: Pick<CommentPreview, 'id' | 'project_id' | 'task_id' | 'user_id' | 'message' | 'created_at'>
   project: Pick<ProjectPreview, 'id' | 'name'> | null
+  taskTitle: string | null
 }
 
 export type ActivityEventPreview = Pick<

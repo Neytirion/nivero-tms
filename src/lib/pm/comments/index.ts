@@ -334,6 +334,28 @@ export async function createProjectComment(input: { projectId: string; message: 
 
 export async function getUserMentions(userId: string, limit = 50): Promise<UserMentionPreview[]> {
   const mentionRows = await buildUserMentionRows(userId, limit)
+  const taskIds = Array.from(new Set(
+    mentionRows
+      .map((mention) => mention.task_id)
+      .filter((taskId): taskId is string => Boolean(taskId)),
+  ))
+
+  let taskTitleById: Record<string, string> = {}
+  if (taskIds.length > 0) {
+    const { data: tasks, error: tasksError } = await supabase
+      .from('tasks')
+      .select('id,title')
+      .in('id', taskIds)
+
+    if (tasksError) {
+      throw new Error(tasksError.message)
+    }
+
+    taskTitleById = (tasks ?? []).reduce<Record<string, string>>((acc, task) => {
+      acc[task.id] = task.title
+      return acc
+    }, {})
+  }
 
   return mentionRows
     .filter((mention) => Boolean(mention.comments))
@@ -350,6 +372,7 @@ export async function getUserMentions(userId: string, limit = 50): Promise<UserM
       },
       comment: mention.comments as Pick<CommentPreview, 'id' | 'project_id' | 'task_id' | 'user_id' | 'message' | 'created_at'>,
       project: mention.projects,
+      taskTitle: mention.task_id ? (taskTitleById[mention.task_id] ?? null) : null,
     }))
 }
 

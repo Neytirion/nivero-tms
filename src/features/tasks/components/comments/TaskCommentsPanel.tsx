@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import {
   createTaskComment,
+  deleteComment,
   getMentionStatesForUserInComments,
   getProjectMembers,
   getTaskComments,
@@ -25,6 +26,7 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [mentionHints, setMentionHints] = useState<string[]>([])
+  const [authorLabelByUserId, setAuthorLabelByUserId] = useState<Record<string, string>>({})
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [mentionStateByCommentId, setMentionStateByCommentId] = useState<Record<string, { id: string; readAt: string | null }>>({})
 
@@ -101,6 +103,14 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
     const loadMentionHints = async () => {
       try {
         const members = await getProjectMembers(projectId)
+        const labels = members.reduce<Record<string, string>>((acc, member) => {
+          if (member.user_id) {
+            acc[member.user_id] = member.full_name ?? member.email ?? member.user_id
+          }
+          return acc
+        }, {})
+        setAuthorLabelByUserId(labels)
+
         const hints = members
           .map((member) => {
             if (member.email) {
@@ -118,6 +128,7 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
 
         setMentionHints(hints)
       } catch {
+        setAuthorLabelByUserId({})
         setMentionHints([])
       }
     }
@@ -145,6 +156,21 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
     }
   }
 
+  const removeComment = async (commentId: string) => {
+    if (!currentUserId) {
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      await deleteComment(commentId)
+      await loadComments()
+      window.dispatchEvent(new Event('mentions:changed'))
+    } catch {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
       <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Comments</p>
@@ -153,6 +179,25 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
         {comments.length === 0 ? <p className="text-xs text-slate-500">No comments yet</p> : null}
         {comments.slice(-3).map((item) => (
           <div key={item.id} className="rounded-md border border-slate-200 bg-white px-2 py-1.5">
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                {currentUserId && item.user_id === currentUserId
+                  ? 'You'
+                  : authorLabelByUserId[item.user_id] ?? item.user_id}
+              </p>
+            </div>
+            {currentUserId && item.user_id === currentUserId ? (
+              <div className="mb-1 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => void removeComment(item.id)}
+                  disabled={isLoading}
+                  className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700 transition hover:bg-rose-100 disabled:opacity-60"
+                >
+                  Delete
+                </button>
+              </div>
+            ) : null}
             {mentionStateByCommentId[item.id] ? (
               <p className={`mb-1 inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
                 mentionStateByCommentId[item.id].readAt ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-800'

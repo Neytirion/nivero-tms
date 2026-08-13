@@ -11,9 +11,11 @@ export function MentionsPage() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(true)
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false)
+  const [openingMentionId, setOpeningMentionId] = useState<string | null>(null)
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
   const [mentions, setMentions] = useState<UserMentionPreview[]>([])
   const [showOnlyUnread, setShowOnlyUnread] = useState(true)
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
   const loadMentions = async () => {
     setIsLoading(true)
@@ -37,6 +39,17 @@ export function MentionsPage() {
 
   useEffect(() => {
     void loadMentions()
+  }, [])
+
+  useEffect(() => {
+    const onFocus = () => {
+      void loadMentions()
+    }
+
+    window.addEventListener('focus', onFocus)
+    return () => {
+      window.removeEventListener('focus', onFocus)
+    }
   }, [])
 
   const unreadMentions = useMemo(
@@ -99,6 +112,44 @@ export function MentionsPage() {
     }
   }
 
+  const openMention = async (item: UserMentionPreview) => {
+    setStatusMessage(null)
+    setOpeningMentionId(item.mention.id)
+
+    try {
+      const { data: commentRow, error: commentError } = await supabase
+        .from('comments')
+        .select('id,project_id,task_id')
+        .eq('id', item.mention.comment_id)
+        .maybeSingle()
+
+      if (commentError || !commentRow) {
+        setMentions((prev) => prev.filter((entry) => entry.mention.id !== item.mention.id))
+        setStatusMessage('This mention points to a deleted message and was removed from the list.')
+        return
+      }
+
+      if (commentRow.task_id) {
+        const { data: taskRow, error: taskError } = await supabase
+          .from('tasks')
+          .select('id')
+          .eq('id', commentRow.task_id)
+          .maybeSingle()
+
+        if (!taskError && taskRow) {
+          navigate(`/app/tasks/${taskRow.id}`, {
+            state: { backTo: `/app/projects/${commentRow.project_id}?tab=collaboration` },
+          })
+          return
+        }
+      }
+
+      navigate(`/app/projects/${commentRow.project_id}?tab=collaboration`)
+    } finally {
+      setOpeningMentionId(null)
+    }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -124,6 +175,12 @@ export function MentionsPage() {
           </button>
         </div>
       </div>
+
+      {statusMessage ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
+          {statusMessage}
+        </div>
+      ) : null}
 
       <div className="rounded-xl border border-slate-200 bg-white">
         {isLoading ? (
@@ -154,6 +211,12 @@ export function MentionsPage() {
                       ) : null}
                     </div>
 
+                    {isTaskMention ? (
+                      <p className="mb-1 text-xs font-medium text-slate-600">
+                        Task: {item.taskTitle ?? 'Task was removed'}
+                      </p>
+                    ) : null}
+
                     <p className="line-clamp-2 text-sm text-slate-800">{item.comment.message}</p>
                   </div>
 
@@ -169,19 +232,11 @@ export function MentionsPage() {
                     ) : null}
                     <button
                       type="button"
-                      onClick={() => {
-                        if (isTaskMention && item.mention.task_id) {
-                          navigate(`/app/tasks/${item.mention.task_id}`, {
-                            state: { backTo: '/app/mentions' },
-                          })
-                          return
-                        }
-
-                        navigate(`/app/projects/${item.mention.project_id}?tab=collaboration`)
-                      }}
+                      onClick={() => void openMention(item)}
+                      disabled={openingMentionId === item.mention.id}
                       className="rounded bg-cyan-700 px-2.5 py-1 text-xs font-semibold text-white hover:bg-cyan-600"
                     >
-                      Open
+                      {openingMentionId === item.mention.id ? 'Opening…' : 'Open'}
                     </button>
                   </div>
                 </article>

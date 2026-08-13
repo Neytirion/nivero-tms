@@ -29,7 +29,6 @@ export function ProjectDetailsPage() {
   const {
     isLoading,
     tasks,
-    projects,
     projectMembers,
     selectedProject,
     selectedProjectId,
@@ -73,15 +72,12 @@ export function ProjectDetailsPage() {
       navigate('/app/projects', { replace: true })
       return
     }
-    const projectExists = projects.some((p) => p.id === projectId)
-    if (!projectExists) {
-      navigate('/app/projects', { replace: true })
-      return
-    }
+    // Only select if not already selected
     if (selectedProjectId === projectId) return
+    // selectProject will handle loading the project data
     void selectProject(projectId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate, projectId, selectedProjectId, projects])
+  }, [navigate, projectId, selectedProjectId])
 
   const activeTabRef = useRef(activeTab)
   useLayoutEffect(() => {

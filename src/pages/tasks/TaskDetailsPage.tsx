@@ -200,14 +200,14 @@ export function TaskDetailsPage() {
           </div>
 
           {/* Description */}
-          <div className="mt-6">
+          <div className="mt-6 lg:max-w-[calc(100%-312px)]">
             <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Description</label>
             {!isLocked ? (
               <textarea
                 value={task.description ?? ''}
                 onChange={(event) => void updateTaskDescriptionHandler(task.id, event.target.value)}
                 placeholder="Add description..."
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-base leading-6 text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+                className="w-full rounded-xl border-2 border-slate-300 bg-slate-50 px-4 py-3 text-base leading-6 text-slate-900 outline-none shadow-sm transition focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-200"
                 rows={5}
               />
             ) : (
@@ -492,17 +492,15 @@ export function TaskDetailsPage() {
 
             {/* Delete Section */}
             {canDelete && (
-              <section className="rounded-lg border border-rose-200 bg-rose-50 p-6">
-                <h2 className="mb-3 text-sm font-semibold text-rose-900">Danger Zone</h2>
-                <p className="mb-4 text-xs text-rose-800">Once you delete a task, there is no going back. Please be certain.</p>
+              <div className="pt-1">
                 <button
                   type="button"
                   onClick={() => setIsDeleteConfirmOpen(true)}
-                  className="w-full rounded-lg border border-rose-300 bg-rose-100 px-4 py-2.5 text-sm font-semibold text-rose-900 transition hover:bg-rose-200"
+                  className="inline-flex items-center rounded-md border border-rose-300 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-800 transition hover:bg-rose-100"
                 >
                   Delete task
                 </button>
-              </section>
+              </div>
             )}
           </div>
 

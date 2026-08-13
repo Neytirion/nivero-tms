@@ -168,25 +168,20 @@ export function TasksPage() {
         )}
       </section>
 
-      <section className="page-section bg-slate-50/70">
+      <section className="page-section">
         <div className="flex items-center justify-between">
-          <div>
-            <h3 className="section-title">Create Task</h3>
-            <p className="section-subtitle">Add a new task to your project</p>
-          </div>
+          <p className="text-xs text-slate-500">
+            Showing {tasks.length} of {tasksTotalCount} tasks
+          </p>
           <button
-            onClick={() => navigate('/app/tasks/create')}
-            disabled={!selectedProject || hasEstimateVersion === false}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            type="button"
+            onClick={() => void loadMoreTasks()}
+            disabled={isLoading}
+            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
           >
-            Create task
+            Load more tasks
           </button>
         </div>
-        {selectedProject && hasEstimateVersion === false && (
-          <p className="mt-2 text-sm text-slate-600">
-            Create estimate version v1 in Project Details → Estimates before creating tasks.
-          </p>
-        )}
       </section>
 
       <TaskViewsSection
@@ -228,6 +223,20 @@ export function TasksPage() {
             </button>
           </div>
         </section>
+      )}
+
+      {/* Плавающая кнопка (FAB) - Вариант 3 */}
+      {selectedProject && (
+        <button
+          onClick={() => navigate('/app/tasks/create')}
+          disabled={hasEstimateVersion === false}
+          className="fixed bottom-6 right-6 inline-flex items-center gap-2 rounded-full bg-blue-600 p-4 text-white hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Create a new task"
+        >
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </button>
       )}
     </div>
   )

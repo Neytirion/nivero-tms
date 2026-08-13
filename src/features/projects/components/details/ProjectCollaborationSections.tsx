@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import type { RefObject } from 'react'
 import type { ActivityEventPreview, CommentPreview, ProjectMemberListItem } from '../../../../lib/pm'
 import { ConfirmDialog } from '../../../../shared/components'
@@ -59,6 +59,40 @@ function MentionHints({ members }: { members: ProjectMemberListItem[] }) {
   )
 }
 
+interface MentionCandidate {
+  handle: string
+  label: string
+}
+
+function normalizeMentionValue(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '.')
+    .replace(/[^a-z0-9._-]/g, '')
+}
+
+function extractMentionQuery(value: string, cursor: number) {
+  const beforeCursor = value.slice(0, cursor)
+  const match = beforeCursor.match(/(?:^|\s)@([a-zA-Z0-9._-]{0,64})$/)
+
+  if (!match) {
+    return null
+  }
+
+  const query = match[1] ?? ''
+  const start = beforeCursor.lastIndexOf('@')
+  if (start < 0) {
+    return null
+  }
+
+  return {
+    start,
+    end: cursor,
+    query,
+  }
+}
+
 interface ProjectCollaborationCommentsSectionProps {
   isLoading: boolean
   comments: CommentPreview[]
@@ -98,9 +132,89 @@ export function ProjectCollaborationCommentsSection({
   mentionStateByCommentId,
   commentsEndRef,
 }: ProjectCollaborationCommentsSectionProps) {
+  const [mentionQueryState, setMentionQueryState] = useState<{ start: number; end: number; query: string } | null>(null)
+  const [activeMentionIndex, setActiveMentionIndex] = useState(0)
+  const commentInputRef = useRef<HTMLTextAreaElement>(null)
+
+  const mentionCandidates = useMemo(() => {
+    const candidates = members.flatMap<MentionCandidate>((member) => {
+      const uniqueHandles = new Set<string>()
+
+      if (member.email) {
+        const localPart = normalizeMentionValue(member.email.split('@')[0] ?? '')
+        if (localPart) {
+          uniqueHandles.add(localPart)
+        }
+      }
+
+      if (member.full_name) {
+        const normalizedName = normalizeMentionValue(member.full_name)
+        if (normalizedName) {
+          uniqueHandles.add(normalizedName)
+          uniqueHandles.add(normalizedName.replace(/\./g, ''))
+        }
+      }
+
+      const label = member.full_name ?? member.email ?? member.user_id ?? 'User'
+      return Array.from(uniqueHandles).map((handle) => ({ handle, label }))
+    })
+
+    return Array.from(
+      candidates.reduce((acc, candidate) => {
+        if (!acc.has(candidate.handle)) {
+          acc.set(candidate.handle, candidate)
+        }
+        return acc
+      }, new Map<string, MentionCandidate>()).values(),
+    )
+  }, [members])
+
+  const filteredMentionCandidates = useMemo(() => {
+    if (!mentionQueryState) {
+      return [] as MentionCandidate[]
+    }
+
+    const normalizedQuery = normalizeMentionValue(mentionQueryState.query)
+    const maxItems = 6
+
+    if (!normalizedQuery) {
+      return mentionCandidates.slice(0, maxItems)
+    }
+
+    return mentionCandidates
+      .filter((candidate) => candidate.handle.startsWith(normalizedQuery))
+      .slice(0, maxItems)
+  }, [mentionCandidates, mentionQueryState])
+
+  const applyMentionCandidate = (candidate: MentionCandidate) => {
+    if (!mentionQueryState) {
+      return
+    }
+
+    const before = commentDraft.slice(0, mentionQueryState.start)
+    const after = commentDraft.slice(mentionQueryState.end)
+    const inserted = `@${candidate.handle} `
+    const nextDraft = `${before}${inserted}${after}`
+    const nextCursor = before.length + inserted.length
+
+    onCommentDraftChange(nextDraft)
+    setMentionQueryState(null)
+    setActiveMentionIndex(0)
+
+    requestAnimationFrame(() => {
+      const input = commentInputRef.current
+      if (!input) {
+        return
+      }
+
+      input.focus()
+      input.setSelectionRange(nextCursor, nextCursor)
+    })
+  }
+
   return (
-    <div className="relative flex flex-1 flex-col rounded-xl border border-slate-200 bg-white">
-      <div className="flex-1 overflow-y-auto space-y-2 p-3 pb-48">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
+      <div className="min-h-0 flex-1 overflow-y-auto space-y-2 p-3 pb-48">
         {isLoading ? (
           <div className="space-y-2">
             {[1, 2].map((i) => (
@@ -184,18 +298,90 @@ export function ProjectCollaborationCommentsSection({
 
       <div className="absolute bottom-0 left-0 right-0 flex-shrink-0 border-t border-slate-100 bg-white p-3">
         <textarea
+          ref={commentInputRef}
           value={commentDraft}
-          onChange={(event) => onCommentDraftChange(event.target.value)}
+          onChange={(event) => {
+            const nextValue = event.target.value
+            const cursor = event.target.selectionStart ?? nextValue.length
+            onCommentDraftChange(nextValue)
+            setMentionQueryState(extractMentionQuery(nextValue, cursor))
+            setActiveMentionIndex(0)
+          }}
+          onClick={(event) => {
+            const input = event.currentTarget
+            const cursor = input.selectionStart ?? input.value.length
+            setMentionQueryState(extractMentionQuery(input.value, cursor))
+          }}
           onKeyDown={(event) => {
+            if (filteredMentionCandidates.length > 0) {
+              if (event.key === 'Tab') {
+                event.preventDefault()
+                const direction = event.shiftKey ? -1 : 1
+                const nextIndex = (activeMentionIndex + direction + filteredMentionCandidates.length) % filteredMentionCandidates.length
+                setActiveMentionIndex(nextIndex)
+                return
+              }
+
+              if (event.key === 'ArrowDown') {
+                event.preventDefault()
+                setActiveMentionIndex((prev) => (prev + 1) % filteredMentionCandidates.length)
+                return
+              }
+
+              if (event.key === 'ArrowUp') {
+                event.preventDefault()
+                setActiveMentionIndex((prev) => (prev - 1 + filteredMentionCandidates.length) % filteredMentionCandidates.length)
+                return
+              }
+
+              if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault()
+                const candidate = filteredMentionCandidates[activeMentionIndex] ?? filteredMentionCandidates[0]
+                if (candidate) {
+                  applyMentionCandidate(candidate)
+                }
+                return
+              }
+            }
+
             if (event.key === 'Enter' && !event.shiftKey) {
               event.preventDefault()
               void onSubmitComment()
             }
           }}
+          onBlur={() => {
+            setTimeout(() => {
+              setMentionQueryState(null)
+              setActiveMentionIndex(0)
+            }, 100)
+          }}
           placeholder="Write a comment… (Enter to send, Shift+Enter for new line)"
           rows={2}
           className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
         />
+        {filteredMentionCandidates.length > 0 ? (
+          <div className="absolute bottom-[84px] left-3 right-3 z-20 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
+            {filteredMentionCandidates.map((candidate, index) => {
+              const isActive = index === activeMentionIndex
+              return (
+                <button
+                  key={`${candidate.handle}-${index}`}
+                  type="button"
+                  onMouseDown={(event) => {
+                    event.preventDefault()
+                    applyMentionCandidate(candidate)
+                  }}
+                  className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs ${
+                    isActive ? 'bg-cyan-50 text-cyan-900' : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="font-semibold">@{candidate.handle}</span>
+                  <span className="ml-2 truncate text-[10px] text-slate-500">{candidate.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        ) : null}
         <div className="mt-1.5 flex items-center justify-between">
           <MentionHints members={members} />
           <button

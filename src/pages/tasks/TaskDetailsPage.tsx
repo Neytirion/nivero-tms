@@ -211,26 +211,82 @@ export function TaskDetailsPage() {
           <div className="space-y-6">
             {/* Details Section */}
             <section className="rounded-lg border border-slate-200 bg-white p-6">
-              <h2 className="mb-4 text-sm font-semibold text-slate-900">Task Details</h2>
+              {/* Quick Settings - Status and Priority */}
+              <div className="mb-6 grid gap-4 sm:grid-cols-2">
+                {/* Status */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Status</label>
+                  {!isLocked ? (
+                    <select
+                      value={task.status ?? 'todo'}
+                      onChange={(event) => void updateTaskStatusHandler(task.id, event.target.value)}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+                    >
+                      <option value="backlog">Backlog</option>
+                      <option value="todo">To Do</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="review">Review</option>
+                      <option value="done">Done</option>
+                    </select>
+                  ) : (
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+                      <p className="text-sm text-slate-700 font-medium">{getStatusLabel(task.status)}</p>
+                    </div>
+                  )}
+                </div>
 
-              <div className="grid gap-6 sm:grid-cols-2">
+                {/* Priority */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Priority</label>
+                  {!isLocked ? (
+                    <select
+                      value={task.priority ?? 'medium'}
+                      onChange={(event) => void updateTaskPriorityHandler(task.id, event.target.value)}
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  ) : (
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
+                      <p className="text-sm text-slate-700 font-medium capitalize">{task.priority ?? 'medium'}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="mb-6 border-t border-slate-200"></div>
+
+              {/* Details - Other fields */}
+              <div className="space-y-4">
                 {/* Due Date */}
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Due date</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Due date</label>
                   {!isLocked ? (
-                    <input
-                      type="date"
-                      value={dueDateInputValue}
-                      min={projectStartDate || undefined}
-                      max={projectEndDate || undefined}
-                      onChange={(event) => void updateTaskDueDateHandler(task.id, event.target.value)}
-                      className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
-                    />
+                    <div className="flex flex-col gap-2">
+                      <input
+                        type="date"
+                        value={dueDateInputValue}
+                        min={projectStartDate || undefined}
+                        max={projectEndDate || undefined}
+                        onChange={(event) => void updateTaskDueDateHandler(task.id, event.target.value)}
+                        className="rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+                      />
+                      {task.due_date && daysUntilDue !== null && (
+                        <p className={`text-xs px-3 py-1.5 rounded-md inline-flex w-fit ${isOverdue ? 'bg-rose-50 text-rose-700 font-medium' : isDueSoon ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
+                          {isOverdue
+                            ? `${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) === 1 ? '' : 's'} overdue`
+                            : `${daysUntilDue} day${daysUntilDue === 1 ? '' : 's'} remaining`}
+                        </p>
+                      )}
+                    </div>
                   ) : (
-                    <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                       <p className="text-sm text-slate-700 font-medium">{dueDate}</p>
                       {daysUntilDue !== null && (
-                        <p className={`text-xs mt-1 ${isOverdue ? 'text-rose-600 font-medium' : isDueSoon ? 'text-amber-600' : 'text-slate-500'}`}>
+                        <p className={`text-xs mt-2 ${isOverdue ? 'text-rose-600 font-medium' : isDueSoon ? 'text-amber-600' : 'text-slate-500'}`}>
                           {isOverdue
                             ? `${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) === 1 ? '' : 's'} overdue`
                             : `${daysUntilDue} day${daysUntilDue === 1 ? '' : 's'} remaining`}
@@ -238,23 +294,16 @@ export function TaskDetailsPage() {
                       )}
                     </div>
                   )}
-                  {!isLocked && task.due_date && daysUntilDue !== null && (
-                    <p className={`text-xs mt-2 ${isOverdue ? 'text-rose-600 font-medium' : isDueSoon ? 'text-amber-600' : 'text-slate-500'}`}>
-                      {isOverdue
-                        ? `${Math.abs(daysUntilDue)} day${Math.abs(daysUntilDue) === 1 ? '' : 's'} overdue`
-                        : `${daysUntilDue} day${daysUntilDue === 1 ? '' : 's'} remaining`}
-                    </p>
-                  )}
                 </div>
 
                 {/* Assignee */}
                 <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Assignee</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Assignee</label>
                   {!isLocked && canAssignAssignee && assigneeOptions ? (
                     <select
                       value={task.assigned_to ?? ''}
                       onChange={(event) => void assignTaskHandler(task.id, event.target.value)}
-                      className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
                     >
                       <option value="">Unassigned</option>
                       {assigneeOptions.map((option) => (
@@ -264,7 +313,7 @@ export function TaskDetailsPage() {
                       ))}
                     </select>
                   ) : (
-                    <div className="mt-2 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                       {assigneeUserId ? (
                         <button
                           type="button"
@@ -282,7 +331,7 @@ export function TaskDetailsPage() {
 
                 {/* Work Package */}
                 <div>
-                  <p className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Work package</p>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Work package</label>
                   <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                     <p className="text-sm text-slate-700 font-medium">{workPackageLabel}</p>
                   </div>
@@ -290,48 +339,10 @@ export function TaskDetailsPage() {
 
                 {/* Blocked By */}
                 <div>
-                  <p className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Blocked by</p>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Blocked by</label>
                   <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
                     <p className="text-sm text-slate-700 font-medium">{blockedByLabel ?? 'None'}</p>
                   </div>
-                </div>
-
-                {/* Status */}
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Status</label>
-                  {!isLocked ? (
-                    <select
-                      value={task.status ?? 'todo'}
-                      onChange={(event) => void updateTaskStatusHandler(task.id, event.target.value)}
-                      className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
-                    >
-                      <option value="backlog">Backlog</option>
-                      <option value="todo">To Do</option>
-                      <option value="in_progress">In Progress</option>
-                      <option value="review">Review</option>
-                      <option value="done">Done</option>
-                    </select>
-                  ) : (
-                    <p className="mt-2 text-sm text-slate-700 font-medium">{getStatusLabel(task.status)}</p>
-                  )}
-                </div>
-
-                {/* Priority */}
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Priority</label>
-                  {!isLocked ? (
-                    <select
-                      value={task.priority ?? 'medium'}
-                      onChange={(event) => void updateTaskPriorityHandler(task.id, event.target.value)}
-                      className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  ) : (
-                    <p className="mt-2 text-sm text-slate-700 font-medium capitalize">{task.priority ?? 'medium'}</p>
-                  )}
                 </div>
               </div>
             </section>

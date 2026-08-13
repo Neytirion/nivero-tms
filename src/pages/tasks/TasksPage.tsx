@@ -10,7 +10,6 @@ export function TasksPage() {
   const [searchParams, setSearchParams] = useSearchParams()
 
   const {
-    isLoading,
     selectedProject,
     selectedProjectId,
     myRoleInSelectedProject,
@@ -27,9 +26,6 @@ export function TasksPage() {
     dependencyLabelByTaskId,
     workPackageLabelById,
     moveTaskToStatus,
-    hasMoreTasks,
-    tasksTotalCount,
-    loadMoreTasks,
     resetPageState,
   } = useTasksPageController()
 
@@ -168,22 +164,6 @@ export function TasksPage() {
         )}
       </section>
 
-      <section className="page-section">
-        <div className="flex items-center justify-between">
-          <p className="text-xs text-slate-500">
-            Showing {tasks.length} of {tasksTotalCount} tasks
-          </p>
-          <button
-            type="button"
-            onClick={() => void loadMoreTasks()}
-            disabled={isLoading}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-          >
-            Load more tasks
-          </button>
-        </div>
-      </section>
-
       <TaskViewsSection
         taskViewMode={taskViewMode}
         onTaskViewModeChange={setTaskViewMode}
@@ -206,24 +186,6 @@ export function TasksPage() {
         profile={selectedProfile}
         onClose={() => setSelectedProfile(null)}
       />
-
-      {hasMoreTasks && (
-        <section className="page-section">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-500">
-              Showing {tasks.length} of {tasksTotalCount} tasks
-            </p>
-            <button
-              type="button"
-              onClick={() => void loadMoreTasks()}
-              disabled={isLoading}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50"
-            >
-              Load more tasks
-            </button>
-          </div>
-        </section>
-      )}
 
       {/* Плавающая кнопка (FAB) - Вариант 3 */}
       {selectedProject && (

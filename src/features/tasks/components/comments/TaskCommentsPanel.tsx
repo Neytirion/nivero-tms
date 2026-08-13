@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react'
-import { createTaskComment, getProjectMembers, getTaskComments, type CommentPreview } from '../../../../lib/pm'
+import {
+  createTaskComment,
+  getMentionStatesForUserInComments,
+  getProjectMembers,
+  getTaskComments,
+  markMentionsAsReadInComments,
+  type CommentPreview,
+} from '../../../../lib/pm'
+import { supabase } from '../../../../lib/supabase'
 
 interface TaskCommentsPanelProps {
   projectId: string
@@ -17,6 +25,17 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
   const [message, setMessage] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [mentionHints, setMentionHints] = useState<string[]>([])
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
+  const [mentionStateByCommentId, setMentionStateByCommentId] = useState<Record<string, { id: string; readAt: string | null }>>({})
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      const { data } = await supabase.auth.getUser()
+      setCurrentUserId(data.user?.id ?? null)
+    }
+
+    void loadCurrentUser()
+  }, [])
 
   const loadComments = async () => {
     setIsLoading(true)
@@ -24,6 +43,47 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
       const data = await getTaskComments(taskId)
       setComments(data)
       onCommentsCountChange?.(data.length)
+
+      if (currentUserId && data.length > 0) {
+        const mentionStates = await getMentionStatesForUserInComments({
+          projectId,
+          userId: currentUserId,
+          commentIds: data.map((comment) => comment.id),
+        })
+
+        const mentionMap = mentionStates.reduce<Record<string, { id: string; readAt: string | null }>>((acc, item) => {
+          acc[item.comment_id] = { id: item.id, readAt: item.read_at }
+          return acc
+        }, {})
+        setMentionStateByCommentId(mentionMap)
+
+        const unreadMentionCommentIds = mentionStates
+          .filter((item) => !item.read_at)
+          .map((item) => item.comment_id)
+
+        if (unreadMentionCommentIds.length > 0) {
+          await markMentionsAsReadInComments({
+            projectId,
+            userId: currentUserId,
+            commentIds: unreadMentionCommentIds,
+          })
+
+          const now = new Date().toISOString()
+          setMentionStateByCommentId((prev) => {
+            const next = { ...prev }
+            unreadMentionCommentIds.forEach((commentId) => {
+              const mention = next[commentId]
+              if (mention) {
+                next[commentId] = { ...mention, readAt: now }
+              }
+            })
+            return next
+          })
+          window.dispatchEvent(new Event('mentions:changed'))
+        }
+      } else {
+        setMentionStateByCommentId({})
+      }
     } catch {
       // Keep UI quiet in card context.
     }
@@ -35,7 +95,7 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
     void loadComments()
     // reload when task changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taskId])
+  }, [taskId, currentUserId, projectId])
 
   useEffect(() => {
     const loadMentionHints = async () => {
@@ -93,6 +153,13 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
         {comments.length === 0 ? <p className="text-xs text-slate-500">No comments yet</p> : null}
         {comments.slice(-3).map((item) => (
           <div key={item.id} className="rounded-md border border-slate-200 bg-white px-2 py-1.5">
+            {mentionStateByCommentId[item.id] ? (
+              <p className={`mb-1 inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                mentionStateByCommentId[item.id].readAt ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-800'
+              }`}>
+                Mentioned you
+              </p>
+            ) : null}
             <p className="text-xs text-slate-700">{item.message}</p>
             <p className="mt-1 text-[10px] text-slate-500">{formatDate(item.created_at)}</p>
           </div>

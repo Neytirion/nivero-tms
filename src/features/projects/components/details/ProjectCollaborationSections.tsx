@@ -75,6 +75,7 @@ interface ProjectCollaborationCommentsSectionProps {
   pendingDeleteComment: CommentPreview | null
   onCancelDeleteComment: () => void
   onConfirmDeleteComment: () => void
+  mentionStateByCommentId: Record<string, { id: string; readAt: string | null }>
   commentsEndRef: RefObject<HTMLDivElement | null>
 }
 
@@ -94,6 +95,7 @@ export function ProjectCollaborationCommentsSection({
   pendingDeleteComment,
   onCancelDeleteComment,
   onConfirmDeleteComment,
+  mentionStateByCommentId,
   commentsEndRef,
 }: ProjectCollaborationCommentsSectionProps) {
   return (
@@ -119,6 +121,9 @@ export function ProjectCollaborationCommentsSection({
             const name = getActorLabel(comment.user_id, membersByUserId)
             const initials = name.slice(0, 2).toUpperCase()
             const isUnread = lastReadAt ? comment.created_at > lastReadAt && !isOwn : false
+            const mentionState = mentionStateByCommentId[comment.id]
+            const isMentioned = Boolean(mentionState)
+            const isUnreadMention = Boolean(mentionState && !mentionState.readAt)
 
             return (
               <div key={comment.id} className={`group flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}>
@@ -144,6 +149,13 @@ export function ProjectCollaborationCommentsSection({
                       </button>
                       <span className="text-[10px] text-slate-400">{timeAgo(comment.created_at)}</span>
                       {isUnread && <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />}
+                      {isMentioned && (
+                        <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
+                          isUnreadMention ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-700'
+                        }`}>
+                          Mentioned you
+                        </span>
+                      )}
                     </div>
                   )}
                   <div className={`relative rounded-2xl px-3 py-1.5 text-sm ${isOwn ? 'rounded-tr-sm bg-slate-900 text-white' : 'rounded-tl-sm bg-slate-100 text-slate-800'}`}>

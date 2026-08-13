@@ -97,8 +97,14 @@ export type CommentPreview = Pick<Comment, 'id' | 'project_id' | 'task_id' | 'us
 
 export type CommentMentionPreview = Pick<
   CommentMention,
-  'id' | 'project_id' | 'comment_id' | 'task_id' | 'mentioned_user_id' | 'mentioned_by_user_id' | 'created_at'
+  'id' | 'project_id' | 'comment_id' | 'task_id' | 'mentioned_user_id' | 'mentioned_by_user_id' | 'created_at' | 'read_at'
 >
+
+export interface UserMentionPreview {
+  mention: CommentMentionPreview
+  comment: Pick<CommentPreview, 'id' | 'project_id' | 'task_id' | 'user_id' | 'message' | 'created_at'>
+  project: Pick<ProjectPreview, 'id' | 'name'> | null
+}
 
 export type ActivityEventPreview = Pick<
   ActivityEvent,

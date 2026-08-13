@@ -2,10 +2,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
   createProjectComment,
   deleteComment,
+  getMentionStatesForUserInComments,
   getProjectActivityEvents,
   getProjectComments,
   getProjectMembers,
   getProjectWikiPage,
+  markMentionsAsReadInComments,
   saveProjectWikiPage,
   type CommentPreview,
   type ProjectMemberListItem,
@@ -33,6 +35,7 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
   const [pendingDeleteComment, setPendingDeleteComment] = useState<CommentPreview | null>(null)
   const [commentDraft, setCommentDraft] = useState('')
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
+  const [mentionStateByCommentId, setMentionStateByCommentId] = useState<Record<string, { id: string; readAt: string | null }>>({})
   const [wikiTitle, setWikiTitle] = useState('Project Wiki')
   const [wikiContent, setWikiContent] = useState('')
   const [wikiDraft, setWikiDraft] = useState('')
@@ -79,6 +82,49 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
       setEvents(activityEvents)
       setMembers(projectMembers)
       setComments(projectComments)
+
+      const authUserId = authData.user?.id ?? null
+      if (authUserId && projectComments.length > 0) {
+        const mentionStates = await getMentionStatesForUserInComments({
+          projectId,
+          userId: authUserId,
+          commentIds: projectComments.map((comment) => comment.id),
+        })
+
+        const mentionMap = mentionStates.reduce<Record<string, { id: string; readAt: string | null }>>((acc, item) => {
+          acc[item.comment_id] = { id: item.id, readAt: item.read_at }
+          return acc
+        }, {})
+        setMentionStateByCommentId(mentionMap)
+
+        const unreadMentionCommentIds = mentionStates
+          .filter((item) => !item.read_at)
+          .map((item) => item.comment_id)
+
+        if (unreadMentionCommentIds.length > 0) {
+          await markMentionsAsReadInComments({
+            projectId,
+            userId: authUserId,
+            commentIds: unreadMentionCommentIds,
+          })
+
+          setMentionStateByCommentId((prev) => {
+            const next = { ...prev }
+            const now = new Date().toISOString()
+            unreadMentionCommentIds.forEach((commentId) => {
+              const mention = next[commentId]
+              if (mention) {
+                next[commentId] = { ...mention, readAt: now }
+              }
+            })
+            return next
+          })
+          window.dispatchEvent(new Event('mentions:changed'))
+        }
+      } else {
+        setMentionStateByCommentId({})
+      }
+
       if (wiki) { setWikiTitle(wiki.title); setWikiContent(wiki.content); setWikiDraft(wiki.content) }
       else { setWikiTitle('Project Wiki'); setWikiContent(''); setWikiDraft('') }
 
@@ -232,6 +278,7 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
             pendingDeleteComment={pendingDeleteComment}
             onCancelDeleteComment={() => setPendingDeleteComment(null)}
             onConfirmDeleteComment={deleteCommentHandler}
+            mentionStateByCommentId={mentionStateByCommentId}
             commentsEndRef={commentsEndRef}
           />
         )}

@@ -1,5 +1,5 @@
 import { supabase } from '../../supabase'
-import type { CommentPreview } from '../types'
+import type { CommentMentionPreview, CommentPreview, UserMentionPreview } from '../types'
 import { assertProjectEditable } from '../helpers'
 import { getProjectMembers } from '../members'
 import { recordProjectActivityEvent } from '../collaboration'
@@ -51,6 +51,62 @@ function buildMemberMentionCandidates(member: { user_id: string | null; full_nam
   }
 
   return Array.from(candidates).filter(Boolean)
+}
+
+function dedupeMentionRows(
+  rows: Array<{
+    project_id: string
+    comment_id: string
+    task_id: string | null
+    mentioned_user_id: string
+    mentioned_by_user_id: string
+  }>,
+) {
+  const seen = new Set<string>()
+  const deduped: typeof rows = []
+
+  for (const row of rows) {
+    const key = `${row.comment_id}:${row.mentioned_user_id}`
+    if (seen.has(key)) {
+      continue
+    }
+
+    seen.add(key)
+    deduped.push(row)
+  }
+
+  return deduped
+}
+
+async function buildUserMentionRows(userId: string, limit: number) {
+  type MentionRow = CommentMentionPreview & {
+    comments: Pick<CommentPreview, 'id' | 'project_id' | 'task_id' | 'user_id' | 'message' | 'created_at'> | null
+    projects: { id: string; name: string } | null
+  }
+
+  const { data, error } = await supabase
+    .from('comment_mentions')
+    .select(`
+      id,
+      project_id,
+      comment_id,
+      task_id,
+      mentioned_user_id,
+      mentioned_by_user_id,
+      created_at,
+      read_at,
+      comments!inner(id,project_id,task_id,user_id,message,created_at),
+      projects(id,name)
+    `)
+    .eq('mentioned_user_id', userId)
+    .order('created_at', { ascending: false })
+    .limit(limit)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return (data ?? []) as MentionRow[]
 }
 
 export async function getTaskComments(taskId: string) {
@@ -137,6 +193,7 @@ export async function createTaskComment(input: { projectId: string; taskId: stri
 
     const mentionRows = matchedMembers
       .filter((member) => member.user_id)
+      .filter((member) => member.user_id !== actorId)
       .map((member) => ({
         project_id: input.projectId,
         comment_id: createdComment.id,
@@ -144,18 +201,19 @@ export async function createTaskComment(input: { projectId: string; taskId: stri
         mentioned_user_id: member.user_id as string,
         mentioned_by_user_id: actorId,
       }))
+    const dedupedMentionRows = dedupeMentionRows(mentionRows)
 
-    if (mentionRows.length > 0) {
+    if (dedupedMentionRows.length > 0) {
       const { error: mentionError } = await supabase
         .from('comment_mentions')
-        .insert(mentionRows)
+        .insert(dedupedMentionRows)
 
       if (mentionError) {
         throw new Error(mentionError.message)
       }
 
       await Promise.all(
-        mentionRows.map((mention) =>
+        dedupedMentionRows.map((mention) =>
           recordProjectActivityEvent({
             projectId: input.projectId,
             actorUserId: actorId,
@@ -248,11 +306,16 @@ export async function createProjectComment(input: { projectId: string; message: 
           mentioned_by_user_id: actorId,
         }))
     })
+    const dedupedMentionRows = dedupeMentionRows(mentionRows)
 
-    if (mentionRows.length > 0) {
-      await supabase.from('comment_mentions').insert(mentionRows)
+    if (dedupedMentionRows.length > 0) {
+      const { error: mentionError } = await supabase.from('comment_mentions').insert(dedupedMentionRows)
+      if (mentionError) {
+        throw new Error(mentionError.message)
+      }
+
       await Promise.all(
-        mentionRows.map((mention) =>
+        dedupedMentionRows.map((mention) =>
           recordProjectActivityEvent({
             projectId: input.projectId,
             actorUserId: actorId,
@@ -267,4 +330,114 @@ export async function createProjectComment(input: { projectId: string; message: 
   }
 
   return createdComment
+}
+
+export async function getUserMentions(userId: string, limit = 50): Promise<UserMentionPreview[]> {
+  const mentionRows = await buildUserMentionRows(userId, limit)
+
+  return mentionRows
+    .filter((mention) => Boolean(mention.comments))
+    .map((mention) => ({
+      mention: {
+        id: mention.id,
+        project_id: mention.project_id,
+        comment_id: mention.comment_id,
+        task_id: mention.task_id,
+        mentioned_user_id: mention.mentioned_user_id,
+        mentioned_by_user_id: mention.mentioned_by_user_id,
+        created_at: mention.created_at,
+        read_at: mention.read_at,
+      },
+      comment: mention.comments as Pick<CommentPreview, 'id' | 'project_id' | 'task_id' | 'user_id' | 'message' | 'created_at'>,
+      project: mention.projects,
+    }))
+}
+
+export async function getUnreadUserMentionsCount(userId: string) {
+  const { count, error } = await supabase
+    .from('comment_mentions')
+    .select('id', { count: 'exact', head: true })
+    .eq('mentioned_user_id', userId)
+    .is('read_at', null)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return count ?? 0
+}
+
+export async function getMentionStatesForUserInComments(input: {
+  projectId: string
+  userId: string
+  commentIds: string[]
+}) {
+  if (input.commentIds.length === 0) {
+    return [] as CommentMentionPreview[]
+  }
+
+  const { data, error } = await supabase
+    .from('comment_mentions')
+    .select('id,project_id,comment_id,task_id,mentioned_user_id,mentioned_by_user_id,created_at,read_at')
+    .eq('project_id', input.projectId)
+    .eq('mentioned_user_id', input.userId)
+    .in('comment_id', input.commentIds)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return (data ?? []) as CommentMentionPreview[]
+}
+
+export async function markMentionAsRead(input: { mentionId: string; userId: string }) {
+  const { data, error } = await supabase
+    .from('comment_mentions')
+    .update({ read_at: new Date().toISOString() })
+    .eq('id', input.mentionId)
+    .eq('mentioned_user_id', input.userId)
+    .is('read_at', null)
+    .select('id')
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return Boolean(data)
+}
+
+export async function markMentionsAsReadInProject(input: { projectId: string; userId: string }) {
+  const { error } = await supabase
+    .from('comment_mentions')
+    .update({ read_at: new Date().toISOString() })
+    .eq('project_id', input.projectId)
+    .eq('mentioned_user_id', input.userId)
+    .is('read_at', null)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
+export async function markMentionsAsReadInComments(input: {
+  projectId: string
+  userId: string
+  commentIds: string[]
+}) {
+  if (input.commentIds.length === 0) {
+    return
+  }
+
+  const { error } = await supabase
+    .from('comment_mentions')
+    .update({ read_at: new Date().toISOString() })
+    .eq('project_id', input.projectId)
+    .eq('mentioned_user_id', input.userId)
+    .in('comment_id', input.commentIds)
+    .is('read_at', null)
+
+  if (error) {
+    throw new Error(error.message)
+  }
 }

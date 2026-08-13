@@ -227,6 +227,7 @@ export interface Database {
           mentioned_user_id: string
           mentioned_by_user_id: string
           created_at: string
+          read_at: string | null
         }
         Insert: {
           id?: string
@@ -236,6 +237,7 @@ export interface Database {
           mentioned_user_id: string
           mentioned_by_user_id: string
           created_at?: string
+          read_at?: string | null
         }
         Update: {
           id?: string
@@ -245,6 +247,7 @@ export interface Database {
           mentioned_user_id?: string
           mentioned_by_user_id?: string
           created_at?: string
+          read_at?: string | null
         }
         Relationships: [
           {

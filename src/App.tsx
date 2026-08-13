@@ -13,6 +13,7 @@ import { TaskDetailsPage } from './pages/tasks/TaskDetailsPage.tsx'
 import { CreateTaskPage } from './pages/tasks/CreateTaskPage.tsx'
 import { TimeTrackingPage } from './pages/time-tracking/TimeTrackingPage.tsx'
 import { ResourcePlanningPage } from './pages/resource-planning/ResourcePlanningPage.tsx'
+import { MentionsPage } from './pages/mentions/MentionsPage.tsx'
 import { useAuthSession } from './features/auth/useAuthSession.ts'
 
 function App() {
@@ -49,6 +50,7 @@ function App() {
           <Route path="tasks" element={<TasksPage />} />
           <Route path="tasks/create" element={<CreateTaskPage />} />
           <Route path="tasks/:taskId" element={<TaskDetailsPage />} />
+          <Route path="mentions" element={<MentionsPage />} />
           <Route path="time-tracking" element={<TimeTrackingPage />} />
           <Route path="resources" element={<ResourcePlanningPage />} />
           <Route index element={<Navigate to="/app/projects" replace />} />

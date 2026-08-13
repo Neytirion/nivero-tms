@@ -29,7 +29,7 @@ vi.mock('../collaboration', () => ({
   recordProjectActivityEvent: mocks.recordProjectActivityEvent,
 }))
 
-import { createTaskComment } from './index'
+import { createTaskComment, getUnreadUserMentionsCount } from './index'
 
 describe('pm.comments', () => {
   beforeEach(() => {
@@ -160,5 +160,93 @@ describe('pm.comments', () => {
     expect(mocks.recordProjectActivityEvent).toHaveBeenCalledWith(
       expect.objectContaining({ eventType: 'comment.created' }),
     )
+  })
+
+  it('deduplicates mention rows and skips self-mentions', async () => {
+    mocks.getProjectMembers.mockResolvedValue([
+      {
+        member_id: 'm-1',
+        project_id: 'p-1',
+        user_id: 'u-actor',
+        role: 'member',
+        joined_at: '2026-06-01T00:00:00.000Z',
+        full_name: 'Actor User',
+        email: 'actor@example.com',
+      },
+      {
+        member_id: 'm-2',
+        project_id: 'p-1',
+        user_id: 'u-mention',
+        role: 'member',
+        joined_at: '2026-06-01T00:00:00.000Z',
+        full_name: 'Jane Doe',
+        email: 'jane.doe@example.com',
+      },
+    ])
+
+    const insertCommentSelect = vi.fn().mockReturnValue({
+      single: vi.fn().mockResolvedValue({
+        data: {
+          id: 'c-3',
+          project_id: 'p-1',
+          task_id: 't-1',
+          user_id: 'u-actor',
+          message: 'Ping @jane.doe and @janedoe and @actor',
+          created_at: '2026-06-01T00:00:00.000Z',
+        },
+        error: null,
+      }),
+    })
+    const insertComment = vi.fn().mockReturnValue({ select: insertCommentSelect })
+    const insertMentions = vi.fn().mockResolvedValue({ error: null })
+
+    mocks.from.mockImplementation((table: string) => {
+      if (table === 'comments') {
+        return { insert: insertComment }
+      }
+
+      if (table === 'comment_mentions') {
+        return { insert: insertMentions }
+      }
+
+      throw new Error(`Unexpected table: ${table}`)
+    })
+
+    await createTaskComment({
+      projectId: 'p-1',
+      taskId: 't-1',
+      message: 'Ping @jane.doe and @janedoe and @actor',
+    })
+
+    expect(insertMentions).toHaveBeenCalledWith([
+      {
+        project_id: 'p-1',
+        comment_id: 'c-3',
+        task_id: 't-1',
+        mentioned_user_id: 'u-mention',
+        mentioned_by_user_id: 'u-actor',
+      },
+    ])
+  })
+
+  it('returns unread mention count for user', async () => {
+    const select = vi.fn().mockReturnValue({
+      eq: vi.fn().mockReturnValue({
+        is: vi.fn().mockResolvedValue({ count: 4, error: null }),
+      }),
+    })
+
+    mocks.from.mockImplementation((table: string) => {
+      if (table === 'comment_mentions') {
+        return { select }
+      }
+
+      throw new Error(`Unexpected table: ${table}`)
+    })
+
+    const count = await getUnreadUserMentionsCount('u-mention')
+
+    expect(count).toBe(4)
+    expect(select).toHaveBeenCalledWith('id', { count: 'exact', head: true })
   })
 })

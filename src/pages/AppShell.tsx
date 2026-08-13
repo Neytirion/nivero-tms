@@ -1,11 +1,14 @@
 import type { User } from '@supabase/supabase-js'
+import { useEffect, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { WorkspaceProvider, useWorkspace } from '../features/dashboard/workspace-context.tsx'
+import { getUnreadUserMentionsCount } from '../lib/pm'
 import { ToastProvider } from '../shared/components'
 
 const baseNavItems = [
   { to: '/app/projects', label: 'Projects' },
   { to: '/app/dashboard', label: 'Dashboard' },
+  { to: '/app/mentions', label: 'Mentions' },
   { to: '/app/time-tracking', label: 'Time Tracking' },
 ]
 
@@ -27,6 +30,9 @@ function AppShellLayout({ user }: AppShellProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const { projects, selectedProjectId, getProjectRole } = useWorkspace()
+  const [unreadMentionsCount, setUnreadMentionsCount] = useState(0)
+
+  const userId = typeof user.id === 'string' ? user.id : null
 
   const avatarUrl = (user.user_metadata.avatar_url as string | undefined) ?? ''
   const fullName = (user.user_metadata.full_name as string | undefined) ?? ''
@@ -41,6 +47,33 @@ function AppShellLayout({ user }: AppShellProps) {
         { to: '/app/resources', label: 'Resources' },
       ]
     : baseNavItems
+
+  useEffect(() => {
+    const refreshMentionsCount = async () => {
+      if (!userId) {
+        setUnreadMentionsCount(0)
+        return
+      }
+
+      try {
+        const count = await getUnreadUserMentionsCount(userId)
+        setUnreadMentionsCount(count)
+      } catch {
+        setUnreadMentionsCount(0)
+      }
+    }
+
+    void refreshMentionsCount()
+
+    const onMentionsChanged = () => {
+      void refreshMentionsCount()
+    }
+
+    window.addEventListener('mentions:changed', onMentionsChanged)
+    return () => {
+      window.removeEventListener('mentions:changed', onMentionsChanged)
+    }
+  }, [location.pathname, userId])
 
   // Handle navigation with refresh support
   const handleNavigation = (to: string) => {
@@ -89,6 +122,7 @@ function AppShellLayout({ user }: AppShellProps) {
                       <nav className="space-y-2">
                         {activeNavItems.map((item) => {
                           const isActive = location.pathname === item.to
+                          const isMentionsItem = item.to === '/app/mentions'
                           return (
                             <button
                               key={item.to}
@@ -100,7 +134,14 @@ function AppShellLayout({ user }: AppShellProps) {
                                   : 'border-[#bad6b2] bg-white/70 text-slate-700 hover:border-[#8fbe83] hover:bg-[#f4fbf1]'
                               }`}
                             >
-                              <p className="text-sm font-semibold">{item.label}</p>
+                              <p className="flex items-center justify-between gap-2 text-sm font-semibold">
+                                <span>{item.label}</span>
+                                {isMentionsItem && unreadMentionsCount > 0 ? (
+                                  <span className="rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                                    {unreadMentionsCount > 99 ? '99+' : unreadMentionsCount}
+                                  </span>
+                                ) : null}
+                              </p>
                             </button>
                           )
                         })}

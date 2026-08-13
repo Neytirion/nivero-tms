@@ -283,5 +283,6 @@ export function useTasksPageController() {
     tasksTotalCount,
     loadMoreTasks,
     resetPageState,
+    editTask,
   }
 }

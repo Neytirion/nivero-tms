@@ -41,6 +41,7 @@ export function TaskDetailsPage() {
     logTimeTask,
     setLogTimeTask,
     submitTaskLogTime,
+    editTask,
   } = useTasksPageController()
 
   const task = tasks.find((t) => t.id === taskId)
@@ -57,38 +58,6 @@ export function TaskDetailsPage() {
         <div className="text-slate-500">Loading task...</div>
       </div>
     )
-  }
-
-  function getPriorityBadgeClass(priority: string | null | undefined) {
-    const normalized = (priority ?? 'medium').toLowerCase()
-
-    if (normalized === 'high') {
-      return 'bg-rose-50 text-rose-700 border border-rose-100'
-    }
-
-    if (normalized === 'low') {
-      return 'bg-emerald-50 text-emerald-700 border border-emerald-100'
-    }
-
-    return 'bg-amber-50 text-amber-700 border border-amber-100'
-  }
-
-  function getStatusBadgeClass(status: string | null | undefined) {
-    const normalized = (status ?? 'todo').toLowerCase()
-
-    if (normalized === 'done' || normalized === 'completed') {
-      return 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-    }
-
-    if (normalized === 'in_progress' || normalized === 'in-progress') {
-      return 'bg-blue-100 text-blue-800 border border-blue-200'
-    }
-
-    if (normalized === 'review') {
-      return 'bg-indigo-100 text-indigo-800 border border-indigo-200'
-    }
-
-    return 'bg-slate-100 text-slate-800 border border-slate-200'
   }
 
   function getStatusLabel(status: string | null | undefined) {
@@ -174,6 +143,14 @@ export function TaskDetailsPage() {
     })
   }
 
+  const updateTaskStatusHandler = async (taskId: string, status: string) => {
+    await editTask(taskId, { status })
+  }
+
+  const updateTaskPriorityHandler = async (taskId: string, priority: string) => {
+    await editTask(taskId, { priority })
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="border-b border-slate-200 bg-white">
@@ -197,22 +174,6 @@ export function TaskDetailsPage() {
           <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <h1 className="text-3xl font-bold text-slate-900 break-words">{task.title}</h1>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${getStatusBadgeClass(
-                  task.status,
-                )}`}
-              >
-                {getStatusLabel(task.status)}
-              </span>
-              <span
-                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${getPriorityBadgeClass(
-                  task.priority,
-                )}`}
-              >
-                {task.priority ?? 'medium'} priority
-              </span>
             </div>
           </div>
 
@@ -311,6 +272,44 @@ export function TaskDetailsPage() {
                   <p className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Blocked by</p>
                   <p className="mt-2 text-sm text-slate-700 font-medium">{blockedByLabel ?? 'None'}</p>
                 </div>
+
+                {/* Status */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Status</label>
+                  {!isLocked ? (
+                    <select
+                      value={task.status ?? 'todo'}
+                      onChange={(event) => void updateTaskStatusHandler(task.id, event.target.value)}
+                      className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+                    >
+                      <option value="backlog">Backlog</option>
+                      <option value="todo">To Do</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="review">Review</option>
+                      <option value="done">Done</option>
+                    </select>
+                  ) : (
+                    <p className="mt-2 text-sm text-slate-700 font-medium">{getStatusLabel(task.status)}</p>
+                  )}
+                </div>
+
+                {/* Priority */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Priority</label>
+                  {!isLocked ? (
+                    <select
+                      value={task.priority ?? 'medium'}
+                      onChange={(event) => void updateTaskPriorityHandler(task.id, event.target.value)}
+                      className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  ) : (
+                    <p className="mt-2 text-sm text-slate-700 font-medium capitalize">{task.priority ?? 'medium'}</p>
+                  )}
+                </div>
               </div>
             </section>
 
@@ -403,51 +402,25 @@ export function TaskDetailsPage() {
                 />
               )}
             </section>
-          </div>
 
-          {/* Sidebar */}
-          <aside className="space-y-6">
-            {/* Info Card */}
-            <section className="rounded-lg border border-slate-200 bg-white p-6">
-              <h3 className="mb-4 text-sm font-semibold text-slate-900">Info</h3>
-              <div className="space-y-3 text-sm">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Status</p>
-                  <span
-                    className={`mt-1 inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusBadgeClass(
-                      task.status,
-                    )}`}
-                  >
-                    {getStatusLabel(task.status)}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Priority</p>
-                  <span
-                    className={`mt-1 inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getPriorityBadgeClass(
-                      task.priority,
-                    )}`}
-                  >
-                    {task.priority ?? 'medium'}
-                  </span>
-                </div>
-              </div>
-            </section>
-
-            {/* Actions Card */}
+            {/* Delete Section */}
             {canDelete && (
-              <section className="rounded-lg border border-slate-200 bg-white p-6">
-                <h3 className="mb-4 text-sm font-semibold text-slate-900">Actions</h3>
+              <section className="rounded-lg border border-rose-200 bg-rose-50 p-6">
+                <h2 className="mb-3 text-sm font-semibold text-rose-900">Danger Zone</h2>
+                <p className="mb-4 text-xs text-rose-800">Once you delete a task, there is no going back. Please be certain.</p>
                 <button
                   type="button"
                   onClick={() => setIsDeleteConfirmOpen(true)}
-                  className="w-full rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                  className="w-full rounded-lg border border-rose-300 bg-rose-100 px-4 py-2.5 text-sm font-semibold text-rose-900 transition hover:bg-rose-200"
                 >
                   Delete task
                 </button>
               </section>
             )}
+          </div>
 
+          {/* Sidebar */}
+          <aside className="space-y-6">
             {/* Access Card */}
             {isLocked && (
               <section className="rounded-lg border border-slate-200 bg-white p-6">

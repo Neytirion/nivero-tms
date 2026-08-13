@@ -175,24 +175,29 @@ export function TaskDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[linear-gradient(180deg,#f8fafc_0%,#eef2ff_100%)] py-6 px-4">
-      <div className="mx-auto max-w-6xl space-y-5">
-        <div className="rounded-2xl border border-slate-200 bg-white/95 p-5 shadow-sm">
+    <div className="min-h-screen bg-slate-50">
+      <div className="border-b border-slate-200 bg-white">
+        <div className="mx-auto max-w-6xl px-6 py-4">
           <button
             type="button"
             onClick={() => navigate(backTo)}
-            className="mb-4 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition hover:text-slate-900"
           >
-            {backTo.startsWith('/app/projects/') ? '← Back to Project Details' : '← Back to Tasks'}
+            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            {backTo.startsWith('/app/projects/') ? 'Project Details' : 'Tasks'}
           </button>
+        </div>
+      </div>
 
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="min-w-0">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Task overview</p>
-              <h1 className="mt-1 text-3xl font-bold text-slate-900 break-words">{task.title}</h1>
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{task.description || 'No description provided yet.'}</p>
+      <div className="mx-auto max-w-6xl px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-3xl font-bold text-slate-900 break-words">{task.title}</h1>
             </div>
-
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${getStatusBadgeClass(
@@ -208,60 +213,68 @@ export function TaskDetailsPage() {
               >
                 {task.priority ?? 'medium'} priority
               </span>
-              <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getDueToneClass(task.due_date)}`}>
-                Due: {dueDate}
-              </span>
-              {isAssignee ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
-                  <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5 6a5 5 0 0 1 10 0H3Z" />
-                  </svg>
-                  Assigned to you
-                </span>
-              ) : null}
-              {isLocked ? (
-                <span className="inline-flex rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                  View mode
-                </span>
-              ) : null}
             </div>
+          </div>
+
+          {task.description && (
+            <p className="max-w-3xl text-sm leading-6 text-slate-600">{task.description}</p>
+          )}
+
+          {/* Badges row */}
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getDueToneClass(task.due_date)}`}>
+              📅 {dueDate}
+            </span>
+            {isAssignee && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700">
+                <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm-5 6a5 5 0 0 1 10 0H3Z" />
+                </svg>
+                Assigned to you
+              </span>
+            )}
+            {isLocked && (
+              <span className="inline-flex rounded-full border border-slate-300 bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                🔒 View only
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="grid gap-5 lg:grid-cols-[1.7fr_1fr]">
-          <section className="space-y-5">
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Execution details</h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        {/* Content Grid */}
+        <div className="grid gap-8 lg:grid-cols-[1fr_280px]">
+          {/* Main Content */}
+          <div className="space-y-6">
+            {/* Details Section */}
+            <section className="rounded-lg border border-slate-200 bg-white p-6">
+              <h2 className="mb-4 text-sm font-semibold text-slate-900">Task Details</h2>
+
+              <div className="grid gap-6 sm:grid-cols-2">
+                {/* Due Date */}
                 <div>
-                  <label htmlFor="task-due-date" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Due date
-                  </label>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Due date</label>
                   {!isLocked ? (
                     <input
-                      id="task-due-date"
                       type="date"
                       value={dueDateInputValue}
                       min={projectStartDate || undefined}
                       max={projectEndDate || undefined}
                       onChange={(event) => void updateTaskDueDateHandler(task.id, event.target.value)}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+                      className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
                     />
                   ) : (
-                    <p className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">{dueDate}</p>
+                    <p className="mt-2 text-sm text-slate-700 font-medium">{dueDate}</p>
                   )}
                 </div>
 
+                {/* Assignee */}
                 <div>
-                  <label htmlFor="task-assignee" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Assignee
-                  </label>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Assignee</label>
                   {!isLocked && canAssignAssignee && assigneeOptions ? (
                     <select
-                      id="task-assignee"
                       value={task.assigned_to ?? ''}
                       onChange={(event) => void assignTaskHandler(task.id, event.target.value)}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+                      className="mt-2 w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
                     >
                       <option value="">Unassigned</option>
                       {assigneeOptions.map((option) => (
@@ -271,152 +284,179 @@ export function TaskDetailsPage() {
                       ))}
                     </select>
                   ) : (
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
+                    <div className="mt-2">
                       {assigneeUserId ? (
                         <button
                           type="button"
                           onClick={() => openUserProfile(assigneeUserId)}
-                          className="font-medium text-sky-700 underline-offset-2 hover:underline"
+                          className="text-sm font-medium text-sky-700 hover:text-sky-800"
                         >
                           {assigneeLabel}
                         </button>
                       ) : (
-                        assigneeLabel
+                        <p className="text-sm text-slate-500">Unassigned</p>
                       )}
                     </div>
                   )}
                 </div>
-              </div>
-            </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Context</h2>
-              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {/* Work Package */}
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Work package</p>
-                  <p className="mt-1 text-sm text-slate-800">{workPackageLabel}</p>
+                  <p className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Work package</p>
+                  <p className="mt-2 text-sm text-slate-700 font-medium">{workPackageLabel}</p>
                 </div>
 
+                {/* Blocked By */}
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Blocked by</p>
-                  <p className="mt-1 text-sm text-slate-800">{blockedByLabel ?? 'No blocker'}</p>
+                  <p className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Blocked by</p>
+                  <p className="mt-2 text-sm text-slate-700 font-medium">{blockedByLabel ?? 'None'}</p>
                 </div>
               </div>
-            </div>
+            </section>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Time tracking</h2>
-                {canLogTime ? (
+            {/* Time Tracking Section */}
+            <section className="rounded-lg border border-slate-200 bg-white p-6">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+                <h2 className="text-sm font-semibold text-slate-900">Time Tracking</h2>
+                {canLogTime && (
                   <button
                     type="button"
                     onClick={() => setLogTimeTask(task)}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500"
+                    className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
                     Log time
                   </button>
-                ) : null}
+                )}
               </div>
 
-              <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Estimate</p>
-                  <p className="mt-1 text-xl font-semibold text-slate-900">{estimateHours}h</p>
+              {/* Time Cards */}
+              <div className="grid gap-3 sm:grid-cols-3 mb-4">
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Estimate</p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900">{estimateHours}<span className="text-sm text-slate-500">h</span></p>
                 </div>
 
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Logged</p>
-                  <p className="mt-1 text-xl font-semibold text-slate-900">{actualHours}h</p>
+                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Logged</p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900">{actualHours}<span className="text-sm text-slate-500">h</span></p>
                 </div>
 
-                <div className={`rounded-xl border p-3 ${isOverBudget ? 'border-rose-200 bg-rose-50' : 'border-slate-200 bg-slate-50'}`}>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <div className={`rounded-lg border p-4 ${isOverBudget ? 'border-rose-200 bg-rose-50' : 'border-slate-200 bg-slate-50'}`}>
+                  <p className={`text-xs font-semibold uppercase tracking-wide ${isOverBudget ? 'text-rose-700' : 'text-slate-600'}`}>
                     {isOverBudget ? 'Over budget' : 'Remaining'}
                   </p>
-                  <p className={`mt-1 text-xl font-semibold ${isOverBudget ? 'text-rose-700' : 'text-slate-900'}`}>
-                    {isOverBudget ? `+${Math.round((actualHours - estimateHours) * 100) / 100}h` : `${remainingHours}h`}
+                  <p className={`mt-2 text-2xl font-bold ${isOverBudget ? 'text-rose-700' : 'text-slate-900'}`}>
+                    {isOverBudget ? `+${Math.round((actualHours - estimateHours) * 100) / 100}` : remainingHours}
+                    <span className="text-sm text-slate-500">h</span>
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4">
-                <div className="mb-1 flex items-center justify-between text-xs text-slate-500">
-                  <span>Progress against estimate</span>
-                  <span>{progressPct}%</span>
+              {/* Progress Bar */}
+              {estimateHours > 0 && (
+                <div>
+                  <div className="mb-2 flex items-center justify-between text-xs text-slate-600">
+                    <span>Progress</span>
+                    <span className="font-semibold">{progressPct}%</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-slate-200">
+                    <div
+                      className={`h-2 rounded-full transition-all ${isOverBudget ? 'bg-rose-500' : 'bg-sky-500'}`}
+                      style={{ width: `${progressPct}%` }}
+                    />
+                  </div>
                 </div>
-                <div className="h-2 rounded-full bg-slate-100">
-                  <div
-                    className={`h-2 rounded-full transition-all ${isOverBudget ? 'bg-rose-500' : 'bg-sky-500'}`}
-                    style={{ width: `${progressPct}%` }}
-                  />
+              )}
+
+              {!canLogTime && (
+                <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="text-xs text-slate-600">
+                    {isAssignee
+                      ? '🔒 Time logging is unavailable while this project is read-only.'
+                      : '👤 Only the assignee can log time on this task.'}
+                  </p>
                 </div>
-              </div>
+              )}
+            </section>
 
-              {!canLogTime ? (
-                <p className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">
-                  {isAssignee
-                    ? 'Time logging is unavailable while this project is read-only.'
-                    : 'Only the assignee can log time on this task.'}
-                </p>
-              ) : null}
-            </div>
-          </section>
-
-          <aside className="space-y-5">
-            {canDelete ? (
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Actions</h2>
-                <p className="mt-2 text-xs text-slate-500">Manage this task.</p>
-
-                <div className="mt-4 flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsDeleteConfirmOpen(true)}
-                    className="inline-flex rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 hover:bg-rose-100"
-                  >
-                    Delete task
-                  </button>
-                </div>
-              </section>
-            ) : null}
-
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-              <div className="flex items-center justify-between gap-3">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Collaboration</h2>
+            {/* Comments Section */}
+            <section className="rounded-lg border border-slate-200 bg-white p-6">
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <h2 className="text-sm font-semibold text-slate-900">Collaboration</h2>
                 <button
                   type="button"
                   onClick={() => setIsCommentsOpen((prev) => !prev)}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100"
+                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2 py-1"
                 >
-                  {isCommentsOpen ? 'Hide comments' : 'Show comments'}
+                  {isCommentsOpen ? 'Hide' : 'Show'}
                 </button>
               </div>
 
-              <p className="mt-2 text-xs text-slate-500">Use comments for updates, blockers, and handoffs.</p>
+              {isCommentsOpen && task.project_id && (
+                <TaskCommentsPanel
+                  projectId={task.project_id}
+                  taskId={task.id}
+                  readOnly={isLocked}
+                />
+              )}
+            </section>
+          </div>
 
-              {isCommentsOpen && task.project_id ? (
-                <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <TaskCommentsPanel
-                    projectId={task.project_id}
-                    taskId={task.id}
-                    readOnly={isLocked}
-                  />
+          {/* Sidebar */}
+          <aside className="space-y-6">
+            {/* Info Card */}
+            <section className="rounded-lg border border-slate-200 bg-white p-6">
+              <h3 className="mb-4 text-sm font-semibold text-slate-900">Info</h3>
+              <div className="space-y-3 text-sm">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Status</p>
+                  <span
+                    className={`mt-1 inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getStatusBadgeClass(
+                      task.status,
+                    )}`}
+                  >
+                    {getStatusLabel(task.status)}
+                  </span>
                 </div>
-              ) : null}
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Priority</p>
+                  <span
+                    className={`mt-1 inline-flex rounded-full px-2 py-1 text-xs font-semibold ${getPriorityBadgeClass(
+                      task.priority,
+                    )}`}
+                  >
+                    {task.priority ?? 'medium'}
+                  </span>
+                </div>
+              </div>
             </section>
 
-            {isLocked ? (
-              <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Access</h2>
-                <p className="mt-2 text-sm text-slate-600">
-                  You have view-only access. Task fields can be changed by the assignee or by
-                  managers, admins, and owners.
+            {/* Actions Card */}
+            {canDelete && (
+              <section className="rounded-lg border border-slate-200 bg-white p-6">
+                <h3 className="mb-4 text-sm font-semibold text-slate-900">Actions</h3>
+                <button
+                  type="button"
+                  onClick={() => setIsDeleteConfirmOpen(true)}
+                  className="w-full rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
+                >
+                  Delete task
+                </button>
+              </section>
+            )}
+
+            {/* Access Card */}
+            {isLocked && (
+              <section className="rounded-lg border border-slate-200 bg-white p-6">
+                <h3 className="mb-3 text-sm font-semibold text-slate-900">Access</h3>
+                <p className="text-xs text-slate-600 leading-5">
+                  You have read-only access. Task details can be modified by the assignee or project managers.
                 </p>
               </section>
-            ) : null}
+            )}
           </aside>
         </div>
       </div>

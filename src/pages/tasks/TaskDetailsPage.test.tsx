@@ -72,7 +72,7 @@ describe('TaskDetailsPage', () => {
       state: { backTo: '/app/projects/p1?tab=tasks' },
     })
 
-    fireEvent.click(screen.getByRole('button', { name: /back to project/i }))
+    fireEvent.click(screen.getByRole('button', { name: /project details/i }))
 
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toBe('/app/projects/p1?tab=tasks')
@@ -82,7 +82,7 @@ describe('TaskDetailsPage', () => {
   it('falls back to tasks module when no origin is provided', async () => {
     renderTaskDetails('/app/tasks/t1')
 
-    fireEvent.click(screen.getByRole('button', { name: /back to tasks/i }))
+    fireEvent.click(screen.getByRole('button', { name: /^tasks$/i }))
 
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toBe('/app/tasks')

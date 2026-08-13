@@ -26,8 +26,17 @@ export function TasksPage() {
     dependencyLabelByTaskId,
     workPackageLabelById,
     moveTaskToStatus,
+    selectProject,
     resetPageState,
   } = useTasksPageController()
+
+  // Restore selected project from URL when page loads or URL changes
+  useEffect(() => {
+    const projectId = searchParams.get('projectId')
+    if (projectId && projectId !== selectedProjectId) {
+      selectProject(projectId)
+    }
+  }, [searchParams, selectedProjectId, selectProject])
 
   // Reset page state when refresh signal is detected
   useEffect(() => {
@@ -176,7 +185,7 @@ export function TasksPage() {
         onMoveTaskToStatus={(taskId, status) => {
           void moveTaskToStatus(taskId, status)
         }}
-        onTaskClick={(taskId) => navigate(`/app/tasks/${taskId}`)}
+        onTaskClick={(taskId) => navigate(`/app/tasks/${taskId}`, { state: { backTo: `/app/tasks?projectId=${selectedProjectId}` } })}
         canManageTask={canManageTask}
       />
 

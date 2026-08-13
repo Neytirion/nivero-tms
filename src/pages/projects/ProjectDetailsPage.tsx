@@ -99,7 +99,7 @@ export function ProjectDetailsPage() {
 
   const handleTabClick = (key: string) => {
     if (key === 'tasks') {
-      navigate('/app/tasks')
+      navigate(`/app/tasks?projectId=${selectedProjectId}`)
       return
     }
     const tab = key as DetailsTab
@@ -190,7 +190,7 @@ export function ProjectDetailsPage() {
             onOpenDeleteConfirm={() => setIsDeleteConfirmOpen(true)}
             onOpenCompleteConfirm={() => setIsCompleteConfirmOpen(true)}
             onOpenSaveSettingsConfirm={() => setIsSaveSettingsConfirmOpen(true)}
-            onNavigateToTasks={() => navigate('/app/tasks')}
+            onNavigateToTasks={() => navigate(`/app/tasks?projectId=${projectId}`)}
             onTaskClick={(taskId) =>
               navigate(`/app/tasks/${taskId}`, {
                 state: { backTo: `/app/projects/${projectId}?tab=tasks` },

@@ -45,7 +45,7 @@ export function CreateTaskPage() {
 
   const handleCreateTask = async () => {
     await createTaskHandler()
-    navigate('/app/tasks')
+    navigate(`/app/tasks?projectId=${selectedProjectId}`)
   }
 
   return (
@@ -54,7 +54,7 @@ export function CreateTaskPage() {
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => navigate('/app/tasks')}
+            onClick={() => navigate(`/app/tasks?projectId=${selectedProjectId}`)}
             className="mb-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
           >
             ← Back to Tasks

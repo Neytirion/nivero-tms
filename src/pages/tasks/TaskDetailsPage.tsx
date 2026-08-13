@@ -87,12 +87,18 @@ export function TaskDetailsPage() {
   const canLogTime = (isAssignee || isCreatorOfUnassigned) && !isLocked
 
   const estimateHours = task.estimate_hours ?? 0
+  const [estimateHoursDraft, setEstimateHoursDraft] = useState(() => String(estimateHours))
   const actualHours = task.actual_hours ?? 0
   const remainingHours = Math.max(0, Math.round((estimateHours - actualHours) * 100) / 100)
   const isOverBudget = estimateHours > 0 && actualHours > estimateHours
+  const canEditEstimateHours = !isLocked && canAssignAssignee
   const progressPct = estimateHours > 0
     ? Math.min(100, Math.round((actualHours / estimateHours) * 100))
     : 0
+
+  useEffect(() => {
+    setEstimateHoursDraft(String(estimateHours))
+  }, [task.id, estimateHours])
 
   const openUserProfile = (userId: string) => {
     if (currentUserProfile?.userId === userId) {
@@ -129,6 +135,28 @@ export function TaskDetailsPage() {
 
   const updateTaskDescriptionHandler = async (taskId: string, description: string) => {
     await editTask(taskId, { description })
+  }
+
+  const updateTaskEstimateHoursHandler = async (taskId: string, nextValue: string) => {
+    const normalized = nextValue.trim()
+
+    if (!normalized) {
+      setEstimateHoursDraft(String(estimateHours))
+      return
+    }
+
+    const parsedEstimateHours = Number.parseFloat(normalized)
+    if (!Number.isFinite(parsedEstimateHours) || parsedEstimateHours < 0) {
+      setEstimateHoursDraft(String(estimateHours))
+      return
+    }
+
+    if (parsedEstimateHours === estimateHours) {
+      setEstimateHoursDraft(String(estimateHours))
+      return
+    }
+
+    await editTask(taskId, { estimateHours: parsedEstimateHours })
   }
 
   const getDaysUntilDue = (dueDateRaw: string | null | undefined) => {
@@ -369,7 +397,32 @@ export function TaskDetailsPage() {
               <div className="grid gap-3 sm:grid-cols-3 mb-4">
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Estimate</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-900">{estimateHours}<span className="text-sm text-slate-500">h</span></p>
+                  {canEditEstimateHours ? (
+                    <div className="mt-2">
+                      <label htmlFor="task-estimate-hours" className="sr-only">Estimate hours</label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          id="task-estimate-hours"
+                          type="number"
+                          min={0}
+                          step={0.25}
+                          inputMode="decimal"
+                          value={estimateHoursDraft}
+                          onChange={(event) => setEstimateHoursDraft(event.target.value)}
+                          onBlur={() => void updateTaskEstimateHoursHandler(task.id, estimateHoursDraft)}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter') {
+                              event.currentTarget.blur()
+                            }
+                          }}
+                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-base font-semibold text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+                        />
+                        <span className="text-sm text-slate-500">h</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="mt-2 text-2xl font-bold text-slate-900">{estimateHours}<span className="text-sm text-slate-500">h</span></p>
+                  )}
                 </div>
 
                 <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">

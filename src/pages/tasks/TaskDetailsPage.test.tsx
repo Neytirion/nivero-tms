@@ -41,7 +41,11 @@ function renderTaskDetails(initialEntry: string | { pathname: string; state?: un
 }
 
 describe('TaskDetailsPage', () => {
+  const editTaskMock = vi.fn(async () => undefined)
+
   beforeEach(() => {
+    editTaskMock.mockClear()
+
     mockUseTasksPageController.mockReturnValue({
       tasks: [
         createTaskPreview({
@@ -63,6 +67,7 @@ describe('TaskDetailsPage', () => {
       assignTaskHandler: vi.fn(async () => undefined),
       updateTaskDueDateHandler: vi.fn(async () => undefined),
       removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
     } as unknown as ReturnType<typeof useTasksPageController>)
   })
 
@@ -104,6 +109,7 @@ describe('TaskDetailsPage', () => {
       assignTaskHandler: vi.fn(async () => undefined),
       updateTaskDueDateHandler: vi.fn(async () => undefined),
       removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
     } as unknown as ReturnType<typeof useTasksPageController>)
 
     renderTaskDetails({
@@ -114,5 +120,48 @@ describe('TaskDetailsPage', () => {
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toBe('/app/projects/p1?tab=tasks')
     })
+  })
+
+  it('allows project admins/managers/owners to update estimated hours inside task details', async () => {
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Task A',
+          project_id: 'p1',
+          estimate_hours: 8,
+        }),
+      ],
+      canAssignAssignee: true,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      assignTaskHandler: vi.fn(async () => undefined),
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+
+    const estimateInput = screen.getByLabelText(/estimate hours/i)
+    fireEvent.change(estimateInput, { target: { value: '12.5' } })
+    fireEvent.blur(estimateInput)
+
+    await waitFor(() => {
+      expect(editTaskMock).toHaveBeenCalledWith('t1', { estimateHours: 12.5 })
+    })
+  })
+
+  it('keeps estimated hours read-only for non-manager roles', () => {
+    renderTaskDetails('/app/tasks/t1')
+
+    expect(screen.queryByLabelText(/estimate hours/i)).not.toBeInTheDocument()
+    expect(screen.getByText('Estimate')).toBeInTheDocument()
   })
 })

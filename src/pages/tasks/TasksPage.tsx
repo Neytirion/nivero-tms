@@ -11,6 +11,7 @@ export function TasksPage() {
   const {
     selectedProject,
     selectedProjectId,
+    projectMembers,
     tasks,
     taskViewMode,
     setTaskViewMode,
@@ -48,6 +49,21 @@ export function TasksPage() {
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
 
   const openUserProfile = (userId: string) => {
+    // Find member in project members to get full info
+    const member = projectMembers.find((m) => m.user_id === userId)
+    
+    if (member) {
+      setSelectedProfile({
+        userId: member.user_id,
+        fullName: member.full_name,
+        email: member.email,
+        role: member.role,
+        joinedAt: member.joined_at,
+      })
+      return
+    }
+
+    // Fallback: just name if not found in members
     setSelectedProfile({
       userId,
       fullName: assigneeLabelByUserId[userId] ?? userId,

@@ -57,15 +57,17 @@ export function useProjectActions(deps: ProjectActionsDeps) {
         setProjects((prev) => [createdProject, ...prev])
         setSelectedProjectId(createdProject.id)
         setStatus(`Project created: ${createdProject.name}`)
+        return createdProject.id
       } catch (error) {
         if (error instanceof Error && error.message.includes('row-level security policy')) {
           setStatus('Create project error: RLS blocks insert. Run the policies SQL in Supabase SQL Editor, then retry.')
         } else {
           setStatus(error instanceof Error ? `Create project error: ${error.message}` : 'Unknown error')
         }
+        return null
+      } finally {
+        setIsLoading(false)
       }
-
-      setIsLoading(false)
     },
     [],
   )

@@ -88,7 +88,7 @@ export function CreateProjectPage() {
 
     setIsLoading(true)
     try {
-      await addProject({
+      const projectId = await addProject({
         name: projectName.trim(),
         description: projectDescription.trim() || undefined,
         customerName: projectCustomer.trim() || undefined,
@@ -100,7 +100,11 @@ export function CreateProjectPage() {
         endDate: projectEndDate || undefined,
       })
       reset()
-      navigate('/app/projects')
+      if (projectId) {
+        navigate(`/app/projects/${projectId}`)
+      } else {
+        navigate('/app/projects')
+      }
     } catch (error) {
       setStatus(
         error instanceof Error
@@ -115,7 +119,7 @@ export function CreateProjectPage() {
   const handleCreateFromAiDraft = async (draft: AiProjectDraft) => {
     setIsLoading(true)
     try {
-      await addProject({
+      const projectId = await addProject({
         name: draft.project.name,
         description: draft.project.description || undefined,
         customerName: draft.project.customer_name || undefined,
@@ -123,7 +127,11 @@ export function CreateProjectPage() {
         endDate: draft.project.end_date || undefined,
       })
       reset()
-      navigate('/app/projects')
+      if (projectId) {
+        navigate(`/app/projects/${projectId}`)
+      } else {
+        navigate('/app/projects')
+      }
     } catch (error) {
       setStatus(
         error instanceof Error

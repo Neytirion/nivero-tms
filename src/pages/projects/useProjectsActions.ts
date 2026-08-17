@@ -24,10 +24,12 @@ export interface UseProjectsActionsInput {
   reset: () => void
   addProject: (input: {
     name: string
+    description?: string
     customerName?: string
+    budgetAmount?: number
     startDate?: string
     endDate?: string
-  }) => Promise<void>
+  }) => Promise<string | null>
   editProject: (
     projectId: string,
     input: {

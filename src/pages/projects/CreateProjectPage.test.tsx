@@ -26,7 +26,7 @@ function buildWorkspace() {
       createProjectPreview({ id: 'p2', customer_name: 'Beta Corp' }),
       createProjectPreview({ id: 'p3', customer_name: 'ACME' }),
     ],
-    addProject: vi.fn(async () => undefined),
+    addProject: vi.fn(async () => null),
   })
 }
 

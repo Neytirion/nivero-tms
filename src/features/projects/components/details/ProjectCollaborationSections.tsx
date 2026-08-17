@@ -42,7 +42,7 @@ function CommentText({ message }: { message: string }) {
     <span>
       {parts.map((part, i) =>
         part.trimStart().startsWith('@') ? (
-          <span key={i} className="rounded bg-blue-50 px-0.5 font-medium text-blue-700">{part}</span>
+          <span key={i} className="rounded bg-blue-200 px-1 font-semibold text-blue-900">{part}</span>
         ) : (
           <span key={i}>{part}</span>
         ),
@@ -275,15 +275,15 @@ export function ProjectCollaborationCommentsSection({
                       <span className="text-[10px] text-slate-400">{timeAgo(comment.created_at)}</span>
                       {isUnread && <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />}
                       {isMentioned && (
-                        <span className={`rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
-                          isUnreadMention ? 'bg-amber-100 text-amber-800' : 'bg-sky-100 text-sky-700'
+                        <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                          isUnreadMention ? 'bg-amber-200 text-amber-900' : 'bg-sky-200 text-sky-900'
                         }`}>
                           Mentioned you
                         </span>
                       )}
                     </div>
                   )}
-                  <div className={`relative rounded-2xl px-3 py-1.5 text-sm ${isOwn ? 'rounded-tr-sm bg-slate-900 text-white' : 'rounded-tl-sm bg-slate-100 text-slate-800'}`}>
+                  <div className={`relative rounded-2xl px-3 py-1.5 text-sm ${isOwn ? 'rounded-tr-sm bg-blue-600 text-white' : 'rounded-tl-sm bg-slate-100 text-slate-800'}`}>
                     <CommentText message={comment.message} />
                     {isOwn && (
                       <button

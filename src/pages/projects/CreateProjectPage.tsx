@@ -156,17 +156,17 @@ export function CreateProjectPage() {
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              Manual Entry
+              📋 Manual Entry
             </button>
             <button
               onClick={() => setMode('ai')}
               className={`flex-1 px-4 py-3 text-sm font-medium border-b-2 transition-colors duration-75 ${
                 mode === 'ai'
-                  ? 'border-blue-600 text-blue-600 bg-blue-50'
+                  ? 'border-purple-600 text-purple-600 bg-purple-50'
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              AI Generator
+              ✨ AI Generator
             </button>
           </div>
 
@@ -174,107 +174,127 @@ export function CreateProjectPage() {
           <div className="p-6">
             {/* Manual mode */}
             {mode === 'manual' && (
-              <div className="space-y-4">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-slate-700">
-                      Project Name <span className="text-red-500">*</span>
-                    </span>
-                    <input
-                      type="text"
-                      value={projectName}
-                      onChange={(event) => setProjectName(event.target.value)}
-                      placeholder="Website Redesign"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    />
-                  </label>
+              <div className="space-y-6">
+                <div>
+                  <h3 className="mb-4 text-sm font-semibold text-slate-900">Required Information</h3>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-slate-700">
+                        Project Name <span className="text-red-500">*</span>
+                      </span>
+                      <input
+                        type="text"
+                        value={projectName}
+                        onChange={(event) => setProjectName(event.target.value)}
+                        placeholder="Website Redesign"
+                        className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors"
+                      />
+                    </label>
 
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-slate-700">
-                      Customer
-                    </span>
-                    <input
-                      type="text"
-                      list="project-customer-suggestions"
-                      value={projectCustomer}
-                      onChange={(event) => setProjectCustomer(event.target.value)}
-                      placeholder="ABC Ltd"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    />
-                    <datalist id="project-customer-suggestions">
-                      {customerSuggestions.map((customerName) => (
-                        <option key={customerName} value={customerName} />
-                      ))}
-                    </datalist>
-                  </label>
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-slate-700">
+                        Customer
+                      </span>
+                      <input
+                        type="text"
+                        list="project-customer-suggestions"
+                        value={projectCustomer}
+                        onChange={(event) => setProjectCustomer(event.target.value)}
+                        placeholder="ABC Ltd"
+                        className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors"
+                      />
+                      <datalist id="project-customer-suggestions">
+                        {customerSuggestions.map((customerName) => (
+                          <option key={customerName} value={customerName} />
+                        ))}
+                      </datalist>
+                    </label>
 
-                  <label className="block sm:col-span-2">
-                    <span className="mb-2 block text-sm font-semibold text-slate-700">
-                      Description
-                    </span>
-                    <textarea
-                      value={projectDescription}
-                      onChange={(event) => setProjectDescription(event.target.value)}
-                      placeholder="Optional: project goals, scope, key constraints..."
-                      rows={4}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    />
-                  </label>
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-slate-700">
+                        Start Date <span className="text-red-500">*</span>
+                      </span>
+                      <input
+                        type="date"
+                        value={projectStartDate}
+                        onChange={(event) => setProjectStartDate(event.target.value)}
+                        required
+                        max={projectEndDate || undefined}
+                        className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors"
+                      />
+                    </label>
 
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-slate-700">
-                      Start Date <span className="text-red-500">*</span>
-                    </span>
-                    <input
-                      type="date"
-                      value={projectStartDate}
-                      onChange={(event) => setProjectStartDate(event.target.value)}
-                      required
-                      max={projectEndDate || undefined}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    />
-                  </label>
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-slate-700">
+                        End Date <span className="text-red-500">*</span>
+                      </span>
+                      <input
+                        type="date"
+                        value={projectEndDate}
+                        onChange={(event) => setProjectEndDate(event.target.value)}
+                        required
+                        min={projectStartDate || undefined}
+                        className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors"
+                      />
+                    </label>
+                  </div>
 
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-semibold text-slate-700">
-                      End Date <span className="text-red-500">*</span>
-                    </span>
-                    <input
-                      type="date"
-                      value={projectEndDate}
-                      onChange={(event) => setProjectEndDate(event.target.value)}
-                      required
-                      min={projectStartDate || undefined}
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    />
-                  </label>
+                  {durationDays !== null && (
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-900">
+                        <span className="font-medium">Duration:</span> {durationDays} day{durationDays === 1 ? '' : 's'}
+                      </p>
+                    </div>
+                  )}
 
-                  <label className="block sm:col-span-2">
-                    <span className="mb-2 block text-sm font-semibold text-slate-700">
-                      Budget Amount
-                    </span>
-                    <input
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      value={projectBudgetAmount}
-                      onChange={(event) => setProjectBudgetAmount(event.target.value)}
-                      placeholder="e.g. 50000"
-                      className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    />
-                  </label>
+                  {dateRangeError && (
+                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <p className="text-sm text-red-700 font-medium">{dateRangeError}</p>
+                    </div>
+                  )}
                 </div>
 
-                <p className="text-sm text-slate-600">
-                  Duration:{' '}
-                  {durationDays !== null
-                    ? `${durationDays} day${durationDays === 1 ? '' : 's'}`
-                    : 'Set valid start and end dates to calculate'}
-                </p>
+                <div>
+                  <h3 className="mb-4 text-sm font-semibold text-slate-900">Additional Details (Optional)</h3>
+                  <div className="space-y-4">
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-slate-700">
+                        Description
+                      </span>
+                      <textarea
+                        value={projectDescription}
+                        onChange={(event) => setProjectDescription(event.target.value)}
+                        placeholder="What is this project about? What are the main goals and objectives?"
+                        rows={4}
+                        className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors resize-none"
+                      />
+                    </label>
 
-                {dateRangeError ? (
-                  <p className="text-sm text-rose-600">{dateRangeError}</p>
-                ) : null}
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-semibold text-slate-700">
+                        Budget Amount
+                      </span>
+                      <div className="relative">
+                        <span className="absolute left-4 top-2.5 text-sm font-medium text-slate-500">$</span>
+                        <input
+                          type="number"
+                          min={0}
+                          step="100"
+                          value={projectBudgetAmount}
+                          onChange={(event) => setProjectBudgetAmount(event.target.value)}
+                          placeholder="0.00"
+                          className="w-full rounded-lg border border-slate-300 pl-8 pr-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors"
+                        />
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
+                  <p className="text-sm text-blue-900">
+                    <span className="font-semibold">💡 Tip:</span> You can add more details like tasks and work packages after creating the project.
+                  </p>
+                </div>
               </div>
             )}
 
@@ -304,8 +324,11 @@ export function CreateProjectPage() {
                 type="button"
                 onClick={() => void handleCreateProject()}
                 disabled={isLoading || !canSubmit}
-                className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-75 hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors duration-75 hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
+                {isLoading && (
+                  <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent" />
+                )}
                 {isLoading ? 'Creating...' : 'Create Project'}
               </button>
             ) : null}

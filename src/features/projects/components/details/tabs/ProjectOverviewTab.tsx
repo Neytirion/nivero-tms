@@ -154,6 +154,7 @@ export function ProjectOverviewTab({
                   role: null,
                   profile: {
                     fullName: name,
+                    avatarUrl: null,
                   } satisfies UserProfilePreview,
                 }))).map((member) => {
                 const initials = member.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()

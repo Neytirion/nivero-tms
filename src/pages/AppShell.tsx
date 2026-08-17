@@ -123,6 +123,7 @@ function AppShellLayout({ user }: AppShellProps) {
                         {activeNavItems.map((item) => {
                           const isActive = location.pathname === item.to
                           const isMentionsItem = item.to === '/app/mentions'
+                          const isDemoModule = item.to === '/app/dashboard' || item.to === '/app/time-tracking' || item.to === '/app/resources'
                           return (
                             <button
                               key={item.to}
@@ -135,7 +136,10 @@ function AppShellLayout({ user }: AppShellProps) {
                               }`}
                             >
                               <p className="flex items-center justify-between gap-2 text-sm font-semibold">
-                                <span>{item.label}</span>
+                                <span>
+                                  {item.label}
+                                  {isDemoModule ? ' (demo)' : ''}
+                                </span>
                                 {isMentionsItem && unreadMentionsCount > 0 ? (
                                   <span className="rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
                                     {unreadMentionsCount > 99 ? '99+' : unreadMentionsCount}

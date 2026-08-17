@@ -52,6 +52,7 @@ export function TeamAccessSection({
       return {
         ...currentUserProfile,
         userId: member.user_id,
+        avatarUrl: currentUserProfile.avatarUrl ?? member.avatar_url,
         email: currentUserProfile.email || member.email,
         role: member.role,
         joinedAt: member.joined_at ?? currentUserProfile.joinedAt,
@@ -62,6 +63,7 @@ export function TeamAccessSection({
       userId: member.user_id,
       fullName: member.full_name,
       email: member.email,
+      avatarUrl: member.avatar_url,
       role: member.role,
       joinedAt: member.joined_at,
     }
@@ -121,7 +123,19 @@ export function TeamAccessSection({
               key={member.member_id}
               className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
             >
-              <div>
+              <div className="min-w-0 flex items-center gap-2.5">
+                {member.avatar_url ? (
+                  <img
+                    src={member.avatar_url}
+                    alt={member.full_name ?? member.email ?? 'User avatar'}
+                    className="h-8 w-8 shrink-0 rounded-full border border-slate-200 object-cover"
+                  />
+                ) : (
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-700">
+                    {(member.full_name ?? member.email ?? '?').slice(0, 2).toUpperCase()}
+                  </span>
+                )}
+                <div className="min-w-0">
                 <button
                   type="button"
                   onClick={() => setSelectedProfile(resolveProfile(member))}
@@ -130,6 +144,7 @@ export function TeamAccessSection({
                   {member.full_name ?? member.email ?? 'Unknown user'}
                 </button>
                 <p className="mt-0.5 text-xs text-slate-500">{member.email ?? 'No email'}</p>
+                </div>
               </div>
               {canManageMemberRoles && member.user_id ? (
                 <div className="flex items-center gap-2">

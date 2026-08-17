@@ -199,7 +199,7 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
     markAsRead()
   }
 
-  const [selectedProfile, setSelectedProfile] = useState<null | { userId?: string | null; fullName?: string | null; email?: string | null; role?: string | null; joinedAt?: string | null }>(null)
+  const [selectedProfile, setSelectedProfile] = useState<null | { userId?: string | null; fullName?: string | null; email?: string | null; avatarUrl?: string | null; role?: string | null; joinedAt?: string | null }>(null)
 
   const openProfileByUserId = (userId: string | null) => {
     if (!userId) return
@@ -212,6 +212,7 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
             userId: member.user_id,
             fullName: member.full_name,
             email: member.email,
+            avatarUrl: member.avatar_url,
             role: member.role,
             joinedAt: member.joined_at,
           }
@@ -313,6 +314,7 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
             isLoading={isLoading}
             events={events}
             membersByUserId={membersByUserId}
+            members={members}
             currentActivityPage={currentActivityPage}
             onCurrentActivityPageChange={setCurrentActivityPage}
             activityItemsPerPage={activityItemsPerPage}

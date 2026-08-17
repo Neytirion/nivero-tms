@@ -6,6 +6,7 @@ import { normalizeTaskStatus, sortTasksForBoardColumn } from '../tasks-page.util
 interface TaskBoardViewProps {
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
+  assigneeAvatarUrlByUserId: Record<string, string>
   onOpenUserProfile: (userId: string) => void
   dragTaskId: string | null
   onDragTaskIdChange: (taskId: string | null) => void
@@ -17,6 +18,7 @@ interface TaskBoardViewProps {
 export function TaskBoardView({
   tasks,
   assigneeLabelByUserId,
+  assigneeAvatarUrlByUserId,
   onOpenUserProfile,
   dragTaskId,
   onDragTaskIdChange,
@@ -40,6 +42,7 @@ export function TaskBoardView({
               label={column.label}
               tasks={columnTasks}
               assigneeLabelByUserId={assigneeLabelByUserId}
+              assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}
               onOpenUserProfile={onOpenUserProfile}
               onDragOver={(event) => event.preventDefault()}
               onDropTask={(status) => {

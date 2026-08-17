@@ -5,6 +5,7 @@ export interface UserProfilePreview {
   displayName?: string | null
   fullName?: string | null
   email?: string | null
+  avatarUrl?: string | null
   role?: string | null
   joinedAt?: string | null
   aboutMe?: string | null
@@ -62,9 +63,17 @@ export function UserProfileDialog({ isOpen, profile, onClose }: UserProfileDialo
         className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
       >
         <div className="flex items-center gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-sm font-bold text-cyan-800">
-            {initials || '?'}
-          </span>
+          {profile.avatarUrl ? (
+            <img
+              src={profile.avatarUrl}
+              alt="Profile avatar"
+              className="h-11 w-11 shrink-0 rounded-full border border-slate-200 object-cover"
+            />
+          ) : (
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-sm font-bold text-cyan-800">
+              {initials || '?'}
+            </span>
+          )}
           <div className="min-w-0">
             <h3 className="truncate text-base font-semibold text-slate-900">{profileName}</h3>
             <p className="mt-0.5 text-xs uppercase tracking-[0.12em] text-slate-500">Member profile</p>

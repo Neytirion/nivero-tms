@@ -143,6 +143,7 @@ export function ProjectOverviewTab({
                       userId: member.user_id,
                       fullName: member.full_name,
                       email: currentUserProfile?.userId === member.user_id ? currentUserProfile.email || member.email : member.email,
+                      avatarUrl: currentUserProfile?.userId === member.user_id ? currentUserProfile.avatarUrl || member.avatar_url : member.avatar_url,
                       role: member.role,
                       joinedAt: member.joined_at ?? currentUserProfile?.joinedAt,
                   } satisfies UserProfilePreview,
@@ -158,9 +159,17 @@ export function ProjectOverviewTab({
                 const initials = member.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()
                 return (
                   <li key={member.key} className="flex items-center gap-2.5">
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[11px] font-bold text-blue-700">
-                      {initials}
-                    </span>
+                    {member.profile.avatarUrl ? (
+                      <img
+                        src={member.profile.avatarUrl}
+                        alt={member.name}
+                        className="h-7 w-7 shrink-0 rounded-full border border-slate-200 object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[11px] font-bold text-blue-700">
+                        {initials}
+                      </span>
+                    )}
                     <button
                       type="button"
                       onClick={() => setSelectedProfile(member.profile)}

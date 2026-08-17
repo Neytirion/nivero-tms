@@ -20,6 +20,12 @@ function getActorLabel(userId: string | null, map: Record<string, string>) {
   return map[userId] ?? userId
 }
 
+function getActorAvatarUrl(userId: string | null, members: ProjectMemberListItem[]) {
+  if (!userId) return null
+  const member = members.find((candidate) => candidate.user_id === userId)
+  return member?.avatar_url ?? null
+}
+
 function formatActivityLabel(event: ActivityEventPreview) {
   switch (event.event_type) {
     case 'comment.created': return 'added a comment'
@@ -234,6 +240,7 @@ export function ProjectCollaborationCommentsSection({
             const isOwn = comment.user_id === currentUserId
             const name = getActorLabel(comment.user_id, membersByUserId)
             const initials = name.slice(0, 2).toUpperCase()
+            const avatarUrl = getActorAvatarUrl(comment.user_id, members)
             const isUnread = lastReadAt ? comment.created_at > lastReadAt && !isOwn : false
             const mentionState = mentionStateByCommentId[comment.id]
             const isMentioned = Boolean(mentionState)
@@ -245,10 +252,14 @@ export function ProjectCollaborationCommentsSection({
                   <button
                     type="button"
                     onClick={() => onOpenProfile(comment.user_id)}
-                    className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[9px] font-bold text-slate-500 transition hover:bg-slate-200"
+                    className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-[9px] font-bold text-slate-500 transition hover:bg-slate-200"
                     title="Open member profile"
                   >
-                    {initials}
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt={name} className="h-full w-full object-cover" />
+                    ) : (
+                      initials
+                    )}
                   </button>
                 )}
                 <div className={`min-w-0 max-w-[75%] ${isOwn ? 'items-end' : 'items-start'} flex flex-col`}>
@@ -492,6 +503,7 @@ interface ProjectCollaborationActivitySectionProps {
   isLoading: boolean
   events: ActivityEventPreview[]
   membersByUserId: Record<string, string>
+  members: ProjectMemberListItem[]
   currentActivityPage: number
   onCurrentActivityPageChange: (page: number) => void
   activityItemsPerPage: number
@@ -502,6 +514,7 @@ export function ProjectCollaborationActivitySection({
   isLoading,
   events,
   membersByUserId,
+  members,
   currentActivityPage,
   onCurrentActivityPageChange,
   activityItemsPerPage,
@@ -529,15 +542,23 @@ export function ProjectCollaborationActivitySection({
         ) : events.length === 0 ? (
           <p className="text-sm text-slate-400">No activity yet</p>
         ) : (
-          paginatedEvents.map((event) => (
+          paginatedEvents.map((event) => {
+            const actorLabel = getActorLabel(event.actor_user_id, membersByUserId)
+            const actorAvatarUrl = getActorAvatarUrl(event.actor_user_id, members)
+
+            return (
             <div key={event.id} className="flex items-start gap-3">
               <button
                 type="button"
                 onClick={() => onOpenProfile(event.actor_user_id)}
-                className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-semibold text-slate-500 transition hover:bg-slate-200"
+                className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-slate-100 text-[10px] font-semibold text-slate-500 transition hover:bg-slate-200"
                 title="Open member profile"
               >
-                {getActorLabel(event.actor_user_id, membersByUserId).slice(0, 2).toUpperCase()}
+                {actorAvatarUrl ? (
+                  <img src={actorAvatarUrl} alt={actorLabel} className="h-full w-full object-cover" />
+                ) : (
+                  actorLabel.slice(0, 2).toUpperCase()
+                )}
               </button>
               <div className="min-w-0 flex-1">
                 <p className="text-sm text-slate-800">
@@ -546,14 +567,15 @@ export function ProjectCollaborationActivitySection({
                     onClick={() => onOpenProfile(event.actor_user_id)}
                     className="font-semibold text-slate-900 underline-offset-2 hover:text-cyan-700 hover:underline"
                   >
-                    {getActorLabel(event.actor_user_id, membersByUserId)}
+                    {actorLabel}
                   </button>
                   {' '}{formatActivityLabel(event)}
                 </p>
                 <p className="mt-0.5 text-[11px] text-slate-400">{timeAgo(event.created_at)}</p>
               </div>
             </div>
-          ))
+            )
+          })
         )}
       </div>
       {events.length > activityItemsPerPage && (

@@ -60,7 +60,9 @@ export type ProjectMemberPreview = Pick<
 export type ProjectMemberListItem = Pick<
   Database['public']['Functions']['get_project_members_with_profile']['Returns'][number],
   'member_id' | 'project_id' | 'user_id' | 'role' | 'joined_at' | 'full_name' | 'email'
->
+> & {
+  avatar_url?: string | null
+}
 
 export type TimeEntryPreview = Pick<
   TimeEntry,

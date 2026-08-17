@@ -68,4 +68,17 @@ describe('TaskCard', () => {
     expect(onOpenUserProfile).toHaveBeenCalledWith('u1')
     expect(onTaskClick).not.toHaveBeenCalled()
   })
+
+  it('renders assignee avatar when URL is provided', () => {
+    render(
+      <TaskCard
+        task={baseTask}
+        assigneeLabel="Alice"
+        assigneeAvatarUrl="https://example.com/avatar.png"
+        isLocked={false}
+      />,
+    )
+
+    expect(screen.getByRole('img', { name: 'Alice' })).toBeInTheDocument()
+  })
 })

@@ -10,6 +10,7 @@ type TaskViewsSectionProps = {
   onTaskViewModeChange: (mode: TaskViewMode) => void
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
+  assigneeAvatarUrlByUserId: Record<string, string>
   workPackageLabelById: Record<string, string>
   dependencyLabelByTaskId: Record<string, string>
   onOpenUserProfile: (userId: string) => void
@@ -25,6 +26,7 @@ export function TaskViewsSection({
   onTaskViewModeChange,
   tasks,
   assigneeLabelByUserId,
+  assigneeAvatarUrlByUserId,
   workPackageLabelById,
   dependencyLabelByTaskId,
   onOpenUserProfile,
@@ -65,6 +67,7 @@ export function TaskViewsSection({
         <TaskBoardView
           tasks={tasks}
           assigneeLabelByUserId={assigneeLabelByUserId}
+          assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}
           onOpenUserProfile={onOpenUserProfile}
           dragTaskId={dragTaskId}
           onDragTaskIdChange={onDragTaskIdChange}

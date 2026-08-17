@@ -699,6 +699,7 @@ export interface Database {
           joined_at: string | null
           full_name: string | null
           email: string | null
+          avatar_url: string | null
         }[]
       }
       invite_project_member_by_email: {

@@ -34,6 +34,8 @@ $$;
 revoke all on function public.is_project_owner(uuid) from public;
 grant execute on function public.is_project_owner(uuid) to authenticated;
 
+drop function if exists public.get_project_members_with_profile(uuid) cascade;
+
 create or replace function public.get_project_members_with_profile(p_project_id uuid)
 returns table (
   member_id uuid,
@@ -42,7 +44,8 @@ returns table (
   role text,
   joined_at timestamptz,
   full_name text,
-  email text
+  email text,
+  avatar_url text
 )
 language plpgsql
 security definer
@@ -84,7 +87,8 @@ begin
       split_part(coalesce(u.email::text, ''), '@', 1),
       'Unknown user'
     )::text as full_name,
-    u.email::text as email
+    u.email::text as email,
+    nullif(trim(u.raw_user_meta_data ->> 'avatar_url'), '')::text as avatar_url
   from public.project_members pm
   left join auth.users u on u.id = pm.user_id
   where pm.project_id = p_project_id

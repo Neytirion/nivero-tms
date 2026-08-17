@@ -4,6 +4,7 @@ interface TaskCardProps {
   task: TaskPreview
   assigneeUserId?: string | null
   assigneeLabel: string
+  assigneeAvatarUrl?: string | null
   onTaskClick?: (taskId: string) => void
   onOpenUserProfile?: (userId: string) => void
   isLocked: boolean
@@ -70,6 +71,7 @@ export function TaskCard({
   task,
   assigneeUserId,
   assigneeLabel,
+  assigneeAvatarUrl,
   onTaskClick,
   onOpenUserProfile,
   isLocked,
@@ -121,11 +123,19 @@ export function TaskCard({
 
       <div className={`mt-3 flex items-center justify-between border-t pt-2.5 ${isLocked ? 'border-slate-300' : 'border-slate-200/70'}`}>
         <div className="min-w-0 flex items-center gap-2">
-          <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
-            isLocked ? 'bg-slate-300 text-slate-700' : 'bg-sky-100 text-sky-800'
-          }`}>
-            {titleInitials}
-          </span>
+          {assigneeAvatarUrl ? (
+            <img
+              src={assigneeAvatarUrl}
+              alt={assigneeLabel}
+              className="h-6 w-6 shrink-0 rounded-full border border-slate-200 object-cover"
+            />
+          ) : (
+            <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+              isLocked ? 'bg-slate-300 text-slate-700' : 'bg-sky-100 text-sky-800'
+            }`}>
+              {titleInitials}
+            </span>
+          )}
           <p className={`truncate text-xs ${isLocked ? 'text-slate-600' : 'text-slate-600'}`}>
             {assigneeUserId && onOpenUserProfile ? (
               <button

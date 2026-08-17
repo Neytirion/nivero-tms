@@ -8,6 +8,7 @@ interface KanbanColumnProps {
   label: string
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
+  assigneeAvatarUrlByUserId: Record<string, string>
   onOpenUserProfile: (userId: string) => void
   onDropTask: (status: TaskStatus) => void
   onDragOver: (event: DragEvent<HTMLDivElement>) => void
@@ -21,6 +22,7 @@ export function KanbanColumn({
   label,
   tasks,
   assigneeLabelByUserId,
+  assigneeAvatarUrlByUserId,
   onOpenUserProfile,
   onDropTask,
   onDragOver,
@@ -61,6 +63,13 @@ export function KanbanColumn({
                   : task.created_by
                     ? `${assigneeLabelByUserId[task.created_by] ?? task.created_by} (creator)`
                     : 'Unassigned'
+              }
+              assigneeAvatarUrl={
+                task.assigned_to
+                  ? assigneeAvatarUrlByUserId[task.assigned_to] ?? null
+                  : task.created_by
+                    ? assigneeAvatarUrlByUserId[task.created_by] ?? null
+                    : null
               }
               onTaskClick={onTaskClick}
               onOpenUserProfile={onOpenUserProfile}

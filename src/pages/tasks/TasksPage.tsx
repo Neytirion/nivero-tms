@@ -20,6 +20,7 @@ export function TasksPage() {
     canManageTask,
     hasEstimateVersion,
     assigneeLabelByUserId,
+    assigneeAvatarUrlByUserId,
     dependencyLabelByTaskId,
     workPackageLabelById,
     moveTaskToStatus,
@@ -57,6 +58,7 @@ export function TasksPage() {
         userId: member.user_id,
         fullName: member.full_name,
         email: member.email,
+        avatarUrl: member.avatar_url,
         role: member.role,
         joinedAt: member.joined_at,
       })
@@ -93,6 +95,7 @@ export function TasksPage() {
         onTaskViewModeChange={setTaskViewMode}
         tasks={tasks}
         assigneeLabelByUserId={assigneeLabelByUserId}
+        assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}
         workPackageLabelById={workPackageLabelById}
         dependencyLabelByTaskId={dependencyLabelByTaskId}
         onOpenUserProfile={openUserProfile}

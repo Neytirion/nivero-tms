@@ -27,8 +27,20 @@ export function useAvatarUpload(input: UseAvatarUploadInput) {
 
     setIsUploadingAvatar(true)
 
+    let effectiveUserId = input.userId
+    if (typeof supabase.auth.getUser === 'function') {
+      try {
+        const { data } = await supabase.auth.getUser()
+        if (data.user?.id) {
+          effectiveUserId = data.user.id
+        }
+      } catch {
+        // Keep fallback to provided user id.
+      }
+    }
+
     const extension = avatarFile.name.split('.').pop()?.toLowerCase() || 'png'
-    const filePath = `${input.userId}/avatar-${Date.now()}.${extension}`
+    const filePath = `${effectiveUserId}/avatar-${Date.now()}.${extension}`
 
     const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, avatarFile, {
       upsert: true,
@@ -36,8 +48,11 @@ export function useAvatarUpload(input: UseAvatarUploadInput) {
     })
 
     if (uploadError) {
+      const isRlsError = /row-level security policy/i.test(uploadError.message)
       input.setStatus(
-        `Avatar upload error: ${uploadError.message}. Ensure Storage bucket "avatars" exists and allows upload for authenticated users.`,
+        isRlsError
+          ? 'Avatar upload error: row-level security policy denied this upload. Ensure bucket "avatars" exists and has INSERT policy for authenticated users in their own folder: name like auth.uid() || "/%".'
+          : `Avatar upload error: ${uploadError.message}. Ensure Storage bucket "avatars" exists and allows upload for authenticated users.`,
       )
       setIsUploadingAvatar(false)
       return

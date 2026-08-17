@@ -192,6 +192,12 @@ export function useTasksPageController() {
     }
     return acc
   }, {})
+  const assigneeAvatarUrlByUserId = projectMembers.reduce<Record<string, string>>((acc, member) => {
+    if (member.user_id && member.avatar_url) {
+      acc[member.user_id] = member.avatar_url
+    }
+    return acc
+  }, {})
   const dependencyLabelByTaskId = tasks.reduce<Record<string, string>>((acc, task) => {
     acc[task.id] = task.title
     return acc
@@ -266,6 +272,7 @@ export function useTasksPageController() {
     workPackages,
     dependencyOptions,
     assigneeLabelByUserId,
+    assigneeAvatarUrlByUserId,
     dependencyLabelByTaskId,
     workPackageLabelById,
     assigneeOptions,

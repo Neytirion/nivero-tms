@@ -111,7 +111,7 @@ export function ProjectDetailsPage() {
           <button
             type="button"
             onClick={() => navigate('/app/projects')}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
           >
             ← Projects
           </button>

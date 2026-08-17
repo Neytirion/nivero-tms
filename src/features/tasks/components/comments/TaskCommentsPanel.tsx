@@ -293,16 +293,14 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
       <div className="mt-2 space-y-1.5">
         {comments.length === 0 ? <p className="text-xs text-slate-500">No comments yet</p> : null}
         {comments.slice(-3).map((item) => (
-          <div key={item.id} className="rounded-md border border-slate-200 bg-white px-2 py-1.5">
+          <div key={item.id} className="relative rounded-md border border-slate-200 bg-white px-2 py-1.5">
             <div className="mb-1 flex items-center justify-between gap-2">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                 {currentUserId && item.user_id === currentUserId
                   ? 'You'
                   : authorLabelByUserId[item.user_id] ?? item.user_id}
               </p>
-            </div>
-            {currentUserId && item.user_id === currentUserId ? (
-              <div className="mb-1 flex justify-end">
+              {currentUserId && item.user_id === currentUserId ? (
                 <button
                   type="button"
                   onClick={() => void removeComment(item.id)}
@@ -311,8 +309,8 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
                 >
                   Delete
                 </button>
-              </div>
-            ) : null}
+              ) : null}
+            </div>
             {mentionStateByCommentId[item.id] ? (
               <p className={`mb-1 inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
                 mentionStateByCommentId[item.id].readAt ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-800'
@@ -320,7 +318,7 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
                 Mentioned you
               </p>
             ) : null}
-            <p className="text-xs text-slate-700">{item.message}</p>
+            <p className="text-sm text-slate-700">{item.message}</p>
             <p className="mt-1 text-[10px] text-slate-500">{formatDate(item.created_at)}</p>
           </div>
         ))}
@@ -375,7 +373,13 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
                 if (candidate) {
                   applyMentionCandidate(candidate)
                 }
+                return
               }
+            }
+
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              void addComment()
             }}
             onBlur={() => {
               setTimeout(() => {
@@ -383,7 +387,7 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
                 setActiveMentionIndex(0)
               }, 100)
             }}
-            placeholder={mentionHints.length > 0 ? `Add comment (mentions: ${mentionHints.join(', ')})` : 'Add comment'}
+            placeholder={mentionHints.length > 0 ? `Add comment - Enter to send (mentions: ${mentionHints.join(', ')})` : 'Add comment - Enter to send'}
             className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
           />
           <button

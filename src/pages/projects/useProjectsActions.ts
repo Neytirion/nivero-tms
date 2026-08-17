@@ -58,7 +58,7 @@ export interface UseProjectsActionsReturn {
   completeProjectHandler: () => Promise<void>
   saveProjectSettings: () => Promise<void>
   saveUseEstimatesSetting: (nextValue: boolean) => Promise<boolean>
-  deleteSelectedProjectHandler: () => Promise<void>
+  deleteSelectedProjectHandler: () => Promise<boolean>
   updateMemberRoleHandler: (userId: string, fallbackRole: string, pendingRoles: Record<string, string>) => Promise<void>
 }
 
@@ -246,17 +246,19 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
 
   const deleteSelectedProjectHandler = async () => {
     if (!selectedProjectId) {
-      return
+      return false
     }
 
     try {
       await removeProject(selectedProjectId)
       onDeleteConfirmClose()
       setStatus('✓ Project deleted')
+      return true
     } catch (error) {
       setStatus(
         error instanceof Error ? `Delete error: ${error.message}` : 'Failed to delete project',
       )
+      return false
     }
   }
 

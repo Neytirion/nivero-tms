@@ -130,6 +130,13 @@ export function ProjectDetailsPage() {
     setIsEstimateToggleConfirmOpen(false)
   }
 
+  const handleDeleteProjectConfirm = async () => {
+    const wasDeleted = await deleteSelectedProjectHandler()
+    if (wasDeleted) {
+      navigate('/app/projects')
+    }
+  }
+
   const handleTabClick = (key: string) => {
     if (key === 'tasks') {
       navigate(`/app/tasks?projectId=${selectedProjectId}`)
@@ -296,7 +303,7 @@ export function ProjectDetailsPage() {
         confirmText="Delete project"
         tone="danger"
         onCancel={() => setIsDeleteConfirmOpen(false)}
-        onConfirm={deleteSelectedProjectHandler}
+        onConfirm={handleDeleteProjectConfirm}
       />
     </div>
   )

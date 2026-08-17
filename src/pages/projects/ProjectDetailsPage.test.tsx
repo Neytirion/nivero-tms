@@ -193,4 +193,21 @@ describe('ProjectDetailsPage', () => {
       expect(mockNavigate).toHaveBeenCalledWith('/app/projects', { replace: true })
     })
   })
+
+  it('navigates to projects list after successful delete confirmation', async () => {
+    const controller = buildController({
+      isDeleteConfirmOpen: true,
+      deleteSelectedProjectHandler: vi.fn(async () => true),
+    })
+    mockUseProjectsPageController.mockReturnValue(controller as never)
+
+    render(<ProjectDetailsPage />)
+
+    fireEvent.click(screen.getByRole('button', { name: 'confirm-Delete project' }))
+
+    await waitFor(() => {
+      expect(controller.deleteSelectedProjectHandler).toHaveBeenCalled()
+      expect(mockNavigate).toHaveBeenCalledWith('/app/projects')
+    })
+  })
 })

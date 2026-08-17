@@ -14,6 +14,12 @@ export interface EditableWorkPackage {
   estimatedHours: string
 }
 
+export interface PackageFieldError {
+  index: number
+  field: 'name' | 'estimatedHours'
+  message: string
+}
+
 function toEditablePackages(estimate: EstimateWithPackages | null) {
   if (!estimate || estimate.work_packages.length === 0) {
     return [] as EditableWorkPackage[]
@@ -27,6 +33,49 @@ function toEditablePackages(estimate: EstimateWithPackages | null) {
       name: item.name,
       estimatedHours: String(item.estimated_hours ?? 0),
     }))
+}
+
+function validatePackages(packages: EditableWorkPackage[]): PackageFieldError[] {
+  const errors: PackageFieldError[] = []
+  const seenNames = new Set<string>()
+
+  for (let i = 0; i < packages.length; i++) {
+    const pkg = packages[i]
+
+    if (!pkg.name.trim() && !pkg.estimatedHours.trim()) {
+      continue
+    }
+
+    if (!pkg.name.trim()) {
+      errors.push({
+        index: i,
+        field: 'name',
+        message: 'Name is required',
+      })
+      continue
+    }
+
+    const normalizedName = pkg.name.trim().toLowerCase()
+    if (seenNames.has(normalizedName)) {
+      errors.push({
+        index: i,
+        field: 'name',
+        message: `Duplicate: "${pkg.name}" already used`,
+      })
+    }
+    seenNames.add(normalizedName)
+
+    const hours = Number(pkg.estimatedHours)
+    if (!Number.isFinite(hours) || hours <= 0) {
+      errors.push({
+        index: i,
+        field: 'estimatedHours',
+        message: 'Must be > 0',
+      })
+    }
+  }
+
+  return errors
 }
 
 interface UseEstimatesTabControllerInput {
@@ -69,6 +118,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
   )
 
   const displayedPackages = showArchived ? [...packages, ...archivedPackages] : packages
+  const packageValidationErrors = useMemo(() => validatePackages(packages), [packages])
   const canEditActiveEstimate = canEdit && activeEstimate?.status !== 'approved'
 
   const addWorkPackageRow = () => {
@@ -123,9 +173,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadEstimates()
-    // Project scope reset.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId])
 
@@ -148,6 +196,11 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
 
   const saveDraftHandler = async () => {
     if (!canEditActiveEstimate || !activeEstimateId) {
+      return
+    }
+
+    if (packageValidationErrors.length > 0) {
+      setStatus('Fix validation errors before saving.')
       return
     }
 
@@ -207,5 +260,6 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
     createVersionHandler,
     saveDraftHandler,
     approveHandler,
+    packageValidationErrors,
   }
 }

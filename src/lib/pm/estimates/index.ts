@@ -177,6 +177,23 @@ export async function saveEstimateDraft(input: SaveEstimateDraftInput) {
     }))
     .filter((item) => item.name.length > 0)
 
+  // Validation 1: Check for duplicate work package names (case-insensitive)
+  const seenNames = new Set<string>()
+  for (const pkg of sanitizedPackages) {
+    const normalizedName = pkg.name.toLowerCase()
+    if (seenNames.has(normalizedName)) {
+      throw new Error(`Duplicate work package name: "${pkg.name}" appears more than once`)
+    }
+    seenNames.add(normalizedName)
+  }
+
+  // Validation 2: Check that all estimate hours are > 0
+  for (const pkg of sanitizedPackages) {
+    if (pkg.estimatedHours <= 0) {
+      throw new Error(`Work package "${pkg.name}" must have estimated hours greater than 0`)
+    }
+  }
+
   const existingPackages = await getExistingDraftPackages(input.estimateId)
   const usedPackageIds = new Set<string>()
 

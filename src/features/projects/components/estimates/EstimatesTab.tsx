@@ -27,6 +27,7 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
     createVersionHandler,
     saveDraftHandler,
     approveHandler,
+    packageValidationErrors,
   } = useEstimatesTabController({ projectId, canEdit })
 
   return (
@@ -59,14 +60,20 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
       {useEstimates ? (
         <>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 text-xs text-blue-900">
+              <span className="font-semibold">Workflow:</span> Create versions • Add/edit work packages • Save changes • Approve baseline. Team can see approved estimates from project start date.
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
             {canEdit ? (
               <button
                 type="button"
                 onClick={() => void createVersionHandler()}
                 disabled={isLoading || !canEdit}
-                className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 relative group"
+                title="Create a new estimate version for planning changes"
               >
-                Create Version
+                New Estimate Version
               </button>
             ) : null}
           </div>
@@ -75,7 +82,7 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
             {status ||
               (activeEstimate?.status === 'approved'
                 ? 'Approved estimates are locked. Create a new version to make changes.'
-                : 'Use versions to keep estimate history before approval.')}
+                : 'Draft versions can be edited. Save changes, then finalize and approve when ready.')}
           </p>
 
           <div className="mt-3 flex flex-wrap gap-2">
@@ -166,6 +173,11 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
                     placeholder="Frontend"
                     className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
                   />
+                  {packageValidationErrors.some((e) => e.index === index && e.field === 'name') && (
+                    <p className="mt-1 text-[11px] text-rose-600">
+                      {packageValidationErrors.find((e) => e.index === index && e.field === 'name')?.message}
+                    </p>
+                  )}
                 </td>
                 <td className="px-3 py-2">
                   <input
@@ -188,6 +200,11 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
                     }
                     className="w-28 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
                   />
+                  {packageValidationErrors.some((e) => e.index === index && e.field === 'estimatedHours') && (
+                    <p className="mt-1 text-[11px] text-rose-600">
+                      {packageValidationErrors.find((e) => e.index === index && e.field === 'estimatedHours')?.message}
+                    </p>
+                  )}
                 </td>
                 {canEdit && !item.name.includes('(archived)') ? (
                   <td className="px-3 py-2 text-right">
@@ -220,6 +237,7 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
                 onClick={addWorkPackageRow}
                 disabled={isLoading || !activeEstimateId || !canEditActiveEstimate}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                title="Add another work package to this estimate"
               >
                 + Add Work Package
               </button>
@@ -228,16 +246,18 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
                 onClick={() => void saveDraftHandler()}
                 disabled={isLoading || !activeEstimateId || !canEditActiveEstimate}
                 className="rounded-lg bg-cyan-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
+                title="Save your work package changes to this draft version"
               >
-                Save Draft
+                Save Changes
               </button>
               <button
                 type="button"
                 onClick={() => void approveHandler()}
                 disabled={isLoading || !activeEstimateId || !canEditActiveEstimate}
                 className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                title="Approve this estimate version as the team baseline. Cannot be edited after approval."
               >
-                Approve Estimate
+                Finalize & Approve
               </button>
             </div>
           ) : null}

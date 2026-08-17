@@ -293,7 +293,7 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
       <div className="mt-2 space-y-1.5">
         {comments.length === 0 ? <p className="text-xs text-slate-500">No comments yet</p> : null}
         {comments.slice(-3).map((item) => (
-          <div key={item.id} className="relative rounded-md border border-slate-200 bg-white px-2 py-1.5">
+          <div key={item.id} className="group relative rounded-md border border-slate-200 bg-white px-2 py-1.5">
             <div className="mb-1 flex items-center justify-between gap-2">
               <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
                 {currentUserId && item.user_id === currentUserId
@@ -305,9 +305,12 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
                   type="button"
                   onClick={() => void removeComment(item.id)}
                   disabled={isLoading}
-                  className="rounded border border-rose-200 bg-rose-50 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700 transition hover:bg-rose-100 disabled:opacity-60"
+                  className="absolute -left-6 top-1/2 -translate-y-1/2 rounded p-0.5 text-slate-300 opacity-0 transition hover:text-rose-500 group-hover:opacity-100"
+                  title="Delete"
                 >
-                  Delete
+                  <svg className="h-3 w-3" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M6 2h4a1 1 0 0 1 1 1H5a1 1 0 0 1 1-1ZM3 4h10l-1 10H4L3 4Zm3 2v6h1V6H6Zm3 0v6h1V6H9Z" />
+                  </svg>
                 </button>
               ) : null}
             </div>

@@ -225,6 +225,7 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     try {
       const wasSaved = await editProject(selectedProject.id, {
         name: selectedProject.name,
+        description: selectedProject.description ?? '',
         useEstimates: nextValue,
       })
 

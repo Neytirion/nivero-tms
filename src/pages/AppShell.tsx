@@ -35,6 +35,7 @@ function AppShellLayout({ user }: AppShellProps) {
 
   const avatarUrl = (user.user_metadata.avatar_url as string | undefined) ?? ''
   const fullName = (user.user_metadata.full_name as string | undefined) ?? ''
+  const profileDisplayName = fullName.trim() || user.email || 'User'
   const avatarFallback = (fullName || user.email || '?').charAt(0).toUpperCase()
   const canViewResourcePlanning = projects.some((project) => {
     const role = getProjectRole(project.id)
@@ -146,14 +147,15 @@ function AppShellLayout({ user }: AppShellProps) {
                     </div>
                   </div>
 
-                  <div className="mt-4 flex items-stretch gap-2">
+                  <div className="mt-4 rounded-xl border border-[#bad6b2] bg-white/75 p-1.5 shadow-sm">
+                    <div className="flex items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() => handleNavigation('/app/mentions')}
-                      className={`relative inline-flex h-auto w-14 shrink-0 items-center justify-center rounded-xl border transition ${
+                      className={`relative inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition ${
                         location.pathname === '/app/mentions'
                           ? 'border-[#7fb070] bg-[#f4fbf1] text-slate-900 shadow-sm'
-                          : 'border-[#bad6b2] bg-white/80 text-slate-700 hover:border-[#8fbe83] hover:bg-[#f4fbf1]'
+                          : 'border-[#c6dec0] bg-white text-slate-700 hover:border-[#8fbe83] hover:bg-[#f4fbf1]'
                       }`}
                       aria-label="Open mentions"
                       title="Open mentions"
@@ -163,7 +165,7 @@ function AppShellLayout({ user }: AppShellProps) {
                         <path strokeLinecap="round" strokeLinejoin="round" d="m4 8 8 6 8-6" />
                       </svg>
                       {unreadMentionsCount > 0 ? (
-                        <span className="absolute right-1.5 top-1.5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                        <span className="absolute -right-1 -top-1 rounded-full border border-white bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
                           {unreadMentionsCount > 99 ? '99+' : unreadMentionsCount}
                         </span>
                       ) : null}
@@ -172,7 +174,7 @@ function AppShellLayout({ user }: AppShellProps) {
                     <button
                       type="button"
                       onClick={() => navigate('/app/profile')}
-                      className="inline-flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-[#bad6b2] bg-white/80 px-3 py-2 text-left text-slate-800 hover:border-[#8fbe83] hover:bg-[#f4fbf1]"
+                      className="inline-flex min-w-0 flex-1 items-center gap-2.5 rounded-lg border border-[#c6dec0] bg-white px-2.5 py-1.5 text-left text-slate-800 transition hover:border-[#8fbe83] hover:bg-[#f4fbf1]"
                       aria-label="Open profile"
                       title="Open profile"
                     >
@@ -180,18 +182,19 @@ function AppShellLayout({ user }: AppShellProps) {
                         <img
                           src={avatarUrl}
                           alt="Profile avatar"
-                          className="h-9 w-9 rounded-full border border-slate-200 object-cover"
+                          className="h-8 w-8 rounded-full border border-slate-200 object-cover"
                         />
                       ) : (
-                        <span className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-xs font-semibold text-slate-700">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-xs font-semibold text-slate-700">
                           {avatarFallback}
                         </span>
                       )}
-                      <span>
-                        <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5f7b57]">Profile</span>
-                        <span className="block text-sm font-semibold text-slate-900">Open profile</span>
-                      </span>
+                      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-900">{profileDisplayName}</span>
+                      <svg className="h-3.5 w-3.5 shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fillRule="evenodd" d="M7.22 4.97a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 1 1-1.06-1.06L10.94 10 7.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                      </svg>
                     </button>
+                  </div>
                   </div>
                 </div>
               </div>

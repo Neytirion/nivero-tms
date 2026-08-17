@@ -153,10 +153,10 @@ describe('MentionsPage', () => {
     renderMentionsPage()
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Open' })).toBeInTheDocument()
+      expect(screen.getByText('Please check this update')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open' }))
+    fireEvent.click(screen.getByText('Please check this update'))
 
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toBe('/app/tasks/t1')
@@ -184,10 +184,10 @@ describe('MentionsPage', () => {
     renderMentionsPage()
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: 'Open' })).toBeInTheDocument()
+      expect(screen.getByText('Please check this update')).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Open' }))
+    fireEvent.click(screen.getByText('Please check this update'))
 
     await waitFor(() => {
       expect(screen.getByText('This mention points to a deleted message and was removed from the list.')).toBeInTheDocument()

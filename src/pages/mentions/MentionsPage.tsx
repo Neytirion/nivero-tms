@@ -197,7 +197,13 @@ export function MentionsPage() {
               const isTaskMention = Boolean(item.mention.task_id)
 
               return (
-                <article key={item.mention.id} className="flex flex-wrap items-start justify-between gap-3 p-4">
+                <button
+                  key={item.mention.id}
+                  type="button"
+                  onClick={() => void openMention(item)}
+                  disabled={openingMentionId === item.mention.id}
+                  className="w-full flex flex-wrap items-start justify-between gap-3 p-4 text-left transition hover:bg-slate-50 disabled:opacity-50"
+                >
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                       <span className="font-semibold text-slate-700">{item.project?.name ?? 'Project'}</span>
@@ -223,22 +229,17 @@ export function MentionsPage() {
                     {isUnread ? (
                       <button
                         type="button"
-                        onClick={() => void markSingleMentionAsRead(item.mention.id)}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          void markSingleMentionAsRead(item.mention.id)
+                        }}
                         className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
                       >
                         Mark read
                       </button>
                     ) : null}
-                    <button
-                      type="button"
-                      onClick={() => void openMention(item)}
-                      disabled={openingMentionId === item.mention.id}
-                      className="rounded bg-cyan-700 px-2.5 py-1 text-xs font-semibold text-white hover:bg-cyan-600"
-                    >
-                      {openingMentionId === item.mention.id ? 'Opening…' : 'Open'}
-                    </button>
                   </div>
-                </article>
+                </button>
               )
             })}
           </div>

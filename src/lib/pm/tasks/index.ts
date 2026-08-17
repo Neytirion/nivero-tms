@@ -35,7 +35,9 @@ export async function createTask(input: CreateTaskInput) {
     }
   }
 
-  await assertTaskWorkPackageValid(input.projectId, input.workPackageId)
+  if (projectUseEstimates || (input.workPackageId?.trim().length ?? 0) > 0) {
+    await assertTaskWorkPackageValid(input.projectId, input.workPackageId)
+  }
   await assertTaskDueDateWithinProjectRange(input.projectId, input.dueDate)
 
   const { data: userData, error: userError } = await supabase.auth.getUser()

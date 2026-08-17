@@ -87,7 +87,10 @@ export function ProjectOverviewTab({
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Estimated</p>
-          <p className="mt-1 text-3xl font-bold text-slate-900">{(selectedProject.estimated_hours ?? 0).toFixed(0)}<span className="ml-1 text-lg text-slate-400">h</span></p>
+          <p className="mt-1 text-3xl font-bold text-slate-900">
+            {selectedProject.estimated_hours != null ? selectedProject.estimated_hours.toFixed(0) : '—'}
+            {selectedProject.estimated_hours != null ? <span className="ml-1 text-lg text-slate-400">h</span> : null}
+          </p>
           <p className="mt-2 text-xs text-slate-500">Actual: {(selectedProject.actual_hours ?? 0).toFixed(1)}h</p>
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4">

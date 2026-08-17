@@ -24,7 +24,7 @@ export interface AiProjectDraft {
     start_date?: string
     end_date?: string
     budget_amount?: number
-    estimated_hours: number
+    estimated_hours?: number
   }
   estimates: {
     version_number: number

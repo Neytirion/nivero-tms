@@ -158,8 +158,6 @@ export function ProjectDetailsSectionBody({
           onSettingsDeadlineChange={onSettingsDeadlineChange}
           settingsBudgetAmount={settingsBudgetAmount}
           onSettingsBudgetAmountChange={onSettingsBudgetAmountChange}
-          settingsUseEstimates={settingsUseEstimates}
-          onSettingsUseEstimatesChange={onSettingsUseEstimatesChange}
           canEditSelectedProject={canEditSelectedProject}
           canDeleteSelectedProject={canDeleteSelectedProject}
           canCompleteSelectedProject={selectedProjectId ? canManageProject(selectedProjectId) : false}
@@ -173,7 +171,12 @@ export function ProjectDetailsSectionBody({
       ) : null}
 
       {activeTab === 'estimates' ? (
-        <EstimatesTab projectId={selectedProject.id} canEdit={canEditSelectedProject} />
+        <EstimatesTab
+          projectId={selectedProject.id}
+          canEdit={canEditSelectedProject}
+          useEstimates={settingsUseEstimates}
+          onUseEstimatesChange={onSettingsUseEstimatesChange}
+        />
       ) : null}
 
       {activeTab === 'collaboration' ? (

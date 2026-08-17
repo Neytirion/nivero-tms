@@ -66,7 +66,7 @@ function validateProjectDraft(data: unknown): { valid: boolean; errors?: Validat
     if (!project.name || typeof project.name !== 'string' || project.name.length < 3 || project.name.length > 255) {
       errors['project.name'] = ['Name must be 3-255 characters']
     }
-    if (typeof project.estimated_hours !== 'number' || project.estimated_hours < 0) {
+    if (project.estimated_hours !== undefined && (typeof project.estimated_hours !== 'number' || project.estimated_hours < 0)) {
       errors['project.estimated_hours'] = ['Must be a non-negative number']
     }
   }
@@ -210,7 +210,7 @@ Return ONLY valid JSON (no markdown, no extra text) matching this exact structur
     "start_date": "string (optional, ISO date YYYY-MM-DD)",
     "end_date": "string (optional, ISO date YYYY-MM-DD)",
     "budget_amount": "number (optional, budget in currency units)",
-    "estimated_hours": "number (total estimated hours for entire project)"
+    "estimated_hours": "number (optional, total estimated hours for entire project)"
   },
   "estimates": {
     "version_number": 1,
@@ -237,7 +237,7 @@ User input: "${trimmedText.replace(/"/g, '\\"')}"
 Requirements:
 - Generate realistic project breakdown
 - Ensure sum of task hours ≈ work package hours
-- Ensure sum of work package hours ≈ project estimated_hours
+- If project estimated_hours is provided, ensure sum of work package hours is approximately aligned
 - Use reasonable priorities (mostly medium, some high/low)
 - Create 3-8 work packages with 5-15 tasks each
 - Return ONLY the JSON object, nothing else

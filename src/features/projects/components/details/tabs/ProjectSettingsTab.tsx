@@ -11,8 +11,6 @@ interface ProjectSettingsTabProps {
   onSettingsDeadlineChange: (value: string) => void
   settingsBudgetAmount: string
   onSettingsBudgetAmountChange: (value: string) => void
-  settingsUseEstimates: boolean
-  onSettingsUseEstimatesChange: (value: boolean) => void
   canEditSelectedProject: boolean
   canDeleteSelectedProject?: boolean
   canCompleteSelectedProject?: boolean
@@ -67,8 +65,6 @@ export function ProjectSettingsTab({
   onSettingsDeadlineChange,
   settingsBudgetAmount,
   onSettingsBudgetAmountChange,
-  settingsUseEstimates,
-  onSettingsUseEstimatesChange,
   canEditSelectedProject,
   canDeleteSelectedProject,
   canCompleteSelectedProject,
@@ -166,20 +162,6 @@ export function ProjectSettingsTab({
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
             disabled={!canEditSelectedProject}
           />
-        </label>
-
-        <label className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
-          <input
-            type="checkbox"
-            checked={settingsUseEstimates}
-            onChange={(event) => onSettingsUseEstimatesChange(event.target.checked)}
-            disabled={!canEditSelectedProject}
-            className="h-4 w-4 rounded border-slate-300 text-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-          />
-          <div className="flex-1">
-            <span className="block text-sm font-semibold text-slate-900">Enable Estimate Versioning</span>
-            <span className="block text-xs text-slate-500">Require estimate version creation before adding tasks</span>
-          </div>
         </label>
       </div>
 

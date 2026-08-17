@@ -115,6 +115,7 @@ function buildController(overrides: Record<string, unknown> = {}) {
     inviteMemberHandler: vi.fn(async () => undefined),
     completeProjectHandler: vi.fn(async () => undefined),
     saveProjectSettings: vi.fn(async () => undefined),
+    saveUseEstimatesSetting: vi.fn(async () => true),
     deleteSelectedProjectHandler: vi.fn(async () => undefined),
     updateMemberRoleHandler: vi.fn(async () => undefined),
     selectProject: vi.fn(async () => undefined),

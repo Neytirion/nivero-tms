@@ -5,6 +5,7 @@ import { CreateTaskPlanningFields } from './CreateTaskPlanningFields'
 import type { CreateTaskSectionProps } from './create-task-section.types'
 
 export function CreateTaskSection({
+  useEstimates,
   hasEstimateVersion,
   selectedProjectId,
   isMemberInSelectedProject,
@@ -43,7 +44,7 @@ export function CreateTaskSection({
 }: CreateTaskSectionProps) {
   const isCreationBlocked =
     !selectedProjectId ||
-    hasEstimateVersion !== true ||
+    (useEstimates && hasEstimateVersion !== true) ||
     !canSubmit ||
     missingRequiredFields.length > 0 ||
     isLoading
@@ -59,7 +60,7 @@ export function CreateTaskSection({
         </div>
       </div>
 
-      {hasEstimateVersion === false && selectedProjectId ? (
+      {useEstimates && hasEstimateVersion === false && selectedProjectId ? (
         <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
           {isMemberInSelectedProject
             ? 'Estimate version is not created yet. Task creation is unavailable.'
@@ -86,6 +87,7 @@ export function CreateTaskSection({
         />
 
         <CreateTaskPlanningFields
+          useEstimates={useEstimates}
           hasAttemptedSubmit={hasAttemptedSubmit}
           isEstimateHoursMissingOrInvalid={isEstimateHoursMissingOrInvalid}
           taskEstimateHours={taskEstimateHours}
@@ -99,6 +101,7 @@ export function CreateTaskSection({
         />
 
         <CreateTaskAssignmentScopeFields
+          useEstimates={useEstimates}
           selectedProjectId={selectedProjectId}
           hasEstimateVersion={hasEstimateVersion}
           hasAttemptedSubmit={hasAttemptedSubmit}

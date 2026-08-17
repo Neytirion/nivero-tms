@@ -26,7 +26,7 @@ export const AiProjectDraftSchema = z.object({
     start_date: z.string().date().optional(),
     end_date: z.string().date().optional(),
     budget_amount: z.number().min(0).optional(),
-    estimated_hours: z.number().min(0),
+    estimated_hours: z.number().min(0).optional(),
   }),
   estimates: z.object({
     version_number: z.number().default(1),

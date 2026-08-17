@@ -57,6 +57,7 @@ export interface UseProjectsActionsReturn {
   inviteMemberHandler: (email: string, role: string) => Promise<void>
   completeProjectHandler: () => Promise<void>
   saveProjectSettings: () => Promise<void>
+  saveUseEstimatesSetting: (nextValue: boolean) => Promise<boolean>
   deleteSelectedProjectHandler: () => Promise<void>
   updateMemberRoleHandler: (userId: string, fallbackRole: string, pendingRoles: Record<string, string>) => Promise<void>
 }
@@ -216,6 +217,32 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     }
   }
 
+  const saveUseEstimatesSetting = async (nextValue: boolean) => {
+    if (!selectedProject) {
+      return false
+    }
+
+    try {
+      const wasSaved = await editProject(selectedProject.id, {
+        name: selectedProject.name,
+        useEstimates: nextValue,
+      })
+
+      if (wasSaved) {
+        setStatus(`✓ Estimate versioning ${nextValue ? 'enabled' : 'disabled'}`)
+      }
+
+      return wasSaved
+    } catch (error) {
+      setStatus(
+        error instanceof Error
+          ? `Estimate toggle error: ${error.message}`
+          : 'Failed to update estimate versioning',
+      )
+      return false
+    }
+  }
+
   const deleteSelectedProjectHandler = async () => {
     if (!selectedProjectId) {
       return
@@ -255,6 +282,7 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     inviteMemberHandler,
     completeProjectHandler,
     saveProjectSettings,
+    saveUseEstimatesSetting,
     deleteSelectedProjectHandler,
     updateMemberRoleHandler,
   }

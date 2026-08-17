@@ -10,6 +10,7 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
   const { selectedProjectId, setTaskWorkPackageId } = input
   const [workPackages, setWorkPackages] = useState<Array<Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours'>>>([])
   const [hasEstimateVersion, setHasEstimateVersion] = useState<boolean | null>(null)
+  const [useEstimates, setUseEstimates] = useState<boolean>(false)
 
   useEffect(() => {
     const loadWorkPackages = async () => {
@@ -17,6 +18,7 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
         setWorkPackages([])
         setTaskWorkPackageId('')
         setHasEstimateVersion(null)
+        setUseEstimates(false)
         return
       }
 
@@ -24,12 +26,13 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
 
       try {
         const nextWorkPackages = await getProjectTaskWorkPackages(selectedProjectId)
-        const useEstimates = await getProjectUseEstimates(selectedProjectId)
+        const useEstimatesEnabled = await getProjectUseEstimates(selectedProjectId)
+        setUseEstimates(useEstimatesEnabled)
 
         // If project doesn't use estimates, allow task creation (hasEstimateVersion = true)
         // If project uses estimates, check for estimate version
         let canCreateTasks = true
-        if (useEstimates) {
+        if (useEstimatesEnabled) {
           canCreateTasks = await hasProjectEstimateVersion(selectedProjectId)
         }
 
@@ -43,6 +46,7 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
       } catch {
         setWorkPackages([])
         setHasEstimateVersion(true)
+        setUseEstimates(false)
         setTaskWorkPackageId('')
       }
     }
@@ -53,5 +57,6 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
   return {
     workPackages,
     hasEstimateVersion,
+    useEstimates,
   }
 }

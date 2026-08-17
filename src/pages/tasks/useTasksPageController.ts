@@ -28,7 +28,7 @@ export function useTasksPageController() {
     setTaskBlockedByTaskId,
     taskDueDate,
     setTaskDueDate,
-    canSubmit,
+    canSubmit: baseCanSubmit,
     reset,
   } = useTaskForm()
 
@@ -69,7 +69,7 @@ export function useTasksPageController() {
   const myRoleInSelectedProject = selectedProject ? getProjectRole(selectedProject.id) : null
   const isMemberInSelectedProject = myRoleInSelectedProject === 'member'
 
-  const { workPackages, hasEstimateVersion } = useTaskWorkPackagesLoader({
+  const { workPackages, hasEstimateVersion, useEstimates } = useTaskWorkPackagesLoader({
     selectedProjectId,
     setTaskWorkPackageId,
   })
@@ -82,10 +82,13 @@ export function useTasksPageController() {
     missingRequiredFields,
   } = useTaskCreationRequirements({
     selectedProjectId,
+    useEstimates,
     taskTitle,
     taskEstimateHours,
     taskWorkPackageId,
   })
+
+  const canSubmit = useEstimates ? baseCanSubmit : taskTitle.trim().length > 0
 
   const canDeleteTaskInView = (task: TaskPreview) => {
     if (isMemberInSelectedProject) {
@@ -113,6 +116,7 @@ export function useTasksPageController() {
   const { createTaskHandler, moveTaskToStatus: moveTaskToStatusRemote, assignTaskHandler, updateTaskDueDateHandler, submitTaskLogTime } =
     useTaskControllerActions({
       selectedProjectId,
+      useEstimates,
       hasEstimateVersion,
       isMemberInSelectedProject,
       canSubmit,
@@ -238,6 +242,7 @@ export function useTasksPageController() {
     tasks: tasksWithOptimisticStatus,
     projectMembers,
     hasEstimateVersion,
+    useEstimates,
     taskViewMode,
     setTaskViewMode,
     dragTaskId,

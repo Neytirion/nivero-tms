@@ -3,6 +3,7 @@ import type { TaskStatus } from '../../features/tasks/constants.ts'
 
 interface UseTaskControllerActionsInput {
   selectedProjectId: string | null
+  useEstimates: boolean
   hasEstimateVersion: boolean | null
   isMemberInSelectedProject: boolean
   canSubmit: boolean
@@ -51,12 +52,12 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
       return
     }
 
-    if (input.hasEstimateVersion === null) {
+    if (input.useEstimates && input.hasEstimateVersion === null) {
       input.setStatus('Checking estimate version...')
       return
     }
 
-    if (!input.hasEstimateVersion) {
+    if (input.useEstimates && !input.hasEstimateVersion) {
       input.setStatus(
         input.isMemberInSelectedProject
           ? 'Estimate version is not created yet. Task creation is unavailable.'
@@ -66,17 +67,21 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
     }
 
     if (!input.canSubmit) {
-      input.setStatus('Task title, estimated hours, and work package are required')
+      input.setStatus(
+        input.useEstimates
+          ? 'Task title, estimated hours, and work package are required'
+          : 'Task title is required',
+      )
       return
     }
 
-    if (input.isWorkPackageMissing) {
+    if (input.useEstimates && input.isWorkPackageMissing) {
       input.setStatus('Work package is required')
       return
     }
 
     const estimateHours = Number.parseFloat(input.taskEstimateHours)
-    if (!Number.isFinite(estimateHours) || estimateHours < 0) {
+    if (input.useEstimates && (!Number.isFinite(estimateHours) || estimateHours < 0)) {
       input.setStatus('Estimated hours must be a number greater than or equal to 0')
       return
     }
@@ -98,8 +103,8 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
       description: input.taskDescription.trim(),
       status: 'backlog',
       priority: input.taskPriority,
-      estimateHours,
-      workPackageId: input.taskWorkPackageId,
+      estimateHours: input.useEstimates ? estimateHours : undefined,
+      workPackageId: input.useEstimates ? input.taskWorkPackageId : undefined,
       assignedTo: input.canAssignAssignee ? input.taskAssigneeId || undefined : undefined,
       blockedByTaskId: input.taskBlockedByTaskId || undefined,
       dueDate: input.taskDueDate || undefined,

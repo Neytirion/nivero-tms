@@ -142,6 +142,7 @@ export function useProjectsPageController() {
     inviteMemberHandler: inviteMemberHandlerRaw,
     completeProjectHandler,
     saveProjectSettings,
+    saveUseEstimatesSetting,
     deleteSelectedProjectHandler,
     updateMemberRoleHandler: updateMemberRoleHandlerRaw,
   } = useProjectsActions(actionsInput)
@@ -266,6 +267,7 @@ export function useProjectsPageController() {
     inviteMemberHandler,
     completeProjectHandler,
     saveProjectSettings,
+    saveUseEstimatesSetting,
     deleteSelectedProjectHandler,
     updateMemberRoleHandler,
     loadDashboardPreview,

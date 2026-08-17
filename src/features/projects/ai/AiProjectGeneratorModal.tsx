@@ -103,7 +103,7 @@ export function AiProjectGeneratorModal({
     (
       !effectiveDraft.project.name.trim() ||
       effectiveDraft.project.name.trim().length < 3 ||
-      effectiveDraft.project.estimated_hours < 0 ||
+      (effectiveDraft.project.estimated_hours != null && effectiveDraft.project.estimated_hours < 0) ||
       effectiveDraft.estimates.work_packages.some((workPackage) =>
         !workPackage.name.trim() ||
         workPackage.estimated_hours < 0 ||
@@ -252,12 +252,17 @@ export function AiProjectGeneratorModal({
                   />
                 </label>
                 <label className="text-xs text-blue-900">
-                  Estimated Hours
+                  Estimated Hours (optional)
                   <input
                     type="number"
                     min={0}
-                    value={effectiveDraft.project.estimated_hours}
-                    onChange={(event) => updateProjectField('estimated_hours', Number(event.target.value) || 0)}
+                    value={effectiveDraft.project.estimated_hours ?? ''}
+                    onChange={(event) =>
+                      updateProjectField(
+                        'estimated_hours',
+                        event.target.value === '' ? undefined : Number(event.target.value),
+                      )
+                    }
                     className="mt-1 w-full rounded border border-blue-200 px-2 py-1 text-sm text-slate-900"
                   />
                 </label>

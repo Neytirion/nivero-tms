@@ -6,6 +6,7 @@ export type DependencyOption = {
 }
 
 export type CreateTaskSectionProps = {
+  useEstimates: boolean
   hasEstimateVersion: boolean | null
   selectedProjectId: string | null
   isMemberInSelectedProject: boolean
@@ -55,6 +56,7 @@ export type CoreTaskFieldsProps = {
 }
 
 export type PlanningTaskFieldsProps = {
+  useEstimates: boolean
   hasAttemptedSubmit: boolean
   isEstimateHoursMissingOrInvalid: boolean
   taskEstimateHours: string
@@ -68,6 +70,7 @@ export type PlanningTaskFieldsProps = {
 }
 
 export type AssignmentScopeFieldsProps = {
+  useEstimates: boolean
   selectedProjectId: string | null
   hasEstimateVersion: boolean | null
   hasAttemptedSubmit: boolean

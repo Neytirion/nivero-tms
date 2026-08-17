@@ -26,6 +26,7 @@ export function TaskDetailsPage() {
   const {
     isLoading,
     tasks,
+    myRoleInSelectedProject,
     canAssignAssignee,
     canManageTask,
     canDeleteTaskInView,
@@ -123,7 +124,9 @@ export function TaskDetailsPage() {
   const actualHours = task.actual_hours ?? 0
   const remainingHours = Math.max(0, Math.round((estimateHours - actualHours) * 100) / 100)
   const isOverBudget = estimateHours > 0 && actualHours > estimateHours
-  const canEditEstimateHours = !isLocked && canAssignAssignee
+  const normalizedRole = (myRoleInSelectedProject ?? '').toLowerCase()
+  const isOwnerOrAdmin = normalizedRole === 'owner' || normalizedRole === 'admin'
+  const canEditEstimateHours = !isLocked && isOwnerOrAdmin
   const progressPct = estimateHours > 0
     ? Math.min(100, Math.round((actualHours / estimateHours) * 100))
     : 0

@@ -55,6 +55,7 @@ describe('TaskDetailsPage', () => {
           project_id: 'p1',
         }),
       ],
+      myRoleInSelectedProject: 'member',
       canAssignAssignee: false,
       canManageTask: vi.fn(() => true),
       canDeleteTaskInView: vi.fn(() => false),
@@ -122,7 +123,7 @@ describe('TaskDetailsPage', () => {
     })
   })
 
-  it('allows project admins/managers/owners to update estimated hours inside task details', async () => {
+  it('allows project owners/admins to update estimated hours inside task details', async () => {
     mockUseTasksPageController.mockReturnValue({
       tasks: [
         createTaskPreview({
@@ -132,6 +133,7 @@ describe('TaskDetailsPage', () => {
           estimate_hours: 8,
         }),
       ],
+      myRoleInSelectedProject: 'admin',
       canAssignAssignee: true,
       canManageTask: vi.fn(() => true),
       canDeleteTaskInView: vi.fn(() => false),
@@ -158,10 +160,44 @@ describe('TaskDetailsPage', () => {
     })
   })
 
-  it('keeps estimated hours read-only for non-manager roles', () => {
+  it('shows estimated hours as text for manager role', () => {
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Task A',
+          project_id: 'p1',
+          estimate_hours: 8,
+        }),
+      ],
+      myRoleInSelectedProject: 'manager',
+      canAssignAssignee: true,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      assignTaskHandler: vi.fn(async () => undefined),
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
     renderTaskDetails('/app/tasks/t1')
 
-    expect(screen.queryByLabelText(/estimate hours/i)).not.toBeInTheDocument()
+    expect(document.getElementById('task-estimate-hours')).not.toBeInTheDocument()
+    expect(document.getElementById('task-estimate-hours-readonly')).not.toBeInTheDocument()
+    expect(screen.getByText('Estimate')).toBeInTheDocument()
+  })
+
+  it('shows estimated hours as text for member role', () => {
+    renderTaskDetails('/app/tasks/t1')
+
+    expect(document.getElementById('task-estimate-hours')).not.toBeInTheDocument()
+    expect(document.getElementById('task-estimate-hours-readonly')).not.toBeInTheDocument()
     expect(screen.getByText('Estimate')).toBeInTheDocument()
   })
 })

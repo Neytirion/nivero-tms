@@ -38,16 +38,15 @@ export function MentionsPage() {
   }
 
   useEffect(() => {
-    void loadMentions()
-  }, [])
-
-  useEffect(() => {
     const onFocus = () => {
       void loadMentions()
     }
 
+    const loadTimerId = window.setTimeout(onFocus, 0)
+
     window.addEventListener('focus', onFocus)
     return () => {
+      window.clearTimeout(loadTimerId)
       window.removeEventListener('focus', onFocus)
     }
   }, [])

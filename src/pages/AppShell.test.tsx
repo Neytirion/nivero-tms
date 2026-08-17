@@ -36,7 +36,7 @@ describe('AppShell', () => {
     )
 
     // ✅ Check BEHAVIOR: Resources menu is hidden for members
-    expect(screen.queryByText('Resources')).toBeNull()
+    expect(screen.queryByText(/Resources/)).toBeNull()
     // ✅ Current project name is displayed read-only
     expect(screen.getByText('Project One')).toBeTruthy()
   })
@@ -56,8 +56,9 @@ describe('AppShell', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('Resources')).toBeTruthy()
+    expect(screen.getByText('Resources (demo)')).toBeTruthy()
     expect(screen.getByText('Nivero PM Tool')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Open mentions' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Open profile' })).toBeTruthy()
     // ✅ Current project name shown read-only (no interactive selector)
     expect(screen.getByText('Project One')).toBeTruthy()
@@ -143,7 +144,7 @@ describe('AppShell', () => {
         )
 
         // ✅ Check BEHAVIOR: Resources hidden for non-managers
-        expect(screen.queryByText('Resources')).toBeNull()
+        expect(screen.queryByText(/Resources/)).toBeNull()
       })
     })
   })

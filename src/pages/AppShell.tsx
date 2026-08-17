@@ -8,7 +8,6 @@ import { ToastProvider } from '../shared/components'
 const baseNavItems = [
   { to: '/app/projects', label: 'Projects' },
   { to: '/app/dashboard', label: 'Dashboard' },
-  { to: '/app/mentions', label: 'Mentions' },
   { to: '/app/time-tracking', label: 'Time Tracking' },
 ]
 
@@ -122,7 +121,6 @@ function AppShellLayout({ user }: AppShellProps) {
                       <nav className="space-y-2">
                         {activeNavItems.map((item) => {
                           const isActive = location.pathname === item.to
-                          const isMentionsItem = item.to === '/app/mentions'
                           const isDemoModule = item.to === '/app/dashboard' || item.to === '/app/time-tracking' || item.to === '/app/resources'
                           return (
                             <button
@@ -140,11 +138,6 @@ function AppShellLayout({ user }: AppShellProps) {
                                   {item.label}
                                   {isDemoModule ? ' (demo)' : ''}
                                 </span>
-                                {isMentionsItem && unreadMentionsCount > 0 ? (
-                                  <span className="rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                                    {unreadMentionsCount > 99 ? '99+' : unreadMentionsCount}
-                                  </span>
-                                ) : null}
                               </p>
                             </button>
                           )
@@ -153,29 +146,53 @@ function AppShellLayout({ user }: AppShellProps) {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => navigate('/app/profile')}
-                    className="mt-4 inline-flex w-full items-center gap-3 rounded-xl border border-[#bad6b2] bg-white/80 px-3 py-2 text-left text-slate-800 hover:border-[#8fbe83] hover:bg-[#f4fbf1]"
-                    aria-label="Open profile"
-                    title="Open profile"
-                  >
-                    {avatarUrl ? (
-                      <img
-                        src={avatarUrl}
-                        alt="Profile avatar"
-                        className="h-9 w-9 rounded-full border border-slate-200 object-cover"
-                      />
-                    ) : (
-                      <span className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-xs font-semibold text-slate-700">
-                        {avatarFallback}
+                  <div className="mt-4 flex items-stretch gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleNavigation('/app/mentions')}
+                      className={`relative inline-flex h-auto w-14 shrink-0 items-center justify-center rounded-xl border transition ${
+                        location.pathname === '/app/mentions'
+                          ? 'border-[#7fb070] bg-[#f4fbf1] text-slate-900 shadow-sm'
+                          : 'border-[#bad6b2] bg-white/80 text-slate-700 hover:border-[#8fbe83] hover:bg-[#f4fbf1]'
+                      }`}
+                      aria-label="Open mentions"
+                      title="Open mentions"
+                    >
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16v12H4z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m4 8 8 6 8-6" />
+                      </svg>
+                      {unreadMentionsCount > 0 ? (
+                        <span className="absolute right-1.5 top-1.5 rounded-full bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                          {unreadMentionsCount > 99 ? '99+' : unreadMentionsCount}
+                        </span>
+                      ) : null}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate('/app/profile')}
+                      className="inline-flex min-w-0 flex-1 items-center gap-3 rounded-xl border border-[#bad6b2] bg-white/80 px-3 py-2 text-left text-slate-800 hover:border-[#8fbe83] hover:bg-[#f4fbf1]"
+                      aria-label="Open profile"
+                      title="Open profile"
+                    >
+                      {avatarUrl ? (
+                        <img
+                          src={avatarUrl}
+                          alt="Profile avatar"
+                          className="h-9 w-9 rounded-full border border-slate-200 object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-xs font-semibold text-slate-700">
+                          {avatarFallback}
+                        </span>
+                      )}
+                      <span>
+                        <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5f7b57]">Profile</span>
+                        <span className="block text-sm font-semibold text-slate-900">Open profile</span>
                       </span>
-                    )}
-                    <span>
-                      <span className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5f7b57]">Profile</span>
-                      <span className="block text-sm font-semibold text-slate-900">Open profile</span>
-                    </span>
-                  </button>
+                    </button>
+                  </div>
                 </div>
               </div>
             </aside>

@@ -46,6 +46,7 @@ export function TaskDetailsPage() {
   } = useTasksPageController()
 
   const task = tasks.find((t) => t.id === taskId)
+  const taskEstimateHours = task?.estimate_hours
 
   useEffect(() => {
     if (!task && taskId) {
@@ -54,13 +55,19 @@ export function TaskDetailsPage() {
   }, [task, taskId, navigate, backTo])
 
   useEffect(() => {
-    if (!task) {
+    if (!taskId) {
       return
     }
 
-    const estimateHours = task.estimate_hours ?? 0
-    setEstimateHoursDraft(String(estimateHours))
-  }, [task?.id, task?.estimate_hours])
+    const estimateHours = taskEstimateHours ?? 0
+    const syncTimerId = window.setTimeout(() => {
+      setEstimateHoursDraft(String(estimateHours))
+    }, 0)
+
+    return () => {
+      window.clearTimeout(syncTimerId)
+    }
+  }, [taskId, taskEstimateHours])
 
   if (!task) {
     return (

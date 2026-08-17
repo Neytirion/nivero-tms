@@ -81,7 +81,7 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
     }
 
     const estimateHours = Number.parseFloat(input.taskEstimateHours)
-    if (input.useEstimates && (!Number.isFinite(estimateHours) || estimateHours < 0)) {
+    if (input.taskEstimateHours.trim().length > 0 && (!Number.isFinite(estimateHours) || estimateHours < 0)) {
       input.setStatus('Estimated hours must be a number greater than or equal to 0')
       return
     }
@@ -103,7 +103,7 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
       description: input.taskDescription.trim(),
       status: 'backlog',
       priority: input.taskPriority,
-      estimateHours: input.useEstimates ? estimateHours : undefined,
+      estimateHours: input.taskEstimateHours.trim().length > 0 ? estimateHours : undefined,
       workPackageId: input.useEstimates ? input.taskWorkPackageId : undefined,
       assignedTo: input.canAssignAssignee ? input.taskAssigneeId || undefined : undefined,
       blockedByTaskId: input.taskBlockedByTaskId || undefined,

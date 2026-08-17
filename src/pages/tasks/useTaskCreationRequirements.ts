@@ -12,8 +12,9 @@ export function useTaskCreationRequirements(input: UseTaskCreationRequirementsIn
   const parsedEstimateHours = Number.parseFloat(input.taskEstimateHours)
   const isProjectMissing = !input.selectedProjectId
   const isTaskTitleMissing = input.taskTitle.trim().length === 0
-  const isEstimateHoursMissingOrInvalid = input.useEstimates
-    ? input.taskEstimateHours.trim().length === 0 || !Number.isFinite(parsedEstimateHours) || parsedEstimateHours < 0
+  // Estimate hours is optional always, but if provided must be valid
+  const isEstimateHoursMissingOrInvalid = input.taskEstimateHours.trim().length > 0
+    ? !Number.isFinite(parsedEstimateHours) || parsedEstimateHours < 0
     : false
   const isWorkPackageMissing = input.useEstimates
     ? input.taskWorkPackageId.trim().length === 0

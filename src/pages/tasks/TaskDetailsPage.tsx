@@ -13,6 +13,7 @@ export function TaskDetailsPage() {
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [estimateHoursDraft, setEstimateHoursDraft] = useState('0')
+  const [taskStatusDraft, setTaskStatusDraft] = useState('todo')
 
   const backTo =
     typeof location.state === 'object' &&
@@ -47,6 +48,7 @@ export function TaskDetailsPage() {
 
   const task = tasks.find((t) => t.id === taskId)
   const taskEstimateHours = task?.estimate_hours
+  const taskStatus = task?.status ?? 'todo'
 
   useEffect(() => {
     if (!task && taskId) {
@@ -68,6 +70,20 @@ export function TaskDetailsPage() {
       window.clearTimeout(syncTimerId)
     }
   }, [taskId, taskEstimateHours])
+
+  useEffect(() => {
+    if (!taskId) {
+      return
+    }
+
+    const syncTimerId = window.setTimeout(() => {
+      setTaskStatusDraft(taskStatus)
+    }, 0)
+
+    return () => {
+      window.clearTimeout(syncTimerId)
+    }
+  }, [taskId, taskStatus])
 
   if (!task) {
     return (
@@ -138,6 +154,7 @@ export function TaskDetailsPage() {
   }
 
   const updateTaskStatusHandler = async (taskId: string, status: string) => {
+    setTaskStatusDraft(status)
     await editTask(taskId, { status })
   }
 
@@ -187,19 +204,17 @@ export function TaskDetailsPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto max-w-6xl px-6 py-4">
-          <button
-            type="button"
-            onClick={() => navigate(backTo)}
-            className="mb-4 inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-          >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            {backTo.startsWith('/app/projects/') ? 'Project Details' : 'Tasks'}
-          </button>
-        </div>
+      <div className="mx-auto max-w-6xl px-6 pt-6">
+        <button
+          type="button"
+          onClick={() => navigate(backTo)}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          {backTo.startsWith('/app/projects/') ? 'Project Details' : 'Tasks'}
+        </button>
       </div>
 
       <div className="mx-auto max-w-6xl px-6 py-8">
@@ -258,7 +273,7 @@ export function TaskDetailsPage() {
                   <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Status</label>
                   {!isLocked ? (
                     <select
-                      value={task.status ?? 'todo'}
+                      value={taskStatusDraft}
                       onChange={(event) => void updateTaskStatusHandler(task.id, event.target.value)}
                       className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
                     >

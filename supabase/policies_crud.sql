@@ -34,9 +34,9 @@ $$;
 revoke all on function public.is_project_owner(uuid) from public;
 grant execute on function public.is_project_owner(uuid) to authenticated;
 
-drop function if exists public.get_project_members_with_profile(uuid) cascade;
+drop function if exists public.get_project_members_with_profile(uuid);
 
-create or replace function public.get_project_members_with_profile(p_project_id uuid)
+create function public.get_project_members_with_profile(p_project_id uuid)
 returns table (
   member_id uuid,
   project_id uuid,
@@ -190,13 +190,6 @@ for delete
 to authenticated
 using (
   owner_id = auth.uid()
-  or exists (
-    select 1
-    from project_members pm
-    where pm.project_id = projects.id
-      and pm.user_id = auth.uid()
-      and pm.role = 'admin'
-  )
 );
 
 drop policy if exists "User can see tasks in his projects" on tasks;
@@ -355,6 +348,67 @@ to authenticated
 using (
   bucket_id = 'avatars'
   and (storage.foldername(name))[1] = auth.uid()::text
+);
+
+drop policy if exists "User can see time entries in their projects" on time_entries;
+drop policy if exists "User can create own time entries" on time_entries;
+drop policy if exists "User can update own time entries" on time_entries;
+drop policy if exists "User can delete own time entries" on time_entries;
+
+create policy "User can see time entries in their projects"
+on time_entries
+for select
+to authenticated
+using (
+  project_id in (
+    select project_id
+    from project_members
+    where user_id = auth.uid()
+  )
+  or project_id in (
+    select id
+    from projects
+    where owner_id = auth.uid()
+  )
+);
+
+create policy "User can create own time entries"
+on time_entries
+for insert
+to authenticated
+with check (
+  user_id = auth.uid()
+  and (
+    project_id in (
+      select project_id
+      from project_members
+      where user_id = auth.uid()
+    )
+    or project_id in (
+      select id
+      from projects
+      where owner_id = auth.uid()
+    )
+  )
+);
+
+create policy "User can update own time entries"
+on time_entries
+for update
+to authenticated
+using (
+  user_id = auth.uid()
+)
+with check (
+  user_id = auth.uid()
+);
+
+create policy "User can delete own time entries"
+on time_entries
+for delete
+to authenticated
+using (
+  user_id = auth.uid()
 );
 
 notify pgrst, 'reload schema';

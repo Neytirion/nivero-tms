@@ -1,6 +1,7 @@
-drop function if exists public.get_project_members_with_profile(uuid) cascade;
+-- Drop without cascade to avoid unintended side effects; if this fails, check dependencies
+drop function if exists public.get_project_members_with_profile(uuid);
 
-create or replace function public.get_project_members_with_profile(p_project_id uuid)
+create function public.get_project_members_with_profile(p_project_id uuid)
 returns table (
   member_id uuid,
   project_id uuid,

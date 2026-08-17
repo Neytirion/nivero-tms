@@ -343,43 +343,41 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
               setMentionQueryState(extractMentionQuery(input.value, cursor))
             }}
             onKeyDown={(event) => {
-              if (filteredMentionCandidates.length === 0) {
-                return
-              }
+              if (filteredMentionCandidates.length > 0) {
+                if (event.key === 'Tab') {
+                  event.preventDefault()
+                  const direction = event.shiftKey ? -1 : 1
+                  const nextIndex = (activeMentionIndex + direction + filteredMentionCandidates.length) % filteredMentionCandidates.length
+                  setActiveMentionIndex(nextIndex)
+                  return
+                }
 
-              if (event.key === 'Tab') {
-                event.preventDefault()
-                const direction = event.shiftKey ? -1 : 1
-                const nextIndex = (activeMentionIndex + direction + filteredMentionCandidates.length) % filteredMentionCandidates.length
-                setActiveMentionIndex(nextIndex)
-                return
-              }
+                if (event.key === 'ArrowDown') {
+                  event.preventDefault()
+                  setActiveMentionIndex((prev) => (prev + 1) % filteredMentionCandidates.length)
+                  return
+                }
 
-              if (event.key === 'ArrowDown') {
-                event.preventDefault()
-                setActiveMentionIndex((prev) => (prev + 1) % filteredMentionCandidates.length)
-                return
-              }
+                if (event.key === 'ArrowUp') {
+                  event.preventDefault()
+                  setActiveMentionIndex((prev) => (prev - 1 + filteredMentionCandidates.length) % filteredMentionCandidates.length)
+                  return
+                }
 
-              if (event.key === 'ArrowUp') {
-                event.preventDefault()
-                setActiveMentionIndex((prev) => (prev - 1 + filteredMentionCandidates.length) % filteredMentionCandidates.length)
-                return
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  const candidate = filteredMentionCandidates[activeMentionIndex] ?? filteredMentionCandidates[0]
+                  if (candidate) {
+                    applyMentionCandidate(candidate)
+                  }
+                  return
+                }
               }
 
               if (event.key === 'Enter') {
                 event.preventDefault()
-                const candidate = filteredMentionCandidates[activeMentionIndex] ?? filteredMentionCandidates[0]
-                if (candidate) {
-                  applyMentionCandidate(candidate)
-                }
-                return
+                void addComment()
               }
-            }
-
-            if (event.key === 'Enter') {
-              event.preventDefault()
-              void addComment()
             }}
             onBlur={() => {
               setTimeout(() => {

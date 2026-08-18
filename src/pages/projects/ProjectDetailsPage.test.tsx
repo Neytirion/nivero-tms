@@ -157,7 +157,7 @@ describe('ProjectDetailsPage', () => {
     fireEvent.click(screen.getByRole('button', { name: /Tasks/ }))
     expect(mockNavigate).toHaveBeenCalledWith('/app/tasks?projectId=p1')
 
-    fireEvent.click(screen.getByRole('button', { name: /Team Access/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Team/ }))
     expect(controller.setActiveTab).toHaveBeenCalledWith('team')
     expect(mockSetSearchParams).toHaveBeenCalledWith({ tab: 'team' })
 

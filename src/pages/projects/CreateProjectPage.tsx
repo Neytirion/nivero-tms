@@ -174,7 +174,7 @@ export function CreateProjectPage() {
                   : 'border-transparent text-slate-600 hover:text-slate-900'
               }`}
             >
-              ✨ AI Generator
+              ✨ AI Generator (Beta)
             </button>
           </div>
 

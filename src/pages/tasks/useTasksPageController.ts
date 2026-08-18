@@ -258,6 +258,7 @@ export function useTasksPageController() {
     isWorkPackageMissing,
     missingRequiredFields,
     hasAttemptedSubmit,
+    setHasAttemptedSubmit,
     taskTitle,
     setTaskTitle,
     taskDescription,

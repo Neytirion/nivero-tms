@@ -41,12 +41,11 @@ export function CreateTaskSection({
   onTaskBlockedByTaskIdChange,
   onTaskAssigneeIdChange,
   onCreateTask,
+  onSetHasAttemptedSubmit,
 }: CreateTaskSectionProps) {
   const isCreationBlocked =
     !selectedProjectId ||
     (useEstimates && hasEstimateVersion !== true) ||
-    !canSubmit ||
-    missingRequiredFields.length > 0 ||
     isLoading
 
   return (
@@ -68,7 +67,7 @@ export function CreateTaskSection({
         </p>
       ) : null}
 
-      {missingRequiredFields.length > 0 ? (
+      {hasAttemptedSubmit && missingRequiredFields.length > 0 ? (
         <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
           Missing required fields: {missingRequiredFields.join(', ')}.
         </div>
@@ -128,6 +127,7 @@ export function CreateTaskSection({
         isLoading={isLoading}
         onCreateTask={onCreateTask}
         isCreationBlocked={isCreationBlocked}
+        onSetHasAttemptedSubmit={onSetHasAttemptedSubmit}
       />
     </section>
   )

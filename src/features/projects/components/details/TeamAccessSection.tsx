@@ -71,7 +71,7 @@ export function TeamAccessSection({
 
   return (
     <section className={isEmbedded ? 'rounded-xl border border-slate-200 bg-slate-50 p-3' : 'page-section bg-slate-50/70'}>
-      <h3 className="section-title">Team Access</h3>
+      <h3 className="section-title">Team</h3>
       <p className="section-subtitle">Invite members by email. A project must be selected first.</p>
 
       {!canInviteToSelectedProject ? (

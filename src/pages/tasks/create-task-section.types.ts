@@ -42,6 +42,7 @@ export type CreateTaskSectionProps = {
   onTaskBlockedByTaskIdChange: (value: string) => void
   onTaskAssigneeIdChange: (value: string) => void
   onCreateTask: () => void
+  onSetHasAttemptedSubmit: (value: boolean) => void
 }
 
 export type CoreTaskFieldsProps = {
@@ -96,4 +97,5 @@ export type CreateTaskFooterProps = {
   isLoading: boolean
   isCreationBlocked: boolean
   onCreateTask: () => void
+  onSetHasAttemptedSubmit: (value: boolean) => void
 }

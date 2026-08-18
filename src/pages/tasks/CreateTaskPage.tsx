@@ -18,6 +18,7 @@ export function CreateTaskPage() {
     isWorkPackageMissing,
     missingRequiredFields,
     hasAttemptedSubmit,
+    setHasAttemptedSubmit,
     taskTitle,
     setTaskTitle,
     taskDescription,
@@ -105,6 +106,7 @@ export function CreateTaskPage() {
           onTaskBlockedByTaskIdChange={setTaskBlockedByTaskId}
           onTaskAssigneeIdChange={setTaskAssigneeId}
           onCreateTask={handleCreateTask}
+          onSetHasAttemptedSubmit={setHasAttemptedSubmit}
         />
       </div>
     </div>

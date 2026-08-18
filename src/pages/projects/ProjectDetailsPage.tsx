@@ -12,7 +12,7 @@ const tabConfig: { key: DetailsTab | 'tasks'; label: string; icon: string }[] = 
   { key: 'collaboration', label: 'Collaboration',  icon: '◈' },
   { key: 'tasks',         label: 'Tasks',          icon: '✓' },
   { key: 'estimates',     label: 'Estimates',      icon: '≈' },
-  { key: 'team',          label: 'Team Access',    icon: '◉' },
+  { key: 'team',          label: 'Team',          icon: '◉' },
   { key: 'settings',      label: 'Settings',       icon: '⚙' },
 ]
 

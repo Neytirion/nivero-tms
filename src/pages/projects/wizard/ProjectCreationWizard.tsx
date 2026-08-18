@@ -11,6 +11,7 @@ import { TeamStep } from './TeamStep'
 import { ReviewStep } from './ReviewStep'
 
 const STEP_NAMES = ['Name & Company', 'Timeline', 'Details', 'Estimates', 'Team', 'Review']
+const FLOW_STEPS: ProjectWizardStep[] = ['basic', 'dates', 'details', 'estimates', 'team', 'review']
 
 interface ProjectCreationWizardProps {
   customerSuggestions: string[]
@@ -69,7 +70,7 @@ export function ProjectCreationWizard({
   }, [currentStep, wizardData])
 
   const handlePrevious = () => {
-    const steps: ProjectWizardStep[] = ['choice', 'basic', 'dates', 'details', 'estimates', 'team', 'review']
+    const steps: ProjectWizardStep[] = ['choice', ...FLOW_STEPS]
     const currentIndex = steps.indexOf(currentStep)
     if (currentIndex > 0) {
       setCurrentStep(steps[currentIndex - 1])
@@ -77,7 +78,7 @@ export function ProjectCreationWizard({
   }
 
   const handleNext = () => {
-    const steps: ProjectWizardStep[] = ['choice', 'basic', 'dates', 'details', 'estimates', 'team', 'review']
+    const steps: ProjectWizardStep[] = ['choice', ...FLOW_STEPS]
     const currentIndex = steps.indexOf(currentStep)
     if (currentIndex < steps.length - 1) {
       setCurrentStep(steps[currentIndex + 1])
@@ -92,14 +93,7 @@ export function ProjectCreationWizard({
     }
   }
 
-  const handleSubmit = async () => {
-    try {
-      await onCreateProject(wizardData)
-    } catch (error) {
-      // Error handling is done in parent component
-      throw error
-    }
-  }
+  const handleSubmit = () => onCreateProject(wizardData)
 
   const handleDataChange = <K extends keyof ProjectWizardData>(
     key: K,
@@ -112,10 +106,12 @@ export function ProjectCreationWizard({
     return <CreationModeChoice onSelectMode={handleSelectMode} />
   }
 
+  const currentStepNumber = FLOW_STEPS.indexOf(currentStep) + 1
+
   return (
     <div>
       <WizardHeader
-        currentStep={Object.values(['basic', 'dates', 'details', 'estimates', 'team', 'review']).indexOf(currentStep as any) + 1}
+        currentStep={currentStepNumber}
         totalSteps={6}
         stepNames={STEP_NAMES}
       />
@@ -170,7 +166,7 @@ export function ProjectCreationWizard({
       )}
 
       <WizardNavigation
-        currentStep={Object.values(['basic', 'dates', 'details', 'estimates', 'team', 'review']).indexOf(currentStep as any) + 1}
+        currentStep={currentStepNumber}
         totalSteps={6}
         isLoading={isLoading}
         canGoNext={canGoToNextStep}

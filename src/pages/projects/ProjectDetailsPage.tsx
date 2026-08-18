@@ -67,6 +67,7 @@ export function ProjectDetailsPage() {
     saveUseEstimatesSetting,
     deleteSelectedProjectHandler,
     updateMemberRoleHandler,
+    removeMemberHandler,
     selectProject,
   } = useProjectsPageController()
 
@@ -223,6 +224,7 @@ export function ProjectDetailsPage() {
             onPendingRoleChange={updatePendingRole}
             selectedProjectOwnerId={selectedProject?.owner_id}
             onSaveRole={updateMemberRoleHandler}
+            onRemoveMember={removeMemberHandler}
             onOpenDeleteConfirm={() => setIsDeleteConfirmOpen(true)}
             onOpenCompleteConfirm={() => setIsCompleteConfirmOpen(true)}
             onOpenSaveSettingsConfirm={() => setIsSaveSettingsConfirmOpen(true)}

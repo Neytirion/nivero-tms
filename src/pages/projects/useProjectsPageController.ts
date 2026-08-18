@@ -58,6 +58,7 @@ export function useProjectsPageController() {
     removeProject,
     inviteMemberToSelectedProjectByEmail,
     changeSelectedProjectMemberRole,
+    removeSelectedProjectMember,
     completeSelectedProject,
   } = useWorkspace()
 
@@ -115,6 +116,8 @@ export function useProjectsPageController() {
   const actionsInput: UseProjectsActionsInput = {
     selectedProjectId,
     selectedProject: selectedProject ?? null,
+    currentUserId,
+    currentUserEmail: currentUserProfile?.email ?? null,
     projectName,
     projectCustomer,
     projectStartDate,
@@ -129,6 +132,7 @@ export function useProjectsPageController() {
     completeSelectedProject,
     inviteMemberToSelectedProjectByEmail,
     changeSelectedProjectMemberRole,
+    removeProjectMember: (_projectId, userId) => removeSelectedProjectMember(userId, true),
     loadDashboardPreview,
     onCreateModalClose: () => setIsCreateModalOpen(false),
     onCompleteConfirmClose: () => setIsCompleteConfirmOpen(false),
@@ -145,6 +149,7 @@ export function useProjectsPageController() {
     saveUseEstimatesSetting,
     deleteSelectedProjectHandler,
     updateMemberRoleHandler: updateMemberRoleHandlerRaw,
+    removeMemberHandler,
   } = useProjectsActions(actionsInput)
 
   const {
@@ -270,6 +275,7 @@ export function useProjectsPageController() {
     saveUseEstimatesSetting,
     deleteSelectedProjectHandler,
     updateMemberRoleHandler,
+    removeMemberHandler,
     loadDashboardPreview,
     selectProject,
   }

@@ -50,6 +50,7 @@ interface ProjectDetailsSectionBodyProps {
   onPendingRoleChange: (userId: string, role: string) => void
   selectedProjectOwnerId: string | null | undefined
   onSaveRole: (userId: string, fallbackRole: string) => void | Promise<void>
+  onRemoveMember?: (userId: string, unassignUnfinishedTasks: boolean) => void | Promise<void>
   onOpenDeleteConfirm?: () => void
   onOpenCompleteConfirm: () => void
   onOpenSaveSettingsConfirm: () => void
@@ -96,6 +97,7 @@ export function ProjectDetailsSectionBody({
   onPendingRoleChange,
   selectedProjectOwnerId,
   onSaveRole,
+  onRemoveMember,
   onOpenDeleteConfirm,
   onOpenCompleteConfirm,
   onOpenSaveSettingsConfirm,
@@ -140,6 +142,7 @@ export function ProjectDetailsSectionBody({
             onPendingRoleChange={onPendingRoleChange}
             selectedProjectOwnerId={selectedProjectOwnerId}
             onSaveRole={onSaveRole}
+            onRemoveMember={onRemoveMember}
           />
         </div>
       ) : null}

@@ -5,6 +5,8 @@ import type { ProjectPreview } from '../../lib/pm'
 export interface UseProjectsActionsInput {
   selectedProjectId: string | null
   selectedProject: ProjectPreview | null
+  currentUserId: string | null
+  currentUserEmail: string | null
   projectName: string
   projectCustomer: string
   projectStartDate: string
@@ -47,6 +49,7 @@ export interface UseProjectsActionsInput {
   completeSelectedProject: () => Promise<void>
   inviteMemberToSelectedProjectByEmail: (email: string, role: string) => Promise<void>
   changeSelectedProjectMemberRole: (userId: string, role: string) => Promise<void>
+  removeProjectMember: (projectId: string, userId: string) => Promise<void>
   loadDashboardPreview: () => Promise<void>
   onCreateModalClose: () => void
   onCompleteConfirmClose: () => void
@@ -63,6 +66,7 @@ export interface UseProjectsActionsReturn {
   saveUseEstimatesSetting: (nextValue: boolean) => Promise<boolean>
   deleteSelectedProjectHandler: () => Promise<boolean>
   updateMemberRoleHandler: (userId: string, fallbackRole: string, pendingRoles: Record<string, string>) => Promise<void>
+  removeMemberHandler: (userId: string) => Promise<void>
 }
 
 /**
@@ -72,6 +76,8 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
   const {
     selectedProjectId,
     selectedProject,
+    currentUserId,
+    currentUserEmail,
     projectName,
     projectCustomer,
     projectStartDate,
@@ -86,6 +92,7 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     completeSelectedProject,
     inviteMemberToSelectedProjectByEmail,
     changeSelectedProjectMemberRole,
+    removeProjectMember,
     loadDashboardPreview,
     onCreateModalClose,
     onCompleteConfirmClose,
@@ -142,7 +149,7 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
   }
 
   const inviteMemberHandler = async (email: string, role: string) => {
-    const trimmedEmail = email.trim()
+    const trimmedEmail = email.trim().toLowerCase()
 
     if (!selectedProjectId) {
       setStatus('Select a project before inviting members')
@@ -154,6 +161,12 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
       return
     }
 
+    // Prevent inviting yourself
+    if (trimmedEmail === currentUserEmail?.toLowerCase()) {
+      setStatus('You cannot invite yourself to a project')
+      return
+    }
+
     try {
       await inviteMemberToSelectedProjectByEmail(trimmedEmail, role)
       setStatus(`✓ Invited ${trimmedEmail} as ${role}`)
@@ -162,6 +175,31 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
         error instanceof Error
           ? `Invite error: ${error.message}`
           : 'Failed to invite member',
+      )
+    }
+  }
+
+  const removeMemberHandler = async (userId: string) => {
+    if (!selectedProjectId) {
+      setStatus('Select a project before removing members')
+      return
+    }
+
+    // Prevent removing yourself
+    if (userId === currentUserId) {
+      setStatus('You cannot remove yourself from the project')
+      return
+    }
+
+    try {
+      // Remove member with task unassignment to owner
+      await removeProjectMember(selectedProjectId, userId)
+      setStatus('Member removed from project and tasks reassigned to owner')
+    } catch (error) {
+      setStatus(
+        error instanceof Error
+          ? `Remove member error: ${error.message}`
+          : 'Failed to remove member',
       )
     }
   }
@@ -291,5 +329,6 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     saveUseEstimatesSetting,
     deleteSelectedProjectHandler,
     updateMemberRoleHandler,
+    removeMemberHandler,
   }
 }

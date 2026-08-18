@@ -44,6 +44,7 @@ export function TeamAccessSection({
   onPendingRoleChange,
   selectedProjectOwnerId,
   onSaveRole,
+  onRemoveMember,
 }: TeamAccessSectionProps) {
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
 
@@ -166,6 +167,19 @@ export function TeamAccessSection({
                   >
                     Save role
                   </button>
+                  {onRemoveMember &&
+                    member.user_id !== selectedProjectOwnerId &&
+                    member.user_id !== currentUserProfile?.userId && (
+                    <button
+                      type="button"
+                      onClick={() => void onRemoveMember(member.user_id as string, true)}
+                      disabled={isLoading}
+                      className="rounded-md bg-red-600 px-2 py-1 text-xs font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      title="Remove member (tasks will be reassigned to project owner)"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
               ) : (
                 <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700">

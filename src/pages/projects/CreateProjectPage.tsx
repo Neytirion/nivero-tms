@@ -10,7 +10,7 @@ import type { ProjectWizardData } from './wizard/types'
 
 export function CreateProjectPage() {
   const navigate = useNavigate()
-  const { addProject, setStatus, projects } = useWorkspace()
+  const { addProject, setStatus, projects, currentUserProfile } = useWorkspace()
   const [isLoading, setIsLoading] = useState(false)
   const [showAIMode, setShowAIMode] = useState(false)
 
@@ -57,10 +57,17 @@ export function CreateProjectPage() {
         }
       }
 
-      // Invite team members if any
+      // Invite team members if any, but never invite the current user.
       if (data.teamInvitations.length > 0) {
+        const currentUserEmail = currentUserProfile?.email?.trim().toLowerCase() ?? null
+        const sanitizedInvitations = data.teamInvitations.filter((invitation) => {
+          const invitationEmail = invitation.email.trim().toLowerCase()
+          return !currentUserEmail || invitationEmail !== currentUserEmail
+        })
+        const skippedSelfInvites = data.teamInvitations.length - sanitizedInvitations.length
+
         const invitationResults = await Promise.allSettled(
-          data.teamInvitations.map((invitation) =>
+          sanitizedInvitations.map((invitation) =>
             inviteProjectMemberByEmail({
               projectId,
               email: invitation.email,
@@ -70,16 +77,18 @@ export function CreateProjectPage() {
         )
 
         const failedInvitations = invitationResults
-          .map((result, idx) => (result.status === 'rejected' ? data.teamInvitations[idx].email : null))
+          .map((result, idx) => (result.status === 'rejected' ? sanitizedInvitations[idx].email : null))
           .filter((email): email is string => email !== null)
 
         if (failedInvitations.length > 0) {
           console.warn('Failed to invite members:', failedInvitations)
           setStatus(
-            `Project created with estimates. Could not invite: ${failedInvitations.join(', ')}`,
+            `Project created. Could not invite: ${failedInvitations.join(', ')}`,
           )
-        } else if (data.teamInvitations.length > 0) {
-          setStatus(`✓ Project created and ${data.teamInvitations.length} member(s) invited`)
+        } else if (sanitizedInvitations.length > 0) {
+          setStatus(`✓ Project created and ${sanitizedInvitations.length} member(s) invited`)
+        } else if (skippedSelfInvites > 0) {
+          setStatus('Project created. Your own email was skipped from invitations')
         }
       }
 

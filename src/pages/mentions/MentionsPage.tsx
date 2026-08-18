@@ -195,14 +195,25 @@ export function MentionsPage() {
             {visibleMentions.map((item) => {
               const isUnread = !item.mention.read_at
               const isTaskMention = Boolean(item.mention.task_id)
+              const isOpening = openingMentionId === item.mention.id
 
               return (
-                <button
+                <div
                   key={item.mention.id}
-                  type="button"
+                  role="button"
+                  tabIndex={isOpening ? -1 : 0}
                   onClick={() => void openMention(item)}
-                  disabled={openingMentionId === item.mention.id}
-                  className="w-full flex flex-wrap items-start justify-between gap-3 p-4 text-left transition hover:bg-slate-50 disabled:opacity-50"
+                  onKeyDown={(event) => {
+                    if (isOpening) return
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      void openMention(item)
+                    }
+                  }}
+                  aria-disabled={isOpening}
+                  className={`w-full flex flex-wrap items-start justify-between gap-3 p-4 text-left transition hover:bg-slate-50 ${
+                    isOpening ? 'opacity-50' : ''
+                  }`}
                 >
                   <div className="min-w-0 flex-1">
                     <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
@@ -239,7 +250,7 @@ export function MentionsPage() {
                       </button>
                     ) : null}
                   </div>
-                </button>
+                </div>
               )
             })}
           </div>

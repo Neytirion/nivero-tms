@@ -173,7 +173,9 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
   }
 
   useEffect(() => {
-    void loadEstimates()
+    queueMicrotask(() => {
+      void loadEstimates()
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId])
 

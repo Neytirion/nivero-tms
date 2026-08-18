@@ -132,6 +132,7 @@ export interface CreateProjectInput {
   endDate?: string
   estimatedHours?: number
   budgetAmount?: number
+  useEstimates?: boolean
 }
 
 export interface UpdateProjectInput {

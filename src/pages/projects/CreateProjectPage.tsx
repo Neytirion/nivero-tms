@@ -41,6 +41,7 @@ export function CreateProjectPage() {
             : undefined,
         startDate: data.projectStartDate || undefined,
         endDate: data.projectEndDate || undefined,
+        useEstimates: data.useEstimates,
       })
       if (projectId) {
         navigate(`/app/projects/${projectId}`)

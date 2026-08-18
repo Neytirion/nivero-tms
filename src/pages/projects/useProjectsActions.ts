@@ -29,6 +29,7 @@ export interface UseProjectsActionsInput {
     budgetAmount?: number
     startDate?: string
     endDate?: string
+    useEstimates?: boolean
   }) => Promise<string | null>
   editProject: (
     projectId: string,

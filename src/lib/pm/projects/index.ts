@@ -116,7 +116,7 @@ export async function createProject(input: CreateProjectInput) {
       budget_amount: input.budgetAmount ?? null,
       deadline_at: input.endDate ?? null,
       owner_id: userData.user.id,
-      use_estimates: false,
+      use_estimates: input.useEstimates ?? false,
     })
     .select(PROJECT_FIELDS)
     .single()

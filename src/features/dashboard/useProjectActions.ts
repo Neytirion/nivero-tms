@@ -47,6 +47,7 @@ export function useProjectActions(deps: ProjectActionsDeps) {
       endDate?: string
       estimatedHours?: number
       budgetAmount?: number
+      useEstimates?: boolean
     }) => {
       const { setIsLoading, setStatus, setProjects, setSelectedProjectId } = depsRef.current
 

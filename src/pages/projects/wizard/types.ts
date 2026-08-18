@@ -1,5 +1,10 @@
 export type ProjectWizardStep = 'choice' | 'basic' | 'dates' | 'details' | 'estimates' | 'team' | 'review'
 
+export type WorkPackageRow = {
+  name: string
+  estimatedHours: string
+}
+
 export type ProjectWizardData = {
   // Step 1: Basic info
   projectName: string
@@ -14,7 +19,8 @@ export type ProjectWizardData = {
   projectBudgetAmount: string
 
   // Step 4: Estimates (optional)
-  estimateTotalHours: string
+  useEstimates: boolean
+  workPackages: WorkPackageRow[]
 
   // Step 5: Team (optional)
   teamMemberIds: string[]

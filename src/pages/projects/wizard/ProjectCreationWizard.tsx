@@ -38,7 +38,8 @@ export function ProjectCreationWizard({
     projectEndDate: '',
     projectDescription: '',
     projectBudgetAmount: '',
-    estimateTotalHours: '',
+    useEstimates: false,
+    workPackages: [],
     teamMemberIds: [],
   })
 
@@ -56,9 +57,15 @@ export function ProjectCreationWizard({
           wizardData.projectEndDate >= wizardData.projectStartDate
         )
       case 'details':
+        return true // Optional step
       case 'estimates':
+        // If estimates enabled, validate all packages have names
+        if (wizardData.useEstimates) {
+          return wizardData.workPackages.every((pkg) => pkg.name.trim().length > 0)
+        }
+        return true
       case 'team':
-        return true // Optional steps
+        return true // Optional step
       case 'review':
         return true
       default:
@@ -160,8 +167,10 @@ export function ProjectCreationWizard({
 
       {currentStep === 'estimates' && (
         <EstimatesStep
-          estimateTotalHours={wizardData.estimateTotalHours}
-          onEstimateChange={(value) => handleDataChange('estimateTotalHours', value)}
+          useEstimates={wizardData.useEstimates}
+          workPackages={wizardData.workPackages}
+          onUseEstimatesChange={(value) => handleDataChange('useEstimates', value)}
+          onWorkPackagesChange={(packages) => handleDataChange('workPackages', packages)}
         />
       )}
 

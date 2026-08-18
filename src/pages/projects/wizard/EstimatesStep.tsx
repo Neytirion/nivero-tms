@@ -1,51 +1,145 @@
+import type { WorkPackageRow } from './types'
+
 interface EstimatesStepProps {
-  estimateTotalHours: string
-  onEstimateChange: (value: string) => void
+  useEstimates: boolean
+  workPackages: WorkPackageRow[]
+  onUseEstimatesChange: (value: boolean) => void
+  onWorkPackagesChange: (packages: WorkPackageRow[]) => void
 }
 
 export function EstimatesStep({
-  estimateTotalHours,
-  onEstimateChange,
+  useEstimates,
+  workPackages,
+  onUseEstimatesChange,
+  onWorkPackagesChange,
 }: EstimatesStepProps) {
+  const handleAddPackage = () => {
+    onWorkPackagesChange([...workPackages, { name: '', estimatedHours: '0' }])
+  }
+
+  const handleRemovePackage = (index: number) => {
+    onWorkPackagesChange(workPackages.filter((_, i) => i !== index))
+  }
+
+  const handleUpdatePackage = (
+    index: number,
+    field: 'name' | 'estimatedHours',
+    value: string,
+  ) => {
+    const updated = [...workPackages]
+    updated[index] = { ...updated[index], [field]: value }
+    onWorkPackagesChange(updated)
+  }
+
+  const totalHours = workPackages.reduce((sum, pkg) => {
+    const hours = Number.parseFloat(pkg.estimatedHours) || 0
+    return sum + hours
+  }, 0)
+
+  const hasEmptyPackages = workPackages.some((pkg) => pkg.name.trim() === '')
+
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
       <h2 className="text-2xl font-bold text-slate-900 mb-6">Project Estimates</h2>
 
       <div className="space-y-4">
-        <label className="block">
-          <span className="mb-2 block text-sm font-semibold text-slate-700">
-            Estimated Total Hours <span className="text-slate-500 font-normal">(optional)</span>
-          </span>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              value={estimateTotalHours}
-              onChange={(event) => onEstimateChange(event.target.value)}
-              placeholder="40"
-              step="1"
-              min="0"
-              className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors"
-            />
-            <span className="text-sm font-medium text-slate-600">hours</span>
+        {/* Enable Estimates Checkbox */}
+        <label className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
+          <input
+            type="checkbox"
+            checked={useEstimates}
+            onChange={(event) => onUseEstimatesChange(event.target.checked)}
+            className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 cursor-pointer"
+          />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-slate-900">Enable Estimate Versioning</p>
+            <p className="text-xs text-slate-600 mt-1">
+              Create and manage project estimates with work packages.
+            </p>
           </div>
-          <p className="mt-1 text-xs text-slate-500">Total estimated effort for the entire project</p>
         </label>
 
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-          <p className="text-sm text-blue-900 font-medium mb-2">📊 Quick Reference</p>
-          <ul className="text-xs text-blue-800 space-y-1">
-            <li>• 1-2 weeks: ~40-80 hours</li>
-            <li>• 1 month: ~160-200 hours</li>
-            <li>• 3 months: ~480-600 hours</li>
-            <li>• 6 months: ~960-1200 hours</li>
-          </ul>
-        </div>
+        {/* Work Packages Table */}
+        {useEstimates && (
+          <>
+            <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
+              <table className="min-w-full border-collapse text-sm">
+                <thead className="bg-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
+                  <tr>
+                    <th className="px-3 py-2">Work Package</th>
+                    <th className="px-3 py-2">Estimated Hours</th>
+                    <th className="px-3 py-2 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {workPackages.length === 0 ? (
+                    <tr className="border-t border-slate-200">
+                      <td colSpan={3} className="px-3 py-3 text-xs text-slate-500 text-center">
+                        No work packages yet. Click "Add Work Package" to get started.
+                      </td>
+                    </tr>
+                  ) : null}
+                  {workPackages.map((pkg, index) => (
+                    <tr key={index} className="border-t border-slate-200">
+                      <td className="px-3 py-2">
+                        <input
+                          type="text"
+                          value={pkg.name}
+                          onChange={(e) => handleUpdatePackage(index, 'name', e.target.value)}
+                          placeholder="e.g., Frontend Development, Backend API"
+                          className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 outline-none focus:border-slate-500"
+                        />
+                      </td>
+                      <td className="px-3 py-2">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          value={pkg.estimatedHours}
+                          onChange={(e) => handleUpdatePackage(index, 'estimatedHours', e.target.value)}
+                          className="w-28 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 outline-none focus:border-slate-500"
+                        />
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        <button
+                          type="button"
+                          onClick={() => handleRemovePackage(index)}
+                          className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-700 transition hover:bg-rose-100"
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-        <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-          <p className="text-sm text-amber-900">
-            ℹ️ This is optional and gives a high-level view of project scope. You can break it down into detailed estimates later in the Estimates module.
-          </p>
-        </div>
+            {/* Total Hours */}
+            <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200 flex justify-between items-center">
+              <p className="text-sm font-medium text-slate-900">Total Estimated Hours:</p>
+              <p className="text-lg font-bold text-slate-900">{totalHours.toFixed(1)}h</p>
+            </div>
+
+            {/* Add Package Button */}
+            <button
+              type="button"
+              onClick={handleAddPackage}
+              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+            >
+              + Add Work Package
+            </button>
+
+            {/* Empty field warning */}
+            {hasEmptyPackages && (
+              <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                <p className="text-xs text-amber-900">
+                  ⚠️ Please fill in the Work Package names before proceeding.
+                </p>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   )

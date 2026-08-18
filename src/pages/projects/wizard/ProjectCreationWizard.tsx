@@ -15,6 +15,7 @@ const FLOW_STEPS: ProjectWizardStep[] = ['basic', 'dates', 'details', 'estimates
 
 interface ProjectCreationWizardProps {
   customerSuggestions: string[]
+  currentUserEmail: string | null
   isLoading: boolean
   onCreateProject: (data: ProjectWizardData) => Promise<void>
   onSelectAI: () => void
@@ -22,6 +23,7 @@ interface ProjectCreationWizardProps {
 
 export function ProjectCreationWizard({
   customerSuggestions,
+  currentUserEmail,
   isLoading,
   onCreateProject,
   onSelectAI,
@@ -156,6 +158,7 @@ export function ProjectCreationWizard({
 
       {currentStep === 'team' && (
         <TeamStep
+          currentUserEmail={currentUserEmail}
           teamInvitations={wizardData.teamInvitations}
           onTeamInvitationsChange={(invitations) => handleDataChange('teamInvitations', invitations)}
         />

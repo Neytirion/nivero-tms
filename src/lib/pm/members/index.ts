@@ -1,6 +1,7 @@
 import { supabase } from '../../supabase'
 import type {
   AddProjectMemberInput,
+  InvitableUserProfile,
   InviteProjectMemberByEmailInput,
   ProjectMemberListItem,
   RemoveProjectMemberInput,
@@ -74,6 +75,24 @@ export async function inviteProjectMemberByEmail(input: InviteProjectMemberByEma
   }
 
   throw new Error(preferredCall.error.message)
+}
+
+export async function getUserProfileByEmail(email: string): Promise<InvitableUserProfile | null> {
+  const normalizedEmail = email.trim().toLowerCase()
+
+  if (!normalizedEmail) {
+    return null
+  }
+
+  const { data, error } = await supabase.rpc('get_user_profile_by_email', {
+    p_email: normalizedEmail,
+  })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data?.[0] ?? null
 }
 
 export async function updateProjectMemberRole(input: UpdateProjectMemberRoleInput) {

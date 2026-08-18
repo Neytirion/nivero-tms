@@ -10,7 +10,14 @@ import type { ProjectWizardData } from './wizard/types'
 
 export function CreateProjectPage() {
   const navigate = useNavigate()
-  const { addProject, setStatus, projects, currentUserProfile } = useWorkspace()
+  const {
+    addProject,
+    setStatus,
+    projects,
+    currentUserProfile,
+    selectProject,
+    reloadProjectData,
+  } = useWorkspace()
   const [isLoading, setIsLoading] = useState(false)
   const [showAIMode, setShowAIMode] = useState(false)
 
@@ -47,6 +54,9 @@ export function CreateProjectPage() {
         return
       }
 
+      // Navigate immediately to the new project details (Overview tab by default).
+      navigate(`/app/projects/${projectId}`)
+
       // Create initial estimate version with work packages if enabled
       if (data.useEstimates && data.workPackages.length > 0) {
         try {
@@ -79,12 +89,23 @@ export function CreateProjectPage() {
         const failedInvitations = invitationResults
           .map((result, idx) => (result.status === 'rejected' ? sanitizedInvitations[idx].email : null))
           .filter((email): email is string => email !== null)
+        const missingUserInvitations = invitationResults
+          .map((result, idx) => {
+            if (result.status !== 'rejected') return null
+            const message = result.reason instanceof Error ? result.reason.message.toLowerCase() : ''
+            return message.includes('user with this email was not found')
+              ? sanitizedInvitations[idx].email
+              : null
+          })
+          .filter((email): email is string => email !== null)
 
         if (failedInvitations.length > 0) {
           console.warn('Failed to invite members:', failedInvitations)
-          setStatus(
-            `Project created. Could not invite: ${failedInvitations.join(', ')}`,
-          )
+          if (missingUserInvitations.length > 0) {
+            setStatus(`Project created. User with this email does not exist: ${missingUserInvitations.join(', ')}`)
+          } else {
+            setStatus(`Project created. Could not invite: ${failedInvitations.join(', ')}`)
+          }
         } else if (sanitizedInvitations.length > 0) {
           setStatus(`✓ Project created and ${sanitizedInvitations.length} member(s) invited`)
         } else if (skippedSelfInvites > 0) {
@@ -92,7 +113,14 @@ export function CreateProjectPage() {
         }
       }
 
-      navigate(`/app/projects/${projectId}`)
+      // Ensure project members are up to date before opening project details.
+      try {
+        selectProject(projectId)
+        await reloadProjectData(projectId)
+      } catch {
+        // Non-fatal: details page will still attempt to load project data.
+      }
+
     } catch (error) {
       setStatus(
         error instanceof Error
@@ -162,6 +190,7 @@ export function CreateProjectPage() {
       <div className="mx-auto max-w-3xl">
         <ProjectCreationWizard
           customerSuggestions={customerSuggestions}
+          currentUserEmail={currentUserProfile?.email ?? null}
           isLoading={isLoading}
           onCreateProject={handleCreateProject}
           onSelectAI={handleSelectAI}

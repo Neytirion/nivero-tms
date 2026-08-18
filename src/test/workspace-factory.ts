@@ -87,6 +87,7 @@ export function createWorkspaceState(overrides: Partial<WorkspaceState> = {}): W
     getSelectedProjectMemberUnfinishedTasksCount: vi.fn(async () => 0),
     removeSelectedProjectMember: vi.fn(async () => undefined),
     completeSelectedProject: vi.fn(async () => undefined),
+    reloadProjectData: vi.fn(async () => undefined),
     reloadCurrentTasks: vi.fn(async () => undefined),
     resetDashboardPreview: vi.fn(),
   }

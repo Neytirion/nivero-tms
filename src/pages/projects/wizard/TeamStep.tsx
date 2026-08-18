@@ -1,22 +1,27 @@
 import { useState } from 'react'
+import { UserProfileDialog, type UserProfilePreview } from '../../../shared/components'
+import { getUserProfileByEmail } from '../../../lib/pm/members'
 import type { TeamInvitation } from './types'
 
 interface TeamStepProps {
+  currentUserEmail: string | null
   teamInvitations: TeamInvitation[]
   onTeamInvitationsChange: (invitations: TeamInvitation[]) => void
 }
 
-export function TeamStep({ teamInvitations, onTeamInvitationsChange }: TeamStepProps) {
+export function TeamStep({ currentUserEmail, teamInvitations, onTeamInvitationsChange }: TeamStepProps) {
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<'member' | 'manager' | 'admin'>('member')
   const [emailError, setEmailError] = useState('')
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false)
+  const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
 
   const isValidEmail = (emailString: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     return emailRegex.test(emailString)
   }
 
-  const handleAddMember = () => {
+  const handleAddMember = async () => {
     const trimmedEmail = email.trim().toLowerCase()
 
     // Validation
@@ -30,19 +35,53 @@ export function TeamStep({ teamInvitations, onTeamInvitationsChange }: TeamStepP
       return
     }
 
+    if (currentUserEmail && trimmedEmail === currentUserEmail.trim().toLowerCase()) {
+      setEmailError('You cannot invite yourself to a project')
+      return
+    }
+
     // Check for duplicates
     if (teamInvitations.some((inv) => inv.email === trimmedEmail)) {
       setEmailError('This email is already added')
       return
     }
 
-    // Add the invitation
-    onTeamInvitationsChange([...teamInvitations, { email: trimmedEmail, role }])
+    setIsCheckingEmail(true)
 
-    // Reset form
-    setEmail('')
-    setRole('member')
-    setEmailError('')
+    try {
+      const inviteeProfile = await getUserProfileByEmail(trimmedEmail)
+
+      if (!inviteeProfile) {
+        setEmailError('User with this email does not exist')
+        return
+      }
+
+      // Add the invitation with profile preview data for avatar + profile dialog.
+      onTeamInvitationsChange([
+        ...teamInvitations,
+        {
+          email: trimmedEmail,
+          role,
+          profile: {
+            userId: inviteeProfile.user_id,
+            fullName: inviteeProfile.full_name,
+            email: inviteeProfile.email ?? trimmedEmail,
+            avatarUrl: inviteeProfile.avatar_url,
+            joinedAt: inviteeProfile.joined_at,
+            aboutMe: inviteeProfile.about_me,
+          },
+        },
+      ])
+
+      // Reset form
+      setEmail('')
+      setRole('member')
+      setEmailError('')
+    } catch (error) {
+      setEmailError(error instanceof Error ? error.message : 'Failed to validate email')
+    } finally {
+      setIsCheckingEmail(false)
+    }
   }
 
   const handleRemoveInvitation = (emailToRemove: string) => {
@@ -52,7 +91,7 @@ export function TeamStep({ teamInvitations, onTeamInvitationsChange }: TeamStepP
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault()
-      handleAddMember()
+      void handleAddMember()
     }
   }
 
@@ -91,10 +130,11 @@ export function TeamStep({ teamInvitations, onTeamInvitationsChange }: TeamStepP
 
               <button
                 type="button"
-                onClick={handleAddMember}
+                onClick={() => void handleAddMember()}
+                disabled={isCheckingEmail}
                 className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-500 transition-colors"
               >
-                Add
+                {isCheckingEmail ? 'Checking...' : 'Add'}
               </button>
             </div>
 
@@ -117,9 +157,41 @@ export function TeamStep({ teamInvitations, onTeamInvitationsChange }: TeamStepP
                   key={invitation.email}
                   className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5"
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-slate-900 truncate">{invitation.email}</p>
+                  <div className="min-w-0 flex flex-1 items-center gap-2.5">
+                    {invitation.profile?.avatarUrl ? (
+                      <img
+                        src={invitation.profile.avatarUrl}
+                        alt={invitation.profile.fullName ?? invitation.profile.email}
+                        className="h-8 w-8 shrink-0 rounded-full border border-slate-200 object-cover"
+                      />
+                    ) : (
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-[11px] font-bold text-blue-700">
+                        {(invitation.profile?.fullName ?? invitation.email)
+                          .split(' ')
+                          .map((part) => part[0])
+                          .join('')
+                          .slice(0, 2)
+                          .toUpperCase()}
+                      </span>
+                    )}
+                    <div className="min-w-0 flex-1">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProfile({
+                        userId: invitation.profile?.userId,
+                        fullName: invitation.profile?.fullName,
+                        email: invitation.profile?.email ?? invitation.email,
+                        avatarUrl: invitation.profile?.avatarUrl ?? null,
+                        role: invitation.role,
+                        joinedAt: invitation.profile?.joinedAt ?? null,
+                        aboutMe: invitation.profile?.aboutMe ?? null,
+                      })}
+                      className="truncate text-left text-sm font-medium text-slate-900 underline-offset-2 hover:text-cyan-700 hover:underline"
+                    >
+                      {invitation.profile?.fullName ?? invitation.profile?.email ?? invitation.email}
+                    </button>
                     <p className="text-xs text-slate-600 capitalize">{invitation.role}</p>
+                    </div>
                   </div>
 
                   <button
@@ -142,6 +214,12 @@ export function TeamStep({ teamInvitations, onTeamInvitationsChange }: TeamStepP
           </p>
         </div>
       </div>
+
+      <UserProfileDialog
+        isOpen={Boolean(selectedProfile)}
+        profile={selectedProfile}
+        onClose={() => setSelectedProfile(null)}
+      />
     </div>
   )
 }

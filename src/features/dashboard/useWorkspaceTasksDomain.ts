@@ -160,6 +160,10 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
     changeSelectedProjectMemberRole,
     getSelectedProjectMemberUnfinishedTasksCount,
     removeSelectedProjectMember,
+    /** Force-reload tasks + members for a specific project id. */
+    reloadProjectData: async (projectId: string) => {
+      await reloadTasksAndMembers(projectId)
+    },
     /** Force-reload tasks + members for the currently selected project */
     reloadCurrentTasks: async () => {
       if (depsRef.current.selectedProjectId) {

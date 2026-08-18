@@ -64,6 +64,11 @@ export type ProjectMemberListItem = Pick<
   avatar_url?: string | null
 }
 
+export type InvitableUserProfile = Pick<
+  Database['public']['Functions']['get_user_profile_by_email']['Returns'][number],
+  'user_id' | 'full_name' | 'email' | 'avatar_url' | 'joined_at' | 'about_me'
+>
+
 export type TimeEntryPreview = Pick<
   TimeEntry,
   | 'id'

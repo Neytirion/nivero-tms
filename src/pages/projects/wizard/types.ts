@@ -8,6 +8,14 @@ export type WorkPackageRow = {
 export type TeamInvitation = {
   email: string
   role: 'member' | 'manager' | 'admin'
+  profile?: {
+    userId: string
+    fullName: string | null
+    email: string
+    avatarUrl: string | null
+    joinedAt: string | null
+    aboutMe: string | null
+  }
 }
 
 export type ProjectWizardData = {

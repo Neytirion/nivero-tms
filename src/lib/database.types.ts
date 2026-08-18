@@ -687,6 +687,19 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      get_user_profile_by_email: {
+        Args: {
+          p_email: string
+        }
+        Returns: {
+          user_id: string
+          full_name: string | null
+          email: string | null
+          avatar_url: string | null
+          joined_at: string | null
+          about_me: string | null
+        }[]
+      }
       get_project_members_with_profile: {
         Args: {
           p_project_id: string

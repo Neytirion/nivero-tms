@@ -5,6 +5,7 @@ import { CreateProjectPage } from './CreateProjectPage'
 import { useWorkspace } from '../../features/dashboard/workspace-context'
 import { createProjectPreview, createWorkspaceState } from '../test-helpers'
 import { inviteProjectMemberByEmail } from '../../lib/pm/members'
+import { getUserProfileByEmail } from '../../lib/pm/members'
 
 vi.mock('../../features/dashboard/workspace-context', () => ({
   useWorkspace: vi.fn(),
@@ -20,10 +21,19 @@ vi.mock('../../features/projects/ai', () => ({
 
 vi.mock('../../lib/pm/members', () => ({
   inviteProjectMemberByEmail: vi.fn(async () => undefined),
+  getUserProfileByEmail: vi.fn(async (email: string) => ({
+    user_id: 'u-invitee',
+    full_name: 'Invitee User',
+    email,
+    avatar_url: null,
+    joined_at: '2026-08-01T00:00:00.000Z',
+    about_me: null,
+  })),
 }))
 
 const mockUseWorkspace = vi.mocked(useWorkspace)
 const mockInviteProjectMemberByEmail = vi.mocked(inviteProjectMemberByEmail)
+const mockGetUserProfileByEmail = vi.mocked(getUserProfileByEmail)
 
 function buildWorkspace() {
   return createWorkspaceState({
@@ -75,6 +85,15 @@ describe('CreateProjectPage', () => {
   beforeEach(() => {
     mockUseWorkspace.mockReset()
     mockInviteProjectMemberByEmail.mockReset()
+    mockGetUserProfileByEmail.mockReset()
+    mockGetUserProfileByEmail.mockResolvedValue({
+      user_id: 'u-invitee',
+      full_name: 'Invitee User',
+      email: 'invitee@example.com',
+      avatar_url: null,
+      joined_at: '2026-08-01T00:00:00.000Z',
+      about_me: null,
+    })
   })
 
   it('submits manual project with optional description', async () => {
@@ -168,13 +187,86 @@ describe('CreateProjectPage', () => {
 
     fireEvent.change(screen.getByPlaceholderText('member@example.com'), { target: { value: 'ME@example.com' } })
     fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
+    expect(screen.getByText('You cannot invite yourself to a project')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /next/i }))
     fireEvent.click(screen.getByRole('button', { name: /create project/i }))
 
     await waitFor(() => {
       expect(addProject).toHaveBeenCalled()
       expect(mockInviteProjectMemberByEmail).not.toHaveBeenCalled()
-      expect(setStatus).toHaveBeenCalledWith('Project created. Your own email was skipped from invitations')
+    })
+  })
+
+  it('navigates to overview and reloads members after successful invitations', async () => {
+    const addProject = vi.fn(async () => 'project-42')
+    const workspace = createWorkspaceState({
+      projects: [],
+      addProject,
+      currentUserProfile: {
+        userId: 'user-1',
+        email: 'me@example.com',
+        fullName: 'Me',
+        avatarUrl: null,
+        role: null,
+        joinedAt: null,
+      },
+    })
+    mockUseWorkspace.mockReturnValue(workspace)
+
+    renderPage()
+    goToManualWizard()
+
+    fireEvent.change(screen.getByLabelText(/project name/i), { target: { value: 'Project Alpha' } })
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    fireEvent.change(screen.getByLabelText(/start date/i), { target: { value: '2026-08-01' } })
+    fireEvent.change(screen.getByLabelText(/end date/i), { target: { value: '2026-08-10' } })
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+
+    fireEvent.change(screen.getByPlaceholderText('member@example.com'), { target: { value: 'john@example.com' } })
+    fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /invitee user/i })).toBeInTheDocument()
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    fireEvent.click(screen.getByRole('button', { name: /create project/i }))
+
+    await waitFor(() => {
+      expect(mockInviteProjectMemberByEmail).toHaveBeenCalledWith({
+        projectId: 'project-42',
+        email: 'john@example.com',
+        role: 'member',
+      })
+      expect(workspace.selectProject).toHaveBeenCalledWith('project-42')
+      expect(workspace.reloadProjectData).toHaveBeenCalledWith('project-42')
+      expect(screen.getByTestId('location')).toHaveTextContent('/app/projects/project-42')
+    })
+  })
+
+  it('shows immediate error for non-existent email in team step', async () => {
+    const workspace = buildWorkspace()
+    mockUseWorkspace.mockReturnValue(workspace)
+    mockGetUserProfileByEmail.mockResolvedValueOnce(null)
+
+    renderPage()
+    goToManualWizard()
+
+    fireEvent.change(screen.getByLabelText(/project name/i), { target: { value: 'Project Alpha' } })
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    fireEvent.change(screen.getByLabelText(/start date/i), { target: { value: '2026-08-01' } })
+    fireEvent.change(screen.getByLabelText(/end date/i), { target: { value: '2026-08-10' } })
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+    fireEvent.click(screen.getByRole('button', { name: /next/i }))
+
+    fireEvent.change(screen.getByPlaceholderText('member@example.com'), { target: { value: 'ghost@example.com' } })
+    fireEvent.click(screen.getByRole('button', { name: /^add$/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText('User with this email does not exist')).toBeInTheDocument()
     })
   })
 })

@@ -122,7 +122,7 @@ export function useProjectActions(deps: ProjectActionsDeps) {
 
       if (!canDeleteProject(projectId)) {
         setStatus('Permission denied: only owner can delete completed projects')
-        return
+        return false
       }
 
       setIsLoading(true)
@@ -137,11 +137,13 @@ export function useProjectActions(deps: ProjectActionsDeps) {
         }
 
         setStatus('Project deleted')
+        return true
       } catch (error) {
         setStatus(error instanceof Error ? `Delete project error: ${error.message}` : 'Unknown error')
+        return false
+      } finally {
+        setIsLoading(false)
       }
-
-      setIsLoading(false)
     },
     [],
   )

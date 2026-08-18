@@ -45,7 +45,7 @@ export interface UseProjectsActionsInput {
       useEstimates?: boolean
     },
   ) => Promise<boolean>
-  removeProject: (projectId: string) => Promise<void>
+  removeProject: (projectId: string) => Promise<boolean>
   completeSelectedProject: () => Promise<void>
   inviteMemberToSelectedProjectByEmail: (email: string, role: string) => Promise<void>
   changeSelectedProjectMemberRole: (userId: string, role: string) => Promise<void>
@@ -169,7 +169,6 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
 
     try {
       await inviteMemberToSelectedProjectByEmail(trimmedEmail, role)
-      setStatus(`✓ Invited ${trimmedEmail} as ${role}`)
     } catch (error) {
       setStatus(
         error instanceof Error
@@ -194,7 +193,6 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     try {
       // Remove member with task unassignment to owner
       await removeProjectMember(selectedProjectId, userId)
-      setStatus('Member removed from project and tasks reassigned to owner')
     } catch (error) {
       setStatus(
         error instanceof Error
@@ -212,7 +210,6 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     try {
       await completeSelectedProject()
       onCompleteConfirmClose()
-      setStatus('Project marked as completed')
     } catch (error) {
       setStatus(
         error instanceof Error ? `Complete error: ${error.message}` : 'Failed to complete project',
@@ -247,7 +244,6 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
 
       if (wasSaved) {
         onSaveSettingsConfirmClose()
-        setStatus('✓ Project settings saved')
       }
     } catch (error) {
       setStatus(
@@ -271,10 +267,10 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
       })
 
       if (wasSaved) {
-        setStatus(`✓ Estimate versioning ${nextValue ? 'enabled' : 'disabled'}`)
+        return true
       }
 
-      return wasSaved
+      return false
     } catch (error) {
       setStatus(
         error instanceof Error
@@ -290,17 +286,12 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
       return false
     }
 
-    try {
-      await removeProject(selectedProjectId)
+    const wasDeleted = await removeProject(selectedProjectId)
+    if (wasDeleted) {
       onDeleteConfirmClose()
-      setStatus('✓ Project deleted')
-      return true
-    } catch (error) {
-      setStatus(
-        error instanceof Error ? `Delete error: ${error.message}` : 'Failed to delete project',
-      )
-      return false
     }
+
+    return wasDeleted
   }
 
   const updateMemberRoleHandler = async (
@@ -312,7 +303,6 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
 
     try {
       await changeSelectedProjectMemberRole(userId, nextRole)
-      setStatus(`✓ Member role updated to ${nextRole}`)
     } catch (error) {
       setStatus(
         error instanceof Error ? `Role update error: ${error.message}` : 'Failed to update role',

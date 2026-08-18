@@ -4,12 +4,13 @@ import { AiProjectGeneratorModal } from '../../features/projects/ai'
 import { useWorkspace } from '../../features/dashboard/workspace-context'
 import type { AiProjectDraft } from '../../lib/ai'
 import { createInitialEstimateVersion } from '../../lib/pm/estimates'
+import { inviteProjectMemberByEmail } from '../../lib/pm/members'
 import { ProjectCreationWizard } from './wizard/ProjectCreationWizard'
 import type { ProjectWizardData } from './wizard/types'
 
 export function CreateProjectPage() {
   const navigate = useNavigate()
-  const { addProject, setStatus, projects, projectMembers } = useWorkspace()
+  const { addProject, setStatus, projects } = useWorkspace()
   const [isLoading, setIsLoading] = useState(false)
   const [showAIMode, setShowAIMode] = useState(false)
 
@@ -24,10 +25,6 @@ export function CreateProjectPage() {
       ).sort((a, b) => a.localeCompare(b)),
     [projects],
   )
-
-  const handleCancel = () => {
-    navigate('/app/projects')
-  }
 
   const handleCreateProject = async (data: ProjectWizardData) => {
     setIsLoading(true)
@@ -45,8 +42,13 @@ export function CreateProjectPage() {
         useEstimates: data.useEstimates,
       })
 
+      if (!projectId) {
+        navigate('/app/projects')
+        return
+      }
+
       // Create initial estimate version with work packages if enabled
-      if (projectId && data.useEstimates && data.workPackages.length > 0) {
+      if (data.useEstimates && data.workPackages.length > 0) {
         try {
           await createInitialEstimateVersion(projectId, data.workPackages)
         } catch (error) {
@@ -55,11 +57,33 @@ export function CreateProjectPage() {
         }
       }
 
-      if (projectId) {
-        navigate(`/app/projects/${projectId}`)
-      } else {
-        navigate('/app/projects')
+      // Invite team members if any
+      if (data.teamInvitations.length > 0) {
+        const invitationResults = await Promise.allSettled(
+          data.teamInvitations.map((invitation) =>
+            inviteProjectMemberByEmail({
+              projectId,
+              email: invitation.email,
+              role: invitation.role,
+            }),
+          ),
+        )
+
+        const failedInvitations = invitationResults
+          .map((result, idx) => (result.status === 'rejected' ? data.teamInvitations[idx].email : null))
+          .filter((email): email is string => email !== null)
+
+        if (failedInvitations.length > 0) {
+          console.warn('Failed to invite members:', failedInvitations)
+          setStatus(
+            `Project created with estimates. Could not invite: ${failedInvitations.join(', ')}`,
+          )
+        } else if (data.teamInvitations.length > 0) {
+          setStatus(`✓ Project created and ${data.teamInvitations.length} member(s) invited`)
+        }
       }
+
+      navigate(`/app/projects/${projectId}`)
     } catch (error) {
       setStatus(
         error instanceof Error
@@ -129,11 +153,9 @@ export function CreateProjectPage() {
       <div className="mx-auto max-w-3xl">
         <ProjectCreationWizard
           customerSuggestions={customerSuggestions}
-          projectMembers={projectMembers}
           isLoading={isLoading}
           onCreateProject={handleCreateProject}
           onSelectAI={handleSelectAI}
-          onCancel={handleCancel}
         />
       </div>
     </div>

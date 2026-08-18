@@ -5,6 +5,11 @@ export type WorkPackageRow = {
   estimatedHours: string
 }
 
+export type TeamInvitation = {
+  email: string
+  role: 'member' | 'manager' | 'admin'
+}
+
 export type ProjectWizardData = {
   // Step 1: Basic info
   projectName: string
@@ -23,5 +28,5 @@ export type ProjectWizardData = {
   workPackages: WorkPackageRow[]
 
   // Step 5: Team (optional)
-  teamMemberIds: string[]
+  teamInvitations: TeamInvitation[]
 }

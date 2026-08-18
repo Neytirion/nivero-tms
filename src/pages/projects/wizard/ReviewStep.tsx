@@ -2,7 +2,6 @@ import type { ProjectWizardData } from './types'
 
 interface ReviewStepProps {
   data: ProjectWizardData
-  teamMemberNames: Record<string, string>
 }
 
 function parseIsoDateToUtcTime(value: string): number | null {
@@ -28,7 +27,7 @@ function getDurationDays(startDate: string, endDate: string): number | null {
   return Math.floor((endTime - startTime) / dayInMs) + 1
 }
 
-export function ReviewStep({ data, teamMemberNames }: ReviewStepProps) {
+export function ReviewStep({ data }: ReviewStepProps) {
   const durationDays = getDurationDays(data.projectStartDate, data.projectEndDate)
 
   return (
@@ -129,14 +128,17 @@ export function ReviewStep({ data, teamMemberNames }: ReviewStepProps) {
         )}
 
         {/* Optional Team */}
-        {data.teamMemberIds.length > 0 && (
+        {data.teamInvitations.length > 0 && (
           <div className="p-4 bg-slate-50 rounded-lg">
-            <h3 className="font-semibold text-slate-900 mb-3">👥 Team Members</h3>
-            <div className="space-y-1">
-              {data.teamMemberIds.map((memberId) => (
-                <p key={memberId} className="text-sm text-slate-900">
-                  • {teamMemberNames[memberId] || 'Unknown'}
-                </p>
+            <h3 className="font-semibold text-slate-900 mb-3">👥 Team Invitations</h3>
+            <div className="space-y-2">
+              {data.teamInvitations.map((invitation) => (
+                <div key={invitation.email} className="flex items-center justify-between text-sm">
+                  <span className="text-slate-900">{invitation.email}</span>
+                  <span className="text-slate-600 capitalize text-xs bg-slate-200 px-2 py-1 rounded">
+                    {invitation.role}
+                  </span>
+                </div>
               ))}
             </div>
           </div>

@@ -9,26 +9,21 @@ import { DetailsStep } from './DetailsStep'
 import { EstimatesStep } from './EstimatesStep'
 import { TeamStep } from './TeamStep'
 import { ReviewStep } from './ReviewStep'
-import type { ProjectMemberListItem } from '../../../lib/pm'
 
 const STEP_NAMES = ['Name & Company', 'Timeline', 'Details', 'Estimates', 'Team', 'Review']
 
 interface ProjectCreationWizardProps {
   customerSuggestions: string[]
-  projectMembers: ProjectMemberListItem[]
   isLoading: boolean
   onCreateProject: (data: ProjectWizardData) => Promise<void>
   onSelectAI: () => void
-  onCancel: () => void
 }
 
 export function ProjectCreationWizard({
   customerSuggestions,
-  projectMembers,
   isLoading,
   onCreateProject,
   onSelectAI,
-  onCancel,
 }: ProjectCreationWizardProps) {
   const [currentStep, setCurrentStep] = useState<ProjectWizardStep>('choice')
   const [wizardData, setWizardData] = useState<ProjectWizardData>({
@@ -40,7 +35,7 @@ export function ProjectCreationWizard({
     projectBudgetAmount: '',
     useEstimates: false,
     workPackages: [],
-    teamMemberIds: [],
+    teamInvitations: [],
   })
 
   // Validation logic
@@ -106,17 +101,6 @@ export function ProjectCreationWizard({
     }
   }
 
-  const teamMemberNames = useMemo(
-    () =>
-      projectMembers.reduce<Record<string, string>>((acc, member) => {
-        if (member.user_id) {
-          acc[member.user_id] = member.full_name || member.email || member.user_id
-        }
-        return acc
-      }, {}),
-    [projectMembers],
-  )
-
   const handleDataChange = <K extends keyof ProjectWizardData>(
     key: K,
     value: ProjectWizardData[K],
@@ -176,14 +160,13 @@ export function ProjectCreationWizard({
 
       {currentStep === 'team' && (
         <TeamStep
-          teamMemberIds={wizardData.teamMemberIds}
-          projectMembers={projectMembers}
-          onTeamMembersChange={(ids) => handleDataChange('teamMemberIds', ids)}
+          teamInvitations={wizardData.teamInvitations}
+          onTeamInvitationsChange={(invitations) => handleDataChange('teamInvitations', invitations)}
         />
       )}
 
       {currentStep === 'review' && (
-        <ReviewStep data={wizardData} teamMemberNames={teamMemberNames} />
+        <ReviewStep data={wizardData} />
       )}
 
       <WizardNavigation

@@ -9,4 +9,4 @@ export { EstimatesStep } from './EstimatesStep'
 export { TeamStep } from './TeamStep'
 export { ReviewStep } from './ReviewStep'
 
-export type { ProjectWizardData, ProjectWizardStep, WorkPackageRow } from './types'
+export type { ProjectWizardData, ProjectWizardStep, WorkPackageRow, TeamInvitation } from './types'

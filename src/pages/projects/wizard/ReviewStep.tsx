@@ -1,0 +1,132 @@
+import type { ProjectWizardData } from './types'
+
+interface ReviewStepProps {
+  data: ProjectWizardData
+  teamMemberNames: Record<string, string>
+}
+
+function parseIsoDateToUtcTime(value: string): number | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return null
+  const year = Number(match[1])
+  const month = Number(match[2])
+  const day = Number(match[3])
+  return Date.UTC(year, month - 1, day)
+}
+
+function formatDate(dateStr: string): string {
+  const date = new Date(dateStr + 'T00:00:00Z')
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
+function getDurationDays(startDate: string, endDate: string): number | null {
+  if (!startDate || !endDate) return null
+  const startTime = parseIsoDateToUtcTime(startDate)
+  const endTime = parseIsoDateToUtcTime(endDate)
+  if (startTime === null || endTime === null || endTime < startTime) return null
+  const dayInMs = 24 * 60 * 60 * 1000
+  return Math.floor((endTime - startTime) / dayInMs) + 1
+}
+
+export function ReviewStep({ data, teamMemberNames }: ReviewStepProps) {
+  const durationDays = getDurationDays(data.projectStartDate, data.projectEndDate)
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+      <h2 className="text-2xl font-bold text-slate-900 mb-6">Review Your Project</h2>
+
+      <div className="space-y-6">
+        {/* Basic Info */}
+        <div className="p-4 bg-slate-50 rounded-lg">
+          <h3 className="font-semibold text-slate-900 mb-3">📋 Project Name & Company</h3>
+          <div className="space-y-2 text-sm">
+            <p>
+              <span className="text-slate-600">Name:</span>{' '}
+              <span className="font-medium text-slate-900">{data.projectName}</span>
+            </p>
+            {data.companyName && (
+              <p>
+                <span className="text-slate-600">Company:</span>{' '}
+                <span className="font-medium text-slate-900">{data.companyName}</span>
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Timeline */}
+        <div className="p-4 bg-slate-50 rounded-lg">
+          <h3 className="font-semibold text-slate-900 mb-3">📅 Timeline</h3>
+          <div className="space-y-2 text-sm">
+            <p>
+              <span className="text-slate-600">Start:</span>{' '}
+              <span className="font-medium text-slate-900">{formatDate(data.projectStartDate)}</span>
+            </p>
+            <p>
+              <span className="text-slate-600">End:</span>{' '}
+              <span className="font-medium text-slate-900">{formatDate(data.projectEndDate)}</span>
+            </p>
+            {durationDays !== null && (
+              <p>
+                <span className="text-slate-600">Duration:</span>{' '}
+                <span className="font-medium text-slate-900">{durationDays} days</span>
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Optional Details */}
+        {(data.projectDescription || data.projectBudgetAmount) && (
+          <div className="p-4 bg-slate-50 rounded-lg">
+            <h3 className="font-semibold text-slate-900 mb-3">📝 Details</h3>
+            <div className="space-y-2 text-sm">
+              {data.projectDescription && (
+                <p>
+                  <span className="text-slate-600">Description:</span>
+                  <br />
+                  <span className="font-medium text-slate-900">{data.projectDescription}</span>
+                </p>
+              )}
+              {data.projectBudgetAmount && (
+                <p>
+                  <span className="text-slate-600">Budget:</span>{' '}
+                  <span className="font-medium text-slate-900">${Number(data.projectBudgetAmount).toLocaleString()}</span>
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Optional Estimates */}
+        {data.estimateTotalHours && (
+          <div className="p-4 bg-slate-50 rounded-lg">
+            <h3 className="font-semibold text-slate-900 mb-3">⏱️ Estimates</h3>
+            <p className="text-sm">
+              <span className="text-slate-600">Total Hours:</span>{' '}
+              <span className="font-medium text-slate-900">{data.estimateTotalHours} hours</span>
+            </p>
+          </div>
+        )}
+
+        {/* Optional Team */}
+        {data.teamMemberIds.length > 0 && (
+          <div className="p-4 bg-slate-50 rounded-lg">
+            <h3 className="font-semibold text-slate-900 mb-3">👥 Team Members</h3>
+            <div className="space-y-1">
+              {data.teamMemberIds.map((memberId) => (
+                <p key={memberId} className="text-sm text-slate-900">
+                  • {teamMemberNames[memberId] || 'Unknown'}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <p className="text-sm text-blue-900">
+            ✓ Everything looks good! Click "Create Project" to proceed.
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}

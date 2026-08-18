@@ -1,0 +1,21 @@
+export type ProjectWizardStep = 'choice' | 'basic' | 'dates' | 'details' | 'estimates' | 'team' | 'review'
+
+export type ProjectWizardData = {
+  // Step 1: Basic info
+  projectName: string
+  companyName: string
+
+  // Step 2: Dates
+  projectStartDate: string
+  projectEndDate: string
+
+  // Step 3: Details (optional)
+  projectDescription: string
+  projectBudgetAmount: string
+
+  // Step 4: Estimates (optional)
+  estimateTotalHours: string
+
+  // Step 5: Team (optional)
+  teamMemberIds: string[]
+}

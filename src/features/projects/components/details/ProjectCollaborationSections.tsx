@@ -181,10 +181,10 @@ export function ProjectCollaborationCommentsSection({
     }
 
     const normalizedQuery = normalizeMentionValue(mentionQueryState.query)
-    const maxItems = 6
+    const maxItems = 5
 
     if (!normalizedQuery) {
-      return mentionCandidates.slice(0, maxItems)
+      return [] as MentionCandidate[]
     }
 
     return mentionCandidates
@@ -268,11 +268,11 @@ export function ProjectCollaborationCommentsSection({
                       <button
                         type="button"
                         onClick={() => onOpenProfile(comment.user_id)}
-                        className="text-[11px] font-semibold text-slate-600 underline-offset-2 hover:text-cyan-700 hover:underline"
+                        className="text-xs font-semibold text-slate-600 underline-offset-2 hover:text-cyan-700 hover:underline"
                       >
                         {name}
                       </button>
-                      <span className="text-[10px] text-slate-400">{timeAgo(comment.created_at)}</span>
+                      <span className="text-xs text-slate-400">{timeAgo(comment.created_at)}</span>
                       {isUnread && <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />}
                       {isMentioned && (
                         <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
@@ -283,7 +283,7 @@ export function ProjectCollaborationCommentsSection({
                       )}
                     </div>
                   )}
-                  <div className={`relative rounded-2xl px-3 py-1.5 text-sm ${isOwn ? 'rounded-tr-sm bg-blue-600 text-white' : 'rounded-tl-sm bg-slate-100 text-slate-800'}`}>
+                  <div className={`relative rounded-2xl px-3 py-1.5 text-base ${isOwn ? 'rounded-tr-sm bg-blue-600 text-white' : 'rounded-tl-sm bg-slate-100 text-slate-800'}`}>
                     <CommentText message={comment.message} />
                     {isOwn && (
                       <button
@@ -298,7 +298,7 @@ export function ProjectCollaborationCommentsSection({
                       </button>
                     )}
                   </div>
-                  {isOwn && <span className="mt-0.5 text-[10px] text-slate-400">{timeAgo(comment.created_at)}</span>}
+                  {isOwn && <span className="mt-0.5 text-xs text-slate-400">{timeAgo(comment.created_at)}</span>}
                 </div>
               </div>
             )
@@ -368,7 +368,7 @@ export function ProjectCollaborationCommentsSection({
           }}
           placeholder="Write a comment… (Enter to send, Shift+Enter for new line)"
           rows={2}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-base text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
         />
         {filteredMentionCandidates.length > 0 ? (
           <div className="absolute -top-[120px] left-0 right-0 z-20 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-lg">
@@ -382,12 +382,12 @@ export function ProjectCollaborationCommentsSection({
                     event.preventDefault()
                     applyMentionCandidate(candidate)
                   }}
-                  className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-xs ${
+                  className={`flex w-full items-center justify-between px-3 py-1.5 text-left text-sm ${
                     isActive ? 'bg-cyan-50 text-cyan-900' : 'text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   <span className="font-semibold">@{candidate.handle}</span>
-                  <span className="ml-2 truncate text-[10px] text-slate-500">{candidate.label}</span>
+                  <span className="ml-2 truncate text-xs text-slate-500">{candidate.label}</span>
                 </button>
               )
             })}
@@ -399,7 +399,7 @@ export function ProjectCollaborationCommentsSection({
             type="button"
             onClick={() => void onSubmitComment()}
             disabled={isSubmittingComment || !commentDraft.trim()}
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
           >
             {isSubmittingComment ? 'Sending…' : 'Send'}
           </button>

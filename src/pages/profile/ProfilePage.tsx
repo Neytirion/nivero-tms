@@ -178,7 +178,7 @@ function AvatarEditorModal({ sourceUrl, fileName, onClose, onApply, setStatus }:
 
 export function ProfilePage({ user }: ProfilePageProps) {
   const email = user.email ?? ''
-  const { status, setStatus, loadDashboardPreview, resetDashboardPreview } = useWorkspace()
+  const { setStatus, loadDashboardPreview, resetDashboardPreview } = useWorkspace()
   const [isSignOutConfirmOpen, setIsSignOutConfirmOpen] = useState(false)
   const avatarFileInputRef = useRef<HTMLInputElement | null>(null)
   const [avatarEditorState, setAvatarEditorState] = useState<{ src: string; fileName: string } | null>(null)
@@ -334,10 +334,6 @@ export function ProfilePage({ user }: ProfilePageProps) {
             </div>
           </div>
 
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50/80 px-3 py-2">
-            <p className="text-xs font-medium text-amber-900">Status</p>
-            <p className="mt-1 text-xs text-amber-800">{status}</p>
-          </div>
         </div>
 
         <div className="page-section border border-slate-200 bg-white/90">

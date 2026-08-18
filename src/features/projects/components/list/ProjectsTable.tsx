@@ -29,9 +29,11 @@ export function ProjectsTable({
   onSelectProject,
 }: ProjectsTableProps) {
   const [currentPage, setCurrentPage] = useState(1)
+  const [isSearchFocused, setIsSearchFocused] = useState(false)
   const pageSize = 15
 
   const normalizedQuery = searchValue.trim().toLowerCase()
+  const hasTypedSearchQuery = normalizedQuery.length > 0
 
   const deduplicatedSuggestions = Array.from(
     allProjects
@@ -52,8 +54,8 @@ export function ProjectsTable({
 
   const suggestionValues = deduplicatedSuggestions
     .filter((value) => {
-      if (!normalizedQuery) {
-        return true
+      if (!hasTypedSearchQuery) {
+        return false
       }
 
       return value.toLowerCase().includes(normalizedQuery)
@@ -82,7 +84,9 @@ export function ProjectsTable({
 
       return left.localeCompare(right)
     })
-    .slice(0, 8)
+    .slice(0, 5)
+
+  const shouldShowSuggestions = isSearchFocused && hasTypedSearchQuery && suggestionValues.length > 0
 
   const totalPages = Math.max(1, Math.ceil(projects.length / pageSize))
 
@@ -125,19 +129,39 @@ export function ProjectsTable({
               onSearchSubmit()
             }}
           >
-            <input
-              type="search"
-              value={searchValue}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Search by project, customer, description..."
-              list="projects-search-suggestions"
-              className="w-[320px] max-w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
-            />
-            <datalist id="projects-search-suggestions">
-              {suggestionValues.map((value) => (
-                <option key={value} value={value} />
-              ))}
-            </datalist>
+            <div className="relative w-[320px] max-w-full">
+              <input
+                type="search"
+                value={searchValue}
+                onChange={(event) => onSearchChange(event.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => {
+                  window.setTimeout(() => {
+                    setIsSearchFocused(false)
+                  }, 100)
+                }}
+                placeholder="Search by project, customer, description..."
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
+              />
+              {shouldShowSuggestions ? (
+                <div className="absolute left-0 right-0 z-20 mt-1 rounded-lg border border-slate-200 bg-white shadow-lg">
+                  {suggestionValues.map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onMouseDown={(event) => event.preventDefault()}
+                      onClick={() => {
+                        onSearchChange(value)
+                        setIsSearchFocused(false)
+                      }}
+                      className="block w-full px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-100"
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </div>
             <button
               type="submit"
               className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700"

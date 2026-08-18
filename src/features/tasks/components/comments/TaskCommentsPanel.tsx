@@ -234,10 +234,10 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
     }
 
     const normalizedQuery = normalizeMentionValue(mentionQueryState.query)
-    const maxItems = 6
+    const maxItems = 5
 
     if (!normalizedQuery) {
-      return mentionCandidates.slice(0, maxItems)
+      return [] as MentionCandidate[]
     }
 
     return mentionCandidates

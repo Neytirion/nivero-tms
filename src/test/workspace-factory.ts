@@ -78,7 +78,7 @@ export function createWorkspaceState(overrides: Partial<WorkspaceState> = {}): W
     setIsLoading: vi.fn(),
     addProject: vi.fn(async () => null),
     editProject: vi.fn(async () => true),
-    removeProject: vi.fn(async () => undefined),
+    removeProject: vi.fn(async () => true),
     addTask: vi.fn(async () => undefined),
     editTask: vi.fn(async () => undefined),
     removeTask: vi.fn(async () => undefined),

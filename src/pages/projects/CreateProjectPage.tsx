@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { AiProjectGeneratorModal } from '../../features/projects/ai'
 import { useWorkspace } from '../../features/dashboard/workspace-context'
 import type { AiProjectDraft } from '../../lib/ai'
+import { createInitialEstimateVersion } from '../../lib/pm/estimates'
 import { ProjectCreationWizard } from './wizard/ProjectCreationWizard'
 import type { ProjectWizardData } from './wizard/types'
 
@@ -43,6 +44,17 @@ export function CreateProjectPage() {
         endDate: data.projectEndDate || undefined,
         useEstimates: data.useEstimates,
       })
+
+      // Create initial estimate version with work packages if enabled
+      if (projectId && data.useEstimates && data.workPackages.length > 0) {
+        try {
+          await createInitialEstimateVersion(projectId, data.workPackages)
+        } catch (error) {
+          console.error('Failed to create initial estimate version:', error)
+          setStatus('Project created, but estimate version could not be initialized')
+        }
+      }
+
       if (projectId) {
         navigate(`/app/projects/${projectId}`)
       } else {

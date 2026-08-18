@@ -234,3 +234,34 @@ export async function approveEstimate(estimateId: string) {
   const nextEstimatedHours = await getEstimateTotalHours(estimateId)
   await updateProjectEstimatedHours(targetEstimate.project_id, nextEstimatedHours)
 }
+
+export async function createInitialEstimateVersion(
+  projectId: string,
+  workPackages: Array<{ name: string; estimatedHours: string }>,
+) {
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+
+  if (userError) {
+    throw new Error(userError.message)
+  }
+
+  if (!userData.user) {
+    throw new Error('User is not authenticated')
+  }
+
+  // Create estimate version 1
+  const estimate = await insertEstimateVersion(projectId, 1, userData.user.id)
+
+  // Add work packages
+  for (const [index, pkg] of workPackages.entries()) {
+    const estimatedHours = Number.parseFloat(pkg.estimatedHours) || 0
+    if (pkg.name.trim().length > 0) {
+      await insertDraftPackage(estimate.id, pkg.name.trim(), estimatedHours, index)
+    }
+  }
+
+  // Mark as draft
+  await markEstimateAsDraft(estimate.id)
+
+  return estimate
+}

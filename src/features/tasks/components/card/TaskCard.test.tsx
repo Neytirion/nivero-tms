@@ -81,4 +81,39 @@ describe('TaskCard', () => {
 
     expect(screen.getByRole('img', { name: 'Alice' })).toBeInTheDocument()
   })
+
+  it('renders work package chip and color accent for unlocked card', () => {
+    render(
+      <TaskCard
+        task={baseTask}
+        assigneeLabel="Alice"
+        workPackageLabel="Backend"
+        workPackageColor="#3b82f6"
+        isLocked={false}
+      />,
+    )
+
+    expect(screen.getByText('Backend')).toBeInTheDocument()
+
+    const card = screen.getByText('Implement API').closest('article')
+    expect(card).not.toBeNull()
+    expect(card).toHaveStyle({ borderLeftColor: '#3b82f6' })
+    expect(card).toHaveStyle({ borderLeftWidth: '6px' })
+  })
+
+  it('does not apply work package accent style for locked card', () => {
+    render(
+      <TaskCard
+        task={baseTask}
+        assigneeLabel="Alice"
+        workPackageLabel="Backend"
+        workPackageColor="#3b82f6"
+        isLocked
+      />,
+    )
+
+    const card = screen.getByText('Implement API').closest('article')
+    expect(card).not.toBeNull()
+    expect(card).not.toHaveStyle({ borderLeftWidth: '6px' })
+  })
 })

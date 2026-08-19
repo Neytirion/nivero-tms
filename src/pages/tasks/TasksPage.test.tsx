@@ -303,6 +303,7 @@ describe('TasksPage', () => {
             id: 't2',
             title: 'Frontend Integration',
             project_id: 'p1',
+            assigned_to: 'u1',
             blocked_by_task_id: 't1', // ✅ t2 is blocked by t1
           }),
         ],

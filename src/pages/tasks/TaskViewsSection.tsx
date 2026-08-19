@@ -19,6 +19,9 @@ type TaskViewsSectionProps = {
   onMoveTaskToStatus: (taskId: string, status: TaskStatus) => void
   onTaskClick?: (taskId: string) => void
   canManageTask: (task: TaskPreview) => boolean
+  canTakeUnassignedTasks: boolean
+  currentUserId: string | null
+  onTakeTask: (taskId: string) => void
 }
 
 export function TaskViewsSection({
@@ -35,6 +38,9 @@ export function TaskViewsSection({
   onMoveTaskToStatus,
   onTaskClick,
   canManageTask,
+  canTakeUnassignedTasks,
+  currentUserId,
+  onTakeTask,
 }: TaskViewsSectionProps) {
   return (
     <section className="page-section border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
@@ -74,6 +80,9 @@ export function TaskViewsSection({
           onMoveTaskToStatus={onMoveTaskToStatus}
           onTaskClick={onTaskClick}
           canManageTask={canManageTask}
+          canTakeUnassignedTasks={canTakeUnassignedTasks}
+          currentUserId={currentUserId}
+          onTakeTask={onTakeTask}
         />
       ) : null}
 
@@ -86,6 +95,9 @@ export function TaskViewsSection({
           onOpenUserProfile={onOpenUserProfile}
           onTaskClick={onTaskClick}
           canManageTask={canManageTask}
+          canTakeUnassignedTasks={canTakeUnassignedTasks}
+          currentUserId={currentUserId}
+          onTakeTask={onTakeTask}
         />
       ) : null}
     </section>

@@ -163,7 +163,57 @@ describe('pm.tasks', () => {
       updateTask('t1', {
         assigned_to: 'u2',
       }),
-    ).rejects.toThrow('Assignee can only be set during task creation')
+    ).rejects.toThrow('Only unassigned tasks can be taken by yourself')
+  })
+
+  it('allows taking unassigned task by current user', async () => {
+    const currentTaskMaybeSingle = vi.fn().mockResolvedValue({
+      data: { status: 'todo', blocked_by_task_id: null, assigned_to: null },
+      error: null,
+    })
+    const currentTaskEq = vi.fn().mockReturnValue({ maybeSingle: currentTaskMaybeSingle })
+    const currentTaskSelect = vi.fn().mockReturnValue({ eq: currentTaskEq })
+
+    const updatedTask = {
+      id: 't1',
+      work_package_id: null,
+      title: 'Take task',
+      description: null,
+      status: 'todo',
+      priority: 'medium',
+      assigned_to: 'u1',
+      created_by: 'u2',
+      estimate_hours: 2,
+      actual_hours: 0,
+      blocked_by_task_id: null,
+      due_date: null,
+      project_id: 'p1',
+      created_at: '2026-06-01T00:00:00.000Z',
+    }
+
+    const updateMaybeSingle = vi.fn().mockResolvedValue({ data: updatedTask, error: null })
+    const updateSelect = vi.fn().mockReturnValue({ maybeSingle: updateMaybeSingle })
+    const updateEq = vi.fn().mockReturnValue({ select: updateSelect })
+    const update = vi.fn().mockReturnValue({ eq: updateEq })
+
+    mocks.from.mockImplementation((table: string) => {
+      if (table === 'tasks') {
+        return {
+          select: currentTaskSelect,
+          update,
+        }
+      }
+
+      return {
+        select: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }) }),
+      }
+    })
+
+    const result = await updateTask('t1', {
+      assigned_to: 'u1',
+    })
+
+    expect(result.assigned_to).toBe('u1')
   })
 
   describe('estimate hours validation', () => {

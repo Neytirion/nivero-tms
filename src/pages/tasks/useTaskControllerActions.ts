@@ -17,6 +17,7 @@ interface UseTaskControllerActionsInput {
   taskPriority: string
   taskWorkPackageId: string
   canAssignAssignee: boolean
+  currentUserId: string | null
   taskAssigneeId: string
   taskBlockedByTaskId: string
   reset: () => void
@@ -118,13 +119,17 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
     await input.editTask(taskId, { status })
   }
 
-  const assignTaskHandler = async (taskId: string, userId: string) => {
+  const claimTaskHandler = async (taskId: string) => {
     if (!input.canAssignAssignee) {
       return
     }
 
+    if (!input.currentUserId) {
+      return
+    }
+
     await input.editTask(taskId, {
-      assignedTo: userId || undefined,
+      assignedTo: input.currentUserId,
     })
   }
 
@@ -174,7 +179,7 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
   return {
     createTaskHandler,
     moveTaskToStatus,
-    assignTaskHandler,
+    claimTaskHandler,
     updateTaskDueDateHandler,
     submitTaskLogTime,
   }

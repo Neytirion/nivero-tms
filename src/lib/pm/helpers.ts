@@ -184,8 +184,12 @@ export async function assertUserCanModifyTask(taskId: string, userId: string, mo
   const canManageOwn =
     hasProjectPermission(role, mode === 'delete' ? 'task.delete.own' : 'task.manage.own') &&
     (mode === 'delete' ? isCreator : task.assigned_to === userId || (isCreator && !task.assigned_to))
+  const canTakeUnassignedTask =
+    mode === 'update' &&
+    !task.assigned_to &&
+    hasProjectPermission(role, 'task.assign')
 
-  if (!canManageAny && !canManageOwn) {
+  if (!canManageAny && !canManageOwn && !canTakeUnassignedTask) {
     throw new Error(
       mode === 'delete'
         ? 'Permission denied: you cannot delete this task'

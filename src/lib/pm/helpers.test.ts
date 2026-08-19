@@ -135,6 +135,40 @@ describe('pm.helpers', () => {
     )
   })
 
+  it('allows member to take unassigned task from shared queue', async () => {
+    mocks.from.mockImplementation((table: string) => {
+      if (table === 'tasks') {
+        const maybeSingle = vi.fn().mockResolvedValue({
+          data: { project_id: 'p1', assigned_to: null, created_by: 'u1' },
+          error: null,
+        })
+        const eq = vi.fn().mockReturnValue({ maybeSingle })
+        const select = vi.fn().mockReturnValue({ eq })
+        return { select }
+      }
+
+      if (table === 'projects') {
+        const maybeSingle = vi.fn().mockResolvedValue({
+          data: { owner_id: 'owner-1' },
+          error: null,
+        })
+        const eq = vi.fn().mockReturnValue({ maybeSingle })
+        const select = vi.fn().mockReturnValue({ eq })
+        return { select }
+      }
+
+      const maybeSingle = vi.fn().mockResolvedValue({
+        data: { role: 'member' },
+        error: null,
+      })
+      const eq = vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ maybeSingle }) })
+      const select = vi.fn().mockReturnValue({ eq })
+      return { select }
+    })
+
+    await expect(assertUserCanModifyTask('t1', 'u2', 'update')).resolves.toBeUndefined()
+  })
+
   it('rejects dependency from another project', async () => {
     const maybeSingle = vi.fn().mockResolvedValue({
       data: { id: 't-blocker', project_id: 'other-project', status: 'todo' },

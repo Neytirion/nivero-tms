@@ -113,7 +113,7 @@ export function useTasksPageController() {
 
   const canAssignAssignee = selectedProject ? canAssignTasksInProject(selectedProject.id) : false
 
-  const { createTaskHandler, moveTaskToStatus: moveTaskToStatusRemote, assignTaskHandler, updateTaskDueDateHandler, submitTaskLogTime } =
+  const { createTaskHandler, moveTaskToStatus: moveTaskToStatusRemote, claimTaskHandler, updateTaskDueDateHandler, submitTaskLogTime } =
     useTaskControllerActions({
       selectedProjectId,
       useEstimates,
@@ -130,6 +130,7 @@ export function useTasksPageController() {
       taskPriority,
       taskWorkPackageId,
       canAssignAssignee,
+      currentUserId: currentUserProfile?.userId ?? null,
       taskAssigneeId,
       taskBlockedByTaskId,
       reset,
@@ -248,6 +249,7 @@ export function useTasksPageController() {
     dragTaskId,
     setDragTaskId,
     canAssignAssignee,
+    canTakeUnassignedTasks: canAssignAssignee,
     canManageTask,
     canDeleteTaskInView,
     projectStartDate,
@@ -287,7 +289,7 @@ export function useTasksPageController() {
     setLogTimeTask,
     createTaskHandler,
     moveTaskToStatus,
-    assignTaskHandler,
+    claimTaskHandler,
     updateTaskDueDateHandler,
     removeTask,
     submitTaskLogTime,

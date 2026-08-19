@@ -133,8 +133,12 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
     }
 
     if (patch.assigned_to !== undefined) {
-      if (patch.assigned_to !== currentTask.assigned_to) {
-        throw new Error('Assignee can only be set during task creation')
+      const currentAssignee = currentTask.assigned_to ?? null
+      const nextAssignee = patch.assigned_to ?? null
+      const isClaimingUnassignedTask = currentAssignee === null && nextAssignee === userData.user.id
+
+      if (nextAssignee !== currentAssignee && !isClaimingUnassignedTask) {
+        throw new Error('Only unassigned tasks can be taken by yourself')
       }
     }
 

@@ -18,12 +18,15 @@ export function TasksPage() {
     dragTaskId,
     setDragTaskId,
     canManageTask,
+    canTakeUnassignedTasks,
     hasEstimateVersion,
+    currentUserProfile,
     assigneeLabelByUserId,
     assigneeAvatarUrlByUserId,
     dependencyLabelByTaskId,
     workPackageLabelById,
     moveTaskToStatus,
+    claimTaskHandler,
     selectProject,
     resetPageState,
   } = useTasksPageController()
@@ -106,6 +109,11 @@ export function TasksPage() {
         }}
         onTaskClick={(taskId) => navigate(`/app/tasks/${taskId}`, { state: { backTo: `/app/tasks?projectId=${selectedProjectId}` } })}
         canManageTask={canManageTask}
+        canTakeUnassignedTasks={canTakeUnassignedTasks}
+        currentUserId={currentUserProfile?.userId ?? null}
+        onTakeTask={(taskId) => {
+          void claimTaskHandler(taskId)
+        }}
       />
 
       <UserProfileDialog

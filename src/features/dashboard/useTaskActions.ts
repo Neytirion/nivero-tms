@@ -123,11 +123,6 @@ export function useTaskActions(deps: TaskActionsDeps) {
         setStatus('Permission denied: you cannot update this task')
         return
       }
-      if (patch.assignedTo !== undefined && targetTask && patch.assignedTo !== targetTask.assigned_to) {
-        setStatus('Assignee can only be set during task creation')
-        return
-      }
-
       try {
         const updatedTask = await updateTask(taskId, {
           title: patch.title,

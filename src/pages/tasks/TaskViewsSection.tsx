@@ -42,6 +42,17 @@ export function TaskViewsSection({
   currentUserId,
   onTakeTask,
 }: TaskViewsSectionProps) {
+  const sharedQueueTasks = tasks.filter((task) => !task.assigned_to)
+  const assignedTasks = tasks.filter((task) => Boolean(task.assigned_to))
+
+  const formatDueDate = (dueDateRaw: string | null | undefined) => {
+    if (!dueDateRaw) {
+      return 'No due date'
+    }
+
+    return new Date(dueDateRaw).toLocaleDateString()
+  }
+
   return (
     <section className="page-section border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
@@ -69,37 +80,84 @@ export function TaskViewsSection({
         </div>
       </div>
 
-      {taskViewMode === 'board' ? (
-        <TaskBoardView
-          tasks={tasks}
-          assigneeLabelByUserId={assigneeLabelByUserId}
-          assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}
-          onOpenUserProfile={onOpenUserProfile}
-          dragTaskId={dragTaskId}
-          onDragTaskIdChange={onDragTaskIdChange}
-          onMoveTaskToStatus={onMoveTaskToStatus}
-          onTaskClick={onTaskClick}
-          canManageTask={canManageTask}
-          canTakeUnassignedTasks={canTakeUnassignedTasks}
-          currentUserId={currentUserId}
-          onTakeTask={onTakeTask}
-        />
-      ) : null}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0">
+          {taskViewMode === 'board' ? (
+            <TaskBoardView
+              tasks={assignedTasks}
+              assigneeLabelByUserId={assigneeLabelByUserId}
+              assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}
+              onOpenUserProfile={onOpenUserProfile}
+              dragTaskId={dragTaskId}
+              onDragTaskIdChange={onDragTaskIdChange}
+              onMoveTaskToStatus={onMoveTaskToStatus}
+              onTaskClick={onTaskClick}
+              canManageTask={canManageTask}
+            />
+          ) : null}
 
-      {taskViewMode === 'list' ? (
-        <TaskListView
-          tasks={tasks}
-          assigneeLabelByUserId={assigneeLabelByUserId}
-          workPackageLabelById={workPackageLabelById}
-          dependencyLabelByTaskId={dependencyLabelByTaskId}
-          onOpenUserProfile={onOpenUserProfile}
-          onTaskClick={onTaskClick}
-          canManageTask={canManageTask}
-          canTakeUnassignedTasks={canTakeUnassignedTasks}
-          currentUserId={currentUserId}
-          onTakeTask={onTakeTask}
-        />
-      ) : null}
+          {taskViewMode === 'list' ? (
+            <TaskListView
+              tasks={assignedTasks}
+              assigneeLabelByUserId={assigneeLabelByUserId}
+              workPackageLabelById={workPackageLabelById}
+              dependencyLabelByTaskId={dependencyLabelByTaskId}
+              onOpenUserProfile={onOpenUserProfile}
+              onTaskClick={onTaskClick}
+              canManageTask={canManageTask}
+            />
+          ) : null}
+        </div>
+
+        <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3">
+          <div className="mb-2">
+            <h4 className="text-sm font-semibold text-cyan-900">Unassigned Tasks ({sharedQueueTasks.length})</h4>
+            <p className="text-xs text-cyan-700">Shared queue anyone can take</p>
+          </div>
+
+          {sharedQueueTasks.length === 0 ? (
+            <p className="rounded-lg border border-cyan-200 bg-white px-3 py-4 text-center text-xs text-slate-500">
+              No unassigned tasks
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {sharedQueueTasks.map((task) => (
+                <article
+                  key={task.id}
+                  onClick={() => onTaskClick?.(task.id)}
+                  className={`rounded-lg border border-cyan-200 bg-white p-2.5 transition ${onTaskClick ? 'cursor-pointer hover:border-cyan-300 hover:bg-cyan-50/30' : ''}`}
+                >
+                  <p className="truncate text-sm font-semibold text-slate-800">{task.title}</p>
+
+                  {task.description ? (
+                    <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-slate-600">{task.description}</p>
+                  ) : null}
+
+                  <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-600">
+                    <span>Status: {task.status ?? 'todo'}</span>
+                    <span>Priority: {task.priority ?? 'medium'}</span>
+                    <span>Estimate: {task.estimate_hours ?? 0}h</span>
+                    <span>Due: {formatDueDate(task.due_date)}</span>
+                  </div>
+
+                  {canTakeUnassignedTasks && currentUserId ? (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        onTakeTask(task.id)
+                      }}
+                      className="mt-2 w-full rounded-md border border-cyan-300 bg-cyan-100 px-2 py-1 text-xs font-semibold text-cyan-900 hover:bg-cyan-200"
+                    >
+                      Take task
+                    </button>
+                  ) : null}
+                </article>
+              ))}
+            </div>
+          )}
+        </aside>
+      </div>
     </section>
   )
 }

@@ -10,9 +10,6 @@ interface TaskListViewProps {
   onOpenUserProfile: (userId: string) => void
   onTaskClick?: (taskId: string) => void
   canManageTask: (task: TaskPreview) => boolean
-  canTakeUnassignedTasks: boolean
-  currentUserId: string | null
-  onTakeTask: (taskId: string) => void
 }
 
 export function TaskListView({
@@ -23,9 +20,6 @@ export function TaskListView({
   onOpenUserProfile,
   onTaskClick,
   canManageTask,
-  canTakeUnassignedTasks,
-  currentUserId,
-  onTakeTask,
 }: TaskListViewProps) {
   const [priorityFilter, setPriorityFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'backlog' | 'todo' | 'in_progress' | 'review' | 'done'>('all')
@@ -33,8 +27,7 @@ export function TaskListView({
 
   const filteredTasks = useMemo(
     () => tasks.filter((task) => {
-      const canTakeTask = canTakeUnassignedTasks && Boolean(currentUserId) && !task.assigned_to
-      const isEditable = canManageTask(task) || canTakeTask
+      const isEditable = canManageTask(task)
 
       if (priorityFilter !== 'all' && (task.priority ?? 'medium').toLowerCase() !== priorityFilter) {
         return false
@@ -54,46 +47,11 @@ export function TaskListView({
 
       return true
     }),
-    [tasks, priorityFilter, statusFilter, accessFilter, canManageTask, canTakeUnassignedTasks, currentUserId],
+    [tasks, priorityFilter, statusFilter, accessFilter, canManageTask],
   )
 
-  const sharedQueueTasks = filteredTasks.filter((task) => !task.assigned_to)
-  const assignedTasks = filteredTasks.filter((task) => Boolean(task.assigned_to))
-
   return (
-    <div className="space-y-3">
-      {sharedQueueTasks.length > 0 ? (
-        <section className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <h4 className="text-sm font-semibold text-cyan-900">Shared Queue ({sharedQueueTasks.length})</h4>
-            <p className="text-xs text-cyan-700">Unassigned tasks anyone can take</p>
-          </div>
-          <div className="space-y-1.5">
-            {sharedQueueTasks.map((task) => (
-              <div key={task.id} className="flex items-center justify-between gap-2 rounded-lg border border-cyan-200 bg-white px-3 py-2">
-                <button
-                  type="button"
-                  onClick={() => onTaskClick?.(task.id)}
-                  className="truncate text-left text-sm font-medium text-slate-800 hover:text-cyan-800"
-                >
-                  {task.title}
-                </button>
-                {canTakeUnassignedTasks && currentUserId ? (
-                  <button
-                    type="button"
-                    onClick={() => onTakeTask(task.id)}
-                    className="shrink-0 rounded-md border border-cyan-300 bg-cyan-100 px-2 py-0.5 text-[11px] font-semibold text-cyan-900 hover:bg-cyan-200"
-                  >
-                    Take
-                  </button>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
-
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
+    <div className="overflow-x-auto rounded-xl border border-slate-200">
       <div className="flex flex-wrap items-end gap-2 border-b border-slate-200 bg-slate-50/70 px-3 py-2">
         <label className="flex min-w-[120px] flex-col gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
           Priority
@@ -164,14 +122,14 @@ export function TaskListView({
           </tr>
         </thead>
         <tbody>
-          {assignedTasks.length === 0 ? (
+          {filteredTasks.length === 0 ? (
             <tr>
               <td colSpan={7} className="px-3 py-4 text-center text-slate-500">
-                No assigned tasks match current filters
+                No tasks match current filters
               </td>
             </tr>
           ) : (
-            assignedTasks.map((task) => {
+            filteredTasks.map((task) => {
               const hasWorkPackageLink = Boolean(task.work_package_id && task.work_package_id.trim().length > 0)
               const workPackageLabel = hasWorkPackageLink
                 ? (workPackageLabelById[task.work_package_id as string] ?? null)
@@ -234,7 +192,6 @@ export function TaskListView({
           )}
         </tbody>
       </table>
-      </div>
     </div>
   )
 }

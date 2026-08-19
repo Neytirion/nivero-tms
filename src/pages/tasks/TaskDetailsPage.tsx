@@ -27,6 +27,7 @@ export function TaskDetailsPage() {
     isLoading,
     tasks,
     myRoleInSelectedProject,
+    canTakeUnassignedTasks,
     canManageTask,
     canDeleteTaskInView,
     projectStartDate,
@@ -109,16 +110,15 @@ export function TaskDetailsPage() {
     ? (workPackageLabelById[task.work_package_id as string] ?? null)
     : null
   const blockedByLabel = task.blocked_by_task_id ? dependencyLabelByTaskId[task.blocked_by_task_id] : undefined
-  const isLocked = !canManageTask(task)
+  const isUnassigned = !task.assigned_to
+  const isLocked = !canManageTask(task) || isUnassigned
   const canDelete = canDeleteTaskInView(task)
 
   const currentUserId = currentUserProfile?.userId ?? null
   const isAssignee = Boolean(currentUserId && task.assigned_to === currentUserId)
-  const isCreatorOfUnassigned = Boolean(currentUserId && !task.assigned_to && task.created_by === currentUserId)
-  // Time logging is reserved for the person doing the work: the assignee (or the
-  // creator while the task is still unassigned). Managers can edit tasks but do
-  // not log time on someone else's behalf.
-  const canLogTime = (isAssignee || isCreatorOfUnassigned) && !isLocked
+  const canTakeCurrentTask = Boolean(currentUserId && !task.assigned_to && canTakeUnassignedTasks)
+  // Time logging is reserved for the assignee after task ownership is explicit.
+  const canLogTime = isAssignee && !isLocked
 
   const estimateHours = task.estimate_hours ?? 0
   const actualHours = task.actual_hours ?? 0
@@ -167,6 +167,14 @@ export function TaskDetailsPage() {
 
   const updateTaskDescriptionHandler = async (taskId: string, description: string) => {
     await editTask(taskId, { description })
+  }
+
+  const takeTaskHandler = async () => {
+    if (!currentUserId || task.assigned_to || !canTakeUnassignedTasks) {
+      return
+    }
+
+    await editTask(task.id, { assignedTo: currentUserId })
   }
 
   const updateTaskEstimateHoursHandler = async (taskId: string, nextValue: string) => {
@@ -369,6 +377,17 @@ export function TaskDetailsPage() {
                     ) : (
                       <p className="text-sm text-slate-500">Unassigned</p>
                     )}
+
+                    {canTakeCurrentTask ? (
+                      <button
+                        type="button"
+                        onClick={() => void takeTaskHandler()}
+                        disabled={isLoading}
+                        className="mt-2 inline-flex items-center rounded-md border border-cyan-300 bg-cyan-100 px-3 py-1.5 text-xs font-semibold text-cyan-900 transition hover:bg-cyan-200 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Take task
+                      </button>
+                    ) : null}
                   </div>
                 </div>
 
@@ -479,7 +498,7 @@ export function TaskDetailsPage() {
                   <p className="text-xs text-slate-600">
                     {isAssignee
                       ? '🔒 Time logging is unavailable while this project is read-only.'
-                      : '👤 Only the assignee can log time on this task.'}
+                      : '👤 Only the assignee can log time on this task after it is taken.'}
                   </p>
                 </div>
               )}

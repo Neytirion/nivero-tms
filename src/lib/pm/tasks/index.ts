@@ -132,14 +132,27 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
       }
     }
 
-    if (patch.assigned_to !== undefined) {
-      const currentAssignee = currentTask.assigned_to ?? null
-      const nextAssignee = patch.assigned_to ?? null
-      const isClaimingUnassignedTask = currentAssignee === null && nextAssignee === userData.user.id
+    const currentAssignee = currentTask.assigned_to ?? null
+    const nextAssignee = patch.assigned_to ?? null
+    const isClaimingUnassignedTask = currentAssignee === null && nextAssignee === userData.user.id
+    const hasNonAssigneeUpdates = [
+      patch.title,
+      patch.description,
+      patch.status,
+      patch.priority,
+      patch.work_package_id,
+      patch.estimate_hours,
+      patch.actual_hours,
+      patch.blocked_by_task_id,
+      patch.due_date,
+    ].some((value) => value !== undefined)
 
-      if (nextAssignee !== currentAssignee && !isClaimingUnassignedTask) {
-        throw new Error('Only unassigned tasks can be taken by yourself')
-      }
+    if (currentAssignee === null && hasNonAssigneeUpdates) {
+      throw new Error('Unassigned task must be taken before editing')
+    }
+
+    if (patch.assigned_to !== undefined && nextAssignee !== currentAssignee && !isClaimingUnassignedTask) {
+      throw new Error('Only unassigned tasks can be taken by yourself')
     }
 
     const nextBlockedByTaskId =

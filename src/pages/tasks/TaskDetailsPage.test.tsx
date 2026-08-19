@@ -57,15 +57,16 @@ describe('TaskDetailsPage', () => {
       ],
       myRoleInSelectedProject: 'member',
       canAssignAssignee: false,
+      canTakeUnassignedTasks: false,
       canManageTask: vi.fn(() => true),
       canDeleteTaskInView: vi.fn(() => false),
       projectStartDate: '',
       projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
       assigneeLabelByUserId: {},
       workPackageLabelById: {},
       dependencyLabelByTaskId: {},
       assigneeOptions: [],
-      assignTaskHandler: vi.fn(async () => undefined),
       updateTaskDueDateHandler: vi.fn(async () => undefined),
       removeTask: vi.fn(async () => undefined),
       editTask: editTaskMock,
@@ -99,15 +100,16 @@ describe('TaskDetailsPage', () => {
     mockUseTasksPageController.mockReturnValueOnce({
       tasks: [],
       canAssignAssignee: false,
+      canTakeUnassignedTasks: false,
       canManageTask: vi.fn(() => true),
       canDeleteTaskInView: vi.fn(() => false),
       projectStartDate: '',
       projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
       assigneeLabelByUserId: {},
       workPackageLabelById: {},
       dependencyLabelByTaskId: {},
       assigneeOptions: [],
-      assignTaskHandler: vi.fn(async () => undefined),
       updateTaskDueDateHandler: vi.fn(async () => undefined),
       removeTask: vi.fn(async () => undefined),
       editTask: editTaskMock,
@@ -131,19 +133,21 @@ describe('TaskDetailsPage', () => {
           title: 'Task A',
           project_id: 'p1',
           estimate_hours: 8,
+          assigned_to: 'u1',
         }),
       ],
       myRoleInSelectedProject: 'admin',
       canAssignAssignee: true,
+      canTakeUnassignedTasks: true,
       canManageTask: vi.fn(() => true),
       canDeleteTaskInView: vi.fn(() => false),
       projectStartDate: '',
       projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
       assigneeLabelByUserId: {},
       workPackageLabelById: {},
       dependencyLabelByTaskId: {},
       assigneeOptions: [],
-      assignTaskHandler: vi.fn(async () => undefined),
       updateTaskDueDateHandler: vi.fn(async () => undefined),
       removeTask: vi.fn(async () => undefined),
       editTask: editTaskMock,
@@ -168,19 +172,21 @@ describe('TaskDetailsPage', () => {
           title: 'Task A',
           project_id: 'p1',
           estimate_hours: 8,
+          assigned_to: 'u1',
         }),
       ],
       myRoleInSelectedProject: 'manager',
       canAssignAssignee: true,
+      canTakeUnassignedTasks: true,
       canManageTask: vi.fn(() => true),
       canDeleteTaskInView: vi.fn(() => false),
       projectStartDate: '',
       projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
       assigneeLabelByUserId: {},
       workPackageLabelById: {},
       dependencyLabelByTaskId: {},
       assigneeOptions: [],
-      assignTaskHandler: vi.fn(async () => undefined),
       updateTaskDueDateHandler: vi.fn(async () => undefined),
       removeTask: vi.fn(async () => undefined),
       editTask: editTaskMock,
@@ -199,5 +205,75 @@ describe('TaskDetailsPage', () => {
     expect(document.getElementById('task-estimate-hours')).not.toBeInTheDocument()
     expect(document.getElementById('task-estimate-hours-readonly')).not.toBeInTheDocument()
     expect(screen.getByText('Estimate')).toBeInTheDocument()
+  })
+
+  it('shows take-task button for unassigned task when user can claim and updates assignee to current user', async () => {
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Task A',
+          project_id: 'p1',
+          assigned_to: null,
+          created_by: 'u2',
+        }),
+      ],
+      myRoleInSelectedProject: 'member',
+      canAssignAssignee: true,
+      canTakeUnassignedTasks: true,
+      canManageTask: vi.fn(() => false),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+
+    fireEvent.click(screen.getByRole('button', { name: /take task/i }))
+
+    await waitFor(() => {
+      expect(editTaskMock).toHaveBeenCalledWith('t1', { assignedTo: 'u1' })
+    })
+  })
+
+  it('hides take-task button when task already assigned', () => {
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Task A',
+          project_id: 'p1',
+          assigned_to: 'u2',
+          created_by: 'u1',
+        }),
+      ],
+      myRoleInSelectedProject: 'member',
+      canAssignAssignee: true,
+      canTakeUnassignedTasks: true,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+
+    expect(screen.queryByRole('button', { name: /take task/i })).not.toBeInTheDocument()
   })
 })

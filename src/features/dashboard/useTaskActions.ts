@@ -118,11 +118,47 @@ export function useTaskActions(deps: TaskActionsDeps) {
         depsRef.current
 
       const targetTask = tasks.find((t) => t.id === taskId)
+      const hasOnlyClaimPatch =
+        patch.assignedTo !== undefined &&
+        patch.title === undefined &&
+        patch.description === undefined &&
+        patch.status === undefined &&
+        patch.priority === undefined &&
+        patch.workPackageId === undefined &&
+        patch.estimateHours === undefined &&
+        patch.actualHours === undefined &&
+        patch.dueDate === undefined
+
+      const isClaimingUnassignedTask = Boolean(targetTask && !targetTask.assigned_to && hasOnlyClaimPatch)
+
       if (targetTask?.project_id && !ensureProjectEditable(targetTask.project_id, 'update task')) return
+
       if (targetTask && !canManageTask(targetTask)) {
-        setStatus('Permission denied: you cannot update this task')
-        return
+        if (!isClaimingUnassignedTask) {
+          setStatus('Permission denied: you cannot update this task')
+          return
+        }
+
+        const { data: authData, error: authError } = await supabase.auth.getUser()
+
+        if (authError) {
+          setStatus(`Update task error: ${authError.message}`)
+          return
+        }
+
+        const authUserId = authData.user?.id ?? null
+        if (!authUserId || patch.assignedTo !== authUserId) {
+          setStatus('Only unassigned tasks can be taken by yourself')
+          return
+        }
+
+        const claimProjectId = targetTask.project_id ?? selectedProjectId
+        if (!claimProjectId || !canAssignTasksInProject(claimProjectId)) {
+          setStatus('Permission denied: only project members can assign tasks')
+          return
+        }
       }
+
       try {
         const updatedTask = await updateTask(taskId, {
           title: patch.title,

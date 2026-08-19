@@ -216,6 +216,22 @@ describe('pm.tasks', () => {
     expect(result.assigned_to).toBe('u1')
   })
 
+  it('blocks editing unassigned task fields before claim', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({
+      data: { status: 'todo', blocked_by_task_id: null, assigned_to: null },
+      error: null,
+    })
+    const eq = vi.fn().mockReturnValue({ maybeSingle })
+    const select = vi.fn().mockReturnValue({ eq })
+    mocks.from.mockReturnValue({ select })
+
+    await expect(
+      updateTask('t1', {
+        status: 'in_progress',
+      }),
+    ).rejects.toThrow('Unassigned task must be taken before editing')
+  })
+
   describe('estimate hours validation', () => {
     beforeEach(() => {
       // Setup mocks for each validation test

@@ -46,11 +46,13 @@ interface ProjectDetailsSectionBodyProps {
   canAssignAdminRole: boolean
   canAssignManagerRole?: boolean
   onInviteMember: () => void | Promise<void>
+  onQuickInviteMember?: (email: string, role: string) => Promise<void>
   pendingRoleByUserId: Record<string, string>
   onPendingRoleChange: (userId: string, role: string) => void
   selectedProjectOwnerId: string | null | undefined
   onSaveRole: (userId: string, fallbackRole: string, explicitRole?: string) => Promise<boolean> | boolean
   onRemoveMember?: (userId: string, unassignUnfinishedTasks: boolean) => void | Promise<void>
+  workspaceProjects?: ProjectPreview[]
   onOpenDeleteConfirm?: () => void
   onOpenCompleteConfirm: () => void
   onOpenSaveSettingsConfirm: () => void
@@ -93,11 +95,13 @@ export function ProjectDetailsSectionBody({
   canAssignAdminRole,
   canAssignManagerRole,
   onInviteMember,
+  onQuickInviteMember,
   pendingRoleByUserId,
   onPendingRoleChange,
   selectedProjectOwnerId,
   onSaveRole,
   onRemoveMember,
+  workspaceProjects,
   onOpenDeleteConfirm,
   onOpenCompleteConfirm,
   onOpenSaveSettingsConfirm,
@@ -133,8 +137,10 @@ export function ProjectDetailsSectionBody({
             canAssignAdminRole={canAssignAdminRole}
             canAssignManagerRole={canAssignManagerRole}
             onInviteMember={onInviteMember}
+            onQuickInviteMember={onQuickInviteMember}
             isLoading={isLoading}
             selectedProjectId={selectedProjectId}
+            workspaceProjects={workspaceProjects}
             projectMembers={projectMembers}
             currentUserProfile={currentUserProfile}
             canManageMemberRoles={canManageMemberRoles}

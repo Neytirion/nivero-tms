@@ -185,6 +185,10 @@ export function useProjectsPageController() {
     resetMemberForm()
   }
 
+  const inviteMemberByEmailAndRoleHandler = async (email: string, role: string) => {
+    await inviteMemberHandlerRaw(email, role)
+  }
+
   const updateMemberRoleHandler = async (
     userId: string,
     fallbackRole: string,
@@ -274,6 +278,7 @@ export function useProjectsPageController() {
     createProjectHandler,
     createProjectFromAiDraftHandler,
     inviteMemberHandler,
+    inviteMemberByEmailAndRoleHandler,
     completeProjectHandler,
     saveProjectSettings,
     saveUseEstimatesSetting,

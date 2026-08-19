@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import type { ProjectMemberListItem } from '../../../../lib/pm'
+import { useEffect, useMemo, useState } from 'react'
+import { getProjectMembers, type ProjectMemberListItem, type ProjectPreview } from '../../../../lib/pm'
 import { UserProfileDialog, type UserProfilePreview } from '../../../../shared/components'
 
 interface TeamAccessSectionProps {
@@ -12,8 +12,10 @@ interface TeamAccessSectionProps {
   canAssignAdminRole: boolean
   canAssignManagerRole?: boolean
   onInviteMember: () => void | Promise<void>
+  onQuickInviteMember?: (email: string, role: string) => Promise<void>
   isLoading: boolean
   selectedProjectId: string | null
+  workspaceProjects?: ProjectPreview[]
   projectMembers: ProjectMemberListItem[]
   currentUserProfile: UserProfilePreview | null
   canManageMemberRoles?: boolean
@@ -35,8 +37,10 @@ export function TeamAccessSection({
   canAssignAdminRole,
   canAssignManagerRole,
   onInviteMember,
+  onQuickInviteMember,
   isLoading,
   selectedProjectId,
+  workspaceProjects = [],
   projectMembers,
   currentUserProfile,
   canManageMemberRoles = false,
@@ -48,6 +52,15 @@ export function TeamAccessSection({
 }: TeamAccessSectionProps) {
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
   const [savingRoleByUserId, setSavingRoleByUserId] = useState<Record<string, boolean>>({})
+  const [quickAddRole, setQuickAddRole] = useState('member')
+  const [isQuickAddLoading, setIsQuickAddLoading] = useState(false)
+  const [isQuickInviteLoadingByEmail, setIsQuickInviteLoadingByEmail] = useState<Record<string, boolean>>({})
+  const [quickAddCandidates, setQuickAddCandidates] = useState<Array<{
+    email: string
+    fullName: string | null
+    avatarUrl: string | null
+    sourceProjectNames: string[]
+  }>>([])
 
   const resolveProfile = (member: ProjectMemberListItem) => {
     if (member.user_id && currentUserProfile?.userId === member.user_id) {
@@ -77,6 +90,133 @@ export function TeamAccessSection({
     ...(canAssignAdminRole ? [{ value: 'admin', label: 'Admin' }] : []),
   ]
 
+  const roleLabelByValue = useMemo(
+    () => roleOptions.reduce<Record<string, string>>((acc, option) => {
+      acc[option.value] = option.label
+      return acc
+    }, {}),
+    [roleOptions],
+  )
+
+  const existingMemberKeys = useMemo(() => {
+    const keys = new Set<string>()
+    for (const member of projectMembers) {
+      if (member.user_id) {
+        keys.add(`user:${member.user_id}`)
+      }
+      if (member.email) {
+        keys.add(`email:${member.email.toLowerCase()}`)
+      }
+    }
+    return keys
+  }, [projectMembers])
+
+  useEffect(() => {
+    if (!selectedProjectId || !onQuickInviteMember) {
+      setQuickAddCandidates([])
+      return
+    }
+
+    const sourceProjects = workspaceProjects.filter((project) => project.id !== selectedProjectId)
+
+    if (sourceProjects.length === 0) {
+      setQuickAddCandidates([])
+      return
+    }
+
+    let isMounted = true
+
+    const loadQuickAddCandidates = async () => {
+      setIsQuickAddLoading(true)
+
+      try {
+        const projectMembersByProject = await Promise.allSettled(
+          sourceProjects.map(async (project) => ({
+            projectName: project.name,
+            members: await getProjectMembers(project.id),
+          })),
+        )
+
+        if (!isMounted) {
+          return
+        }
+
+        const candidatesByEmail = new Map<string, {
+          email: string
+          fullName: string | null
+          avatarUrl: string | null
+          sourceProjectNames: Set<string>
+        }>()
+
+        for (const result of projectMembersByProject) {
+          if (result.status !== 'fulfilled') {
+            continue
+          }
+
+          for (const member of result.value.members) {
+            const normalizedEmail = member.email?.trim().toLowerCase()
+            if (!normalizedEmail) {
+              continue
+            }
+
+            const userKey = member.user_id ? `user:${member.user_id}` : null
+            const emailKey = `email:${normalizedEmail}`
+
+            if ((userKey && existingMemberKeys.has(userKey)) || existingMemberKeys.has(emailKey)) {
+              continue
+            }
+
+            const existingCandidate = candidatesByEmail.get(normalizedEmail)
+            if (!existingCandidate) {
+              candidatesByEmail.set(normalizedEmail, {
+                email: normalizedEmail,
+                fullName: member.full_name,
+                avatarUrl: member.avatar_url ?? null,
+                sourceProjectNames: new Set([result.value.projectName]),
+              })
+              continue
+            }
+
+            if (!existingCandidate.fullName && member.full_name) {
+              existingCandidate.fullName = member.full_name
+            }
+
+            if (!existingCandidate.avatarUrl && member.avatar_url) {
+              existingCandidate.avatarUrl = member.avatar_url
+            }
+
+            existingCandidate.sourceProjectNames.add(result.value.projectName)
+          }
+        }
+
+        const nextCandidates = Array.from(candidatesByEmail.values())
+          .map((candidate) => ({
+            email: candidate.email,
+            fullName: candidate.fullName,
+            avatarUrl: candidate.avatarUrl,
+            sourceProjectNames: Array.from(candidate.sourceProjectNames),
+          }))
+          .sort((a, b) => {
+            const left = (a.fullName ?? a.email).toLowerCase()
+            const right = (b.fullName ?? b.email).toLowerCase()
+            return left.localeCompare(right)
+          })
+
+        setQuickAddCandidates(nextCandidates)
+      } finally {
+        if (isMounted) {
+          setIsQuickAddLoading(false)
+        }
+      }
+    }
+
+    void loadQuickAddCandidates()
+
+    return () => {
+      isMounted = false
+    }
+  }, [existingMemberKeys, onQuickInviteMember, selectedProjectId, workspaceProjects])
+
   const handleRoleSelectChange = async (member: ProjectMemberListItem, nextRole: string) => {
     if (!member.user_id) {
       return
@@ -100,6 +240,20 @@ export function TeamAccessSection({
       }
     } finally {
       setSavingRoleByUserId((prev) => ({ ...prev, [userId]: false }))
+    }
+  }
+
+  const handleQuickInvite = async (email: string) => {
+    if (!onQuickInviteMember) {
+      return
+    }
+
+    setIsQuickInviteLoadingByEmail((prev) => ({ ...prev, [email]: true }))
+
+    try {
+      await onQuickInviteMember(email, quickAddRole)
+    } finally {
+      setIsQuickInviteLoadingByEmail((prev) => ({ ...prev, [email]: false }))
     }
   }
 
@@ -146,6 +300,77 @@ export function TeamAccessSection({
           </button>
         </div>
       </div>
+
+      {onQuickInviteMember ? (
+        <div className="mt-3 max-w-3xl rounded-xl border border-slate-200 bg-white p-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Quick add from other projects</p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-slate-500">Role:</span>
+              <select
+                value={quickAddRole}
+                onChange={(event) => setQuickAddRole(event.target.value)}
+                disabled={!canInviteToSelectedProject || isQuickAddLoading}
+                className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900 outline-none focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                aria-label="Quick add role"
+              >
+                {roleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-2 max-h-52 space-y-1 overflow-auto pr-1">
+            {!selectedProjectId ? (
+              <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">Select a project first.</p>
+            ) : null}
+
+            {selectedProjectId && isQuickAddLoading ? (
+              <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">Loading reusable teammates...</p>
+            ) : null}
+
+            {selectedProjectId && !isQuickAddLoading && quickAddCandidates.length === 0 ? (
+              <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">No candidates from other projects.</p>
+            ) : null}
+
+            {quickAddCandidates.map((candidate) => (
+              <div
+                key={candidate.email}
+                className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2"
+              >
+                <div className="min-w-0 flex items-center gap-2">
+                  {candidate.avatarUrl ? (
+                    <img
+                      src={candidate.avatarUrl}
+                      alt={candidate.fullName ?? candidate.email}
+                      className="h-7 w-7 shrink-0 rounded-full border border-slate-200 object-cover"
+                    />
+                  ) : (
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-700">
+                      {(candidate.fullName ?? candidate.email).slice(0, 2).toUpperCase()}
+                    </span>
+                  )}
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-medium text-slate-800">{candidate.fullName ?? candidate.email}</p>
+                    <p className="truncate text-[11px] text-slate-500">{candidate.sourceProjectNames.join(', ')}</p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => void handleQuickInvite(candidate.email)}
+                  disabled={!canInviteToSelectedProject || isQuickInviteLoadingByEmail[candidate.email] || isLoading}
+                  className="shrink-0 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  title={`Invite as ${roleLabelByValue[quickAddRole] ?? 'Member'}`}
+                >
+                  {isQuickInviteLoadingByEmail[candidate.email] ? 'Adding...' : `Add ${roleLabelByValue[quickAddRole] ?? 'Member'}`}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
       <div className="mt-4 max-w-3xl rounded-xl border border-slate-200 bg-white p-3">
         <div className="flex items-center justify-between gap-2">

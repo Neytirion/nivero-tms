@@ -30,6 +30,7 @@ export function ProjectDetailsPage() {
 
   const {
     isLoading,
+    projects,
     tasks,
     projectMembers,
     selectedProject,
@@ -62,6 +63,7 @@ export function ProjectDetailsPage() {
     currentSettingsDraft,
     updateSettingsDraft,
     inviteMemberHandler,
+    inviteMemberByEmailAndRoleHandler,
     completeProjectHandler,
     saveProjectSettings,
     saveUseEstimatesSetting,
@@ -219,7 +221,9 @@ export function ProjectDetailsPage() {
             canAssignAdminRole={canAssignAdminRole}
             canAssignManagerRole={canAssignManagerRole}
             onInviteMember={inviteMemberHandler}
+            onQuickInviteMember={inviteMemberByEmailAndRoleHandler}
             projectMembers={projectMembers}
+            workspaceProjects={projects}
             pendingRoleByUserId={pendingRoleByUserId}
             onPendingRoleChange={updatePendingRole}
             selectedProjectOwnerId={selectedProject?.owner_id}

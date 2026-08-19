@@ -11,6 +11,7 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
   const [workPackages, setWorkPackages] = useState<Array<Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours'>>>([])
   const [hasEstimateVersion, setHasEstimateVersion] = useState<boolean | null>(null)
   const [useEstimates, setUseEstimates] = useState<boolean>(false)
+  const [isWorkPackagesLoading, setIsWorkPackagesLoading] = useState(false)
 
   useEffect(() => {
     const loadWorkPackages = async () => {
@@ -19,10 +20,12 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
         setTaskWorkPackageId('')
         setHasEstimateVersion(null)
         setUseEstimates(false)
+        setIsWorkPackagesLoading(false)
         return
       }
 
       setHasEstimateVersion(null)
+      setIsWorkPackagesLoading(true)
 
       try {
         const nextWorkPackages = await getProjectTaskWorkPackages(selectedProjectId)
@@ -48,6 +51,8 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
         setHasEstimateVersion(true)
         setUseEstimates(false)
         setTaskWorkPackageId('')
+      } finally {
+        setIsWorkPackagesLoading(false)
       }
     }
 
@@ -58,5 +63,6 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
     workPackages,
     hasEstimateVersion,
     useEstimates,
+    isWorkPackagesLoading,
   }
 }

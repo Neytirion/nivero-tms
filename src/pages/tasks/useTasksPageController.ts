@@ -69,7 +69,7 @@ export function useTasksPageController() {
   const myRoleInSelectedProject = selectedProject ? getProjectRole(selectedProject.id) : null
   const isMemberInSelectedProject = myRoleInSelectedProject === 'member'
 
-  const { workPackages, hasEstimateVersion, useEstimates } = useTaskWorkPackagesLoader({
+  const { workPackages, hasEstimateVersion, useEstimates, isWorkPackagesLoading } = useTaskWorkPackagesLoader({
     selectedProjectId,
     setTaskWorkPackageId,
   })
@@ -244,6 +244,7 @@ export function useTasksPageController() {
     projectMembers,
     hasEstimateVersion,
     useEstimates,
+    isWorkPackagesLoading,
     taskViewMode,
     setTaskViewMode,
     dragTaskId,

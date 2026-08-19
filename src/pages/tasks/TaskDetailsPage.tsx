@@ -30,6 +30,7 @@ export function TaskDetailsPage() {
     canTakeUnassignedTasks,
     canManageTask,
     canDeleteTaskInView,
+    isWorkPackagesLoading,
     projectStartDate,
     projectEndDate,
     assigneeLabelByUserId,
@@ -392,11 +393,11 @@ export function TaskDetailsPage() {
                 </div>
 
                 {/* Work Package */}
-                {hasWorkPackageLink && workPackageLabel ? (
+                {hasWorkPackageLink ? (
                   <div>
                     <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Work package</label>
                     <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                      <p className="text-sm text-slate-700 font-medium">{workPackageLabel}</p>
+                      <p className="text-sm text-slate-700 font-medium">{workPackageLabel ?? (isWorkPackagesLoading ? 'Loading work package...' : 'Not linked')}</p>
                     </div>
                   </div>
                 ) : null}

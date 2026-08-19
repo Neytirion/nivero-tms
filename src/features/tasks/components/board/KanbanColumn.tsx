@@ -60,8 +60,14 @@ export function KanbanColumn({
             {/** For member-created unassigned tasks, show creator as effective assignee in UI. */}
             <TaskCard
               task={task}
-              workPackageLabel={task.work_package_id ? (workPackageLabelById[task.work_package_id] ?? null) : null}
-              workPackageColor={task.work_package_id ? (workPackageColorById[task.work_package_id] ?? null) : null}
+              workPackageLabel={
+                task.work_package?.name
+                ?? (task.work_package_id ? (workPackageLabelById[task.work_package_id] ?? null) : null)
+              }
+              workPackageColor={
+                task.work_package?.color
+                ?? (task.work_package_id ? (workPackageColorById[task.work_package_id] ?? null) : null)
+              }
               assigneeUserId={task.assigned_to ?? task.created_by}
               assigneeLabel={
                 task.assigned_to

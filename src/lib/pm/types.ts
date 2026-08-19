@@ -50,7 +50,9 @@ export type TaskPreview = Pick<
   | 'due_date'
   | 'project_id'
   | 'created_at'
->
+> & {
+  work_package?: Pick<WorkPackage, 'name' | 'color'> | null
+}
 
 export type ProjectMemberPreview = Pick<
   Database['public']['Tables']['project_members']['Row'],

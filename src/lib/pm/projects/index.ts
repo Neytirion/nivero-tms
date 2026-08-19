@@ -7,7 +7,7 @@ const PROJECT_FIELDS =
   'id,name,description,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at,updated_at'
 
 const TASK_FIELDS =
-  'id,work_package_id,title,description,status,priority,assigned_to,created_by,estimate_hours,actual_hours,blocked_by_task_id,due_date,project_id,created_at'
+  'id,work_package_id,title,description,status,priority,assigned_to,created_by,estimate_hours,actual_hours,blocked_by_task_id,due_date,project_id,created_at,work_package:work_packages(name,color)'
 
 export const TASKS_PAGE_SIZE = 100
 

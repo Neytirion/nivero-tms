@@ -65,7 +65,12 @@ export interface UseProjectsActionsReturn {
   saveProjectSettings: () => Promise<void>
   saveUseEstimatesSetting: (nextValue: boolean) => Promise<boolean>
   deleteSelectedProjectHandler: () => Promise<boolean>
-  updateMemberRoleHandler: (userId: string, fallbackRole: string, pendingRoles: Record<string, string>) => Promise<void>
+  updateMemberRoleHandler: (
+    userId: string,
+    fallbackRole: string,
+    pendingRoles: Record<string, string>,
+    explicitRole?: string,
+  ) => Promise<boolean>
   removeMemberHandler: (userId: string) => Promise<void>
 }
 
@@ -298,15 +303,22 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     userId: string,
     fallbackRole: string,
     pendingRoles: Record<string, string>,
+    explicitRole?: string,
   ) => {
-    const nextRole = pendingRoles[userId] ?? fallbackRole
+    const nextRole = explicitRole ?? pendingRoles[userId] ?? fallbackRole
+
+    if (nextRole === fallbackRole) {
+      return true
+    }
 
     try {
       await changeSelectedProjectMemberRole(userId, nextRole)
+      return true
     } catch (error) {
       setStatus(
         error instanceof Error ? `Role update error: ${error.message}` : 'Failed to update role',
       )
+      return false
     }
   }
 

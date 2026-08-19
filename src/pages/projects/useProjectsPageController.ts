@@ -185,8 +185,12 @@ export function useProjectsPageController() {
     resetMemberForm()
   }
 
-  const updateMemberRoleHandler = async (userId: string, fallbackRole: string) => {
-    await updateMemberRoleHandlerRaw(userId, fallbackRole, pendingRoleByUserId)
+  const updateMemberRoleHandler = async (
+    userId: string,
+    fallbackRole: string,
+    explicitRole?: string,
+  ) => {
+    return updateMemberRoleHandlerRaw(userId, fallbackRole, pendingRoleByUserId, explicitRole)
   }
 
   return {

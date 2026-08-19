@@ -49,7 +49,7 @@ interface ProjectDetailsSectionBodyProps {
   pendingRoleByUserId: Record<string, string>
   onPendingRoleChange: (userId: string, role: string) => void
   selectedProjectOwnerId: string | null | undefined
-  onSaveRole: (userId: string, fallbackRole: string) => void | Promise<void>
+  onSaveRole: (userId: string, fallbackRole: string, explicitRole?: string) => Promise<boolean> | boolean
   onRemoveMember?: (userId: string, unassignUnfinishedTasks: boolean) => void | Promise<void>
   onOpenDeleteConfirm?: () => void
   onOpenCompleteConfirm: () => void

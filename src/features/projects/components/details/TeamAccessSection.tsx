@@ -20,7 +20,7 @@ interface TeamAccessSectionProps {
   pendingRoleByUserId: Record<string, string>
   onPendingRoleChange: (userId: string, role: string) => void
   selectedProjectOwnerId: string | null | undefined
-  onSaveRole: (userId: string, fallbackRole: string) => void | Promise<void>
+  onSaveRole: (userId: string, fallbackRole: string, explicitRole?: string) => Promise<boolean> | boolean
   onGetMemberUnfinishedTaskCount?: (userId: string) => Promise<number>
   onRemoveMember?: (userId: string, unassignUnfinishedTasks: boolean) => void | Promise<void>
 }
@@ -47,6 +47,7 @@ export function TeamAccessSection({
   onRemoveMember,
 }: TeamAccessSectionProps) {
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
+  const [savingRoleByUserId, setSavingRoleByUserId] = useState<Record<string, boolean>>({})
 
   const resolveProfile = (member: ProjectMemberListItem) => {
     if (member.user_id && currentUserProfile?.userId === member.user_id) {
@@ -70,8 +71,40 @@ export function TeamAccessSection({
     }
   }
 
+  const roleOptions = [
+    { value: 'member', label: 'Member' },
+    ...(canAssignManagerRole ? [{ value: 'manager', label: 'Manager' }] : []),
+    ...(canAssignAdminRole ? [{ value: 'admin', label: 'Admin' }] : []),
+  ]
+
+  const handleRoleSelectChange = async (member: ProjectMemberListItem, nextRole: string) => {
+    if (!member.user_id) {
+      return
+    }
+
+    const userId = member.user_id
+    const fallbackRole = member.role ?? 'member'
+
+    onPendingRoleChange(userId, nextRole)
+
+    if (nextRole === fallbackRole) {
+      return
+    }
+
+    setSavingRoleByUserId((prev) => ({ ...prev, [userId]: true }))
+
+    try {
+      const wasSaved = await onSaveRole(userId, fallbackRole, nextRole)
+      if (wasSaved === false) {
+        onPendingRoleChange(userId, fallbackRole)
+      }
+    } finally {
+      setSavingRoleByUserId((prev) => ({ ...prev, [userId]: false }))
+    }
+  }
+
   return (
-    <section className={isEmbedded ? 'rounded-xl border border-slate-200 bg-slate-50 p-3' : 'page-section bg-slate-50/70'}>
+    <section className={isEmbedded ? 'rounded-2xl border border-slate-200 bg-slate-50 p-3.5' : 'page-section bg-slate-50/70'}>
       <h3 className="section-title">Team</h3>
       <p className="section-subtitle">Invite members by email. A project must be selected first.</p>
 
@@ -81,38 +114,49 @@ export function TeamAccessSection({
         </p>
       ) : null}
 
-      <div className="mt-3 flex max-w-lg flex-wrap gap-1.5">
-        <input
-          type="email"
-          value={memberEmail}
-          onChange={(event) => onMemberEmailChange(event.target.value)}
-          placeholder="Member email"
-          disabled={!canInviteToSelectedProject}
-          className="w-52 min-w-0 rounded-md border border-slate-300 px-2.5 py-1.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-        />
-        <select
-          value={memberRole}
-          onChange={(event) => onMemberRoleChange(event.target.value)}
-          disabled={!canInviteToSelectedProject}
-          className="rounded-md border border-slate-300 px-2 py-1.5 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-        >
-          <option value="member">member</option>
-          {canAssignManagerRole ? <option value="manager">manager</option> : null}
-          {canAssignAdminRole ? <option value="admin">admin</option> : null}
-        </select>
-        <button
-          type="button"
-          onClick={() => void onInviteMember()}
-          disabled={isLoading || !selectedProjectId || !canInviteToSelectedProject}
-          className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
-        >
-          Add member
-        </button>
+      <div className="mt-3 max-w-3xl rounded-xl border border-slate-200 bg-white p-2.5">
+        <p className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Invite by email</p>
+        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_9rem_auto]">
+          <input
+            type="email"
+            value={memberEmail}
+            onChange={(event) => onMemberEmailChange(event.target.value)}
+            placeholder="name@company.com"
+            disabled={!canInviteToSelectedProject}
+            className="min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+          />
+          <select
+            value={memberRole}
+            onChange={(event) => onMemberRoleChange(event.target.value)}
+            disabled={!canInviteToSelectedProject}
+            className="rounded-lg border border-slate-300 px-2.5 py-2 text-sm text-slate-900 outline-none focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            aria-label="Invite role"
+          >
+            {roleOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => void onInviteMember()}
+            disabled={isLoading || !selectedProjectId || !canInviteToSelectedProject}
+            className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Invite
+          </button>
+        </div>
       </div>
 
-      <div className="mt-4 max-w-lg rounded-xl border border-slate-200 bg-white p-3">
-        <h4 className="text-sm font-semibold text-slate-900">Project members</h4>
-        <p className="mt-1 text-xs text-slate-500">Showing users currently in selected project.</p>
+      <div className="mt-4 max-w-3xl rounded-xl border border-slate-200 bg-white p-3">
+        <div className="flex items-center justify-between gap-2">
+          <h4 className="text-sm font-semibold text-slate-900">Project members</h4>
+          {selectedProjectId ? (
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+              {projectMembers.length} total
+            </span>
+          ) : null}
+        </div>
+        <p className="mt-1 text-xs text-slate-500">Role updates are applied immediately after selection.</p>
 
         <div className="mt-3 space-y-2">
           {!selectedProjectId ? <p className="text-xs text-slate-500">No project selected</p> : null}
@@ -122,7 +166,7 @@ export function TeamAccessSection({
           {projectMembers.map((member) => (
             <div
               key={member.member_id}
-              className="flex items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 py-2"
+              className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2"
             >
               <div className="min-w-0 flex items-center gap-2.5">
                 {member.avatar_url ? (
@@ -137,36 +181,37 @@ export function TeamAccessSection({
                   </span>
                 )}
                 <div className="min-w-0">
-                <button
-                  type="button"
-                  onClick={() => setSelectedProfile(resolveProfile(member))}
-                  className="text-left text-sm font-medium text-slate-800 underline-offset-2 hover:text-cyan-700 hover:underline"
-                >
-                  {member.full_name ?? member.email ?? 'Unknown user'}
-                </button>
-                <p className="mt-0.5 text-xs text-slate-500">{member.email ?? 'No email'}</p>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedProfile(resolveProfile(member))}
+                    className="text-left text-sm font-medium text-slate-800 underline-offset-2 hover:text-cyan-700 hover:underline"
+                  >
+                    {member.full_name ?? member.email ?? 'Unknown user'}
+                  </button>
+                  <p className="mt-0.5 text-xs text-slate-500">{member.email ?? 'No email'}</p>
                 </div>
               </div>
               {canManageMemberRoles && member.user_id ? (
                 <div className="flex items-center gap-2">
                   <select
                     value={pendingRoleByUserId[member.user_id] ?? member.role ?? 'member'}
-                    onChange={(event) => onPendingRoleChange(member.user_id as string, event.target.value)}
-                    disabled={!canAssignAdminRole && member.user_id === selectedProjectOwnerId}
-                    className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-800 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                    onChange={(event) => {
+                      void handleRoleSelectChange(member, event.target.value)
+                    }}
+                    disabled={
+                      savingRoleByUserId[member.user_id] ||
+                      (!canAssignAdminRole && member.user_id === selectedProjectOwnerId)
+                    }
+                    className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-800 outline-none focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                    aria-label={`Role for ${member.full_name ?? member.email ?? 'member'}`}
                   >
-                    <option value="member">member</option>
-                    {canAssignManagerRole ? <option value="manager">manager</option> : null}
-                    {canAssignAdminRole ? <option value="admin">admin</option> : null}
+                    {roleOptions.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
-                  <button
-                    type="button"
-                    onClick={() => void onSaveRole(member.user_id as string, member.role ?? 'member')}
-                    disabled={isLoading || (!canAssignAdminRole && member.user_id === selectedProjectOwnerId)}
-                    className="rounded-md bg-slate-900 px-2 py-1 text-xs font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Save role
-                  </button>
+                  <span className="w-14 text-center text-[11px] font-medium text-slate-500">
+                    {savingRoleByUserId[member.user_id] ? 'Saving...' : 'Synced'}
+                  </span>
                   {onRemoveMember &&
                     member.user_id !== selectedProjectOwnerId &&
                     member.user_id !== currentUserProfile?.userId && (
@@ -174,7 +219,7 @@ export function TeamAccessSection({
                       type="button"
                       onClick={() => void onRemoveMember(member.user_id as string, true)}
                       disabled={isLoading}
-                      className="rounded-md bg-red-600 px-2 py-1 text-xs font-medium text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-md border border-red-200 bg-white px-2.5 py-1 text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                       title="Remove member (tasks will be reassigned to project owner)"
                     >
                       Remove

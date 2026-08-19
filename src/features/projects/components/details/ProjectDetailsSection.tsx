@@ -110,6 +110,7 @@ export function ProjectDetailsSection({
   onOpenSaveSettingsConfirm,
 }: ProjectDetailsSectionProps) {
   const [isTabLoading, setIsTabLoading] = useState(false)
+  const selectedProjectStableId = selectedProject?.id ?? null
 
   useEffect(() => {
     if (!selectedProject) {
@@ -125,7 +126,7 @@ export function ProjectDetailsSection({
     return () => {
       window.clearTimeout(timeoutId)
     }
-  }, [activeTab, selectedProject])
+  }, [activeTab, selectedProjectStableId])
 
   return (
     <section className="page-section">

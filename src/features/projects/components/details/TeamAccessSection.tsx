@@ -52,6 +52,7 @@ export function TeamAccessSection({
 }: TeamAccessSectionProps) {
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
   const [savingRoleByUserId, setSavingRoleByUserId] = useState<Record<string, boolean>>({})
+  const [removingMemberByUserId, setRemovingMemberByUserId] = useState<Record<string, boolean>>({})
   const [quickAddRole, setQuickAddRole] = useState('member')
   const [isQuickAddLoading, setIsQuickAddLoading] = useState(false)
   const [isQuickInviteLoadingByEmail, setIsQuickInviteLoadingByEmail] = useState<Record<string, boolean>>({})
@@ -257,6 +258,20 @@ export function TeamAccessSection({
     }
   }
 
+  const handleRemoveMember = async (userId: string) => {
+    if (!onRemoveMember) {
+      return
+    }
+
+    setRemovingMemberByUserId((prev) => ({ ...prev, [userId]: true }))
+
+    try {
+      await onRemoveMember(userId, true)
+    } finally {
+      setRemovingMemberByUserId((prev) => ({ ...prev, [userId]: false }))
+    }
+  }
+
   return (
     <section className={isEmbedded ? 'rounded-2xl border border-slate-200 bg-slate-50 p-3.5' : 'page-section bg-slate-50/70'}>
       <h3 className="section-title">Team</h3>
@@ -308,6 +323,9 @@ export function TeamAccessSection({
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Quick add from other projects</p>
                 <div className="flex items-center gap-2">
+                  {isQuickAddLoading ? (
+                    <span className="text-[11px] font-medium text-slate-500">Updating...</span>
+                  ) : null}
                   <span className="text-xs text-slate-500">Role:</span>
                   <select
                     value={quickAddRole}
@@ -323,13 +341,9 @@ export function TeamAccessSection({
                 </div>
               </div>
 
-              <div className="mt-2 max-h-[28rem] space-y-1 overflow-auto pr-1 xl:max-h-[34rem]">
+              <div className="mt-2 max-h-[28rem] min-h-[3.25rem] space-y-1 overflow-auto pr-1 xl:max-h-[34rem]">
                 {!selectedProjectId ? (
                   <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">Select a project first.</p>
-                ) : null}
-
-                {selectedProjectId && isQuickAddLoading ? (
-                  <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">Loading reusable teammates...</p>
                 ) : null}
 
                 {selectedProjectId && !isQuickAddLoading && quickAddCandidates.length === 0 ? (
@@ -446,12 +460,12 @@ export function TeamAccessSection({
                     member.user_id !== currentUserProfile?.userId && (
                     <button
                       type="button"
-                      onClick={() => void onRemoveMember(member.user_id as string, true)}
-                      disabled={isLoading}
+                      onClick={() => void handleRemoveMember(member.user_id as string)}
+                      disabled={removingMemberByUserId[member.user_id]}
                       className="rounded-md border border-red-200 bg-white px-2.5 py-1 text-xs font-medium text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-60"
                       title="Remove member (tasks will be reassigned to project owner)"
                     >
-                      Remove
+                      {removingMemberByUserId[member.user_id] ? 'Removing...' : 'Remove'}
                     </button>
                   )}
                 </div>

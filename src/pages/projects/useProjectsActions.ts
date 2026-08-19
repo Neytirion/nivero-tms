@@ -47,9 +47,21 @@ export interface UseProjectsActionsInput {
   ) => Promise<boolean>
   removeProject: (projectId: string) => Promise<boolean>
   completeSelectedProject: () => Promise<void>
-  inviteMemberToSelectedProjectByEmail: (email: string, role: string) => Promise<void>
-  changeSelectedProjectMemberRole: (userId: string, role: string) => Promise<void>
-  removeProjectMember: (projectId: string, userId: string) => Promise<void>
+  inviteMemberToSelectedProjectByEmail: (
+    email: string,
+    role: string,
+    options?: { suppressGlobalLoading?: boolean },
+  ) => Promise<void>
+  changeSelectedProjectMemberRole: (
+    userId: string,
+    role: string,
+    options?: { suppressGlobalLoading?: boolean },
+  ) => Promise<void>
+  removeProjectMember: (
+    projectId: string,
+    userId: string,
+    options?: { suppressGlobalLoading?: boolean },
+  ) => Promise<void>
   loadDashboardPreview: () => Promise<void>
   onCreateModalClose: () => void
   onCompleteConfirmClose: () => void
@@ -60,7 +72,11 @@ export interface UseProjectsActionsInput {
 export interface UseProjectsActionsReturn {
   createProjectHandler: () => Promise<void>
   createProjectFromAiDraftHandler: (draft: AiProjectDraft) => Promise<void>
-  inviteMemberHandler: (email: string, role: string) => Promise<void>
+  inviteMemberHandler: (
+    email: string,
+    role: string,
+    options?: { suppressGlobalLoading?: boolean },
+  ) => Promise<void>
   completeProjectHandler: () => Promise<void>
   saveProjectSettings: () => Promise<void>
   saveUseEstimatesSetting: (nextValue: boolean) => Promise<boolean>
@@ -153,7 +169,11 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     }
   }
 
-  const inviteMemberHandler = async (email: string, role: string) => {
+  const inviteMemberHandler = async (
+    email: string,
+    role: string,
+    options?: { suppressGlobalLoading?: boolean },
+  ) => {
     const trimmedEmail = email.trim().toLowerCase()
 
     if (!selectedProjectId) {
@@ -173,7 +193,7 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     }
 
     try {
-      await inviteMemberToSelectedProjectByEmail(trimmedEmail, role)
+      await inviteMemberToSelectedProjectByEmail(trimmedEmail, role, options)
     } catch (error) {
       setStatus(
         error instanceof Error
@@ -197,7 +217,7 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
 
     try {
       // Remove member with task unassignment to owner
-      await removeProjectMember(selectedProjectId, userId)
+      await removeProjectMember(selectedProjectId, userId, { suppressGlobalLoading: true })
     } catch (error) {
       setStatus(
         error instanceof Error
@@ -312,7 +332,7 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     }
 
     try {
-      await changeSelectedProjectMemberRole(userId, nextRole)
+      await changeSelectedProjectMemberRole(userId, nextRole, { suppressGlobalLoading: true })
       return true
     } catch (error) {
       setStatus(

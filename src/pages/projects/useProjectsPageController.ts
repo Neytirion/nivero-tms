@@ -132,7 +132,7 @@ export function useProjectsPageController() {
     completeSelectedProject,
     inviteMemberToSelectedProjectByEmail,
     changeSelectedProjectMemberRole,
-    removeProjectMember: (_projectId, userId) => removeSelectedProjectMember(userId, true),
+    removeProjectMember: (_projectId, userId, options) => removeSelectedProjectMember(userId, true, options),
     loadDashboardPreview,
     onCreateModalClose: () => setIsCreateModalOpen(false),
     onCompleteConfirmClose: () => setIsCompleteConfirmOpen(false),
@@ -186,7 +186,7 @@ export function useProjectsPageController() {
   }
 
   const inviteMemberByEmailAndRoleHandler = async (email: string, role: string) => {
-    await inviteMemberHandlerRaw(email, role)
+    await inviteMemberHandlerRaw(email, role, { suppressGlobalLoading: true })
   }
 
   const updateMemberRoleHandler = async (

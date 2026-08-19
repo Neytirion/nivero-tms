@@ -38,7 +38,7 @@ export function useMemberActions(deps: MemberActionsDeps) {
   })
 
   const inviteMemberToSelectedProjectByEmail = useCallback(
-    async (email: string, role = 'member') => {
+    async (email: string, role = 'member', options?: { suppressGlobalLoading?: boolean }) => {
       const { selectedProjectId, ensureProjectEditable, canInviteToProject, setStatus, setIsLoading, setProjectMembers } =
         depsRef.current
 
@@ -52,7 +52,11 @@ export function useMemberActions(deps: MemberActionsDeps) {
         return
       }
 
-      setIsLoading(true)
+      const shouldUseGlobalLoading = !options?.suppressGlobalLoading
+
+      if (shouldUseGlobalLoading) {
+        setIsLoading(true)
+      }
 
       try {
         await inviteProjectMemberByEmail({ projectId: selectedProjectId, email, role })
@@ -68,15 +72,17 @@ export function useMemberActions(deps: MemberActionsDeps) {
         } else {
           setStatus('Unknown error')
         }
+      } finally {
+        if (shouldUseGlobalLoading) {
+          setIsLoading(false)
+        }
       }
-
-      setIsLoading(false)
     },
     [],
   )
 
   const changeSelectedProjectMemberRole = useCallback(
-    async (userId: string, role: string) => {
+    async (userId: string, role: string, options?: { suppressGlobalLoading?: boolean }) => {
       const {
         selectedProjectId,
         currentUserId,
@@ -112,7 +118,11 @@ export function useMemberActions(deps: MemberActionsDeps) {
         return
       }
 
-      setIsLoading(true)
+      const shouldUseGlobalLoading = !options?.suppressGlobalLoading
+
+      if (shouldUseGlobalLoading) {
+        setIsLoading(true)
+      }
 
       try {
         await updateProjectMemberRole({ projectId: selectedProjectId, userId, role })
@@ -121,9 +131,11 @@ export function useMemberActions(deps: MemberActionsDeps) {
         setStatus('Member role updated')
       } catch (error) {
         setStatus(error instanceof Error ? `Update role error: ${error.message}` : 'Unknown error')
+      } finally {
+        if (shouldUseGlobalLoading) {
+          setIsLoading(false)
+        }
       }
-
-      setIsLoading(false)
     },
     [],
   )
@@ -138,7 +150,7 @@ export function useMemberActions(deps: MemberActionsDeps) {
   )
 
   const removeSelectedProjectMember = useCallback(
-    async (userId: string, unassignUnfinishedTasks: boolean) => {
+    async (userId: string, unassignUnfinishedTasks: boolean, options?: { suppressGlobalLoading?: boolean }) => {
       const {
         selectedProjectId,
         ensureProjectEditable,
@@ -158,7 +170,11 @@ export function useMemberActions(deps: MemberActionsDeps) {
         return
       }
 
-      setIsLoading(true)
+      const shouldUseGlobalLoading = !options?.suppressGlobalLoading
+
+      if (shouldUseGlobalLoading) {
+        setIsLoading(true)
+      }
 
       try {
         await removeProjectMember({ projectId: selectedProjectId, userId, unassignUnfinishedTasks })
@@ -166,9 +182,11 @@ export function useMemberActions(deps: MemberActionsDeps) {
         setStatus('Member removed from project')
       } catch (error) {
         setStatus(error instanceof Error ? `Remove member error: ${error.message}` : 'Unknown error')
+      } finally {
+        if (shouldUseGlobalLoading) {
+          setIsLoading(false)
+        }
       }
-
-      setIsLoading(false)
     },
     [],
   )

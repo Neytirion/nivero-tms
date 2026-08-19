@@ -262,117 +262,121 @@ export function TeamAccessSection({
       <h3 className="section-title">Team</h3>
       <p className="section-subtitle">Invite members by email. A project must be selected first.</p>
 
-      {!canInviteToSelectedProject ? (
-        <p className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500">
-          Only project members can invite users.
-        </p>
-      ) : null}
+      <div className="mt-3 grid items-start gap-3 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
+        <div className="space-y-3">
+          {!canInviteToSelectedProject ? (
+            <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500">
+              Only project members can invite users.
+            </p>
+          ) : null}
 
-      <div className="mt-3 max-w-3xl rounded-xl border border-slate-200 bg-white p-2.5">
-        <p className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Invite by email</p>
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_9rem_auto]">
-          <input
-            type="email"
-            value={memberEmail}
-            onChange={(event) => onMemberEmailChange(event.target.value)}
-            placeholder="name@company.com"
-            disabled={!canInviteToSelectedProject}
-            className="min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-          />
-          <select
-            value={memberRole}
-            onChange={(event) => onMemberRoleChange(event.target.value)}
-            disabled={!canInviteToSelectedProject}
-            className="rounded-lg border border-slate-300 px-2.5 py-2 text-sm text-slate-900 outline-none focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-            aria-label="Invite role"
-          >
-            {roleOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={() => void onInviteMember()}
-            disabled={isLoading || !selectedProjectId || !canInviteToSelectedProject}
-            className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Invite
-          </button>
-        </div>
-      </div>
-
-      {onQuickInviteMember ? (
-        <div className="mt-3 max-w-3xl rounded-xl border border-slate-200 bg-white p-2.5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Quick add from other projects</p>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500">Role:</span>
+          <div className="rounded-xl border border-slate-200 bg-white p-2.5">
+            <p className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Invite by email</p>
+            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_9rem_auto]">
+              <input
+                type="email"
+                value={memberEmail}
+                onChange={(event) => onMemberEmailChange(event.target.value)}
+                placeholder="name@company.com"
+                disabled={!canInviteToSelectedProject}
+                className="min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+              />
               <select
-                value={quickAddRole}
-                onChange={(event) => setQuickAddRole(event.target.value)}
-                disabled={!canInviteToSelectedProject || isQuickAddLoading}
-                className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900 outline-none focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-                aria-label="Quick add role"
+                value={memberRole}
+                onChange={(event) => onMemberRoleChange(event.target.value)}
+                disabled={!canInviteToSelectedProject}
+                className="rounded-lg border border-slate-300 px-2.5 py-2 text-sm text-slate-900 outline-none focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                aria-label="Invite role"
               >
                 {roleOptions.map((option) => (
                   <option key={option.value} value={option.value}>{option.label}</option>
                 ))}
               </select>
+              <button
+                type="button"
+                onClick={() => void onInviteMember()}
+                disabled={isLoading || !selectedProjectId || !canInviteToSelectedProject}
+                className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Invite
+              </button>
             </div>
           </div>
 
-          <div className="mt-2 max-h-52 space-y-1 overflow-auto pr-1">
-            {!selectedProjectId ? (
-              <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">Select a project first.</p>
-            ) : null}
-
-            {selectedProjectId && isQuickAddLoading ? (
-              <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">Loading reusable teammates...</p>
-            ) : null}
-
-            {selectedProjectId && !isQuickAddLoading && quickAddCandidates.length === 0 ? (
-              <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">No candidates from other projects.</p>
-            ) : null}
-
-            {quickAddCandidates.map((candidate) => (
-              <div
-                key={candidate.email}
-                className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2"
-              >
-                <div className="min-w-0 flex items-center gap-2">
-                  {candidate.avatarUrl ? (
-                    <img
-                      src={candidate.avatarUrl}
-                      alt={candidate.fullName ?? candidate.email}
-                      className="h-7 w-7 shrink-0 rounded-full border border-slate-200 object-cover"
-                    />
-                  ) : (
-                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-700">
-                      {(candidate.fullName ?? candidate.email).slice(0, 2).toUpperCase()}
-                    </span>
-                  )}
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-medium text-slate-800">{candidate.fullName ?? candidate.email}</p>
-                    <p className="truncate text-[11px] text-slate-500">{candidate.sourceProjectNames.join(', ')}</p>
-                  </div>
+          {onQuickInviteMember ? (
+            <div className="rounded-xl border border-slate-200 bg-white p-2.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Quick add from other projects</p>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500">Role:</span>
+                  <select
+                    value={quickAddRole}
+                    onChange={(event) => setQuickAddRole(event.target.value)}
+                    disabled={!canInviteToSelectedProject || isQuickAddLoading}
+                    className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900 outline-none focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                    aria-label="Quick add role"
+                  >
+                    {roleOptions.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={() => void handleQuickInvite(candidate.email)}
-                  disabled={!canInviteToSelectedProject || isQuickInviteLoadingByEmail[candidate.email] || isLoading}
-                  className="shrink-0 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                  title={`Invite as ${roleLabelByValue[quickAddRole] ?? 'Member'}`}
-                >
-                  {isQuickInviteLoadingByEmail[candidate.email] ? 'Adding...' : `Add ${roleLabelByValue[quickAddRole] ?? 'Member'}`}
-                </button>
               </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
 
-      <div className="mt-4 max-w-3xl rounded-xl border border-slate-200 bg-white p-3">
+              <div className="mt-2 max-h-[28rem] space-y-1 overflow-auto pr-1 xl:max-h-[34rem]">
+                {!selectedProjectId ? (
+                  <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">Select a project first.</p>
+                ) : null}
+
+                {selectedProjectId && isQuickAddLoading ? (
+                  <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">Loading reusable teammates...</p>
+                ) : null}
+
+                {selectedProjectId && !isQuickAddLoading && quickAddCandidates.length === 0 ? (
+                  <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">No candidates from other projects.</p>
+                ) : null}
+
+                {quickAddCandidates.map((candidate) => (
+                  <div
+                    key={candidate.email}
+                    className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2"
+                  >
+                    <div className="min-w-0 flex items-center gap-2">
+                      {candidate.avatarUrl ? (
+                        <img
+                          src={candidate.avatarUrl}
+                          alt={candidate.fullName ?? candidate.email}
+                          className="h-7 w-7 shrink-0 rounded-full border border-slate-200 object-cover"
+                        />
+                      ) : (
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-700">
+                          {(candidate.fullName ?? candidate.email).slice(0, 2).toUpperCase()}
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <p className="truncate text-xs font-medium text-slate-800">{candidate.fullName ?? candidate.email}</p>
+                        <p className="truncate text-[11px] text-slate-500">{candidate.sourceProjectNames.join(', ')}</p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => void handleQuickInvite(candidate.email)}
+                      disabled={!canInviteToSelectedProject || isQuickInviteLoadingByEmail[candidate.email] || isLoading}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      title={`Invite as ${roleLabelByValue[quickAddRole] ?? 'Member'}`}
+                      aria-label={`Add ${candidate.fullName ?? candidate.email} as ${roleLabelByValue[quickAddRole] ?? 'Member'}`}
+                    >
+                      {isQuickInviteLoadingByEmail[candidate.email] ? '…' : '+'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white p-3">
         <div className="flex items-center justify-between gap-2">
           <h4 className="text-sm font-semibold text-slate-900">Project members</h4>
           {selectedProjectId ? (
@@ -459,6 +463,7 @@ export function TeamAccessSection({
             </div>
           ))}
         </div>
+      </div>
       </div>
 
       <UserProfileDialog

@@ -325,6 +325,11 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     pendingRoles: Record<string, string>,
     explicitRole?: string,
   ) => {
+    if (selectedProject?.owner_id && userId === selectedProject.owner_id) {
+      setStatus('Project owner role cannot be changed')
+      return false
+    }
+
     const nextRole = explicitRole ?? pendingRoles[userId] ?? fallbackRole
 
     if (nextRole === fallbackRole) {

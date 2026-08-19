@@ -223,6 +223,10 @@ export function TeamAccessSection({
       return
     }
 
+    if (member.user_id === selectedProjectOwnerId) {
+      return
+    }
+
     const userId = member.user_id
     const fallbackRole = member.role ?? 'member'
 
@@ -436,6 +440,11 @@ export function TeamAccessSection({
               </div>
               {canManageMemberRoles && member.user_id ? (
                 <div className="flex items-center gap-2">
+                  {member.user_id === selectedProjectOwnerId ? (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-amber-800">
+                      Owner
+                    </span>
+                  ) : null}
                   <select
                     value={pendingRoleByUserId[member.user_id] ?? member.role ?? 'member'}
                     onChange={(event) => {
@@ -443,10 +452,11 @@ export function TeamAccessSection({
                     }}
                     disabled={
                       savingRoleByUserId[member.user_id] ||
-                      (!canAssignAdminRole && member.user_id === selectedProjectOwnerId)
+                      member.user_id === selectedProjectOwnerId
                     }
                     className="rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-800 outline-none focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
                     aria-label={`Role for ${member.full_name ?? member.email ?? 'member'}`}
+                    title={member.user_id === selectedProjectOwnerId ? 'Project owner role cannot be changed' : undefined}
                   >
                     {roleOptions.map((option) => (
                       <option key={option.value} value={option.value}>{option.label}</option>

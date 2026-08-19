@@ -27,7 +27,6 @@ export function TaskDetailsPage() {
     isLoading,
     tasks,
     myRoleInSelectedProject,
-    canAssignAssignee,
     canManageTask,
     canDeleteTaskInView,
     projectStartDate,
@@ -35,10 +34,8 @@ export function TaskDetailsPage() {
     assigneeLabelByUserId,
     workPackageLabelById,
     dependencyLabelByTaskId,
-    assigneeOptions,
     projectMembers,
     currentUserProfile,
-    assignTaskHandler,
     updateTaskDueDateHandler,
     removeTask,
     logTimeTask,
@@ -107,7 +104,10 @@ export function TaskDetailsPage() {
     : task.created_by
       ? `${assigneeLabelByUserId[task.created_by] ?? task.created_by} (creator)`
       : 'Unassigned'
-  const workPackageLabel = task.work_package_id ? workPackageLabelById[task.work_package_id] : 'Not linked'
+  const hasWorkPackageLink = Boolean(task.work_package_id && task.work_package_id.trim().length > 0)
+  const workPackageLabel = hasWorkPackageLink
+    ? (workPackageLabelById[task.work_package_id as string] ?? null)
+    : null
   const blockedByLabel = task.blocked_by_task_id ? dependencyLabelByTaskId[task.blocked_by_task_id] : undefined
   const isLocked = !canManageTask(task)
   const canDelete = canDeleteTaskInView(task)
@@ -357,43 +357,30 @@ export function TaskDetailsPage() {
                 {/* Assignee */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Assignee</label>
-                  {!isLocked && canAssignAssignee && assigneeOptions ? (
-                    <select
-                      value={task.assigned_to ?? ''}
-                      onChange={(event) => void assignTaskHandler(task.id, event.target.value)}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
-                    >
-                      <option value="">Unassigned</option>
-                      {assigneeOptions.map((option) => (
-                        <option key={option.userId} value={option.userId}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                      {assigneeUserId ? (
-                        <button
-                          type="button"
-                          onClick={() => openUserProfile(assigneeUserId)}
-                          className="text-sm font-medium text-sky-700 hover:text-sky-800"
-                        >
-                          {assigneeLabel}
-                        </button>
-                      ) : (
-                        <p className="text-sm text-slate-500">Unassigned</p>
-                      )}
-                    </div>
-                  )}
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                    {assigneeUserId ? (
+                      <button
+                        type="button"
+                        onClick={() => openUserProfile(assigneeUserId)}
+                        className="text-sm font-medium text-sky-700 hover:text-sky-800"
+                      >
+                        {assigneeLabel}
+                      </button>
+                    ) : (
+                      <p className="text-sm text-slate-500">Unassigned</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Work Package */}
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Work package</label>
-                  <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-                    <p className="text-sm text-slate-700 font-medium">{workPackageLabel}</p>
+                {hasWorkPackageLink && workPackageLabel ? (
+                  <div>
+                    <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Work package</label>
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                      <p className="text-sm text-slate-700 font-medium">{workPackageLabel}</p>
+                    </div>
                   </div>
-                </div>
+                ) : null}
 
                 {/* Blocked By */}
                 <div>

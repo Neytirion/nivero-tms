@@ -127,61 +127,66 @@ export function TaskListView({
               </td>
             </tr>
           ) : (
-            filteredTasks.map((task) => (
-              <tr
-                key={task.id}
-                className={`border-t border-slate-100 ${onTaskClick ? 'cursor-pointer hover:bg-slate-50' : ''}`}
-                onClick={() => onTaskClick?.(task.id)}
-              >
-                <td className="px-3 py-2 font-medium text-slate-800">{task.title}</td>
-                <td className="px-3 py-2 text-slate-600">
-                  {task.work_package_id ? workPackageLabelById[task.work_package_id] ?? task.work_package_id : 'Not linked'}
-                </td>
-                <td className="px-3 py-2 text-slate-600">{task.status ?? 'todo'}</td>
-                <td className="px-3 py-2">
-                  <span
-                    className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${getTaskPriorityBadgeClass(
-                      task.priority,
-                    )}`}
-                  >
-                    {task.priority ?? 'medium'}
-                  </span>
-                </td>
-                <td className="px-3 py-2 text-slate-600">
-                  {task.assigned_to ? (
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onOpenUserProfile(task.assigned_to as string)
-                      }}
-                      className="text-cyan-700 underline-offset-2 hover:underline"
+            filteredTasks.map((task) => {
+              const hasWorkPackageLink = Boolean(task.work_package_id && task.work_package_id.trim().length > 0)
+              const workPackageLabel = hasWorkPackageLink
+                ? (workPackageLabelById[task.work_package_id as string] ?? null)
+                : null
+
+              return (
+                <tr
+                  key={task.id}
+                  className={`border-t border-slate-100 ${onTaskClick ? 'cursor-pointer hover:bg-slate-50' : ''}`}
+                  onClick={() => onTaskClick?.(task.id)}
+                >
+                  <td className="px-3 py-2 font-medium text-slate-800">{task.title}</td>
+                  <td className="px-3 py-2 text-slate-600">{workPackageLabel ?? 'Not linked'}</td>
+                  <td className="px-3 py-2 text-slate-600">{task.status ?? 'todo'}</td>
+                  <td className="px-3 py-2">
+                    <span
+                      className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${getTaskPriorityBadgeClass(
+                        task.priority,
+                      )}`}
                     >
-                      {assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to}
-                    </button>
-                  ) : task.created_by ? (
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onOpenUserProfile(task.created_by as string)
-                      }}
-                      className="text-cyan-700 underline-offset-2 hover:underline"
-                    >
-                      {(assigneeLabelByUserId[task.created_by] ?? task.created_by)} (creator)
-                    </button>
-                  ) : 'Unassigned'}
-                </td>
-                <td className="px-3 py-2 text-slate-600">
-                  {task.blocked_by_task_id
-                    ? dependencyLabelByTaskId[task.blocked_by_task_id] ?? task.blocked_by_task_id
-                    : 'None'}
-                </td>
-                <td className="px-3 py-2 text-slate-600">
-                  {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
-                </td>
-              </tr>
-            ))
+                      {task.priority ?? 'medium'}
+                    </span>
+                  </td>
+                  <td className="px-3 py-2 text-slate-600">
+                    {task.assigned_to ? (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onOpenUserProfile(task.assigned_to as string)
+                        }}
+                        className="text-cyan-700 underline-offset-2 hover:underline"
+                      >
+                        {assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to}
+                      </button>
+                    ) : task.created_by ? (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          onOpenUserProfile(task.created_by as string)
+                        }}
+                        className="text-cyan-700 underline-offset-2 hover:underline"
+                      >
+                        {(assigneeLabelByUserId[task.created_by] ?? task.created_by)} (creator)
+                      </button>
+                    ) : 'Unassigned'}
+                  </td>
+                  <td className="px-3 py-2 text-slate-600">
+                    {task.blocked_by_task_id
+                      ? dependencyLabelByTaskId[task.blocked_by_task_id] ?? task.blocked_by_task_id
+                      : 'None'}
+                  </td>
+                  <td className="px-3 py-2 text-slate-600">
+                    {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
+                  </td>
+                </tr>
+              )
+            })
           )}
         </tbody>
       </table>

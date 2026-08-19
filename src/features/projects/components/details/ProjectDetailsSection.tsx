@@ -113,7 +113,7 @@ export function ProjectDetailsSection({
   const selectedProjectStableId = selectedProject?.id ?? null
 
   useEffect(() => {
-    if (!selectedProject) {
+    if (!selectedProjectStableId) {
       return
     }
 

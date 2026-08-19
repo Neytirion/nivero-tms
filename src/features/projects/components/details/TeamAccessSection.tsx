@@ -85,11 +85,14 @@ export function TeamAccessSection({
     }
   }
 
-  const roleOptions = [
-    { value: 'member', label: 'Member' },
-    ...(canAssignManagerRole ? [{ value: 'manager', label: 'Manager' }] : []),
-    ...(canAssignAdminRole ? [{ value: 'admin', label: 'Admin' }] : []),
-  ]
+  const roleOptions = useMemo(
+    () => [
+      { value: 'member', label: 'Member' },
+      ...(canAssignManagerRole ? [{ value: 'manager', label: 'Manager' }] : []),
+      ...(canAssignAdminRole ? [{ value: 'admin', label: 'Admin' }] : []),
+    ],
+    [canAssignAdminRole, canAssignManagerRole],
+  )
 
   const roleLabelByValue = useMemo(
     () => roleOptions.reduce<Record<string, string>>((acc, option) => {
@@ -112,16 +115,28 @@ export function TeamAccessSection({
     return keys
   }, [projectMembers])
 
+  const visibleQuickAddCandidates = useMemo(() => {
+    if (!selectedProjectId || !onQuickInviteMember) {
+      return []
+    }
+
+    const sourceProjects = workspaceProjects.filter((project) => project.id !== selectedProjectId)
+    if (sourceProjects.length === 0) {
+      return []
+    }
+
+    return quickAddCandidates
+  }, [onQuickInviteMember, quickAddCandidates, selectedProjectId, workspaceProjects])
+
   useEffect(() => {
     if (!selectedProjectId || !onQuickInviteMember) {
-      setQuickAddCandidates([])
       return
     }
 
     const sourceProjects = workspaceProjects.filter((project) => project.id !== selectedProjectId)
 
     if (sourceProjects.length === 0) {
-      setQuickAddCandidates([])
+      // Keep cached candidates in state; render logic hides them when no source projects.
       return
     }
 
@@ -350,11 +365,11 @@ export function TeamAccessSection({
                   <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">Select a project first.</p>
                 ) : null}
 
-                {selectedProjectId && !isQuickAddLoading && quickAddCandidates.length === 0 ? (
+                {selectedProjectId && !isQuickAddLoading && visibleQuickAddCandidates.length === 0 ? (
                   <p className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">No candidates from other projects.</p>
                 ) : null}
 
-                {quickAddCandidates.map((candidate) => (
+                {visibleQuickAddCandidates.map((candidate) => (
                   <div
                     key={candidate.email}
                     className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2"

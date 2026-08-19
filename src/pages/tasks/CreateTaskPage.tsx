@@ -46,8 +46,10 @@ export function CreateTaskPage() {
   } = useTasksPageController()
 
   const handleCreateTask = async () => {
-    await createTaskHandler()
-    navigate(`/app/tasks?projectId=${selectedProjectId}`)
+    const wasCreated = await createTaskHandler()
+    if (wasCreated) {
+      navigate(`/app/tasks?projectId=${selectedProjectId}`)
+    }
   }
 
   return (

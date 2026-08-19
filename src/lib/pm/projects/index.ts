@@ -48,7 +48,7 @@ export async function getMyProjectMemberships() {
   return data satisfies ProjectMemberPreview[]
 }
 
-export async function getProjectTasks(projectId: string) {
+export async function getProjectTasks(projectId: string): Promise<TaskPreview[]> {
   const { data, error } = await supabase
     .from('tasks')
     .select(TASK_FIELDS)
@@ -60,7 +60,7 @@ export async function getProjectTasks(projectId: string) {
     throw new Error(error.message)
   }
 
-  return data satisfies TaskPreview[]
+  return (data ?? []) as TaskPreview[]
 }
 
 export async function getProjectTasksPage(
@@ -81,7 +81,7 @@ export async function getProjectTasksPage(
     throw new Error(error.message)
   }
 
-  return { data: (data ?? []) satisfies TaskPreview[], totalCount: count ?? 0 }
+  return { data: (data ?? []) as TaskPreview[], totalCount: count ?? 0 }
 }
 
 export async function createProject(input: CreateProjectInput) {

@@ -122,6 +122,7 @@ describeRls('Supabase RLS integration', () => {
         project_id: visibleProjectId,
         title: `RLS Task ${seedSuffix}`,
         created_by: ownerId,
+        assigned_to: projectAdminId,
         status: 'todo',
         priority: 'medium',
       })

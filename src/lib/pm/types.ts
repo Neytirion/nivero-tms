@@ -91,10 +91,10 @@ export type EstimatePreview = Pick<
 
 export type WorkPackagePreview = Pick<
   WorkPackage,
-  'id' | 'estimate_id' | 'name' | 'estimated_hours' | 'sort_order' | 'is_active' | 'created_at'
+  'id' | 'estimate_id' | 'name' | 'estimated_hours' | 'color' | 'sort_order' | 'is_active' | 'created_at'
 >
 
-export type ProjectTaskWorkPackagePreview = Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours'>
+export type ProjectTaskWorkPackagePreview = Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours' | 'color'>
 
 export type EstimateWithPackages = EstimatePreview & {
   work_packages: WorkPackagePreview[]
@@ -230,6 +230,7 @@ export interface SaveEstimateDraftInput {
   workPackages: Array<{
     name: string
     estimatedHours: number
+    color?: string | null
   }>
 }
 

@@ -7,6 +7,7 @@ interface TaskBoardViewProps {
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
   assigneeAvatarUrlByUserId: Record<string, string>
+  workPackageColorById: Record<string, string>
   onOpenUserProfile: (userId: string) => void
   dragTaskId: string | null
   onDragTaskIdChange: (taskId: string | null) => void
@@ -19,6 +20,7 @@ export function TaskBoardView({
   tasks,
   assigneeLabelByUserId,
   assigneeAvatarUrlByUserId,
+  workPackageColorById,
   onOpenUserProfile,
   dragTaskId,
   onDragTaskIdChange,
@@ -42,6 +44,7 @@ export function TaskBoardView({
               tasks={columnTasks}
               assigneeLabelByUserId={assigneeLabelByUserId}
               assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}
+              workPackageColorById={workPackageColorById}
               onOpenUserProfile={onOpenUserProfile}
               onDragOver={(event) => event.preventDefault()}
               onDropTask={(status) => {

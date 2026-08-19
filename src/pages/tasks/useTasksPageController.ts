@@ -211,6 +211,13 @@ export function useTasksPageController() {
     acc[workPackage.id] = workPackage.name
     return acc
   }, {})
+  const workPackageColorById = workPackages.reduce<Record<string, string>>((acc, workPackage) => {
+    if (workPackage.color) {
+      acc[workPackage.id] = workPackage.color
+    }
+
+    return acc
+  }, {})
   const assigneeOptions = projectMembers
     .filter((member) => Boolean(member.user_id))
     .map((member) => ({
@@ -284,6 +291,7 @@ export function useTasksPageController() {
     assigneeAvatarUrlByUserId,
     dependencyLabelByTaskId,
     workPackageLabelById,
+    workPackageColorById,
     assigneeOptions,
     canSubmit,
     logTimeTask,

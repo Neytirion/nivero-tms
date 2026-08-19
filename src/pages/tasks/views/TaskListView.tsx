@@ -6,6 +6,7 @@ interface TaskListViewProps {
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
   workPackageLabelById: Record<string, string>
+  workPackageColorById: Record<string, string>
   dependencyLabelByTaskId: Record<string, string>
   onOpenUserProfile: (userId: string) => void
   onTaskClick?: (taskId: string) => void
@@ -16,6 +17,7 @@ export function TaskListView({
   tasks,
   assigneeLabelByUserId,
   workPackageLabelById,
+  workPackageColorById,
   dependencyLabelByTaskId,
   onOpenUserProfile,
   onTaskClick,
@@ -134,12 +136,21 @@ export function TaskListView({
               const workPackageLabel = hasWorkPackageLink
                 ? (workPackageLabelById[task.work_package_id as string] ?? null)
                 : null
+              const workPackageColor = hasWorkPackageLink
+                ? (workPackageColorById[task.work_package_id as string] ?? null)
+                : null
 
               return (
                 <tr
                   key={task.id}
                   className={`border-t border-slate-100 ${onTaskClick ? 'cursor-pointer hover:bg-slate-50' : ''}`}
                   onClick={() => onTaskClick?.(task.id)}
+                  style={workPackageColor
+                    ? {
+                        borderLeft: `4px solid ${workPackageColor}`,
+                        backgroundColor: `${workPackageColor}12`,
+                      }
+                    : undefined}
                 >
                   <td className="px-3 py-2 font-medium text-slate-800">{task.title}</td>
                   <td className="px-3 py-2 text-slate-600">{workPackageLabel ?? 'Not linked'}</td>

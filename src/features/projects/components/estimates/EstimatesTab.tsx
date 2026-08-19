@@ -104,6 +104,7 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
                         .map((item) => ({
                           name: item.name,
                           estimatedHours: String(item.estimated_hours ?? 0),
+                          color: item.color ?? '#94a3b8',
                         })),
                     )
                   }}
@@ -140,13 +141,14 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
             <tr>
               <th className="px-3 py-2">Work Package</th>
               <th className="px-3 py-2">Hours</th>
+              <th className="px-3 py-2">Color</th>
               {canEdit ? <th className="px-3 py-2 text-right">Actions</th> : null}
             </tr>
           </thead>
           <tbody>
             {packages.length === 0 ? (
               <tr className="border-t border-slate-200">
-                <td colSpan={canEdit ? 3 : 2} className="px-3 py-3 text-xs text-slate-500">
+                <td colSpan={canEdit ? 4 : 3} className="px-3 py-3 text-xs text-slate-500">
                   No work packages yet. Add rows for this specific project estimate.
                 </td>
               </tr>
@@ -205,6 +207,30 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
                       {packageValidationErrors.find((e) => e.index === index && e.field === 'estimatedHours')?.message}
                     </p>
                   )}
+                </td>
+                <td className="px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="color"
+                      value={item.color}
+                      disabled={item.name.includes('(archived)') || !canEditActiveEstimate || !activeEstimateId}
+                      onChange={(event) =>
+                        setPackages((prev) =>
+                          prev.map((entry, entryIndex) =>
+                            entryIndex === index
+                              ? {
+                                  ...entry,
+                                  color: event.target.value,
+                                }
+                              : entry,
+                          ),
+                        )
+                      }
+                      className="h-8 w-10 cursor-pointer rounded border border-slate-300 bg-white p-1 disabled:cursor-not-allowed disabled:opacity-60"
+                      aria-label="Work package color"
+                    />
+                    <span className="text-[11px] font-medium uppercase text-slate-500">{item.color}</span>
+                  </div>
                 </td>
                 {canEdit && !item.name.includes('(archived)') ? (
                   <td className="px-3 py-2 text-right">

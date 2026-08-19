@@ -25,6 +25,7 @@ export function TasksPage() {
     assigneeAvatarUrlByUserId,
     dependencyLabelByTaskId,
     workPackageLabelById,
+    workPackageColorById,
     moveTaskToStatus,
     claimTaskHandler,
     selectProject,
@@ -100,6 +101,7 @@ export function TasksPage() {
         assigneeLabelByUserId={assigneeLabelByUserId}
         assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}
         workPackageLabelById={workPackageLabelById}
+        workPackageColorById={workPackageColorById}
         dependencyLabelByTaskId={dependencyLabelByTaskId}
         onOpenUserProfile={openUserProfile}
         dragTaskId={dragTaskId}

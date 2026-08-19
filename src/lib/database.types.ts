@@ -137,6 +137,7 @@ export interface Database {
           estimate_id: string
           name: string
           estimated_hours: number
+          color: string | null
           sort_order: number
           is_active: boolean
           created_at: string
@@ -146,6 +147,7 @@ export interface Database {
           estimate_id: string
           name: string
           estimated_hours: number
+          color?: string | null
           sort_order?: number
           is_active?: boolean
           created_at?: string
@@ -155,6 +157,7 @@ export interface Database {
           estimate_id?: string
           name?: string
           estimated_hours?: number
+          color?: string | null
           sort_order?: number
           is_active?: boolean
           created_at?: string

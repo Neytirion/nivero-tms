@@ -12,6 +12,7 @@ type TaskViewsSectionProps = {
   assigneeLabelByUserId: Record<string, string>
   assigneeAvatarUrlByUserId: Record<string, string>
   workPackageLabelById: Record<string, string>
+  workPackageColorById: Record<string, string>
   dependencyLabelByTaskId: Record<string, string>
   onOpenUserProfile: (userId: string) => void
   dragTaskId: string | null
@@ -31,6 +32,7 @@ export function TaskViewsSection({
   assigneeLabelByUserId,
   assigneeAvatarUrlByUserId,
   workPackageLabelById,
+  workPackageColorById,
   dependencyLabelByTaskId,
   onOpenUserProfile,
   dragTaskId,
@@ -87,6 +89,7 @@ export function TaskViewsSection({
               tasks={assignedTasks}
               assigneeLabelByUserId={assigneeLabelByUserId}
               assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}
+              workPackageColorById={workPackageColorById}
               onOpenUserProfile={onOpenUserProfile}
               dragTaskId={dragTaskId}
               onDragTaskIdChange={onDragTaskIdChange}
@@ -101,6 +104,7 @@ export function TaskViewsSection({
               tasks={assignedTasks}
               assigneeLabelByUserId={assigneeLabelByUserId}
               workPackageLabelById={workPackageLabelById}
+              workPackageColorById={workPackageColorById}
               dependencyLabelByTaskId={dependencyLabelByTaskId}
               onOpenUserProfile={onOpenUserProfile}
               onTaskClick={onTaskClick}
@@ -126,6 +130,12 @@ export function TaskViewsSection({
                   key={task.id}
                   onClick={() => onTaskClick?.(task.id)}
                   className={`rounded-lg border border-cyan-200 bg-white p-2.5 transition ${onTaskClick ? 'cursor-pointer hover:border-cyan-300 hover:bg-cyan-50/30' : ''}`}
+                  style={task.work_package_id && workPackageColorById[task.work_package_id]
+                    ? {
+                        borderLeftWidth: '4px',
+                        borderLeftColor: workPackageColorById[task.work_package_id],
+                      }
+                    : undefined}
                 >
                   <p className="truncate text-sm font-semibold text-slate-800">{task.title}</p>
 

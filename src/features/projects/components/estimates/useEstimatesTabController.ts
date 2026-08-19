@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import {
   approveEstimate,
   createEstimateVersion,
+  getDefaultWorkPackageColor,
   getProjectEstimates,
+  getWorkPackageColor,
   saveEstimateDraft,
   type EstimateWithPackages,
   type WorkPackagePreview,
@@ -12,6 +14,7 @@ import { useWorkspace } from '../../../dashboard/workspace-context'
 export interface EditableWorkPackage {
   name: string
   estimatedHours: string
+  color: string
 }
 
 export interface PackageFieldError {
@@ -29,9 +32,10 @@ function toEditablePackages(estimate: EstimateWithPackages | null) {
     .slice()
     .filter((item: WorkPackagePreview) => item.is_active)
     .sort((a: WorkPackagePreview, b: WorkPackagePreview) => a.sort_order - b.sort_order)
-    .map((item: WorkPackagePreview) => ({
+    .map((item: WorkPackagePreview, index: number) => ({
       name: item.name,
       estimatedHours: String(item.estimated_hours ?? 0),
+      color: getWorkPackageColor(item.color, index),
     }))
 }
 
@@ -110,9 +114,10 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
       activeEstimate?.work_packages
         .filter((item: WorkPackagePreview) => !item.is_active)
         .sort((a: WorkPackagePreview, b: WorkPackagePreview) => a.sort_order - b.sort_order)
-        .map((item: WorkPackagePreview) => ({
+        .map((item: WorkPackagePreview, index: number) => ({
           name: `${item.name} (archived)`,
           estimatedHours: String(item.estimated_hours ?? 0),
+          color: getWorkPackageColor(item.color, index),
         })) ?? [],
     [activeEstimate],
   )
@@ -131,6 +136,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
       {
         name: '',
         estimatedHours: '',
+        color: getDefaultWorkPackageColor(prev.length),
       },
     ])
   }
@@ -211,9 +217,10 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
     try {
       await saveEstimateDraft({
         estimateId: activeEstimateId,
-        workPackages: packages.map((item) => ({
+        workPackages: packages.map((item, index) => ({
           name: item.name,
           estimatedHours: Number(item.estimatedHours) || 0,
+          color: getWorkPackageColor(item.color, index),
         })),
       })
 

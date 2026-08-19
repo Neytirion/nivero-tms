@@ -2,6 +2,7 @@ import type { TaskPreview } from '../../../../lib/pm'
 
 interface TaskCardProps {
   task: TaskPreview
+  workPackageColor?: string | null
   assigneeUserId?: string | null
   assigneeLabel: string
   assigneeAvatarUrl?: string | null
@@ -69,6 +70,7 @@ function getDueDateMeta(dueDateRaw: string | null | undefined) {
 
 export function TaskCard({
   task,
+  workPackageColor,
   assigneeUserId,
   assigneeLabel,
   assigneeAvatarUrl,
@@ -87,11 +89,18 @@ export function TaskCard({
   const cardToneClass = isLocked
     ? 'border-2 border-dashed border-slate-400 bg-slate-200/80 text-slate-600 opacity-90 hover:border-slate-500 hover:bg-slate-100 hover:shadow-sm'
     : 'border border-l-4 border-sky-200 border-l-sky-400 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-sm hover:border-sky-400 hover:border-l-sky-500 hover:shadow-md'
+  const cardStyle = !isLocked && workPackageColor
+    ? {
+        borderLeftColor: workPackageColor,
+        boxShadow: `inset 0 0 0 1px ${workPackageColor}33`,
+      }
+    : undefined
 
   return (
     <article
       onClick={() => onTaskClick?.(task.id)}
       className={`group relative rounded-2xl p-3.5 transition ${onTaskClick ? 'cursor-pointer' : ''} ${cardToneClass}`}
+      style={cardStyle}
     >
       <div className="flex items-start justify-between gap-2">
         <p className={`line-clamp-2 w-full text-left text-sm font-semibold leading-5 ${isLocked ? 'text-slate-700' : 'text-slate-900'}`}>

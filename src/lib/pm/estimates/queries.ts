@@ -83,7 +83,7 @@ export async function getProjectEstimatePreviews(projectId: string, canViewDraft
 export async function getWorkPackagesByEstimateIds(estimateIds: string[]) {
   const { data, error } = await supabase
     .from('work_packages')
-    .select('id,estimate_id,name,estimated_hours,sort_order,is_active,created_at')
+    .select('id,estimate_id,name,estimated_hours,color,sort_order,is_active,created_at')
     .in('estimate_id', estimateIds)
     .order('sort_order', { ascending: true })
 

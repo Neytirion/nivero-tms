@@ -1,5 +1,6 @@
 import { supabase } from '../../supabase'
 import type { EstimatePreview, WorkPackage, WorkPackagePreview } from '../types'
+import { getWorkPackageColor } from '../work-package-colors'
 
 export async function insertEstimateVersion(projectId: string, versionNumber: number, createdBy: string) {
   const { data, error } = await supabase
@@ -29,6 +30,7 @@ export async function cloneEstimateWorkPackages(estimateId: string, previousPack
     estimate_id: estimateId,
     name: item.name,
     estimated_hours: item.estimated_hours,
+    color: getWorkPackageColor(item.color, index),
     is_active: item.is_active,
     sort_order: index,
   }))
@@ -53,12 +55,19 @@ export async function getExistingDraftPackages(estimateId: string) {
   return data satisfies Array<Pick<WorkPackage, 'id' | 'name' | 'is_active'>>
 }
 
-export async function updateExistingPackage(packageId: string, name: string, estimatedHours: number, sortOrder: number) {
+export async function updateExistingPackage(
+  packageId: string,
+  name: string,
+  estimatedHours: number,
+  sortOrder: number,
+  color: string | null,
+) {
   const { error } = await supabase
     .from('work_packages')
     .update({
       name,
       estimated_hours: estimatedHours,
+      color,
       sort_order: sortOrder,
       is_active: true,
     })
@@ -69,11 +78,18 @@ export async function updateExistingPackage(packageId: string, name: string, est
   }
 }
 
-export async function insertDraftPackage(estimateId: string, name: string, estimatedHours: number, sortOrder: number) {
+export async function insertDraftPackage(
+  estimateId: string,
+  name: string,
+  estimatedHours: number,
+  sortOrder: number,
+  color: string | null,
+) {
   const { error } = await supabase.from('work_packages').insert({
     estimate_id: estimateId,
     name,
     estimated_hours: estimatedHours,
+    color,
     sort_order: sortOrder,
     is_active: true,
   })

@@ -8,7 +8,7 @@ interface UseTaskWorkPackagesLoaderInput {
 
 export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput) {
   const { selectedProjectId, setTaskWorkPackageId } = input
-  const [workPackages, setWorkPackages] = useState<Array<Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours'>>>([])
+  const [workPackages, setWorkPackages] = useState<Array<Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours' | 'color'>>>([])
   const [hasEstimateVersion, setHasEstimateVersion] = useState<boolean | null>(null)
   const [useEstimates, setUseEstimates] = useState<boolean>(false)
   const [isWorkPackagesLoading, setIsWorkPackagesLoading] = useState(false)
@@ -42,7 +42,7 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
         setWorkPackages(nextWorkPackages)
         setHasEstimateVersion(canCreateTasks)
         setTaskWorkPackageId((prev) =>
-          nextWorkPackages.some((item: Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours'>) => item.id === prev)
+          nextWorkPackages.some((item: Pick<WorkPackagePreview, 'id' | 'name' | 'estimated_hours' | 'color'>) => item.id === prev)
             ? prev
             : '',
         )

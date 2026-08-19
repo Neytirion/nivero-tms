@@ -6,6 +6,7 @@ import type {
   WorkPackagePreview,
 } from '../types'
 import { assertProjectEditable } from '../helpers'
+import { getWorkPackageColor } from '../work-package-colors'
 import {
   getEstimateWithProjectById,
   getLatestEstimateVersion,
@@ -140,6 +141,7 @@ export async function getProjectTaskWorkPackages(projectId: string) {
       id: item.id,
       name: item.name,
       estimated_hours: item.estimated_hours,
+      color: item.color,
     }))
 }
 
@@ -171,9 +173,10 @@ export async function saveEstimateDraft(input: SaveEstimateDraftInput) {
   await assertEstimateIsLatestDraft(input.estimateId, 'save estimate version')
 
   const sanitizedPackages = input.workPackages
-    .map((item) => ({
+    .map((item, index) => ({
       name: item.name.trim(),
       estimatedHours: Number(item.estimatedHours) || 0,
+      color: getWorkPackageColor(item.color, index),
     }))
     .filter((item) => item.name.length > 0)
 
@@ -212,12 +215,12 @@ export async function saveEstimateDraft(input: SaveEstimateDraftInput) {
     if (existingPackage) {
       usedPackageIds.add(existingPackage.id)
 
-      await updateExistingPackage(existingPackage.id, item.name, item.estimatedHours, index)
+      await updateExistingPackage(existingPackage.id, item.name, item.estimatedHours, index, item.color)
 
       continue
     }
 
-    await insertDraftPackage(input.estimateId, item.name, item.estimatedHours, index)
+    await insertDraftPackage(input.estimateId, item.name, item.estimatedHours, index, item.color)
   }
 
   const packagesToArchive = existingPackages.filter((item) => !usedPackageIds.has(item.id))
@@ -237,7 +240,7 @@ export async function approveEstimate(estimateId: string) {
 
 export async function createInitialEstimateVersion(
   projectId: string,
-  workPackages: Array<{ name: string; estimatedHours: string }>,
+  workPackages: Array<{ name: string; estimatedHours: string; color?: string }>,
 ) {
   const { data: userData, error: userError } = await supabase.auth.getUser()
 
@@ -256,7 +259,7 @@ export async function createInitialEstimateVersion(
   for (const [index, pkg] of workPackages.entries()) {
     const estimatedHours = Number.parseFloat(pkg.estimatedHours) || 0
     if (pkg.name.trim().length > 0) {
-      await insertDraftPackage(estimate.id, pkg.name.trim(), estimatedHours, index)
+      await insertDraftPackage(estimate.id, pkg.name.trim(), estimatedHours, index, getWorkPackageColor(pkg.color, index))
     }
   }
 

@@ -89,6 +89,7 @@ export function TaskViewsSection({
               tasks={assignedTasks}
               assigneeLabelByUserId={assigneeLabelByUserId}
               assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}
+              workPackageLabelById={workPackageLabelById}
               workPackageColorById={workPackageColorById}
               onOpenUserProfile={onOpenUserProfile}
               dragTaskId={dragTaskId}

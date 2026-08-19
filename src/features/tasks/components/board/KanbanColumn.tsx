@@ -9,6 +9,7 @@ interface KanbanColumnProps {
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
   assigneeAvatarUrlByUserId: Record<string, string>
+  workPackageLabelById: Record<string, string>
   workPackageColorById: Record<string, string>
   onOpenUserProfile: (userId: string) => void
   onDropTask: (status: TaskStatus) => void
@@ -24,6 +25,7 @@ export function KanbanColumn({
   tasks,
   assigneeLabelByUserId,
   assigneeAvatarUrlByUserId,
+  workPackageLabelById,
   workPackageColorById,
   onOpenUserProfile,
   onDropTask,
@@ -58,6 +60,7 @@ export function KanbanColumn({
             {/** For member-created unassigned tasks, show creator as effective assignee in UI. */}
             <TaskCard
               task={task}
+              workPackageLabel={task.work_package_id ? (workPackageLabelById[task.work_package_id] ?? null) : null}
               workPackageColor={task.work_package_id ? (workPackageColorById[task.work_package_id] ?? null) : null}
               assigneeUserId={task.assigned_to ?? task.created_by}
               assigneeLabel={

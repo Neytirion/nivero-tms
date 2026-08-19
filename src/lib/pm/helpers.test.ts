@@ -75,7 +75,7 @@ describe('pm.helpers', () => {
     )
   })
 
-  it('returns false for task assignment when user is not privileged', async () => {
+  it('returns true for task assignment when user is a project member', async () => {
     mocks.from.mockImplementation((table: string) => {
       if (table === 'projects') {
         const maybeSingle = vi.fn().mockResolvedValue({
@@ -96,7 +96,7 @@ describe('pm.helpers', () => {
       return { select }
     })
 
-    await expect(canUserAssignTasksInProject('p1', 'u2')).resolves.toBe(false)
+    await expect(canUserAssignTasksInProject('p1', 'u2')).resolves.toBe(true)
   })
 
   it('prevents deleting task without ownership or elevated role', async () => {

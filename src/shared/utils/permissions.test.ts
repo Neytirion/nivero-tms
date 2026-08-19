@@ -30,6 +30,10 @@ describe('permissions', () => {
     expect(hasProjectPermission('manager', 'task.assign')).toBe(true)
   })
 
+  it('grants member task assignment permission', () => {
+    expect(hasProjectPermission('member', 'task.assign')).toBe(true)
+  })
+
   it('allows admin to remove members but not update their roles', () => {
     expect(hasProjectPermission('admin', 'member.remove')).toBe(true)
     expect(hasProjectPermission('admin', 'member.role.update')).toBe(false)

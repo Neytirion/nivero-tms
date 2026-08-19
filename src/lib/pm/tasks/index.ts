@@ -53,7 +53,7 @@ export async function createTask(input: CreateTaskInput) {
   if (input.assignedTo && input.assignedTo !== userData.user.id) {
     const canAssign = await canUserAssignTasksInProject(input.projectId, userData.user.id)
     if (!canAssign) {
-      throw new Error('Permission denied: only owner, admin, or manager can assign tasks')
+      throw new Error('Permission denied: only project members can assign tasks')
     }
   }
 
@@ -106,7 +106,7 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
 
   const { data: currentTask, error: currentTaskError } = await supabase
     .from('tasks')
-    .select('status,blocked_by_task_id')
+    .select('status,blocked_by_task_id,assigned_to')
     .eq('id', taskId)
     .maybeSingle()
 
@@ -133,9 +133,8 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
     }
 
     if (patch.assigned_to !== undefined) {
-      const canAssign = await canUserAssignTasksInProject(projectId, userData.user.id)
-      if (!canAssign) {
-        throw new Error('Permission denied: only owner, admin, or manager can assign tasks')
+      if (patch.assigned_to !== currentTask.assigned_to) {
+        throw new Error('Assignee can only be set during task creation')
       }
     }
 

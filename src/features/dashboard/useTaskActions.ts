@@ -64,7 +64,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
       const canAssign = canAssignTasksInProject(selectedProjectId)
       const normalizedAssignedTo = input.assignedTo ?? (canAssign ? undefined : authUserId)
       if (normalizedAssignedTo && normalizedAssignedTo !== authUserId && !canAssign) {
-        setStatus('Permission denied: only owner, admin, or manager can assign tasks')
+        setStatus('Permission denied: only project members can assign tasks')
         return
       }
 
@@ -123,8 +123,8 @@ export function useTaskActions(deps: TaskActionsDeps) {
         setStatus('Permission denied: you cannot update this task')
         return
       }
-      if (patch.assignedTo !== undefined && targetTask?.project_id && !canAssignTasksInProject(targetTask.project_id)) {
-        setStatus('Permission denied: only owner, admin, or manager can assign tasks')
+      if (patch.assignedTo !== undefined && targetTask && patch.assignedTo !== targetTask.assigned_to) {
+        setStatus('Assignee can only be set during task creation')
         return
       }
 

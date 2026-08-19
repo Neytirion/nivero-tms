@@ -92,7 +92,7 @@ describe('pm.tasks', () => {
         estimateHours: 4,
         assignedTo: 'u2',
       }),
-    ).rejects.toThrow('Permission denied: only owner, admin, or manager can assign tasks')
+    ).rejects.toThrow('Permission denied: only project members can assign tasks')
   })
 
   it('creates task with normalized insert payload', async () => {
@@ -150,21 +150,20 @@ describe('pm.tasks', () => {
     ).rejects.toThrow('Permission denied: dependency cannot be changed after task creation')
   })
 
-  it('blocks reassignment on update when actor cannot assign', async () => {
+  it('blocks reassignment on update even for privileged actor', async () => {
     const maybeSingle = vi.fn().mockResolvedValue({
-      data: { status: 'todo', blocked_by_task_id: null },
+      data: { status: 'todo', blocked_by_task_id: null, assigned_to: 'u1' },
       error: null,
     })
     const eq = vi.fn().mockReturnValue({ maybeSingle })
     const select = vi.fn().mockReturnValue({ eq })
     mocks.from.mockReturnValue({ select })
-    mocks.canUserAssignTasksInProject.mockResolvedValue(false)
 
     await expect(
       updateTask('t1', {
         assigned_to: 'u2',
       }),
-    ).rejects.toThrow('Permission denied: only owner, admin, or manager can assign tasks')
+    ).rejects.toThrow('Assignee can only be set during task creation')
   })
 
   describe('estimate hours validation', () => {

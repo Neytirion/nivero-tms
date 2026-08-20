@@ -41,6 +41,28 @@ export function ProjectCreationWizard({
     teamInvitations: [],
   })
 
+  const hasDuplicateWorkPackageNames = useMemo(() => {
+    if (!wizardData.useEstimates) {
+      return false
+    }
+
+    const seenNames = new Set<string>()
+    for (const workPackage of wizardData.workPackages) {
+      const normalizedName = workPackage.name.trim().toLowerCase()
+      if (!normalizedName) {
+        continue
+      }
+
+      if (seenNames.has(normalizedName)) {
+        return true
+      }
+
+      seenNames.add(normalizedName)
+    }
+
+    return false
+  }, [wizardData.useEstimates, wizardData.workPackages])
+
   // Validation logic
   const canGoToNextStep = useMemo(() => {
     switch (currentStep) {
@@ -57,9 +79,12 @@ export function ProjectCreationWizard({
       case 'details':
         return true // Optional step
       case 'estimates':
-        // If estimates enabled, validate all packages have names
+        // If estimates enabled, validate all packages have names and no duplicates
         if (wizardData.useEstimates) {
-          return wizardData.workPackages.every((pkg) => pkg.name.trim().length > 0)
+          return (
+            wizardData.workPackages.every((pkg) => pkg.name.trim().length > 0) &&
+            !hasDuplicateWorkPackageNames
+          )
         }
         return true
       case 'team':
@@ -69,7 +94,7 @@ export function ProjectCreationWizard({
       default:
         return false
     }
-  }, [currentStep, wizardData])
+  }, [currentStep, hasDuplicateWorkPackageNames, wizardData])
 
   const handlePrevious = () => {
     const steps: ProjectWizardStep[] = ['choice', ...FLOW_STEPS]

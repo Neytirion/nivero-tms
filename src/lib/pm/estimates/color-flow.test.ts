@@ -167,4 +167,16 @@ describe('pm.estimates color flow', () => {
     )
     expect(mocks.markEstimateAsDraft).toHaveBeenCalledWith('e-new')
   })
+
+  it('createInitialEstimateVersion rejects duplicate work package names (case-insensitive)', async () => {
+    await expect(
+      createInitialEstimateVersion('p1', [
+        { name: 'Backend', estimatedHours: '5' },
+        { name: ' backend ', estimatedHours: '2' },
+      ]),
+    ).rejects.toThrow('Duplicate work package name: "backend" appears more than once')
+
+    expect(mocks.insertEstimateVersion).not.toHaveBeenCalled()
+    expect(mocks.insertDraftPackage).not.toHaveBeenCalled()
+  })
 })

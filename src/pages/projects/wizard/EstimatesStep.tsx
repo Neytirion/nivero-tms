@@ -37,6 +37,24 @@ export function EstimatesStep({
   }, 0)
 
   const hasEmptyPackages = workPackages.some((pkg) => pkg.name.trim() === '')
+  const hasDuplicatePackages = (() => {
+    const seenNames = new Set<string>()
+
+    for (const pkg of workPackages) {
+      const normalizedName = pkg.name.trim().toLowerCase()
+      if (!normalizedName) {
+        continue
+      }
+
+      if (seenNames.has(normalizedName)) {
+        return true
+      }
+
+      seenNames.add(normalizedName)
+    }
+
+    return false
+  })()
 
   return (
     <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
@@ -135,6 +153,14 @@ export function EstimatesStep({
               <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
                 <p className="text-xs text-amber-900">
                   ⚠️ Please fill in the Work Package names before proceeding.
+                </p>
+              </div>
+            )}
+
+            {hasDuplicatePackages && (
+              <div className="p-3 bg-rose-50 rounded-lg border border-rose-200">
+                <p className="text-xs text-rose-900">
+                  ⚠️ Work Package names must be unique.
                 </p>
               </div>
             )}

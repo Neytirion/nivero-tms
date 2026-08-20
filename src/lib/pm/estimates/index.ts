@@ -252,15 +252,29 @@ export async function createInitialEstimateVersion(
     throw new Error('User is not authenticated')
   }
 
+  const sanitizedWorkPackages = workPackages
+    .map((pkg) => ({
+      ...pkg,
+      name: pkg.name.trim(),
+    }))
+    .filter((pkg) => pkg.name.length > 0)
+
+  const seenNames = new Set<string>()
+  for (const pkg of sanitizedWorkPackages) {
+    const normalizedName = pkg.name.toLowerCase()
+    if (seenNames.has(normalizedName)) {
+      throw new Error(`Duplicate work package name: "${pkg.name}" appears more than once`)
+    }
+    seenNames.add(normalizedName)
+  }
+
   // Create estimate version 1
   const estimate = await insertEstimateVersion(projectId, 1, userData.user.id)
 
   // Add work packages
-  for (const [index, pkg] of workPackages.entries()) {
+  for (const [index, pkg] of sanitizedWorkPackages.entries()) {
     const estimatedHours = Number.parseFloat(pkg.estimatedHours) || 0
-    if (pkg.name.trim().length > 0) {
-      await insertDraftPackage(estimate.id, pkg.name.trim(), estimatedHours, index, getWorkPackageColor(pkg.color, index))
-    }
+    await insertDraftPackage(estimate.id, pkg.name, estimatedHours, index, getWorkPackageColor(pkg.color, index))
   }
 
   // Mark as draft

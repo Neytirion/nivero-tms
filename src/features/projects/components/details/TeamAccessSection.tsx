@@ -440,7 +440,7 @@ export function TeamAccessSection({
   }
 
   const handleMemberDisplayRoleChange = (member: ProjectMemberListItem, roleName: string) => {
-    if (!selectedProjectId || !member.user_id || !canManageMemberRoles) {
+    if (!selectedProjectId || !member.user_id || !canEditMemberDisplayRole(member)) {
       return
     }
 
@@ -503,6 +503,14 @@ export function TeamAccessSection({
     }
 
     return memberDisplayRoleByUserId[member.user_id] ?? null
+  }
+
+  const canEditMemberDisplayRole = (member: ProjectMemberListItem) => {
+    if (!member.user_id) {
+      return false
+    }
+
+    return canManageMemberRoles || member.user_id === currentUserProfile?.userId
   }
 
   const handleRemoveMember = async (userId: string) => {
@@ -775,7 +783,7 @@ export function TeamAccessSection({
                     onChange={(event) => {
                       handleMemberDisplayRoleChange(member, event.target.value)
                     }}
-                    disabled={isSavingDisplayRoleByUserId[member.user_id]}
+                    disabled={!canEditMemberDisplayRole(member) || isSavingDisplayRoleByUserId[member.user_id]}
                     className="rounded-md border border-cyan-200 bg-cyan-50 px-2.5 py-1.5 text-xs font-medium text-cyan-900 outline-none focus:border-cyan-500"
                     aria-label={`Display role for ${member.full_name ?? member.email ?? 'member'}`}
                   >
@@ -820,6 +828,22 @@ export function TeamAccessSection({
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
+                  {canEditMemberDisplayRole(member) ? (
+                    <select
+                      value={getMemberDisplayRole(member) ?? ''}
+                      onChange={(event) => {
+                        handleMemberDisplayRoleChange(member, event.target.value)
+                      }}
+                      disabled={Boolean(member.user_id) && isSavingDisplayRoleByUserId[member.user_id]}
+                      className="rounded-md border border-cyan-200 bg-cyan-50 px-2.5 py-1.5 text-xs font-medium text-cyan-900 outline-none focus:border-cyan-500"
+                      aria-label={`Display role for ${member.full_name ?? member.email ?? 'member'}`}
+                    >
+                      <option value="">No display role</option>
+                      {displayRoleOptions.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  ) : null}
                   <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700">
                     {member.role ?? 'member'}
                   </span>

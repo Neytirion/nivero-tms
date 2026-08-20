@@ -112,26 +112,6 @@ export function TaskCard({
         <span className={`text-xs transition ${isLocked ? 'text-slate-400 group-hover:text-slate-600' : 'text-slate-300 group-hover:text-sky-600'}`}>↗</span>
       </div>
 
-      {workPackageLabel && workPackageColor ? (
-        <div className="mt-2 flex items-center gap-1.5">
-          <span
-            className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ backgroundColor: workPackageColor }}
-            aria-hidden="true"
-          />
-          <span
-            className="inline-flex max-w-full items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
-            style={{
-              borderColor: `${workPackageColor}66`,
-              backgroundColor: `${workPackageColor}1f`,
-              color: '#0f172a',
-            }}
-          >
-            <span className="truncate">{workPackageLabel}</span>
-          </span>
-        </div>
-      ) : null}
-
       {task.description ? (
         <p className={`mt-1.5 line-clamp-2 text-xs leading-5 ${isLocked ? 'text-slate-500' : 'text-slate-500'}`}>{task.description}</p>
       ) : null}
@@ -185,6 +165,26 @@ export function TaskCard({
             )}
           </p>
         </div>
+
+        {workPackageLabel && workPackageColor ? (
+          <div className="ml-2 flex max-w-[45%] items-center justify-end gap-1.5">
+            <span
+              className="inline-block h-2.5 w-2.5 shrink-0 rounded-full"
+              style={{ backgroundColor: workPackageColor }}
+              aria-hidden="true"
+            />
+            <span
+              className="inline-flex min-w-0 max-w-full items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+              style={{
+                borderColor: `${workPackageColor}66`,
+                backgroundColor: `${workPackageColor}1f`,
+                color: '#0f172a',
+              }}
+            >
+              <span className="truncate">{workPackageLabel}</span>
+            </span>
+          </div>
+        ) : null}
       </div>
     </article>
   )

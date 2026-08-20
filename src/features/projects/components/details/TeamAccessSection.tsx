@@ -20,12 +20,10 @@ interface TeamAccessSectionProps {
   canInviteToSelectedProject: boolean
   memberEmail: string
   onMemberEmailChange: (value: string) => void
-  memberRole: string
-  onMemberRoleChange: (value: string) => void
   canAssignAdminRole: boolean
   canAssignManagerRole?: boolean
   onInviteMember: () => void | Promise<void>
-  onQuickInviteMember?: (email: string, role: string) => Promise<void>
+  onQuickInviteMember?: (email: string) => Promise<void>
   isLoading: boolean
   selectedProjectId: string | null
   workspaceProjects?: ProjectPreview[]
@@ -45,8 +43,6 @@ export function TeamAccessSection({
   canInviteToSelectedProject,
   memberEmail,
   onMemberEmailChange,
-  memberRole,
-  onMemberRoleChange,
   canAssignAdminRole,
   canAssignManagerRole,
   onInviteMember,
@@ -66,7 +62,6 @@ export function TeamAccessSection({
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
   const [savingRoleByUserId, setSavingRoleByUserId] = useState<Record<string, boolean>>({})
   const [removingMemberByUserId, setRemovingMemberByUserId] = useState<Record<string, boolean>>({})
-  const [quickAddRole, setQuickAddRole] = useState('member')
   const [isQuickAddLoading, setIsQuickAddLoading] = useState(false)
   const [isQuickInviteLoadingByEmail, setIsQuickInviteLoadingByEmail] = useState<Record<string, boolean>>({})
   const [customDisplayRoles, setCustomDisplayRoles] = useState<ProjectDisplayRolePreview[]>([])
@@ -112,14 +107,6 @@ export function TeamAccessSection({
       ...(canAssignAdminRole ? [{ value: 'admin', label: 'Admin' }] : []),
     ],
     [canAssignAdminRole, canAssignManagerRole],
-  )
-
-  const roleLabelByValue = useMemo(
-    () => roleOptions.reduce<Record<string, string>>((acc, option) => {
-      acc[option.value] = option.label
-      return acc
-    }, {}),
-    [roleOptions],
   )
 
   const displayRoleOptions = useMemo(() => {
@@ -360,7 +347,7 @@ export function TeamAccessSection({
     setIsQuickInviteLoadingByEmail((prev) => ({ ...prev, [email]: true }))
 
     try {
-      await onQuickInviteMember(email, quickAddRole)
+      await onQuickInviteMember(email)
     } finally {
       setIsQuickInviteLoadingByEmail((prev) => ({ ...prev, [email]: false }))
     }
@@ -540,7 +527,7 @@ export function TeamAccessSection({
 
           <div className="rounded-xl border border-slate-200 bg-white p-2.5">
             <p className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Invite by email</p>
-            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_9rem_auto]">
+            <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
               <input
                 type="email"
                 value={memberEmail}
@@ -549,17 +536,6 @@ export function TeamAccessSection({
                 disabled={!canInviteToSelectedProject}
                 className="min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
               />
-              <select
-                value={memberRole}
-                onChange={(event) => onMemberRoleChange(event.target.value)}
-                disabled={!canInviteToSelectedProject}
-                className="rounded-lg border border-slate-300 px-2.5 py-2 text-sm text-slate-900 outline-none focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-                aria-label="Invite role"
-              >
-                {roleOptions.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
               <button
                 type="button"
                 onClick={() => void onInviteMember()}
@@ -575,23 +551,9 @@ export function TeamAccessSection({
             <div className="rounded-xl border border-slate-200 bg-white p-2.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Quick add from other projects</p>
-                <div className="flex items-center gap-2">
-                  {isQuickAddLoading ? (
-                    <span className="text-[11px] font-medium text-slate-500">Updating...</span>
-                  ) : null}
-                  <span className="text-xs text-slate-500">Role:</span>
-                  <select
-                    value={quickAddRole}
-                    onChange={(event) => setQuickAddRole(event.target.value)}
-                    disabled={!canInviteToSelectedProject || isQuickAddLoading}
-                    className="rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900 outline-none focus:border-cyan-600 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
-                    aria-label="Quick add role"
-                  >
-                    {roleOptions.map((option) => (
-                      <option key={option.value} value={option.value}>{option.label}</option>
-                    ))}
-                  </select>
-                </div>
+                {isQuickAddLoading ? (
+                  <span className="text-[11px] font-medium text-slate-500">Updating...</span>
+                ) : null}
               </div>
 
               <div className="mt-2 max-h-[28rem] min-h-[3.25rem] space-y-1 overflow-auto pr-1 xl:max-h-[34rem]">
@@ -631,8 +593,8 @@ export function TeamAccessSection({
                       onClick={() => void handleQuickInvite(candidate.email)}
                       disabled={!canInviteToSelectedProject || isQuickInviteLoadingByEmail[candidate.email] || isLoading}
                       className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                      title={`Invite as ${roleLabelByValue[quickAddRole] ?? 'Member'}`}
-                      aria-label={`Add ${candidate.fullName ?? candidate.email} as ${roleLabelByValue[quickAddRole] ?? 'Member'}`}
+                      title="Invite as member"
+                      aria-label={`Add ${candidate.fullName ?? candidate.email} as member`}
                     >
                       {isQuickInviteLoadingByEmail[candidate.email] ? '…' : '+'}
                     </button>

@@ -43,7 +43,6 @@ export function ProjectDetailsPage() {
     canInviteToSelectedProject,
     canAssignAdminRole,
     canAssignManagerRole,
-    effectiveMemberRole,
     teamMemberNames,
     projectManagerName,
     incompleteTaskCount,
@@ -51,7 +50,6 @@ export function ProjectDetailsPage() {
     setActiveTab,
     memberEmail,
     setMemberEmail,
-    setMemberRole,
     pendingRoleByUserId,
     updatePendingRole,
     isCompleteConfirmOpen,
@@ -216,8 +214,6 @@ export function ProjectDetailsPage() {
             canInviteToSelectedProject={canInviteToSelectedProject}
             memberEmail={memberEmail}
             onMemberEmailChange={setMemberEmail}
-            memberRole={effectiveMemberRole}
-            onMemberRoleChange={setMemberRole}
             canAssignAdminRole={canAssignAdminRole}
             canAssignManagerRole={canAssignManagerRole}
             onInviteMember={inviteMemberHandler}

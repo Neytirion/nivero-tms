@@ -41,12 +41,10 @@ interface ProjectDetailsSectionBodyProps {
   canInviteToSelectedProject: boolean
   memberEmail: string
   onMemberEmailChange: (value: string) => void
-  memberRole: string
-  onMemberRoleChange: (value: string) => void
   canAssignAdminRole: boolean
   canAssignManagerRole?: boolean
   onInviteMember: () => void | Promise<void>
-  onQuickInviteMember?: (email: string, role: string) => Promise<void>
+  onQuickInviteMember?: (email: string) => Promise<void>
   pendingRoleByUserId: Record<string, string>
   onPendingRoleChange: (userId: string, role: string) => void
   selectedProjectOwnerId: string | null | undefined
@@ -90,8 +88,6 @@ export function ProjectDetailsSectionBody({
   canInviteToSelectedProject,
   memberEmail,
   onMemberEmailChange,
-  memberRole,
-  onMemberRoleChange,
   canAssignAdminRole,
   canAssignManagerRole,
   onInviteMember,
@@ -132,8 +128,6 @@ export function ProjectDetailsSectionBody({
             canInviteToSelectedProject={canInviteToSelectedProject}
             memberEmail={memberEmail}
             onMemberEmailChange={onMemberEmailChange}
-            memberRole={memberRole}
-            onMemberRoleChange={onMemberRoleChange}
             canAssignAdminRole={canAssignAdminRole}
             canAssignManagerRole={canAssignManagerRole}
             onInviteMember={onInviteMember}

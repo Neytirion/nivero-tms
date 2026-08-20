@@ -181,12 +181,12 @@ export function useProjectsPageController() {
 
   // Wrapper handlers with form reset
   const inviteMemberHandler = async () => {
-    await inviteMemberHandlerRaw(memberEmail, effectiveMemberRole)
+    await inviteMemberHandlerRaw(memberEmail, 'member')
     resetMemberForm()
   }
 
-  const inviteMemberByEmailAndRoleHandler = async (email: string, role: string) => {
-    await inviteMemberHandlerRaw(email, role, { suppressGlobalLoading: true })
+  const inviteMemberByEmailAndRoleHandler = async (email: string) => {
+    await inviteMemberHandlerRaw(email, 'member', { suppressGlobalLoading: true })
   }
 
   const updateMemberRoleHandler = async (

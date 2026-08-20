@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getProjectMemberUnfinishedTasksCount, getProjectMembers, inviteProjectMemberByEmail } from './index'
+import {
+  clearProjectMemberDisplayRole,
+  getProjectMemberUnfinishedTasksCount,
+  getProjectMembers,
+  inviteProjectMemberByEmail,
+  setProjectMemberDisplayRole,
+} from './index'
 import { supabase } from '../../supabase'
 import { assertProjectEditable } from '../helpers'
 
@@ -91,5 +97,52 @@ describe('pm.members', () => {
     const count = await getProjectMemberUnfinishedTasksCount('p1', 'u1')
 
     expect(count).toBe(2)
+  })
+
+  it('upserts project member display role', async () => {
+    const query = {
+      upsert: vi.fn(async () => ({ error: null })),
+    }
+
+    mockSupabase.from.mockReturnValue(query as never)
+
+    await setProjectMemberDisplayRole({
+      projectId: 'p1',
+      userId: 'u2',
+      displayRole: 'Backend',
+    })
+
+    expect(mockAssertProjectEditable).toHaveBeenCalledWith('p1', 'set member display role')
+    expect(mockSupabase.from).toHaveBeenCalledWith('project_member_display_roles')
+    expect(query.upsert).toHaveBeenCalledWith(
+      {
+        project_id: 'p1',
+        user_id: 'u2',
+        display_role: 'Backend',
+      },
+      { onConflict: 'project_id,user_id' },
+    )
+  })
+
+  it('clears project member display role assignment', async () => {
+    const query = {
+      delete: vi.fn(),
+      eq: vi.fn(),
+    }
+
+    query.delete.mockReturnValue(query)
+    query.eq
+      .mockImplementationOnce(() => query)
+      .mockImplementationOnce(async () => ({ error: null }))
+
+    mockSupabase.from.mockReturnValue(query as never)
+
+    await clearProjectMemberDisplayRole('p1', 'u2')
+
+    expect(mockAssertProjectEditable).toHaveBeenCalledWith('p1', 'clear member display role')
+    expect(mockSupabase.from).toHaveBeenCalledWith('project_member_display_roles')
+    expect(query.delete).toHaveBeenCalledTimes(1)
+    expect(query.eq).toHaveBeenNthCalledWith(1, 'project_id', 'p1')
+    expect(query.eq).toHaveBeenNthCalledWith(2, 'user_id', 'u2')
   })
 })

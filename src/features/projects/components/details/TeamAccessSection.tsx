@@ -296,8 +296,8 @@ export function TeamAccessSection({
       <h3 className="section-title">Team</h3>
       <p className="section-subtitle">Invite members by email. A project must be selected first.</p>
 
-      <div className="mt-3 grid items-start gap-3 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)]">
-        <div className="space-y-3">
+      <div className="mt-3 grid items-start gap-3 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+        <div className="space-y-3 xl:order-2">
           {!canInviteToSelectedProject ? (
             <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500">
               Only project members can invite users.
@@ -409,7 +409,7 @@ export function TeamAccessSection({
           ) : null}
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-3">
+        <div className="rounded-xl border border-slate-200 bg-white p-3 xl:order-1">
         <div className="flex items-center justify-between gap-2">
           <h4 className="text-sm font-semibold text-slate-900">Project members</h4>
           {selectedProjectId ? (

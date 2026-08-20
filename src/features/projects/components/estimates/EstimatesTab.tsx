@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { ConfirmDialog } from '../../../../shared/components'
 import { useEstimatesTabController } from './useEstimatesTabController'
 
 interface EstimatesTabProps {
@@ -8,6 +10,8 @@ interface EstimatesTabProps {
 }
 
 export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesChange }: EstimatesTabProps) {
+  const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false)
+
   const {
     isLoading,
     status,
@@ -29,6 +33,8 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
     approveHandler,
     packageValidationErrors,
   } = useEstimatesTabController({ projectId, canEdit })
+
+  const hasPackageValidationErrors = packageValidationErrors.length > 0
 
   return (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -278,10 +284,14 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
               </button>
               <button
                 type="button"
-                onClick={() => void approveHandler()}
-                disabled={isLoading || !activeEstimateId || !canEditActiveEstimate}
+                onClick={() => setIsApproveConfirmOpen(true)}
+                disabled={isLoading || !activeEstimateId || !canEditActiveEstimate || hasPackageValidationErrors}
                 className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
-                title="Approve this estimate version as the team baseline. Cannot be edited after approval."
+                title={
+                  hasPackageValidationErrors
+                    ? 'Fix validation errors before finalizing and approving'
+                    : 'Approve this estimate version as the team baseline. Cannot be edited after approval.'
+                }
               >
                 Finalize & Approve
               </button>
@@ -289,6 +299,19 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
           ) : null}
         </>
       ) : null}
+
+      <ConfirmDialog
+        isOpen={isApproveConfirmOpen}
+        title="Finalize and approve estimate"
+        description="Approve this draft estimate as the project baseline? After approval, this version becomes read-only."
+        confirmText="Finalize & Approve"
+        tone="success"
+        onCancel={() => setIsApproveConfirmOpen(false)}
+        onConfirm={async () => {
+          setIsApproveConfirmOpen(false)
+          await approveHandler()
+        }}
+      />
     </div>
   )
 }

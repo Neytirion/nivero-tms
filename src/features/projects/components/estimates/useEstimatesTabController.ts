@@ -237,6 +237,11 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
       return
     }
 
+    if (packageValidationErrors.length > 0) {
+      setStatus('Fix validation errors before approval.')
+      return
+    }
+
     setIsLoading(true)
 
     try {

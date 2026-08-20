@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import type { ProjectMemberListItem, ProjectPreview, TaskPreview } from '../../../../../lib/pm'
+import { useEffect, useState } from 'react'
+import { getProjectMemberDisplayRoles, type ProjectMemberListItem, type ProjectPreview, type TaskPreview } from '../../../../../lib/pm'
 import { UserProfileDialog, type UserProfilePreview } from '../../../../../shared/components'
 import { downloadClientBrief, type ClientBriefExportFormat } from '../../../utils/client-brief'
 import { deriveProgress, deriveRisk, formatDate } from '../../../utils/project-metrics'
@@ -54,7 +54,39 @@ export function ProjectOverviewTab({
   const [exportFormat, setExportFormat] = useState<ClientBriefExportFormat>('pdf')
   const [isExporting, setIsExporting] = useState(false)
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
+  const [memberDisplayRoleByUserId, setMemberDisplayRoleByUserId] = useState<Record<string, string>>({})
   const durationDays = getDurationDays(selectedProject.start_date, selectedProject.end_date)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadDisplayRoles = async () => {
+      try {
+        const assignments = await getProjectMemberDisplayRoles(selectedProject.id)
+        if (!isMounted) {
+          return
+        }
+
+        setMemberDisplayRoleByUserId(
+          assignments.reduce<Record<string, string>>((acc, item) => {
+            acc[item.user_id] = item.display_role
+            return acc
+          }, {}),
+        )
+      } catch (error) {
+        console.error('Failed to load display roles for overview:', error)
+        if (isMounted) {
+          setMemberDisplayRoleByUserId({})
+        }
+      }
+    }
+
+    void loadDisplayRoles()
+
+    return () => {
+      isMounted = false
+    }
+  }, [selectedProject.id])
 
   const exportClientBrief = async () => {
     setIsExporting(true)
@@ -140,7 +172,7 @@ export function ProjectOverviewTab({
                 ? projectMembers.map((member) => ({
                   key: member.member_id,
                   name: member.full_name ?? member.email ?? member.user_id,
-                  role: member.role,
+                  role: member.user_id ? (memberDisplayRoleByUserId[member.user_id] ?? null) : null,
                   profile: {
                       ...(member.user_id && currentUserProfile?.userId === member.user_id ? currentUserProfile : {}),
                       userId: member.user_id,
@@ -182,8 +214,9 @@ export function ProjectOverviewTab({
                       {member.name}
                     </button>
                     {member.role ? (
-                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
-                        {member.role}
+                      <span className="inline-flex h-5 shrink-0 items-center gap-1.5 text-xs font-medium text-slate-600">
+                        <span className="h-2 w-2 rounded-full bg-cyan-500" aria-hidden="true" />
+                        <span className="truncate">{member.role}</span>
                       </span>
                     ) : null}
                   </li>

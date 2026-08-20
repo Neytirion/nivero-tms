@@ -13,7 +13,7 @@ import {
 } from '../../../../lib/pm'
 import { UserProfileDialog, type UserProfilePreview } from '../../../../shared/components'
 
-const DEFAULT_DISPLAY_ROLES = ['Design', 'Frontend', 'Backend', 'QA', 'DevOps', 'Product', 'Analytics']
+const DEFAULT_DISPLAY_ROLES = ['Design', 'Frontend', 'Backend', 'Fullstack', 'QA', 'Tester', 'DevOps', 'Product', 'Analytics']
 
 interface TeamAccessSectionProps {
   isEmbedded?: boolean
@@ -721,27 +721,27 @@ export function TeamAccessSection({
                   </span>
                 )}
                 <div className="min-w-0">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedProfile(resolveProfile(member))}
-                    className="text-left text-sm font-medium text-slate-800 underline-offset-2 hover:text-cyan-700 hover:underline"
-                  >
-                    {member.full_name ?? member.email ?? 'Unknown user'}
-                  </button>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedProfile(resolveProfile(member))}
+                      className="min-w-0 flex-1 truncate text-left text-sm font-medium text-slate-800 underline-offset-2 hover:text-cyan-700 hover:underline"
+                    >
+                      {member.full_name ?? member.email ?? 'Unknown user'}
+                    </button>
+                    {(() => {
+                      const displayRole = getMemberDisplayRole(member)
+                      return (
+                        <span
+                          className={`inline-flex h-5 shrink-0 items-center gap-1.5 text-xs font-medium text-slate-600 ${displayRole ? '' : 'invisible'}`}
+                        >
+                          <span className="h-2 w-2 rounded-full bg-cyan-500" aria-hidden="true" />
+                          <span className="truncate">{displayRole ?? 'Role'}</span>
+                        </span>
+                      )
+                    })()}
+                  </div>
                   <p className="mt-0.5 text-xs text-slate-500">{member.email ?? 'No email'}</p>
-                  {(() => {
-                    const displayRole = getMemberDisplayRole(member)
-
-                    if (!displayRole) {
-                      return null
-                    }
-
-                    return (
-                      <span className="mt-1 inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-cyan-800">
-                        {displayRole}
-                      </span>
-                    )
-                  })()}
                 </div>
               </div>
               {canManageMemberRoles && member.user_id ? (

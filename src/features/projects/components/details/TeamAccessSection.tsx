@@ -583,8 +583,21 @@ export function TeamAccessSection({
                         </span>
                       )}
                       <div className="min-w-0">
-                        <p className="truncate text-xs font-medium text-slate-800">{candidate.fullName ?? candidate.email}</p>
-                        <p className="truncate text-[11px] text-slate-500">{candidate.sourceProjectNames.join(', ')}</p>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSelectedProfile({
+                              fullName: candidate.fullName,
+                              email: candidate.email,
+                              avatarUrl: candidate.avatarUrl,
+                              role: 'member',
+                            })
+                          }
+                          className="truncate text-left text-xs font-medium text-slate-800 underline-offset-2 hover:text-cyan-700 hover:underline"
+                          title="Open member profile"
+                        >
+                          {candidate.fullName ?? candidate.email}
+                        </button>
                       </div>
                     </div>
 

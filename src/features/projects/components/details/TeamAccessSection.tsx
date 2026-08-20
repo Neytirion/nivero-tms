@@ -276,8 +276,6 @@ export function TeamAccessSection({
 
   useEffect(() => {
     if (!selectedProjectId) {
-      setCustomDisplayRoles([])
-      setMemberDisplayRoleByUserId({})
       return
     }
 

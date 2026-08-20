@@ -58,22 +58,24 @@ This document outlines key architectural decisions made in the Nivero PM Tool pr
 **Structure**:
 ```
 src/lib/
-  ├── pm.types.ts       (Type definitions aligned with DB schema)
-  ├── pm.projects.ts    (Project operations)
-  ├── pm.tasks.ts       (Task operations)
-  ├── pm.estimates.ts   (Estimation workflow)
-  ├── pm.members.ts     (Team membership)
-  ├── pm.time.ts        (Time tracking)
-  ├── pm.comments.ts    (Comments & mentions)
-  ├── pm.documents.ts   (File storage)
-  ├── pm.helpers.ts     (Shared validation logic)
-  └── pm/               (Barrel exports)
+  ├── database.types.ts  (Generated Supabase schema types)
+  └── pm/
+      ├── types.ts       (Domain type projections aligned with DB schema)
+      ├── projects/      (Project operations)
+      ├── tasks/         (Task operations)
+      ├── estimates/     (Estimation workflow)
+      ├── members/       (Team membership)
+      ├── time/          (Time tracking)
+      ├── comments/      (Comments & mentions)
+      ├── documents/     (File storage)
+      ├── helpers.ts     (Shared validation logic)
+      └── index.ts       (Domain barrel exports)
 ```
 
 **Principle**: All business operations go through `src/lib`, never directly from UI components.
 
 **Challenges Identified**:
-- Repeated SELECT field lists (e.g., [pm.projects.ts:9](../src/lib/pm.projects.ts#L9), [pm.tasks.ts:73](../src/lib/pm.tasks.ts#L73))
+- Repeated SELECT field lists across domain modules (projects/tasks)
 - Risk of field synchronization when schema changes
 - No central query definition
 
@@ -200,7 +202,7 @@ Large page controllers (`useProjectsPageController`, `useTasksPageController`, e
 
 **Strategy**:
 - `database.types.ts` auto-generated from Supabase (one-way sync)
-- Domain types in `pm.types.ts` derive from database types using `Pick<>`
+- Domain types in `src/lib/pm/types.ts` derive from database types using `Pick<>`
 - Type-specific preview types (e.g., `ProjectPreview`, `TaskPreview`) for query results
 
 **Example**:

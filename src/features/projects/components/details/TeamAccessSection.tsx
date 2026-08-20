@@ -1,6 +1,19 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getProjectMembers, type ProjectMemberListItem, type ProjectPreview } from '../../../../lib/pm'
+import {
+  clearProjectMemberDisplayRole,
+  createProjectDisplayRole,
+  deleteProjectDisplayRole,
+  getProjectDisplayRoles,
+  getProjectMemberDisplayRoles,
+  getProjectMembers,
+  setProjectMemberDisplayRole,
+  type ProjectDisplayRolePreview,
+  type ProjectMemberListItem,
+  type ProjectPreview,
+} from '../../../../lib/pm'
 import { UserProfileDialog, type UserProfilePreview } from '../../../../shared/components'
+
+const DEFAULT_DISPLAY_ROLES = ['Design', 'Frontend', 'Backend', 'QA', 'DevOps', 'Product', 'Analytics']
 
 interface TeamAccessSectionProps {
   isEmbedded?: boolean
@@ -56,6 +69,13 @@ export function TeamAccessSection({
   const [quickAddRole, setQuickAddRole] = useState('member')
   const [isQuickAddLoading, setIsQuickAddLoading] = useState(false)
   const [isQuickInviteLoadingByEmail, setIsQuickInviteLoadingByEmail] = useState<Record<string, boolean>>({})
+  const [customDisplayRoles, setCustomDisplayRoles] = useState<ProjectDisplayRolePreview[]>([])
+  const [newDisplayRole, setNewDisplayRole] = useState('')
+  const [memberDisplayRoleByUserId, setMemberDisplayRoleByUserId] = useState<Record<string, string>>({})
+  const [isDisplayRolesLoading, setIsDisplayRolesLoading] = useState(false)
+  const [isCreatingDisplayRole, setIsCreatingDisplayRole] = useState(false)
+  const [isDeletingDisplayRoleById, setIsDeletingDisplayRoleById] = useState<Record<string, boolean>>({})
+  const [isSavingDisplayRoleByUserId, setIsSavingDisplayRoleByUserId] = useState<Record<string, boolean>>({})
   const [quickAddCandidates, setQuickAddCandidates] = useState<Array<{
     email: string
     fullName: string | null
@@ -101,6 +121,27 @@ export function TeamAccessSection({
     }, {}),
     [roleOptions],
   )
+
+  const displayRoleOptions = useMemo(() => {
+    const unique = new Set<string>()
+    for (const item of DEFAULT_DISPLAY_ROLES) {
+      const normalized = item.trim()
+      if (!normalized) {
+        continue
+      }
+      unique.add(normalized)
+    }
+
+    for (const role of customDisplayRoles) {
+      const normalized = role.name.trim()
+      if (!normalized) {
+        continue
+      }
+      unique.add(normalized)
+    }
+
+    return Array.from(unique)
+  }, [customDisplayRoles])
 
   const existingMemberKeys = useMemo(() => {
     const keys = new Set<string>()
@@ -233,6 +274,56 @@ export function TeamAccessSection({
     }
   }, [existingMemberKeys, onQuickInviteMember, selectedProjectId, workspaceProjects])
 
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setCustomDisplayRoles([])
+      setMemberDisplayRoleByUserId({})
+      return
+    }
+
+    let isMounted = true
+
+    const loadDisplayRoles = async () => {
+      setIsDisplayRolesLoading(true)
+
+      try {
+        const [roles, assignments] = await Promise.all([
+          getProjectDisplayRoles(selectedProjectId),
+          getProjectMemberDisplayRoles(selectedProjectId),
+        ])
+
+        if (!isMounted) {
+          return
+        }
+
+        setCustomDisplayRoles(roles)
+        setMemberDisplayRoleByUserId(
+          assignments.reduce<Record<string, string>>((acc, item) => {
+            acc[item.user_id] = item.display_role
+            return acc
+          }, {}),
+        )
+      } catch (error) {
+        console.error('Failed to load display roles:', error)
+
+        if (isMounted) {
+          setCustomDisplayRoles([])
+          setMemberDisplayRoleByUserId({})
+        }
+      } finally {
+        if (isMounted) {
+          setIsDisplayRolesLoading(false)
+        }
+      }
+    }
+
+    void loadDisplayRoles()
+
+    return () => {
+      isMounted = false
+    }
+  }, [selectedProjectId])
+
   const handleRoleSelectChange = async (member: ProjectMemberListItem, nextRole: string) => {
     if (!member.user_id) {
       return
@@ -275,6 +366,143 @@ export function TeamAccessSection({
     } finally {
       setIsQuickInviteLoadingByEmail((prev) => ({ ...prev, [email]: false }))
     }
+  }
+
+  const handleAddDisplayRole = () => {
+    if (!selectedProjectId || !canManageMemberRoles) {
+      return
+    }
+
+    const normalized = newDisplayRole.trim()
+    if (!normalized) {
+      return
+    }
+
+    const alreadyExists = displayRoleOptions.some((item) => item.toLowerCase() === normalized.toLowerCase())
+    if (alreadyExists) {
+      setNewDisplayRole('')
+      return
+    }
+
+    const createRole = async () => {
+      setIsCreatingDisplayRole(true)
+
+      try {
+        const createdRole = await createProjectDisplayRole({
+          projectId: selectedProjectId,
+          name: normalized,
+        })
+
+        setCustomDisplayRoles((prev) =>
+          [...prev, createdRole].sort((a, b) => a.name.localeCompare(b.name)),
+        )
+        setNewDisplayRole('')
+      } catch (error) {
+        console.error('Failed to create display role:', error)
+      } finally {
+        setIsCreatingDisplayRole(false)
+      }
+    }
+
+    void createRole()
+  }
+
+  const handleRemoveCustomDisplayRole = (role: ProjectDisplayRolePreview) => {
+    if (!selectedProjectId || !canManageMemberRoles) {
+      return
+    }
+
+    const removeRole = async () => {
+      setIsDeletingDisplayRoleById((prev) => ({ ...prev, [role.id]: true }))
+
+      try {
+        await deleteProjectDisplayRole({
+          projectId: selectedProjectId,
+          roleId: role.id,
+          roleName: role.name,
+        })
+
+        const normalized = role.name.trim().toLowerCase()
+        setCustomDisplayRoles((prev) => prev.filter((item) => item.id !== role.id))
+        setMemberDisplayRoleByUserId((prev) =>
+          Object.fromEntries(
+            Object.entries(prev).filter(([, value]) => value.trim().toLowerCase() !== normalized),
+          ),
+        )
+      } catch (error) {
+        console.error('Failed to delete display role:', error)
+      } finally {
+        setIsDeletingDisplayRoleById((prev) => ({ ...prev, [role.id]: false }))
+      }
+    }
+
+    void removeRole()
+  }
+
+  const handleMemberDisplayRoleChange = (member: ProjectMemberListItem, roleName: string) => {
+    if (!selectedProjectId || !member.user_id || !canManageMemberRoles) {
+      return
+    }
+
+    const userId = member.user_id
+    const previousRole = memberDisplayRoleByUserId[userId] ?? ''
+    const normalized = roleName.trim()
+
+    setMemberDisplayRoleByUserId((prev) => {
+      if (!normalized) {
+        const next = { ...prev }
+        delete next[userId]
+        return next
+      }
+
+      return {
+        ...prev,
+        [userId]: normalized,
+      }
+    })
+
+    const persistRole = async () => {
+      setIsSavingDisplayRoleByUserId((prev) => ({ ...prev, [userId]: true }))
+
+      try {
+        if (!normalized) {
+          await clearProjectMemberDisplayRole(selectedProjectId, userId)
+        } else {
+          await setProjectMemberDisplayRole({
+            projectId: selectedProjectId,
+            userId,
+            displayRole: normalized,
+          })
+        }
+      } catch (error) {
+        console.error('Failed to update member display role:', error)
+
+        setMemberDisplayRoleByUserId((prev) => {
+          if (!previousRole) {
+            const next = { ...prev }
+            delete next[userId]
+            return next
+          }
+
+          return {
+            ...prev,
+            [userId]: previousRole,
+          }
+        })
+      } finally {
+        setIsSavingDisplayRoleByUserId((prev) => ({ ...prev, [userId]: false }))
+      }
+    }
+
+    void persistRole()
+  }
+
+  const getMemberDisplayRole = (member: ProjectMemberListItem) => {
+    if (!member.user_id) {
+      return null
+    }
+
+    return memberDisplayRoleByUserId[member.user_id] ?? null
   }
 
   const handleRemoveMember = async (userId: string) => {
@@ -407,6 +635,75 @@ export function TeamAccessSection({
               </div>
             </div>
           ) : null}
+
+          <div className="rounded-xl border border-slate-200 bg-white p-2.5">
+            <p className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Display roles</p>
+            <p className="px-1 text-xs text-slate-500">
+              Visual labels for team responsibilities. They do not affect access rights.
+            </p>
+
+            <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]">
+              <input
+                type="text"
+                value={newDisplayRole}
+                onChange={(event) => setNewDisplayRole(event.target.value)}
+                placeholder="e.g., UX Writer"
+                disabled={!canManageMemberRoles || !selectedProjectId || isCreatingDisplayRole}
+                className="min-w-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-cyan-600"
+              />
+              <button
+                type="button"
+                onClick={handleAddDisplayRole}
+                disabled={!canManageMemberRoles || !selectedProjectId || isCreatingDisplayRole}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+              >
+                {isCreatingDisplayRole ? 'Adding...' : 'Add role'}
+              </button>
+            </div>
+
+            {isDisplayRolesLoading ? (
+              <p className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">
+                Loading display roles...
+              </p>
+            ) : null}
+
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {displayRoleOptions.map((roleName) => {
+                const isDefaultRole = DEFAULT_DISPLAY_ROLES.some(
+                  (defaultRole) => defaultRole.toLowerCase() === roleName.toLowerCase(),
+                )
+                const customRole = customDisplayRoles.find(
+                  (item) => item.name.trim().toLowerCase() === roleName.trim().toLowerCase(),
+                )
+                const isDeletingCustomRole = customRole ? Boolean(isDeletingDisplayRoleById[customRole.id]) : false
+
+                return (
+                  <span
+                    key={roleName}
+                    className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-700"
+                  >
+                    {roleName}
+                    {!isDefaultRole ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (customRole) {
+                            handleRemoveCustomDisplayRole(customRole)
+                          }
+                        }}
+                        disabled={!canManageMemberRoles || isDeletingCustomRole}
+                        className="rounded px-1 text-[10px] text-slate-500 transition hover:bg-slate-200 hover:text-slate-700"
+                        aria-label={`Remove display role ${roleName}`}
+                        title="Remove custom role"
+                      >
+                        {isDeletingCustomRole ? '...' : 'x'}
+                      </button>
+                    ) : null}
+                  </span>
+                )
+              })}
+            </div>
+          </div>
         </div>
 
         <div className="rounded-xl border border-slate-200 bg-white p-3 xl:order-1">
@@ -451,6 +748,19 @@ export function TeamAccessSection({
                     {member.full_name ?? member.email ?? 'Unknown user'}
                   </button>
                   <p className="mt-0.5 text-xs text-slate-500">{member.email ?? 'No email'}</p>
+                  {(() => {
+                    const displayRole = getMemberDisplayRole(member)
+
+                    if (!displayRole) {
+                      return null
+                    }
+
+                    return (
+                      <span className="mt-1 inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-cyan-800">
+                        {displayRole}
+                      </span>
+                    )
+                  })()}
                 </div>
               </div>
               {canManageMemberRoles && member.user_id ? (
@@ -460,6 +770,20 @@ export function TeamAccessSection({
                       Owner
                     </span>
                   ) : null}
+                  <select
+                    value={getMemberDisplayRole(member) ?? ''}
+                    onChange={(event) => {
+                      handleMemberDisplayRoleChange(member, event.target.value)
+                    }}
+                    disabled={isSavingDisplayRoleByUserId[member.user_id]}
+                    className="rounded-md border border-cyan-200 bg-cyan-50 px-2.5 py-1.5 text-xs font-medium text-cyan-900 outline-none focus:border-cyan-500"
+                    aria-label={`Display role for ${member.full_name ?? member.email ?? 'member'}`}
+                  >
+                    <option value="">No display role</option>
+                    {displayRoleOptions.map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
                   <select
                     value={pendingRoleByUserId[member.user_id] ?? member.role ?? 'member'}
                     onChange={(event) => {
@@ -495,9 +819,11 @@ export function TeamAccessSection({
                   )}
                 </div>
               ) : (
-                <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700">
-                  {member.role ?? 'member'}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700">
+                    {member.role ?? 'member'}
+                  </span>
+                </div>
               )}
             </div>
           ))}

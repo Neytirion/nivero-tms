@@ -10,6 +10,8 @@ export type ProjectWikiPage = Database['public']['Tables']['project_wiki_pages']
 export type ProjectDocument = Database['public']['Tables']['project_documents']['Row']
 export type Task = Database['public']['Tables']['tasks']['Row']
 export type TimeEntry = Database['public']['Tables']['time_entries']['Row']
+export type ProjectDisplayRole = Database['public']['Tables']['project_display_roles']['Row']
+export type ProjectMemberDisplayRole = Database['public']['Tables']['project_member_display_roles']['Row']
 
 export type ProjectPreview = Pick<
   Project,
@@ -131,6 +133,16 @@ export type ProjectDocumentPreview = Pick<
   'id' | 'project_id' | 'user_id' | 'file_url' | 'name' | 'mime_type' | 'size_bytes' | 'created_at'
 >
 
+export type ProjectDisplayRolePreview = Pick<
+  ProjectDisplayRole,
+  'id' | 'project_id' | 'name' | 'created_by' | 'created_at' | 'updated_at'
+>
+
+export type ProjectMemberDisplayRolePreview = Pick<
+  ProjectMemberDisplayRole,
+  'project_id' | 'user_id' | 'display_role' | 'created_at' | 'updated_at'
+>
+
 export interface CreateProjectInput {
   name: string
   description?: string
@@ -201,6 +213,23 @@ export interface RemoveProjectMemberInput {
   projectId: string
   userId: string
   unassignUnfinishedTasks: boolean
+}
+
+export interface CreateProjectDisplayRoleInput {
+  projectId: string
+  name: string
+}
+
+export interface DeleteProjectDisplayRoleInput {
+  projectId: string
+  roleId: string
+  roleName: string
+}
+
+export interface SetProjectMemberDisplayRoleInput {
+  projectId: string
+  userId: string
+  displayRole: string
 }
 
 export interface CreateTimeEntryInput {

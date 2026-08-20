@@ -560,6 +560,87 @@ export interface Database {
           },
         ]
       }
+      project_display_roles: {
+        Row: {
+          id: string
+          project_id: string
+          name: string
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          name: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          name?: string
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'project_display_roles_project_id_fkey'
+            columns: ['project_id']
+            isOneToOne: false
+            referencedRelation: 'projects'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'project_display_roles_created_by_fkey'
+            columns: ['created_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      project_member_display_roles: {
+        Row: {
+          project_id: string
+          user_id: string
+          display_role: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          project_id: string
+          user_id: string
+          display_role: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          project_id?: string
+          user_id?: string
+          display_role?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'project_member_display_roles_project_id_fkey'
+            columns: ['project_id']
+            isOneToOne: false
+            referencedRelation: 'projects'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'project_member_display_roles_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       users: {
         Row: {
           id: string

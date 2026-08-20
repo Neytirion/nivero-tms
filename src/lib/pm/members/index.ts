@@ -1,10 +1,15 @@
 import { supabase } from '../../supabase'
 import type {
   AddProjectMemberInput,
+  CreateProjectDisplayRoleInput,
+  DeleteProjectDisplayRoleInput,
   InvitableUserProfile,
   InviteProjectMemberByEmailInput,
+  ProjectDisplayRolePreview,
   ProjectMemberListItem,
+  ProjectMemberDisplayRolePreview,
   RemoveProjectMemberInput,
+  SetProjectMemberDisplayRoleInput,
   UpdateProjectMemberRoleInput,
 } from '../types'
 import { assertProjectEditable } from '../helpers'
@@ -139,5 +144,120 @@ export async function removeProjectMember(input: RemoveProjectMemberInput) {
 
   if (rpcCall.error) {
     throw new Error(rpcCall.error.message)
+  }
+}
+
+export async function getProjectDisplayRoles(projectId: string): Promise<ProjectDisplayRolePreview[]> {
+  const { data, error } = await supabase
+    .from('project_display_roles')
+    .select('id,project_id,name,created_by,created_at,updated_at')
+    .eq('project_id', projectId)
+    .order('name', { ascending: true })
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data satisfies ProjectDisplayRolePreview[]
+}
+
+export async function getProjectMemberDisplayRoles(
+  projectId: string,
+): Promise<ProjectMemberDisplayRolePreview[]> {
+  const { data, error } = await supabase
+    .from('project_member_display_roles')
+    .select('project_id,user_id,display_role,created_at,updated_at')
+    .eq('project_id', projectId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data satisfies ProjectMemberDisplayRolePreview[]
+}
+
+export async function createProjectDisplayRole(input: CreateProjectDisplayRoleInput) {
+  await assertProjectEditable(input.projectId, 'create display role')
+
+  const normalizedName = input.name.trim()
+  if (!normalizedName) {
+    throw new Error('Display role name is required')
+  }
+
+  const { data, error } = await supabase
+    .from('project_display_roles')
+    .insert({
+      project_id: input.projectId,
+      name: normalizedName,
+    })
+    .select('id,project_id,name,created_by,created_at,updated_at')
+    .single()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  return data satisfies ProjectDisplayRolePreview
+}
+
+export async function deleteProjectDisplayRole(input: DeleteProjectDisplayRoleInput) {
+  await assertProjectEditable(input.projectId, 'delete display role')
+
+  const { error: deleteRoleError } = await supabase
+    .from('project_display_roles')
+    .delete()
+    .eq('project_id', input.projectId)
+    .eq('id', input.roleId)
+
+  if (deleteRoleError) {
+    throw new Error(deleteRoleError.message)
+  }
+
+  const { error: cleanupError } = await supabase
+    .from('project_member_display_roles')
+    .delete()
+    .eq('project_id', input.projectId)
+    .ilike('display_role', input.roleName)
+
+  if (cleanupError) {
+    throw new Error(cleanupError.message)
+  }
+}
+
+export async function setProjectMemberDisplayRole(input: SetProjectMemberDisplayRoleInput) {
+  await assertProjectEditable(input.projectId, 'set member display role')
+
+  const normalizedRole = input.displayRole.trim()
+  if (!normalizedRole) {
+    throw new Error('Display role is required')
+  }
+
+  const { error } = await supabase
+    .from('project_member_display_roles')
+    .upsert(
+      {
+        project_id: input.projectId,
+        user_id: input.userId,
+        display_role: normalizedRole,
+      },
+      { onConflict: 'project_id,user_id' },
+    )
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
+export async function clearProjectMemberDisplayRole(projectId: string, userId: string) {
+  await assertProjectEditable(projectId, 'clear member display role')
+
+  const { error } = await supabase
+    .from('project_member_display_roles')
+    .delete()
+    .eq('project_id', projectId)
+    .eq('user_id', userId)
+
+  if (error) {
+    throw new Error(error.message)
   }
 }

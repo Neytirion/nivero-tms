@@ -26,6 +26,33 @@ export async function submitClientIntake(input: SubmitClientIntakeInput) {
   })
 
   if (error) {
+    const response = (error as { context?: Response }).context
+
+    if (response) {
+      const responseClone = response.clone()
+      let parsedMessage = ''
+
+      try {
+        const payload = (await response.json()) as { error?: string; message?: string }
+        parsedMessage = payload.error ?? payload.message ?? ''
+      } catch {
+        // Ignore JSON parse errors; we'll try plain text below.
+      }
+
+      if (parsedMessage.trim().length > 0) {
+        throw new Error(parsedMessage)
+      }
+
+      try {
+        const text = await responseClone.text()
+        if (text.trim().length > 0) {
+          throw new Error(text)
+        }
+      } catch {
+        // Fall through to generic message.
+      }
+    }
+
     throw new Error(error.message)
   }
 

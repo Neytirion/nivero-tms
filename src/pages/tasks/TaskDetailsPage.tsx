@@ -90,16 +90,6 @@ export function TaskDetailsPage() {
     }
   }, [taskId, taskStatus])
 
-  useEffect(() => {
-    if (!taskId) {
-      return
-    }
-
-    if (!isDescriptionEditing) {
-      setDescriptionDraft(task?.description ?? '')
-    }
-  }, [taskId, task?.description, isDescriptionEditing])
-
   if (!task) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
@@ -204,6 +194,7 @@ export function TaskDetailsPage() {
     try {
       await editTask(taskId, { description: nextDescription })
       setIsDescriptionEditing(false)
+      setDescriptionDraft(nextDescription)
     } finally {
       setIsDescriptionSaving(false)
     }

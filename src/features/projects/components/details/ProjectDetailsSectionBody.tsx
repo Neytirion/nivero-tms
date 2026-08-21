@@ -27,6 +27,7 @@ interface ProjectDetailsSectionBodyProps {
   onSettingsDeadlineChange: (value: string) => void
   settingsBudgetAmount: string
   onSettingsBudgetAmountChange: (value: string) => void
+  selectedProjectClientIntakeToken: string | null
   canEditSelectedProject: boolean
   canDeleteSelectedProject?: boolean
   canManageMemberRoles?: boolean
@@ -72,6 +73,7 @@ export function ProjectDetailsSectionBody({
   onSettingsDeadlineChange,
   settingsBudgetAmount,
   onSettingsBudgetAmountChange,
+  selectedProjectClientIntakeToken,
   canEditSelectedProject,
   canDeleteSelectedProject,
   canManageMemberRoles,
@@ -151,6 +153,7 @@ export function ProjectDetailsSectionBody({
           onSettingsDeadlineChange={onSettingsDeadlineChange}
           settingsBudgetAmount={settingsBudgetAmount}
           onSettingsBudgetAmountChange={onSettingsBudgetAmountChange}
+          selectedProjectClientIntakeToken={selectedProjectClientIntakeToken}
           canEditSelectedProject={canEditSelectedProject}
           canDeleteSelectedProject={canDeleteSelectedProject}
           canCompleteSelectedProject={selectedProjectId ? canManageProject(selectedProjectId) : false}

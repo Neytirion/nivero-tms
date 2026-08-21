@@ -11,6 +11,7 @@ interface ProjectSettingsTabProps {
   onSettingsDeadlineChange: (value: string) => void
   settingsBudgetAmount: string
   onSettingsBudgetAmountChange: (value: string) => void
+  selectedProjectClientIntakeToken: string | null
   canEditSelectedProject: boolean
   canDeleteSelectedProject?: boolean
   canCompleteSelectedProject?: boolean
@@ -65,6 +66,7 @@ export function ProjectSettingsTab({
   onSettingsDeadlineChange,
   settingsBudgetAmount,
   onSettingsBudgetAmountChange,
+  selectedProjectClientIntakeToken,
   canEditSelectedProject,
   canDeleteSelectedProject,
   canCompleteSelectedProject,
@@ -76,6 +78,21 @@ export function ProjectSettingsTab({
   onOpenCompleteConfirm,
 }: ProjectSettingsTabProps) {
   const durationDays = getDurationDays(settingsStartDate, settingsDeadline)
+  const clientIntakeUrl = selectedProjectClientIntakeToken
+    ? `${window.location.origin}/client/${selectedProjectClientIntakeToken}`
+    : null
+
+  const handleCopyClientIntakeUrl = async () => {
+    if (!clientIntakeUrl) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(clientIntakeUrl)
+    } catch {
+      // Silent fallback: URL stays visible for manual copy.
+    }
+  }
 
   return (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -163,6 +180,29 @@ export function ProjectSettingsTab({
             disabled={!canEditSelectedProject}
           />
         </label>
+
+        <div className="rounded-lg border border-slate-200 bg-white px-3 py-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Client Request Link</p>
+          <p className="mt-1 text-xs text-slate-500">
+            Share this link with your client so they can submit requests, bug reports, and comments directly to this project.
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              value={clientIntakeUrl ?? 'Generating link...'}
+              readOnly
+              className="min-w-0 flex-1 rounded-md border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs text-slate-700"
+            />
+            <button
+              type="button"
+              onClick={() => void handleCopyClientIntakeUrl()}
+              disabled={!clientIntakeUrl}
+              className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Copy
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">

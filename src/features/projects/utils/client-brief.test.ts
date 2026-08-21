@@ -7,6 +7,7 @@ function createProject(overrides: Partial<ProjectPreview> = {}): ProjectPreview 
     id: 'project-1',
     name: 'Northwind Revamp',
     description: 'Rebuild customer portal with role-based access and project analytics.',
+    client_intake_token: 'token-project-1',
     owner_id: 'owner-1',
     customer_name: 'Northwind',
     project_manager_id: 'manager-1',

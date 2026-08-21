@@ -16,6 +16,7 @@ import { TimeTrackingPage } from './pages/time-tracking/TimeTrackingPage.tsx'
 import { ResourcePlanningPage } from './pages/resource-planning/ResourcePlanningPage.tsx'
 import { MentionsPage } from './pages/mentions/MentionsPage.tsx'
 import { useAuthSession } from './features/auth/useAuthSession.ts'
+import { ClientIntakePage } from './pages/client/ClientIntakePage.tsx'
 
 function App() {
   const { user, isAuthLoading } = useAuthSession()
@@ -33,6 +34,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/client/:token" element={<ClientIntakePage />} />
         <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route

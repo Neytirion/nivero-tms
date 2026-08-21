@@ -14,6 +14,7 @@ export interface Database {
           id: string
           name: string
           description: string | null
+          client_intake_token: string
           owner_id: string
           customer_name: string | null
           project_manager_id: string | null
@@ -35,6 +36,7 @@ export interface Database {
           id?: string
           name: string
           description?: string | null
+          client_intake_token?: string
           owner_id: string
           customer_name?: string | null
           project_manager_id?: string | null
@@ -56,6 +58,7 @@ export interface Database {
           id?: string
           name?: string
           description?: string | null
+          client_intake_token?: string
           owner_id?: string
           customer_name?: string | null
           project_manager_id?: string | null

@@ -7,6 +7,7 @@ export function createProjectPreview(overrides: Partial<ProjectPreview> = {}): P
     id: 'project-1',
     name: 'Project',
     description: null,
+    client_intake_token: 'token-project-1',
     owner_id: 'owner-1',
     customer_name: null,
     project_manager_id: null,

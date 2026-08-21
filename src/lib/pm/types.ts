@@ -18,6 +18,7 @@ export type ProjectPreview = Pick<
   | 'id'
   | 'name'
   | 'description'
+  | 'client_intake_token'
   | 'owner_id'
   | 'customer_name'
   | 'project_manager_id'

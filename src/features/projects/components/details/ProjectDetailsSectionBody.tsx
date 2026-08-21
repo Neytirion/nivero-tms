@@ -104,12 +104,6 @@ export function ProjectDetailsSectionBody({
 }: ProjectDetailsSectionBodyProps) {
   return (
     <>
-      {isLoading ? (
-        <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-600">
-          Loading module...
-        </div>
-      ) : null}
-
       {activeTab === 'overview' ? (
         <ProjectOverviewTab
           selectedProject={selectedProject}

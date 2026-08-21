@@ -117,7 +117,6 @@ export function TaskViewsSection({
         <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3">
           <div className="mb-2">
             <h4 className="text-sm font-semibold text-cyan-900">Unassigned Tasks ({sharedQueueTasks.length})</h4>
-            <p className="text-xs text-cyan-700">Shared queue anyone can take</p>
           </div>
 
           {sharedQueueTasks.length === 0 ? (

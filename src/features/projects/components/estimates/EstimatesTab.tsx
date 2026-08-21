@@ -13,9 +13,7 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
 
   const {
     isLoading,
-    status,
     estimates,
-    activeEstimate,
     activeEstimateId,
     setActiveEstimateId,
     packages,
@@ -46,11 +44,6 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
 
       <>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-            <div className="w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 text-xs text-blue-900">
-              <span className="font-semibold">Workflow:</span> Create versions • Add/edit work packages • Save changes • Approve baseline. Team can see approved estimates from project start date.
-            </div>
-          </div>
-          <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
             {canEdit ? (
               <>
                 <button
@@ -66,41 +59,9 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
                 >
                   New Estimate Version
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingEstimateId(activeEstimateId)}
-                  disabled={isLoading || !canEditActiveEstimate || !activeEstimateId || isEditingPackages}
-                  className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                  title="Enable editing for work packages in this draft"
-                >
-                  Edit Work Packages
-                </button>
-                {isEditingPackages ? (
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const wasSaved = await saveDraftHandler()
-                      if (wasSaved) {
-                        setEditingEstimateId(null)
-                      }
-                    }}
-                    disabled={isLoading || !activeEstimateId || !canEditActiveEstimate}
-                    className="rounded-lg bg-cyan-700 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
-                    title="Save your work package changes to this draft version"
-                  >
-                    Save Changes
-                  </button>
-                ) : null}
               </>
             ) : null}
           </div>
-
-          <p className="mt-2 text-xs text-slate-500">
-            {status ||
-              (activeEstimate?.status === 'approved'
-                ? 'Approved estimates are locked. Create a new version to make changes.'
-                : 'Draft versions can be edited. Save changes, then finalize and approve when ready.')}
-          </p>
 
           <div className="mt-3 flex flex-wrap gap-2">
             {estimates.length === 0 ? (
@@ -139,7 +100,7 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
           </div>
 
           <div className="mt-3 flex items-center justify-between">
-            <p className="text-xs text-slate-500">Active packages | Archived ones are hidden from task creation but keep historical task links.</p>
+            <span />
             <button
               type="button"
               onClick={() => setShowArchived(!showArchived)}
@@ -251,20 +212,47 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
 
           {canEdit ? (
             <div className="mt-3 flex flex-wrap gap-2">
+              {isEditingPackages ? (
+                <button
+                  type="button"
+                  onClick={addWorkPackageRow}
+                  disabled={isLoading || !canModifyPackages}
+                  className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  title="Add another work package to this estimate"
+                >
+                  + Add Work Package
+                </button>
+              ) : null}
               <button
                 type="button"
-                onClick={addWorkPackageRow}
-                disabled={isLoading || !canModifyPackages}
+                onClick={() => setEditingEstimateId(activeEstimateId)}
+                disabled={isLoading || !canEditActiveEstimate || !activeEstimateId || isEditingPackages}
                 className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                title="Add another work package to this estimate"
+                title="Enable editing for work packages in this draft"
               >
-                + Add Work Package
+                Edit
               </button>
+              {isEditingPackages ? (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const wasSaved = await saveDraftHandler()
+                    if (wasSaved) {
+                      setEditingEstimateId(null)
+                    }
+                  }}
+                  disabled={isLoading || !activeEstimateId || !canEditActiveEstimate}
+                  className="rounded-lg bg-cyan-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-cyan-600 disabled:cursor-not-allowed disabled:opacity-60"
+                  title="Save your work package changes to this draft version"
+                >
+                  Save Changes
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => setIsApproveConfirmOpen(true)}
                 disabled={isLoading || !activeEstimateId || !canEditActiveEstimate || hasPackageValidationErrors}
-                className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="ml-auto rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
                 title={
                   hasPackageValidationErrors
                     ? 'Fix validation errors before finalizing and approving'

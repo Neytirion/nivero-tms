@@ -195,10 +195,10 @@ export async function saveEstimateDraft(input: SaveEstimateDraftInput) {
     seenNames.add(normalizedName)
   }
 
-  // Validation 2: Check that all estimate hours are > 0
+  // Validation 2: Check that all estimate hours are non-negative
   for (const pkg of sanitizedPackages) {
-    if (pkg.estimatedHours <= 0) {
-      throw new Error(`Work package "${pkg.name}" must have estimated hours greater than 0`)
+    if (pkg.estimatedHours < 0) {
+      throw new Error(`Work package "${pkg.name}" must have estimated hours of 0 or more`)
     }
   }
 

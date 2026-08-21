@@ -172,7 +172,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
 
       setActiveEstimateId(targetId)
       setPackages(toEditablePackages(data.find((item: EstimateWithPackages) => item.id === targetId) ?? null))
-      setStatus(`Loaded ${data.length} estimate version(s).`)
+      setStatus('')
     } catch (error) {
       setStatus(error instanceof Error ? `Estimate load error: ${error.message}` : 'Estimate load error')
     }

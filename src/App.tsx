@@ -11,6 +11,7 @@ import { ResetPasswordPage } from './pages/auth/ResetPasswordPage.tsx'
 import { TasksPage } from './pages/tasks/TasksPage.tsx'
 import { TaskDetailsPage } from './pages/tasks/TaskDetailsPage.tsx'
 import { CreateTaskPage } from './pages/tasks/CreateTaskPage.tsx'
+import { TaskCardSettingsPage } from './pages/tasks/TaskCardSettingsPage.tsx'
 import { TimeTrackingPage } from './pages/time-tracking/TimeTrackingPage.tsx'
 import { ResourcePlanningPage } from './pages/resource-planning/ResourcePlanningPage.tsx'
 import { MentionsPage } from './pages/mentions/MentionsPage.tsx'
@@ -48,6 +49,7 @@ function App() {
           <Route path="projects/create" element={<CreateProjectPage />} />
           <Route path="projects/:projectId" element={<ProjectDetailsPage />} />
           <Route path="tasks" element={<TasksPage />} />
+          <Route path="tasks/card-settings" element={<TaskCardSettingsPage />} />
           <Route path="tasks/create" element={<CreateTaskPage />} />
           <Route path="tasks/:taskId" element={<TaskDetailsPage />} />
           <Route path="mentions" element={<MentionsPage />} />

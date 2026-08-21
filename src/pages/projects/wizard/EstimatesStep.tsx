@@ -1,16 +1,12 @@
 import type { WorkPackageRow } from './types'
 
 interface EstimatesStepProps {
-  useEstimates: boolean
   workPackages: WorkPackageRow[]
-  onUseEstimatesChange: (value: boolean) => void
   onWorkPackagesChange: (packages: WorkPackageRow[]) => void
 }
 
 export function EstimatesStep({
-  useEstimates,
   workPackages,
-  onUseEstimatesChange,
   onWorkPackagesChange,
 }: EstimatesStepProps) {
   const handleAddPackage = () => {
@@ -61,25 +57,8 @@ export function EstimatesStep({
       <h2 className="text-2xl font-bold text-slate-900 mb-6">Project Estimates</h2>
 
       <div className="space-y-4">
-        {/* Enable Estimates Checkbox */}
-        <label className="flex items-start gap-3 p-4 rounded-lg border border-slate-200 hover:bg-slate-50 cursor-pointer transition-colors">
-          <input
-            type="checkbox"
-            checked={useEstimates}
-            onChange={(event) => onUseEstimatesChange(event.target.checked)}
-            className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 cursor-pointer"
-          />
-          <div className="flex-1">
-            <p className="text-sm font-semibold text-slate-900">Enable Estimate Versioning</p>
-            <p className="text-xs text-slate-600 mt-1">
-              Create and manage project estimates with work packages.
-            </p>
-          </div>
-        </label>
-
         {/* Work Packages Table */}
-        {useEstimates && (
-          <>
+        <>
             <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
               <table className="min-w-full border-collapse text-sm">
                 <thead className="bg-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
@@ -164,8 +143,7 @@ export function EstimatesStep({
                 </p>
               </div>
             )}
-          </>
-        )}
+        </>
       </div>
     </div>
   )

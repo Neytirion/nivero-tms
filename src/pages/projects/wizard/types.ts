@@ -31,8 +31,7 @@ export type ProjectWizardData = {
   projectDescription: string
   projectBudgetAmount: string
 
-  // Step 4: Estimates (optional)
-  useEstimates: boolean
+  // Step 4: Estimates
   workPackages: WorkPackageRow[]
 
   // Step 5: Team (optional)

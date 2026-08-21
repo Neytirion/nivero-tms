@@ -95,37 +95,35 @@ export function ReviewStep({ data }: ReviewStepProps) {
           </div>
         )}
 
-        {/* Optional Estimates */}
-        {data.useEstimates && (
-          <div className="p-4 bg-slate-50 rounded-lg">
-            <h3 className="font-semibold text-slate-900 mb-3">⏱️ Estimates</h3>
-            <div className="space-y-2 text-sm">
-              <p>
-                <span className="text-slate-600">Status:</span>{' '}
-                <span className="font-medium text-slate-900">✓ Enabled</span>
-              </p>
-              {data.workPackages.length > 0 && (
-                <>
-                  <p className="text-slate-600 font-medium mt-3">Work Packages:</p>
-                  <div className="space-y-1">
-                    {data.workPackages.map((pkg, idx) => (
-                      <div key={idx} className="flex justify-between text-sm">
-                        <span className="text-slate-900">{pkg.name}</span>
-                        <span className="text-slate-600">{pkg.estimatedHours}h</span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="pt-2 border-t border-slate-300 flex justify-between font-semibold">
-                    <span>Total:</span>
-                    <span className="text-slate-900">
-                      {data.workPackages.reduce((sum, pkg) => sum + (Number.parseFloat(pkg.estimatedHours) || 0), 0).toFixed(1)}h
-                    </span>
-                  </p>
-                </>
-              )}
-            </div>
+        {/* Estimates */}
+        <div className="p-4 bg-slate-50 rounded-lg">
+          <h3 className="font-semibold text-slate-900 mb-3">⏱️ Estimates</h3>
+          <div className="space-y-2 text-sm">
+            <p>
+              <span className="text-slate-600">Status:</span>{' '}
+              <span className="font-medium text-slate-900">✓ Enabled</span>
+            </p>
+            {data.workPackages.length > 0 && (
+              <>
+                <p className="text-slate-600 font-medium mt-3">Work Packages:</p>
+                <div className="space-y-1">
+                  {data.workPackages.map((pkg, idx) => (
+                    <div key={idx} className="flex justify-between text-sm">
+                      <span className="text-slate-900">{pkg.name}</span>
+                      <span className="text-slate-600">{pkg.estimatedHours}h</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="pt-2 border-t border-slate-300 flex justify-between font-semibold">
+                  <span>Total:</span>
+                  <span className="text-slate-900">
+                    {data.workPackages.reduce((sum, pkg) => sum + (Number.parseFloat(pkg.estimatedHours) || 0), 0).toFixed(1)}h
+                  </span>
+                </p>
+              </>
+            )}
           </div>
-        )}
+        </div>
 
         {/* Optional Team */}
         {data.teamInvitations.length > 0 && (

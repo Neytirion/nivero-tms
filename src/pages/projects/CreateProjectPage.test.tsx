@@ -125,7 +125,7 @@ describe('CreateProjectPage', () => {
         budgetAmount: undefined,
         startDate: '2026-07-10',
         endDate: '2026-07-20',
-        useEstimates: false,
+        useEstimates: true,
       })
     })
   })

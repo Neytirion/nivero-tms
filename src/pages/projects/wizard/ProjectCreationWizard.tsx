@@ -36,16 +36,11 @@ export function ProjectCreationWizard({
     projectEndDate: '',
     projectDescription: '',
     projectBudgetAmount: '',
-    useEstimates: false,
     workPackages: [],
     teamInvitations: [],
   })
 
   const hasDuplicateWorkPackageNames = useMemo(() => {
-    if (!wizardData.useEstimates) {
-      return false
-    }
-
     const seenNames = new Set<string>()
     for (const workPackage of wizardData.workPackages) {
       const normalizedName = workPackage.name.trim().toLowerCase()
@@ -61,7 +56,7 @@ export function ProjectCreationWizard({
     }
 
     return false
-  }, [wizardData.useEstimates, wizardData.workPackages])
+  }, [wizardData.workPackages])
 
   // Validation logic
   const canGoToNextStep = useMemo(() => {
@@ -79,14 +74,10 @@ export function ProjectCreationWizard({
       case 'details':
         return true // Optional step
       case 'estimates':
-        // If estimates enabled, validate all packages have names and no duplicates
-        if (wizardData.useEstimates) {
-          return (
-            wizardData.workPackages.every((pkg) => pkg.name.trim().length > 0) &&
-            !hasDuplicateWorkPackageNames
-          )
-        }
-        return true
+        return (
+          wizardData.workPackages.every((pkg) => pkg.name.trim().length > 0) &&
+          !hasDuplicateWorkPackageNames
+        )
       case 'team':
         return true // Optional step
       case 'review':
@@ -174,9 +165,7 @@ export function ProjectCreationWizard({
 
       {currentStep === 'estimates' && (
         <EstimatesStep
-          useEstimates={wizardData.useEstimates}
           workPackages={wizardData.workPackages}
-          onUseEstimatesChange={(value) => handleDataChange('useEstimates', value)}
           onWorkPackagesChange={(packages) => handleDataChange('workPackages', packages)}
         />
       )}

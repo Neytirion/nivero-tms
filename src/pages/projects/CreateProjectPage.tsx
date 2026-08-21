@@ -46,7 +46,7 @@ export function CreateProjectPage() {
             : undefined,
         startDate: data.projectStartDate || undefined,
         endDate: data.projectEndDate || undefined,
-        useEstimates: data.useEstimates,
+        useEstimates: true,
       })
 
       if (!projectId) {
@@ -57,8 +57,8 @@ export function CreateProjectPage() {
       // Navigate immediately to the new project details (Overview tab by default).
       navigate(`/app/projects/${projectId}`)
 
-      // Create initial estimate version with work packages if enabled
-      if (data.useEstimates && data.workPackages.length > 0) {
+      // Create initial estimate version when work packages were provided in wizard.
+      if (data.workPackages.length > 0) {
         try {
           await createInitialEstimateVersion(projectId, data.workPackages)
         } catch (error) {
@@ -145,6 +145,7 @@ export function CreateProjectPage() {
         customerName: draft.project.customer_name || undefined,
         startDate: draft.project.start_date || undefined,
         endDate: draft.project.end_date || undefined,
+        useEstimates: true,
       })
       if (projectId) {
         navigate(`/app/projects/${projectId}`)

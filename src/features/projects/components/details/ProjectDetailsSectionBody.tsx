@@ -27,8 +27,6 @@ interface ProjectDetailsSectionBodyProps {
   onSettingsDeadlineChange: (value: string) => void
   settingsBudgetAmount: string
   onSettingsBudgetAmountChange: (value: string) => void
-  settingsUseEstimates: boolean
-  onSettingsUseEstimatesChange: (value: boolean) => void
   canEditSelectedProject: boolean
   canDeleteSelectedProject?: boolean
   canManageMemberRoles?: boolean
@@ -74,8 +72,6 @@ export function ProjectDetailsSectionBody({
   onSettingsDeadlineChange,
   settingsBudgetAmount,
   onSettingsBudgetAmountChange,
-  settingsUseEstimates,
-  onSettingsUseEstimatesChange,
   canEditSelectedProject,
   canDeleteSelectedProject,
   canManageMemberRoles,
@@ -171,8 +167,6 @@ export function ProjectDetailsSectionBody({
         <EstimatesTab
           projectId={selectedProject.id}
           canEdit={canEditSelectedProject}
-          useEstimates={settingsUseEstimates}
-          onUseEstimatesChange={onSettingsUseEstimatesChange}
         />
       ) : null}
 

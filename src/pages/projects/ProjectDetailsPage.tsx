@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ProjectDetailsSection } from '../../features/projects/components'
 import type { DetailsTab } from '../../features/projects/components'
@@ -25,8 +25,6 @@ export function ProjectDetailsPage() {
   const navigate = useNavigate()
   const { projectId } = useParams<{ projectId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [isEstimateToggleConfirmOpen, setIsEstimateToggleConfirmOpen] = useState(false)
-  const [pendingEstimateToggleValue, setPendingEstimateToggleValue] = useState<boolean | null>(null)
 
   const {
     isLoading,
@@ -64,7 +62,6 @@ export function ProjectDetailsPage() {
     inviteMemberByEmailAndRoleHandler,
     completeProjectHandler,
     saveProjectSettings,
-    saveUseEstimatesSetting,
     deleteSelectedProjectHandler,
     updateMemberRoleHandler,
     removeMemberHandler,
@@ -96,40 +93,6 @@ export function ProjectDetailsPage() {
   }, [searchParams, setActiveTab])
 
   const canEditSelectedProject = selectedProject ? canManageProject(selectedProject.id) : false
-
-  const requestEstimateToggle = (value: boolean) => {
-    if (value === currentSettingsDraft.useEstimates) {
-      return
-    }
-
-    setPendingEstimateToggleValue(value)
-    setIsEstimateToggleConfirmOpen(true)
-  }
-
-  const confirmEstimateToggle = async () => {
-    if (pendingEstimateToggleValue === null) {
-      setIsEstimateToggleConfirmOpen(false)
-      return
-    }
-
-    const nextValue = pendingEstimateToggleValue
-    const wasSaved = await saveUseEstimatesSetting(nextValue)
-
-    if (wasSaved) {
-      updateSettingsDraft({ useEstimates: nextValue })
-      setPendingEstimateToggleValue(null)
-      setIsEstimateToggleConfirmOpen(false)
-      return
-    }
-
-    setPendingEstimateToggleValue(null)
-    setIsEstimateToggleConfirmOpen(false)
-  }
-
-  const cancelEstimateToggle = () => {
-    setPendingEstimateToggleValue(null)
-    setIsEstimateToggleConfirmOpen(false)
-  }
 
   const handleDeleteProjectConfirm = async () => {
     const wasDeleted = await deleteSelectedProjectHandler()
@@ -201,8 +164,6 @@ export function ProjectDetailsPage() {
             onSettingsDeadlineChange={(value) => updateSettingsDraft({ deadline: value })}
             settingsBudgetAmount={currentSettingsDraft.budgetAmount}
             onSettingsBudgetAmountChange={(value) => updateSettingsDraft({ budgetAmount: value })}
-            settingsUseEstimates={currentSettingsDraft.useEstimates}
-            onSettingsUseEstimatesChange={requestEstimateToggle}
             canEditSelectedProject={canEditSelectedProject}
             canDeleteSelectedProject={canDeleteSelectedProject}
             canManageMemberRoles={canManageMemberRoles}
@@ -267,19 +228,6 @@ export function ProjectDetailsPage() {
         </nav>
       </div>
 
-      <ConfirmDialog
-        isOpen={isEstimateToggleConfirmOpen}
-        title={pendingEstimateToggleValue ? 'Enable estimate versioning' : 'Disable estimate versioning'}
-        description={
-          pendingEstimateToggleValue
-            ? 'Enable estimate versioning for this project? Work packages and estimate versions will become available immediately.'
-            : 'Disable estimate versioning for this project? Work package planning will be hidden, but existing task links will remain in history.'
-        }
-        confirmText={pendingEstimateToggleValue ? 'Enable' : 'Disable'}
-        tone={pendingEstimateToggleValue ? 'success' : 'danger'}
-        onCancel={cancelEstimateToggle}
-        onConfirm={confirmEstimateToggle}
-      />
       <ConfirmDialog
         isOpen={isCompleteConfirmOpen}
         title="Complete project"

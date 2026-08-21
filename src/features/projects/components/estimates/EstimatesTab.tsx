@@ -5,11 +5,9 @@ import { useEstimatesTabController } from './useEstimatesTabController'
 interface EstimatesTabProps {
   projectId: string
   canEdit: boolean
-  useEstimates: boolean
-  onUseEstimatesChange: (value: boolean) => void
 }
 
-export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesChange }: EstimatesTabProps) {
+export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
   const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false)
 
   const {
@@ -43,29 +41,7 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
         <h4 className="text-sm font-semibold text-slate-900">Estimates Module</h4>
       </div>
 
-      <label className="mt-3 flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-3 py-2.5">
-        <input
-          type="checkbox"
-          checked={useEstimates}
-          onChange={(event) => onUseEstimatesChange(event.target.checked)}
-          disabled={!canEdit}
-          className="h-4 w-4 rounded border-slate-300 text-blue-600 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-        />
-        <div className="flex-1">
-          <span className="block text-sm font-semibold text-slate-900">Enable Estimate Versioning</span>
-          <span className="block text-xs text-slate-500">Toggle estimate versions and work package planning for this project</span>
-          <span className="block text-[11px] text-slate-400">Changes apply immediately after confirmation.</span>
-        </div>
-      </label>
-
-      {!useEstimates ? (
-        <div className="mt-3 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-600">
-          Estimate versioning is disabled. Turn it on to work with versions and work packages.
-        </div>
-      ) : null}
-
-      {useEstimates ? (
-        <>
+      <>
           <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
             <div className="w-full rounded-lg border border-blue-200 bg-blue-50 px-3 py-2.5 text-xs text-blue-900">
               <span className="font-semibold">Workflow:</span> Create versions • Add/edit work packages • Save changes • Approve baseline. Team can see approved estimates from project start date.
@@ -277,8 +253,7 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
               </button>
             </div>
           ) : null}
-        </>
-      ) : null}
+      </>
 
       <ConfirmDialog
         isOpen={isApproveConfirmOpen}

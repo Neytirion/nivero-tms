@@ -22,28 +22,94 @@ BEGIN;
 
 -- ── 1. project_members: prevent duplicate memberships ────────────────────────
 -- Same user can only have one membership record per project.
-ALTER TABLE public.project_members
-  ADD CONSTRAINT uq_project_members_user UNIQUE (project_id, user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'uq_project_members_user'
+      AND conrelid = 'public.project_members'::regclass
+  ) THEN
+    ALTER TABLE public.project_members
+      ADD CONSTRAINT uq_project_members_user UNIQUE (project_id, user_id);
+  END IF;
+END
+$$;
 
 -- ── 2. estimates: prevent duplicate version numbers per project ───────────────
-ALTER TABLE public.estimates
-  ADD CONSTRAINT uq_estimates_version UNIQUE (project_id, version_number);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'uq_estimates_version'
+      AND conrelid = 'public.estimates'::regclass
+  ) THEN
+    ALTER TABLE public.estimates
+      ADD CONSTRAINT uq_estimates_version UNIQUE (project_id, version_number);
+  END IF;
+END
+$$;
 
 -- ── 3. task_dependencies: prevent self-loops and duplicate deps ───────────────
-ALTER TABLE public.task_dependencies
-  ADD CONSTRAINT chk_no_self_dependency CHECK (task_id <> depends_on_task_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'chk_no_self_dependency'
+      AND conrelid = 'public.task_dependencies'::regclass
+  ) THEN
+    ALTER TABLE public.task_dependencies
+      ADD CONSTRAINT chk_no_self_dependency CHECK (task_id <> depends_on_task_id);
+  END IF;
+END
+$$;
 
-ALTER TABLE public.task_dependencies
-  ADD CONSTRAINT uq_task_dependency UNIQUE (task_id, depends_on_task_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'uq_task_dependency'
+      AND conrelid = 'public.task_dependencies'::regclass
+  ) THEN
+    ALTER TABLE public.task_dependencies
+      ADD CONSTRAINT uq_task_dependency UNIQUE (task_id, depends_on_task_id);
+  END IF;
+END
+$$;
 
 -- ── 4. time_entries: started_at must be before ended_at ──────────────────────
-ALTER TABLE public.time_entries
-  ADD CONSTRAINT chk_time_entry_order
-    CHECK (started_at IS NULL OR ended_at IS NULL OR started_at < ended_at);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'chk_time_entry_order'
+      AND conrelid = 'public.time_entries'::regclass
+  ) THEN
+    ALTER TABLE public.time_entries
+      ADD CONSTRAINT chk_time_entry_order
+        CHECK (started_at IS NULL OR ended_at IS NULL OR started_at < ended_at);
+  END IF;
+END
+$$;
 
 -- ── 5. comment_mentions: one mention per user per comment ────────────────────
-ALTER TABLE public.comment_mentions
-  ADD CONSTRAINT uq_comment_mention UNIQUE (comment_id, mentioned_user_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'uq_comment_mention'
+      AND conrelid = 'public.comment_mentions'::regclass
+  ) THEN
+    ALTER TABLE public.comment_mentions
+      ADD CONSTRAINT uq_comment_mention UNIQUE (comment_id, mentioned_user_id);
+  END IF;
+END
+$$;
 
 -- ── 6. projects.owner_id: project must have an owner ────────────────────────
 ALTER TABLE public.projects

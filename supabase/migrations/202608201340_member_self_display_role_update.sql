@@ -3,6 +3,7 @@
 -- Elevated project role managers (owner/admin) can manage any member assignment.
 
 drop policy if exists "Member display roles manageable by managers" on public.project_member_display_roles;
+drop policy if exists "Member display roles self or admin manage" on public.project_member_display_roles;
 
 create policy "Member display roles self or admin manage"
 on public.project_member_display_roles

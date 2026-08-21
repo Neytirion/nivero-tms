@@ -1,5 +1,11 @@
 import { useEffect, useState, type Dispatch, type SetStateAction } from 'react'
-import { getProjectTaskWorkPackages, getProjectUseEstimates, hasProjectEstimateVersion, type WorkPackagePreview } from '../../lib/pm'
+import {
+  getProjectTaskWorkPackages,
+  getProjectUseEstimates,
+  getProjectWorkPackageDisplayProfileById,
+  hasProjectEstimateVersion,
+  type WorkPackagePreview,
+} from '../../lib/pm'
 
 interface UseTaskWorkPackagesLoaderInput {
   selectedProjectId: string | null
@@ -12,11 +18,15 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
   const [hasEstimateVersion, setHasEstimateVersion] = useState<boolean | null>(null)
   const [useEstimates, setUseEstimates] = useState<boolean>(false)
   const [isWorkPackagesLoading, setIsWorkPackagesLoading] = useState(false)
+  const [workPackageLabelByAnyId, setWorkPackageLabelByAnyId] = useState<Record<string, string>>({})
+  const [workPackageColorByAnyId, setWorkPackageColorByAnyId] = useState<Record<string, string>>({})
 
   useEffect(() => {
     const loadWorkPackages = async () => {
       if (!selectedProjectId) {
         setWorkPackages([])
+        setWorkPackageLabelByAnyId({})
+        setWorkPackageColorByAnyId({})
         setTaskWorkPackageId('')
         setHasEstimateVersion(null)
         setUseEstimates(false)
@@ -28,9 +38,25 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
       setIsWorkPackagesLoading(true)
 
       try {
-        const nextWorkPackages = await getProjectTaskWorkPackages(selectedProjectId)
+        const [nextWorkPackages, displayByAnyId] = await Promise.all([
+          getProjectTaskWorkPackages(selectedProjectId),
+          getProjectWorkPackageDisplayProfileById(selectedProjectId),
+        ])
         const useEstimatesEnabled = await getProjectUseEstimates(selectedProjectId)
         setUseEstimates(useEstimatesEnabled)
+
+        setWorkPackageLabelByAnyId(
+          Object.entries(displayByAnyId).reduce<Record<string, string>>((acc, [id, profile]) => {
+            acc[id] = profile.displayName
+            return acc
+          }, {}),
+        )
+        setWorkPackageColorByAnyId(
+          Object.entries(displayByAnyId).reduce<Record<string, string>>((acc, [id, profile]) => {
+            acc[id] = profile.color
+            return acc
+          }, {}),
+        )
 
         // If project doesn't use estimates, allow task creation (hasEstimateVersion = true)
         // If project uses estimates, check for estimate version
@@ -48,6 +74,8 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
         )
       } catch {
         setWorkPackages([])
+        setWorkPackageLabelByAnyId({})
+        setWorkPackageColorByAnyId({})
         setHasEstimateVersion(true)
         setUseEstimates(false)
         setTaskWorkPackageId('')
@@ -61,6 +89,8 @@ export function useTaskWorkPackagesLoader(input: UseTaskWorkPackagesLoaderInput)
 
   return {
     workPackages,
+    workPackageLabelByAnyId,
+    workPackageColorByAnyId,
     hasEstimateVersion,
     useEstimates,
     isWorkPackagesLoading,

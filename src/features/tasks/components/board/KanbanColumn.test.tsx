@@ -16,7 +16,7 @@ describe('KanbanColumn', () => {
     capturedTaskCardProps.length = 0
   })
 
-  it('prefers task embedded work package color and label over fallback maps', () => {
+  it('prefers canonical map values over embedded work package values', () => {
     render(
       <KanbanColumn
         status="todo"
@@ -53,8 +53,8 @@ describe('KanbanColumn', () => {
     )
 
     expect(capturedTaskCardProps).toHaveLength(1)
-    expect(capturedTaskCardProps[0].workPackageLabel).toBe('Embedded WP')
-    expect(capturedTaskCardProps[0].workPackageColor).toBe('#ef4444')
+    expect(capturedTaskCardProps[0].workPackageLabel).toBe('Fallback WP')
+    expect(capturedTaskCardProps[0].workPackageColor).toBe('#3b82f6')
   })
 
   it('falls back to map values when embedded work package is missing', () => {

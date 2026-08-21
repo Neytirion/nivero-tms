@@ -5,7 +5,12 @@ import { TasksPage } from './TasksPage'
 import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
 import { useTaskForm } from '../../features/tasks/hooks/useTaskForm.ts'
 import { createProjectPreview, createWorkspaceState, createTaskPreview } from '../test-helpers.ts'
-import { getProjectTaskWorkPackages, hasProjectEstimateVersion, getProjectUseEstimates } from '../../lib/pm'
+import {
+  getProjectTaskWorkPackages,
+  getProjectUseEstimates,
+  getProjectWorkPackageDisplayProfileById,
+  hasProjectEstimateVersion,
+} from '../../lib/pm'
 
 vi.mock('../../features/dashboard/workspace-context.tsx', () => ({
   useWorkspace: vi.fn(),
@@ -20,6 +25,7 @@ vi.mock('../../lib/pm', () => ({
   getProjectTaskWorkPackages: vi.fn(),
   hasProjectEstimateVersion: vi.fn(),
   getProjectUseEstimates: vi.fn(),
+  getProjectWorkPackageDisplayProfileById: vi.fn(),
 }))
 
 let lastKanbanProps: unknown = null
@@ -39,6 +45,7 @@ const mockUseTaskForm = vi.mocked(useTaskForm)
 const mockGetProjectTaskWorkPackages = vi.mocked(getProjectTaskWorkPackages)
 const mockHasProjectEstimateVersion = vi.mocked(hasProjectEstimateVersion)
 const mockGetProjectUseEstimates = vi.mocked(getProjectUseEstimates)
+const mockGetProjectWorkPackageDisplayProfileById = vi.mocked(getProjectWorkPackageDisplayProfileById)
 
 function mockTaskForm(overrides: Record<string, unknown> = {}) {
   mockUseTaskForm.mockReturnValue({
@@ -72,6 +79,7 @@ describe('TasksPage', () => {
     mockGetProjectTaskWorkPackages.mockResolvedValue([
       { id: 'wp1', name: 'Backend', estimated_hours: 20 },
     ] as never)
+    mockGetProjectWorkPackageDisplayProfileById.mockResolvedValue({})
     mockHasProjectEstimateVersion.mockResolvedValue(true)
     mockGetProjectUseEstimates.mockResolvedValue(false)
   })

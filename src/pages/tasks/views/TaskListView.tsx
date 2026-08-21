@@ -134,10 +134,10 @@ export function TaskListView({
             filteredTasks.map((task) => {
               const hasWorkPackageLink = Boolean(task.work_package_id && task.work_package_id.trim().length > 0)
               const workPackageLabel = hasWorkPackageLink
-                ? (task.work_package?.name ?? workPackageLabelById[task.work_package_id as string] ?? null)
+                ? (workPackageLabelById[task.work_package_id as string] ?? task.work_package?.name ?? null)
                 : null
               const workPackageColor = hasWorkPackageLink
-                ? (task.work_package?.color ?? workPackageColorById[task.work_package_id as string] ?? null)
+                ? (workPackageColorById[task.work_package_id as string] ?? task.work_package?.color ?? null)
                 : null
 
               return (

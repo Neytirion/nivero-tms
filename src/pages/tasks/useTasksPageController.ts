@@ -69,7 +69,14 @@ export function useTasksPageController() {
   const myRoleInSelectedProject = selectedProject ? getProjectRole(selectedProject.id) : null
   const isMemberInSelectedProject = myRoleInSelectedProject === 'member'
 
-  const { workPackages, hasEstimateVersion, useEstimates, isWorkPackagesLoading } = useTaskWorkPackagesLoader({
+  const {
+    workPackages,
+    workPackageLabelByAnyId,
+    workPackageColorByAnyId,
+    hasEstimateVersion,
+    useEstimates,
+    isWorkPackagesLoading,
+  } = useTaskWorkPackagesLoader({
     selectedProjectId,
     setTaskWorkPackageId,
   })
@@ -211,6 +218,10 @@ export function useTasksPageController() {
     acc[workPackage.id] = workPackage.name
     return acc
   }, {})
+  for (const [id, label] of Object.entries(workPackageLabelByAnyId)) {
+    workPackageLabelById[id] = label
+  }
+
   const workPackageColorById = workPackages.reduce<Record<string, string>>((acc, workPackage) => {
     if (workPackage.color) {
       acc[workPackage.id] = workPackage.color
@@ -218,6 +229,9 @@ export function useTasksPageController() {
 
     return acc
   }, {})
+  for (const [id, color] of Object.entries(workPackageColorByAnyId)) {
+    workPackageColorById[id] = color
+  }
   const assigneeOptions = projectMembers
     .filter((member) => Boolean(member.user_id))
     .map((member) => ({

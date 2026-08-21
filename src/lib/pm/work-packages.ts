@@ -12,6 +12,7 @@ interface WorkPackageRecord {
   name: string
   color: string | null
   sort_order: number | null
+  is_active: boolean
   created_at: string | null
 }
 
@@ -20,6 +21,12 @@ export interface ProjectTaskCardColorSetting {
   displayName: string
   color: string
   linkedPackageCount: number
+}
+
+export interface ProjectWorkPackageDisplayProfile {
+  displayName: string
+  color: string
+  settingKey: string
 }
 
 function normalizeWorkPackageName(value: string) {
@@ -50,7 +57,7 @@ async function getWorkPackagesByEstimateIds(estimateIds: string[]) {
 
   const { data, error } = await supabase
     .from('work_packages')
-    .select('id,estimate_id,name,color,sort_order,created_at')
+    .select('id,estimate_id,name,color,sort_order,is_active,created_at')
     .in('estimate_id', estimateIds)
 
   if (error) {
@@ -60,25 +67,32 @@ async function getWorkPackagesByEstimateIds(estimateIds: string[]) {
   return (data ?? []) as WorkPackageRecord[]
 }
 
-export async function getProjectTaskCardColorSettings(projectId: string) {
-  const estimates = await getProjectEstimateRefs(projectId)
-  if (estimates.length === 0) {
-    return [] as ProjectTaskCardColorSetting[]
+function getLatestEstimateId(estimates: EstimateRef[]) {
+  const sorted = [...estimates].sort((a, b) => b.version_number - a.version_number)
+  return sorted[0]?.id ?? null
+}
+
+function getSettingKeyByPackage(item: WorkPackageRecord) {
+  if (item.sort_order !== null) {
+    return `slot:${item.sort_order}`
   }
 
-  const estimateIds = estimates.map((estimate) => estimate.id)
-  const versionByEstimateId = estimates.reduce<Record<string, number>>((acc, estimate) => {
-    acc[estimate.id] = estimate.version_number
-    return acc
-  }, {})
+  return `name:${normalizeWorkPackageName(item.name)}`
+}
 
-  const workPackages = await getWorkPackagesByEstimateIds(estimateIds)
-  const sortedPackages = [...workPackages].sort((a, b) => {
-    const versionDelta = (versionByEstimateId[b.estimate_id] ?? 0) - (versionByEstimateId[a.estimate_id] ?? 0)
-    if (versionDelta !== 0) {
-      return versionDelta
+function buildCanonicalProfilesBySettingKey(workPackages: WorkPackageRecord[], latestEstimateId: string | null) {
+  const latestEstimatePackages = workPackages.filter((item) => item.estimate_id === latestEstimateId)
+
+  const latestBySlot = new Map<number, WorkPackageRecord>()
+  for (const item of latestEstimatePackages) {
+    if (item.sort_order !== null && item.is_active) {
+      latestBySlot.set(item.sort_order, item)
     }
+  }
 
+  const profilesBySettingKey = new Map<string, ProjectWorkPackageDisplayProfile>()
+
+  const sortedPackages = [...workPackages].sort((a, b) => {
     const sortOrderDelta = (a.sort_order ?? 0) - (b.sort_order ?? 0)
     if (sortOrderDelta !== 0) {
       return sortOrderDelta
@@ -87,32 +101,80 @@ export async function getProjectTaskCardColorSettings(projectId: string) {
     return (b.created_at ?? '').localeCompare(a.created_at ?? '')
   })
 
-  const settingsByKey = new Map<string, ProjectTaskCardColorSetting>()
+  for (const item of sortedPackages) {
+    const fallbackKey = getSettingKeyByPackage(item)
+    const canonicalFromSlot =
+      item.sort_order !== null
+        ? latestBySlot.get(item.sort_order)
+        : null
 
-  for (const workPackage of sortedPackages) {
-    const settingKey = normalizeWorkPackageName(workPackage.name)
-    if (!settingKey) {
+    const canonical = canonicalFromSlot ?? item
+    const settingKey = canonical.sort_order !== null ? `slot:${canonical.sort_order}` : fallbackKey
+
+    if (profilesBySettingKey.has(settingKey)) {
       continue
     }
 
-    const existing = settingsByKey.get(settingKey)
-    if (!existing) {
-      settingsByKey.set(settingKey, {
-        settingKey,
-        displayName: workPackage.name.trim(),
-        color: normalizeWorkPackageColor(workPackage.color) ?? fallbackColor(),
-        linkedPackageCount: 1,
-      })
-      continue
-    }
-
-    settingsByKey.set(settingKey, {
-      ...existing,
-      linkedPackageCount: existing.linkedPackageCount + 1,
+    profilesBySettingKey.set(settingKey, {
+      settingKey,
+      displayName: canonical.name.trim(),
+      color: normalizeWorkPackageColor(canonical.color) ?? fallbackColor(),
     })
   }
 
-  return Array.from(settingsByKey.values()).sort((a, b) => a.displayName.localeCompare(b.displayName))
+  return profilesBySettingKey
+}
+
+export async function getProjectWorkPackageDisplayProfileById(projectId: string) {
+  const estimates = await getProjectEstimateRefs(projectId)
+  if (estimates.length === 0) {
+    return {} as Record<string, ProjectWorkPackageDisplayProfile>
+  }
+
+  const estimateIds = estimates.map((estimate) => estimate.id)
+  const workPackages = await getWorkPackagesByEstimateIds(estimateIds)
+  const latestEstimateId = getLatestEstimateId(estimates)
+  const canonicalBySettingKey = buildCanonicalProfilesBySettingKey(workPackages, latestEstimateId)
+
+  const byId: Record<string, ProjectWorkPackageDisplayProfile> = {}
+  for (const item of workPackages) {
+    const ownSettingKey = getSettingKeyByPackage(item)
+    const slotSettingKey = item.sort_order !== null ? `slot:${item.sort_order}` : ownSettingKey
+    const canonical = canonicalBySettingKey.get(slotSettingKey) ?? canonicalBySettingKey.get(ownSettingKey)
+
+    if (canonical) {
+      byId[item.id] = canonical
+    }
+  }
+
+  return byId
+}
+
+export async function getProjectTaskCardColorSettings(projectId: string) {
+  const estimates = await getProjectEstimateRefs(projectId)
+  if (estimates.length === 0) {
+    return [] as ProjectTaskCardColorSetting[]
+  }
+
+  const estimateIds = estimates.map((estimate) => estimate.id)
+  const workPackages = await getWorkPackagesByEstimateIds(estimateIds)
+  const latestEstimateId = getLatestEstimateId(estimates)
+  const canonicalBySettingKey = buildCanonicalProfilesBySettingKey(workPackages, latestEstimateId)
+  const linkedCountBySettingKey = new Map<string, number>()
+
+  for (const item of workPackages) {
+    const key = item.sort_order !== null ? `slot:${item.sort_order}` : getSettingKeyByPackage(item)
+    linkedCountBySettingKey.set(key, (linkedCountBySettingKey.get(key) ?? 0) + 1)
+  }
+
+  const settings: ProjectTaskCardColorSetting[] = Array.from(canonicalBySettingKey.values()).map((item) => ({
+    settingKey: item.settingKey,
+    displayName: item.displayName,
+    color: item.color,
+    linkedPackageCount: linkedCountBySettingKey.get(item.settingKey) ?? 0,
+  }))
+
+  return settings.sort((a, b) => a.displayName.localeCompare(b.displayName))
 }
 
 export async function updateProjectTaskCardColor(
@@ -120,7 +182,7 @@ export async function updateProjectTaskCardColor(
   settingKey: string,
   nextColor: string,
 ) {
-  const normalizedSettingKey = normalizeWorkPackageName(settingKey)
+  const normalizedSettingKey = settingKey.trim().toLowerCase()
   if (!normalizedSettingKey) {
     throw new Error('Work package key is required')
   }
@@ -134,9 +196,15 @@ export async function updateProjectTaskCardColor(
   const estimateIds = estimates.map((estimate) => estimate.id)
   const workPackages = await getWorkPackagesByEstimateIds(estimateIds)
 
-  const matchingIds = workPackages
-    .filter((item) => normalizeWorkPackageName(item.name) === normalizedSettingKey)
-    .map((item) => item.id)
+  const slotMatch = normalizedSettingKey.match(/^slot:(\d+)$/)
+  const matchingIds = workPackages.filter((item) => {
+    if (slotMatch) {
+      return item.sort_order === Number.parseInt(slotMatch[1], 10)
+    }
+
+    const nameKey = getSettingKeyByPackage(item)
+    return nameKey === normalizedSettingKey
+  }).map((item) => item.id)
 
   if (matchingIds.length === 0) {
     throw new Error('Work package group not found for this project')

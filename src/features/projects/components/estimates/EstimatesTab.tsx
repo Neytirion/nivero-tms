@@ -134,53 +134,59 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
             {displayedPackages.map((item, index) => (
               <tr key={index} className="border-t border-slate-200">
                 <td className="px-3 py-2">
-                  <input
-                    type="text"
-                    value={item.name}
-                    disabled={item.name.includes('(archived)') || !canModifyPackages}
-                    onChange={(event) =>
-                      setPackages((prev) =>
-                        prev.map((entry, entryIndex) =>
-                          entryIndex === index
-                            ? {
-                                ...entry,
-                                name: event.target.value,
-                              }
-                            : entry,
-                        ),
-                      )
-                    }
-                    placeholder="Frontend"
-                    className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-                  />
-                  {packageValidationErrors.some((e) => e.index === index && e.field === 'name') && (
+                  {item.name.includes('(archived)') || !canModifyPackages ? (
+                    <span className="block py-1 text-sm text-slate-900">{item.name}</span>
+                  ) : (
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={(event) =>
+                        setPackages((prev) =>
+                          prev.map((entry, entryIndex) =>
+                            entryIndex === index
+                              ? {
+                                  ...entry,
+                                  name: event.target.value,
+                                }
+                              : entry,
+                          ),
+                        )
+                      }
+                      placeholder="Frontend"
+                      className="w-full rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 outline-none focus:border-slate-500"
+                    />
+                  )}
+                  {canModifyPackages && packageValidationErrors.some((e) => e.index === index && e.field === 'name') && (
                     <p className="mt-1 text-[11px] text-rose-600">
                       {packageValidationErrors.find((e) => e.index === index && e.field === 'name')?.message}
                     </p>
                   )}
                 </td>
                 <td className="px-3 py-2">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.5"
-                    value={item.estimatedHours}
-                    disabled={item.name.includes('(archived)') || !canModifyPackages}
-                    onChange={(event) =>
-                      setPackages((prev) =>
-                        prev.map((entry, entryIndex) =>
-                          entryIndex === index
-                            ? {
-                                ...entry,
-                                estimatedHours: event.target.value,
-                              }
-                            : entry,
-                        ),
-                      )
-                    }
-                    className="w-28 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-                  />
-                  {packageValidationErrors.some((e) => e.index === index && e.field === 'estimatedHours') && (
+                  {item.name.includes('(archived)') || !canModifyPackages ? (
+                    <span className="block py-1 text-sm text-slate-900">{item.estimatedHours}</span>
+                  ) : (
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      value={item.estimatedHours}
+                      onChange={(event) =>
+                        setPackages((prev) =>
+                          prev.map((entry, entryIndex) =>
+                            entryIndex === index
+                              ? {
+                                  ...entry,
+                                  estimatedHours: event.target.value,
+                                }
+                              : entry,
+                          ),
+                        )
+                      }
+                      className="w-28 rounded-md border border-slate-300 px-2 py-1 text-sm text-slate-900 outline-none focus:border-slate-500"
+                    />
+                  )}
+                  {canModifyPackages && packageValidationErrors.some((e) => e.index === index && e.field === 'estimatedHours') && (
                     <p className="mt-1 text-[11px] text-rose-600">
                       {packageValidationErrors.find((e) => e.index === index && e.field === 'estimatedHours')?.message}
                     </p>

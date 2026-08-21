@@ -276,4 +276,48 @@ describe('TaskDetailsPage', () => {
 
     expect(screen.queryByRole('button', { name: /take task/i })).not.toBeInTheDocument()
   })
+
+  it('updates description only after clicking Save', async () => {
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Task A',
+          description: 'Old description',
+          project_id: 'p1',
+          assigned_to: 'u1',
+        }),
+      ],
+      myRoleInSelectedProject: 'member',
+      canAssignAssignee: false,
+      canTakeUnassignedTasks: false,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+
+    fireEvent.click(screen.getByRole('button', { name: /^edit$/i }))
+
+    const descriptionInput = screen.getByPlaceholderText(/add description/i)
+    fireEvent.change(descriptionInput, { target: { value: 'New description value' } })
+
+    expect(editTaskMock).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+
+    await waitFor(() => {
+      expect(editTaskMock).toHaveBeenCalledWith('t1', { description: 'New description value' })
+    })
+  })
 })

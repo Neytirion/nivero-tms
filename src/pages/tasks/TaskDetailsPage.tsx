@@ -5,6 +5,8 @@ import { TaskLogTimeModal } from '../../features/tasks/components'
 import { TaskCommentsPanel } from '../../features/tasks/components/comments'
 import { ConfirmDialog, UserProfileDialog, type UserProfilePreview } from '../../shared/components'
 
+const TASK_DESCRIPTION_MAX_LENGTH = 250
+
 export function TaskDetailsPage() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -14,6 +16,9 @@ export function TaskDetailsPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [estimateHoursDraft, setEstimateHoursDraft] = useState('0')
   const [taskStatusDraft, setTaskStatusDraft] = useState('todo')
+  const [descriptionDraft, setDescriptionDraft] = useState('')
+  const [isDescriptionEditing, setIsDescriptionEditing] = useState(false)
+  const [isDescriptionSaving, setIsDescriptionSaving] = useState(false)
 
   const backTo =
     typeof location.state === 'object' &&
@@ -84,6 +89,16 @@ export function TaskDetailsPage() {
       window.clearTimeout(syncTimerId)
     }
   }, [taskId, taskStatus])
+
+  useEffect(() => {
+    if (!taskId) {
+      return
+    }
+
+    if (!isDescriptionEditing) {
+      setDescriptionDraft(task?.description ?? '')
+    }
+  }, [taskId, task?.description, isDescriptionEditing])
 
   if (!task) {
     return (
@@ -166,8 +181,32 @@ export function TaskDetailsPage() {
     await editTask(taskId, { priority })
   }
 
-  const updateTaskDescriptionHandler = async (taskId: string, description: string) => {
-    await editTask(taskId, { description })
+  const startDescriptionEditing = () => {
+    setDescriptionDraft(task.description ?? '')
+    setIsDescriptionEditing(true)
+  }
+
+  const cancelDescriptionEditing = () => {
+    setDescriptionDraft(task.description ?? '')
+    setIsDescriptionEditing(false)
+  }
+
+  const saveTaskDescriptionHandler = async (taskId: string) => {
+    const nextDescription = descriptionDraft
+    const currentDescription = task.description ?? ''
+
+    if (nextDescription === currentDescription) {
+      setIsDescriptionEditing(false)
+      return
+    }
+
+    setIsDescriptionSaving(true)
+    try {
+      await editTask(taskId, { description: nextDescription })
+      setIsDescriptionEditing(false)
+    } finally {
+      setIsDescriptionSaving(false)
+    }
   }
 
   const takeTaskHandler = async () => {
@@ -250,16 +289,52 @@ export function TaskDetailsPage() {
           </div>
 
           {/* Description */}
-          <div className="lg:max-w-[calc(100%-312px)]">
-            <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Description</label>
-            {!isLocked ? (
-              <textarea
-                value={task.description ?? ''}
-                onChange={(event) => void updateTaskDescriptionHandler(task.id, event.target.value)}
-                placeholder="Add description..."
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-base leading-6 text-slate-900 outline-none shadow-sm transition focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-200"
-                rows={5}
-              />
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Description</label>
+              {!isLocked && !isDescriptionEditing ? (
+                <button
+                  type="button"
+                  onClick={startDescriptionEditing}
+                  className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                >
+                  Edit
+                </button>
+              ) : null}
+            </div>
+
+            {isDescriptionEditing ? (
+              <div>
+                <textarea
+                  value={descriptionDraft}
+                  onChange={(event) => setDescriptionDraft(event.target.value)}
+                  placeholder="Add description..."
+                  maxLength={TASK_DESCRIPTION_MAX_LENGTH}
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-base leading-6 text-slate-900 outline-none shadow-sm transition focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-200"
+                  rows={5}
+                />
+                <p className="mt-1 text-right text-xs text-slate-500">
+                  {descriptionDraft.length}/{TASK_DESCRIPTION_MAX_LENGTH}
+                </p>
+                <div className="mt-2 flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void saveTaskDescriptionHandler(task.id)}
+                    disabled={isDescriptionSaving}
+                    className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isDescriptionSaving ? 'Saving...' : 'Save'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelDescriptionEditing}
+                    disabled={isDescriptionSaving}
+                    className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             ) : (
               <p className="text-base leading-6 text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg border border-slate-200 p-4">{task.description || 'No description'}</p>
             )}

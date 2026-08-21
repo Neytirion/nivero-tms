@@ -301,7 +301,7 @@ export function TaskDetailsPage() {
                   onChange={(event) => setDescriptionDraft(event.target.value)}
                   placeholder="Add description..."
                   maxLength={TASK_DESCRIPTION_MAX_LENGTH}
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-base leading-6 text-slate-900 outline-none shadow-sm transition focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-200"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-base leading-6 text-slate-900 [overflow-wrap:anywhere] outline-none shadow-sm transition focus:border-sky-500 focus:bg-white focus:ring-2 focus:ring-sky-200"
                   rows={5}
                 />
                 <p className="mt-1 text-right text-xs text-slate-500">
@@ -327,7 +327,7 @@ export function TaskDetailsPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-base leading-6 text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg border border-slate-200 p-4">{task.description || 'No description'}</p>
+              <p className="text-base leading-6 text-slate-700 whitespace-pre-wrap [overflow-wrap:anywhere] bg-slate-50 rounded-lg border border-slate-200 p-4">{task.description || 'No description'}</p>
             )}
           </div>
         </header>

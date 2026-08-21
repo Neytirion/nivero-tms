@@ -70,11 +70,11 @@ function validatePackages(packages: EditableWorkPackage[]): PackageFieldError[] 
     seenNames.add(normalizedName)
 
     const hours = Number(pkg.estimatedHours)
-    if (!Number.isFinite(hours) || hours <= 0) {
+    if (!Number.isFinite(hours) || hours < 0) {
       errors.push({
         index: i,
         field: 'estimatedHours',
-        message: 'Must be > 0',
+        message: 'Must be 0 or more',
       })
     }
   }
@@ -211,12 +211,12 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
 
   const saveDraftHandler = async () => {
     if (!canEditActiveEstimate || !activeEstimateId) {
-      return
+      return false
     }
 
     if (packageValidationErrors.length > 0) {
       setStatus('Fix validation errors before saving.')
-      return
+      return false
     }
 
     setIsLoading(true)
@@ -233,9 +233,11 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
 
       await loadEstimates(activeEstimateId)
       setStatus('Estimate draft saved.')
+      return true
     } catch (error) {
       setStatus(error instanceof Error ? `Save draft error: ${error.message}` : 'Save draft error')
       setIsLoading(false)
+      return false
     }
   }
 

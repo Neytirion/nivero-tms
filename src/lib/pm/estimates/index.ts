@@ -160,6 +160,11 @@ export async function createEstimateVersion(projectId: string) {
 
   const estimates = await getProjectEstimates(projectId)
   const latest = estimates[0] ?? null
+
+  if (latest && (latest.status ?? '').toLowerCase() !== 'approved') {
+    throw new Error('Cannot create new version: finalize and approve the current draft first')
+  }
+
   const nextVersion = latest ? latest.version_number + 1 : 1
 
   const createdEstimate = await insertEstimateVersion(projectId, nextVersion, userData.user.id)

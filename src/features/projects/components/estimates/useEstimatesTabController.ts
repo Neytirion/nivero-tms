@@ -125,6 +125,8 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
   const displayedPackages = showArchived ? [...packages, ...archivedPackages] : packages
   const packageValidationErrors = useMemo(() => validatePackages(packages), [packages])
   const canEditActiveEstimate = canEdit && activeEstimate?.status !== 'approved'
+  const latestEstimate = estimates[0] ?? null
+  const canCreateNewVersion = canEdit && (!latestEstimate || (latestEstimate.status ?? '').toLowerCase() === 'approved')
 
   const addWorkPackageRow = () => {
     if (!canEditActiveEstimate || !activeEstimateId) {
@@ -187,6 +189,11 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
 
   const createVersionHandler = async () => {
     if (!canEdit) {
+      return
+    }
+
+    if (!canCreateNewVersion) {
+      setStatus('Finalize & Approve the current estimate version before creating a new one.')
       return
     }
 
@@ -268,6 +275,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
     setShowArchived,
     displayedPackages,
     canEditActiveEstimate,
+    canCreateNewVersion,
     totalHours,
     addWorkPackageRow,
     removeWorkPackageRow,

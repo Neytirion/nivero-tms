@@ -25,6 +25,7 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
     setShowArchived,
     displayedPackages,
     canEditActiveEstimate,
+    canCreateNewVersion,
     totalHours,
     addWorkPackageRow,
     removeWorkPackageRow,
@@ -75,9 +76,13 @@ export function EstimatesTab({ projectId, canEdit, useEstimates, onUseEstimatesC
               <button
                 type="button"
                 onClick={() => void createVersionHandler()}
-                disabled={isLoading || !canEdit}
+                disabled={isLoading || !canCreateNewVersion}
                 className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60 relative group"
-                title="Create a new estimate version for planning changes"
+                title={
+                  canCreateNewVersion
+                    ? 'Create a new estimate version for planning changes'
+                    : 'Finalize & Approve the current estimate version before creating a new one'
+                }
               >
                 New Estimate Version
               </button>

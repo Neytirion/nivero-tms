@@ -19,7 +19,7 @@ vi.mock('../helpers', () => ({
   assertProjectEditable: mocks.assertProjectEditable,
 }))
 
-import { approveEstimate, getProjectEstimates } from './index'
+import { approveEstimate, createEstimateVersion, getProjectEstimates } from './index'
 
 describe('pm.estimates', () => {
   beforeEach(() => {
@@ -264,6 +264,55 @@ describe('pm.estimates', () => {
 
     await expect(approveEstimate('e1')).rejects.toThrow(
       'Cannot approve estimate: previous estimate versions are read-only',
+    )
+  })
+
+  it('blocks creating a new version while latest estimate is still draft', async () => {
+    const projectMaybeSingle = vi.fn().mockResolvedValue({
+      data: { owner_id: 'owner-1', start_date: '2026-01-01' },
+      error: null,
+    })
+    const projectEq = vi.fn().mockReturnValue({ maybeSingle: projectMaybeSingle })
+    const projectSelect = vi.fn().mockReturnValue({ eq: projectEq })
+
+    const membershipMaybeSingle = vi.fn().mockResolvedValue({ data: { role: 'manager' }, error: null })
+    const membershipEqUser = vi.fn().mockReturnValue({ maybeSingle: membershipMaybeSingle })
+    const membershipEqProject = vi.fn().mockReturnValue({ eq: membershipEqUser })
+    const membershipSelect = vi.fn().mockReturnValue({ eq: membershipEqProject })
+
+    const estimatesRows = [{ id: 'e2', project_id: 'p1', version_number: 2, status: 'draft' }]
+    const estimatesQuery: {
+      eq: ReturnType<typeof vi.fn>
+      order: ReturnType<typeof vi.fn>
+      then: (resolve: (value: { data: unknown[]; error: null }) => void) => void
+    } = {
+      eq: vi.fn(() => estimatesQuery),
+      order: vi.fn(() => estimatesQuery),
+      then: (resolve) => resolve({ data: estimatesRows, error: null }),
+    }
+    const estimatesSelect = vi.fn().mockReturnValue(estimatesQuery)
+
+    const packagesQuery: {
+      in: ReturnType<typeof vi.fn>
+      order: ReturnType<typeof vi.fn>
+      then: (resolve: (value: { data: unknown[]; error: null }) => void) => void
+    } = {
+      in: vi.fn(() => packagesQuery),
+      order: vi.fn(() => packagesQuery),
+      then: (resolve) => resolve({ data: [], error: null }),
+    }
+    const packagesSelect = vi.fn().mockReturnValue(packagesQuery)
+
+    mocks.from.mockImplementation((table: string) => {
+      if (table === 'projects') return { select: projectSelect }
+      if (table === 'project_members') return { select: membershipSelect }
+      if (table === 'estimates') return { select: estimatesSelect }
+      if (table === 'work_packages') return { select: packagesSelect }
+      throw new Error(`Unexpected table: ${table}`)
+    })
+
+    await expect(createEstimateVersion('p1')).rejects.toThrow(
+      'Cannot create new version: finalize and approve the current draft first',
     )
   })
 })

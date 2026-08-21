@@ -43,13 +43,15 @@ export async function submitClientIntake(input: SubmitClientIntakeInput) {
         throw new Error(parsedMessage)
       }
 
+      let responseText = ''
       try {
-        const text = await responseClone.text()
-        if (text.trim().length > 0) {
-          throw new Error(text)
-        }
+        responseText = await responseClone.text()
       } catch {
         // Fall through to generic message.
+      }
+
+      if (responseText.trim().length > 0) {
+        throw new Error(responseText)
       }
     }
 

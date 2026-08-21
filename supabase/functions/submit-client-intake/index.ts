@@ -1,16 +1,10 @@
-// @ts-nocheck
+export {}
 
 declare const Deno: {
   env: {
     get(key: string): string | undefined
   }
   serve(handler: (req: Request) => Response | Promise<Response>): void
-}
-
-declare global {
-  interface RequestInit {
-    body?: BodyInit | Uint8Array<ArrayBufferLike> | null
-  }
 }
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
@@ -173,7 +167,6 @@ Deno.serve(async (req: Request) => {
         'Content-Type': attachment.mimeType || 'application/octet-stream',
         'x-upsert': 'false',
       },
-      // @ts-expect-error Deno runtime accepts ArrayBuffer body; VS Code TS server mis-infers BodyInit here.
       body: arrayBuffer,
     })
 

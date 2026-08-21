@@ -99,21 +99,6 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
             )}
           </div>
 
-          <div className="mt-3 flex items-center justify-between">
-            <span />
-            <button
-              type="button"
-              onClick={() => setShowArchived(!showArchived)}
-              className={`rounded-md px-2 py-1 text-xs font-semibold uppercase tracking-wide ${
-                showArchived
-                  ? 'border border-slate-300 bg-slate-100 text-slate-700'
-                  : 'border border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
-              }`}
-            >
-              {showArchived ? 'Hide archived' : 'Show archived'}
-            </button>
-          </div>
-
           <div className="mt-3 overflow-x-auto rounded-lg border border-slate-200 bg-white">
         <table className="min-w-full border-collapse text-sm">
           <thead className="bg-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
@@ -192,7 +177,7 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
                     </p>
                   )}
                 </td>
-                {canEdit && !item.name.includes('(archived)') ? (
+                {canEdit && isEditingPackages && !item.name.includes('(archived)') ? (
                   <td className="px-3 py-2 text-right">
                     <button
                       type="button"
@@ -218,6 +203,17 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
 
           {canEdit ? (
             <div className="mt-3 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setShowArchived(!showArchived)}
+                className={`rounded-lg border px-3 py-2 text-xs font-semibold uppercase tracking-wide transition ${
+                  showArchived
+                    ? 'border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200'
+                    : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50'
+                }`}
+              >
+                {showArchived ? 'Hide archived' : 'Show archived'}
+              </button>
               {isEditingPackages ? (
                 <button
                   type="button"

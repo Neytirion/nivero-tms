@@ -43,6 +43,9 @@ const PRESET_DETAILED: ProjectTaskCardFieldPreferences = {
   showWorkPackage: true,
 }
 
+const PREVIEW_TASK_DUE_DATE = '2026-08-26T00:00:00.000Z'
+const PREVIEW_TASK_CREATED_AT = '2026-08-24T00:00:00.000Z'
+
 export function TaskCardSettingsPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -195,9 +198,9 @@ export function TaskCardSettingsPage() {
     estimate_hours: 8,
     actual_hours: 3,
     blocked_by_task_id: null,
-    due_date: new Date(Date.now() + 2 * 86400000).toISOString(),
+    due_date: PREVIEW_TASK_DUE_DATE,
     project_id: activeProjectId ?? 'preview-project',
-    created_at: new Date().toISOString(),
+    created_at: PREVIEW_TASK_CREATED_AT,
   }), [activeProjectId])
 
   return (

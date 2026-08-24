@@ -127,7 +127,6 @@ export function useTasksPageController() {
 
   useEffect(() => {
     if (!selectedProjectId) {
-      setTaskCardFieldPreferences(DEFAULT_TASK_CARD_FIELD_PREFERENCES)
       return
     }
 

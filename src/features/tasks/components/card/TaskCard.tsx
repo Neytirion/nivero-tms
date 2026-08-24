@@ -112,9 +112,11 @@ export function TaskCard({
         <span className={`text-xs transition ${isLocked ? 'text-slate-400 group-hover:text-slate-600' : 'text-slate-300 group-hover:text-sky-600'}`}>↗</span>
       </div>
 
-      {task.description ? (
-        <p className={`mt-1.5 line-clamp-2 text-xs leading-5 ${isLocked ? 'text-slate-500' : 'text-slate-500'}`}>{task.description}</p>
-      ) : null}
+      <div className="mt-1.5 min-h-10">
+        {task.description ? (
+          <p className={`line-clamp-2 text-xs leading-5 ${isLocked ? 'text-slate-500' : 'text-slate-500'}`}>{task.description}</p>
+        ) : null}
+      </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         <span

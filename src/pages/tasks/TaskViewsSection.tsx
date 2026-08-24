@@ -162,9 +162,11 @@ export function TaskViewsSection({
                 >
                   <p className="truncate text-sm font-semibold text-slate-800">{task.title}</p>
 
-                  {task.description ? (
-                    <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-slate-600">{task.description}</p>
-                  ) : null}
+                  <div className="mt-1.5 min-h-10">
+                    {task.description ? (
+                      <p className="line-clamp-2 text-xs leading-5 text-slate-600">{task.description}</p>
+                    ) : null}
+                  </div>
 
                   <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-600">
                     <span>Status: {task.status ?? 'todo'}</span>

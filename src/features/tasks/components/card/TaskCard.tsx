@@ -12,6 +12,21 @@ interface TaskCardProps {
   isLocked: boolean
 }
 
+function getDescriptionPreview(description: string | null | undefined) {
+  if (!description) {
+    return ''
+  }
+
+  const normalized = description.replace(/\r\n/g, '\n').trim()
+  if (!/^Client request submitted via public intake link\./i.test(normalized)) {
+    return normalized
+  }
+
+  const internalDescriptionMatch = normalized.match(/\n\s*Internal description:\s*\n([\s\S]*)$/i)
+  const internalDescription = (internalDescriptionMatch?.[1] ?? '').trim()
+  return internalDescription
+}
+
 function getPriorityBadgeClass(priority: string | null | undefined) {
   const normalized = (priority ?? 'medium').toLowerCase()
 
@@ -98,6 +113,7 @@ export function TaskCard({
         boxShadow: `inset 0 0 0 1px ${workPackageColor}33`,
       }
     : undefined
+  const descriptionPreview = getDescriptionPreview(task.description)
 
   return (
     <article
@@ -113,8 +129,8 @@ export function TaskCard({
       </div>
 
       <div className="mt-1.5 min-h-10">
-        {task.description ? (
-          <p className={`line-clamp-2 text-xs leading-5 ${isLocked ? 'text-slate-500' : 'text-slate-500'}`}>{task.description}</p>
+        {descriptionPreview ? (
+          <p className={`line-clamp-2 text-xs leading-5 ${isLocked ? 'text-slate-500' : 'text-slate-500'}`}>{descriptionPreview}</p>
         ) : null}
       </div>
 

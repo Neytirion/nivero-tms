@@ -1,4 +1,5 @@
 import type { TaskStatus } from '../../features/tasks/constants.ts'
+import { TaskCard } from '../../features/tasks/components/card'
 import type { TaskPreview } from '../../lib/pm'
 import { TaskBoardView } from './views/TaskBoardView'
 import { TaskListView } from './views/TaskListView'
@@ -49,12 +50,14 @@ export function TaskViewsSection({
   const sharedQueueTasks = tasks.filter((task) => !task.assigned_to)
   const assignedTasks = tasks.filter((task) => Boolean(task.assigned_to))
 
-  const formatDueDate = (dueDateRaw: string | null | undefined) => {
-    if (!dueDateRaw) {
-      return 'No due date'
+  const getUnassignedTaskTitle = (task: TaskPreview) => {
+    const description = task.description ?? ''
+    const isClientIntakeTask = /^\s*Client request submitted via public intake link\./i.test(description)
+    if (isClientIntakeTask) {
+      return 'Task from client'
     }
 
-    return new Date(dueDateRaw).toLocaleDateString()
+    return task.title
   }
 
   const shouldDeferTaskViews = isWorkPackagesLoading && tasks.length > 0
@@ -87,8 +90,8 @@ export function TaskViewsSection({
       </div>
 
       {shouldDeferTaskViews ? (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]" aria-live="polite" aria-busy="true">
-          <div className="min-w-0 space-y-3">
+        <div className="grid gap-4 xl:grid-cols-6" aria-live="polite" aria-busy="true">
+          <div className="min-w-0 space-y-3 xl:col-span-5">
             {[0, 1, 2].map((row) => (
               <div key={row} className="animate-pulse rounded-xl border border-slate-200 bg-white p-3">
                 <div className="h-4 w-1/3 rounded bg-slate-200" />
@@ -97,7 +100,7 @@ export function TaskViewsSection({
               </div>
             ))}
           </div>
-          <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3">
+          <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3 xl:col-span-1">
             <div className="animate-pulse space-y-2">
               <div className="h-4 w-2/3 rounded bg-cyan-100" />
               <div className="h-16 rounded-lg border border-cyan-200 bg-white" />
@@ -105,8 +108,8 @@ export function TaskViewsSection({
           </aside>
         </div>
       ) : (
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="min-w-0">
+      <div className="grid gap-4 xl:grid-cols-6">
+        <div className="min-w-0 xl:col-span-5">
           {taskViewMode === 'board' ? (
             <TaskBoardView
               tasks={assignedTasks}
@@ -137,7 +140,7 @@ export function TaskViewsSection({
           ) : null}
         </div>
 
-        <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3">
+        <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3 xl:col-span-1">
           <div className="mb-2">
             <h4 className="text-sm font-semibold text-cyan-900">Unassigned Tasks ({sharedQueueTasks.length})</h4>
           </div>
@@ -149,31 +152,33 @@ export function TaskViewsSection({
           ) : (
             <div className="space-y-2">
               {sharedQueueTasks.map((task) => (
-                <article
-                  key={task.id}
-                  onClick={() => onTaskClick?.(task.id)}
-                  className={`rounded-lg border border-cyan-200 bg-white p-2.5 transition ${onTaskClick ? 'cursor-pointer hover:border-cyan-300 hover:bg-cyan-50/30' : ''}`}
-                  style={task.work_package_id && workPackageColorById[task.work_package_id]
-                    ? {
-                        borderLeftWidth: '4px',
-                        borderLeftColor: workPackageColorById[task.work_package_id],
-                      }
-                    : undefined}
-                >
-                  <p className="truncate text-sm font-semibold text-slate-800">{task.title}</p>
-
-                  <div className="mt-1.5 min-h-10">
-                    {task.description ? (
-                      <p className="line-clamp-2 text-xs leading-5 text-slate-600">{task.description}</p>
-                    ) : null}
-                  </div>
-
-                  <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] text-slate-600">
-                    <span>Status: {task.status ?? 'todo'}</span>
-                    <span>Priority: {task.priority ?? 'medium'}</span>
-                    <span>Estimate: {task.estimate_hours ?? 0}h</span>
-                    <span>Due: {formatDueDate(task.due_date)}</span>
-                  </div>
+                <div key={task.id} className="space-y-2">
+                  <TaskCard
+                    task={{
+                      ...task,
+                      title: getUnassignedTaskTitle(task),
+                    }}
+                    workPackageLabel={
+                      task.work_package_id
+                        ? (workPackageLabelById[task.work_package_id] ?? null)
+                        : (task.work_package?.name ?? null)
+                    }
+                    workPackageColor={
+                      task.work_package_id
+                        ? (workPackageColorById[task.work_package_id] ?? null)
+                        : (task.work_package?.color ?? null)
+                    }
+                    assigneeUserId={task.created_by}
+                    assigneeLabel={
+                      task.created_by
+                        ? `${assigneeLabelByUserId[task.created_by] ?? task.created_by} (creator)`
+                        : 'Unassigned'
+                    }
+                    assigneeAvatarUrl={task.created_by ? (assigneeAvatarUrlByUserId[task.created_by] ?? null) : null}
+                    onTaskClick={onTaskClick}
+                    onOpenUserProfile={onOpenUserProfile}
+                    isLocked={!canManageTask(task)}
+                  />
 
                   {canTakeUnassignedTasks && currentUserId ? (
                     <button
@@ -182,12 +187,12 @@ export function TaskViewsSection({
                         event.stopPropagation()
                         onTakeTask(task.id)
                       }}
-                      className="mt-2 w-full rounded-md border border-cyan-300 bg-cyan-100 px-2 py-1 text-xs font-semibold text-cyan-900 hover:bg-cyan-200"
+                      className="w-full rounded-md border border-cyan-300 bg-cyan-100 px-2 py-1 text-xs font-semibold text-cyan-900 hover:bg-cyan-200"
                     >
                       Take task
                     </button>
                   ) : null}
-                </article>
+                </div>
               ))}
             </div>
           )}

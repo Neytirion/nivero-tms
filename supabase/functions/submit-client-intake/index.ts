@@ -13,9 +13,19 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 const MAX_TITLE_LENGTH = 255
 const MIN_TITLE_LENGTH = 3
 const MIN_MESSAGE_LENGTH = 10
-const MAX_MESSAGE_LENGTH = 10000
+const MAX_MESSAGE_LENGTH = 1000
+const MAX_CLIENT_NAME_LENGTH = 120
+const MAX_CLIENT_EMAIL_LENGTH = 254
 const MAX_ATTACHMENTS = 5
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
+
+function isLikelyEmail(value: string): boolean {
+  if (value.length === 0) {
+    return true
+  }
+
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+}
 
 function corsHeaders(req: Request): HeadersInit {
   const origin = req.headers.get('origin')
@@ -94,6 +104,8 @@ Deno.serve(async (req: Request) => {
   }
 
   const token = payload.token?.trim() ?? ''
+  const clientName = payload.clientName?.trim() ?? ''
+  const clientEmail = payload.clientEmail?.trim() ?? ''
   const title = payload.title?.trim() ?? ''
   const message = payload.message?.trim() ?? ''
   const attachments = payload.attachments ?? []
@@ -110,8 +122,20 @@ Deno.serve(async (req: Request) => {
     return json(req, { success: false, error: `Details must be ${MIN_MESSAGE_LENGTH}-${MAX_MESSAGE_LENGTH} characters` }, 400)
   }
 
+  if (clientName.length > MAX_CLIENT_NAME_LENGTH) {
+    return json(req, { success: false, error: `Client name must be at most ${MAX_CLIENT_NAME_LENGTH} characters` }, 400)
+  }
+
+  if (clientEmail.length > MAX_CLIENT_EMAIL_LENGTH) {
+    return json(req, { success: false, error: `Client email must be at most ${MAX_CLIENT_EMAIL_LENGTH} characters` }, 400)
+  }
+
+  if (!isLikelyEmail(clientEmail)) {
+    return json(req, { success: false, error: 'Client email format is invalid' }, 400)
+  }
+
   if (attachments.length > MAX_ATTACHMENTS) {
-    return json(req, { success: false, error: `You can upload up to ${MAX_ATTACHMENTS} images` }, 400)
+    return json(req, { success: false, error: `You can upload up to ${MAX_ATTACHMENTS} files` }, 400)
   }
 
   const projectLookupUrl = `${SUPABASE_URL}/rest/v1/projects?select=id,name,owner_id,project_manager_id&client_intake_token=eq.${encodeURIComponent(token)}&limit=1`
@@ -141,21 +165,32 @@ Deno.serve(async (req: Request) => {
     return json(req, { success: false, error: 'Project has no responsible manager/owner for task creation' }, 400)
   }
 
-  const attachmentPublicUrls: string[] = []
+  const attachmentPublicEntries: Array<{ name: string; url: string }> = []
 
   for (const attachment of attachments) {
+    const fileName = attachment.name?.trim() ?? ''
     const contentBase64 = attachment.contentBase64?.trim() ?? ''
-    if (!contentBase64) {
-      continue
+
+    if (!fileName) {
+      return json(req, { success: false, error: 'Attachment name is required' }, 400)
     }
 
-    const arrayBuffer = base64ToArrayBuffer(contentBase64)
+    if (!contentBase64) {
+      return json(req, { success: false, error: `Attachment ${fileName} has empty content` }, 400)
+    }
+
+    let arrayBuffer: ArrayBuffer
+    try {
+      arrayBuffer = base64ToArrayBuffer(contentBase64)
+    } catch {
+      return json(req, { success: false, error: `Attachment ${fileName} content is invalid` }, 400)
+    }
 
     if (arrayBuffer.byteLength > MAX_ATTACHMENT_BYTES) {
-      return json(req, { success: false, error: `Attachment ${attachment.name} exceeds 5MB` }, 400)
+      return json(req, { success: false, error: `Attachment ${fileName} exceeds 5MB` }, 400)
     }
 
-    const extension = safeFileName(attachment.name || 'image')
+    const extension = safeFileName(fileName || 'attachment')
     const path = `${project.id}/${Date.now()}-${crypto.randomUUID()}-${extension}`
     const uploadUrl = `${SUPABASE_URL}/storage/v1/object/client-intake-images/${encodeURIComponent(path)}`
 
@@ -171,14 +206,14 @@ Deno.serve(async (req: Request) => {
     })
 
     if (!uploadResponse.ok) {
-      return json(req, { success: false, error: `Failed to upload attachment ${attachment.name}` }, 500)
+      return json(req, { success: false, error: `Failed to upload attachment ${fileName}` }, 500)
     }
 
-    attachmentPublicUrls.push(`${SUPABASE_URL}/storage/v1/object/public/client-intake-images/${path}`)
+    attachmentPublicEntries.push({
+      name: fileName,
+      url: `${SUPABASE_URL}/storage/v1/object/public/client-intake-images/${path}`,
+    })
   }
-
-  const clientName = payload.clientName?.trim() ?? ''
-  const clientEmail = payload.clientEmail?.trim() ?? ''
 
   const descriptionParts: string[] = [
     'Client request submitted via public intake link.',
@@ -190,10 +225,10 @@ Deno.serve(async (req: Request) => {
     message,
   ]
 
-  if (attachmentPublicUrls.length > 0) {
+  if (attachmentPublicEntries.length > 0) {
     descriptionParts.push('', 'Attachments:')
-    for (const [index, url] of attachmentPublicUrls.entries()) {
-      descriptionParts.push(`${index + 1}. ${url}`)
+    for (const [index, attachment] of attachmentPublicEntries.entries()) {
+      descriptionParts.push(`${index + 1}. ${attachment.name} | ${attachment.url}`)
     }
   }
 

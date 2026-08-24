@@ -102,4 +102,61 @@ describe('ClientIntakePage', () => {
       expect(screen.getByText(/project link is invalid or expired/i)).toBeInTheDocument()
     })
   })
+
+  it('supports non-image file attachments in submission payload', async () => {
+    mockSubmitClientIntake.mockResolvedValue({ success: true, taskId: 'task-43' })
+
+    renderPage()
+
+    fireEvent.change(screen.getByLabelText(/task title/i), {
+      target: { value: 'Share logs with team' },
+    })
+    fireEvent.change(screen.getByLabelText(/details/i), {
+      target: { value: 'Please review attached logs and screenshot for root cause analysis.' },
+    })
+
+    const fileInput = screen.getByLabelText(/attachments/i)
+    const imageFile = new File(['image-bytes'], 'bug.png', { type: 'image/png' })
+    const textFile = new File(['log content'], 'debug.log', { type: 'text/plain' })
+    fireEvent.change(fileInput, {
+      target: {
+        files: [imageFile, textFile],
+      },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /send request/i }))
+
+    await waitFor(() => {
+      expect(mockSubmitClientIntake).toHaveBeenCalled()
+    })
+
+    const payload = mockSubmitClientIntake.mock.calls[0]?.[0]
+    expect(payload?.attachments).toHaveLength(2)
+    expect(payload?.attachments?.[0].name).toBe('bug.png')
+    expect(payload?.attachments?.[1].name).toBe('debug.log')
+    expect(payload?.attachments?.[1].mimeType).toBe('text/plain')
+  })
+
+  it('uses 1000-character limit for details field', () => {
+    renderPage()
+
+    const detailsField = screen.getByLabelText(/details/i)
+    expect(detailsField).toHaveAttribute('maxLength', '1000')
+  })
+
+  it('disables submit for invalid optional email format', () => {
+    renderPage()
+
+    fireEvent.change(screen.getByLabelText(/task title/i), {
+      target: { value: 'Fix checkout on mobile' },
+    })
+    fireEvent.change(screen.getByLabelText(/details/i), {
+      target: { value: 'Checkout button overlaps the footer on iPhone SE.' },
+    })
+    fireEvent.change(screen.getByLabelText(/your email/i), {
+      target: { value: 'not-an-email' },
+    })
+
+    expect(screen.getByRole('button', { name: /send request/i })).toBeDisabled()
+  })
 })

@@ -7,6 +7,134 @@ import { ConfirmDialog, UserProfileDialog, type UserProfilePreview } from '../..
 
 const TASK_DESCRIPTION_MAX_LENGTH = 250
 
+type ParsedAttachment = {
+  name: string
+  url: string
+  isImage: boolean
+}
+
+function normalizeAttachmentUrl(value: string) {
+  return value.trim().replace(/[),.;]+$/g, '')
+}
+
+function isImageAttachmentUrl(url: string) {
+  const normalized = url.split('?')[0].toLowerCase()
+  return /\.(png|jpe?g|gif|webp|bmp|svg|avif|heic|heif)$/.test(normalized)
+}
+
+function parseAttachmentLine(line: string): { name: string; url: string } | null {
+  const namedPattern = /^\s*(?:\d+\.\s*)?(.+?)\s*\|\s*(https?:\/\/\S+)\s*$/i
+  const namedMatch = line.match(namedPattern)
+  if (namedMatch) {
+    const name = namedMatch[1].trim()
+    const url = normalizeAttachmentUrl(namedMatch[2])
+    if (url) {
+      return {
+        name: name.length > 0 ? name : 'Attachment',
+        url,
+      }
+    }
+  }
+
+  const legacyPattern = /^\s*(?:\d+\.\s*)?(https?:\/\/\S+)\s*$/i
+  const legacyMatch = line.match(legacyPattern)
+  if (legacyMatch) {
+    const url = normalizeAttachmentUrl(legacyMatch[1])
+    if (url) {
+      return {
+        name: 'Attachment',
+        url,
+      }
+    }
+  }
+
+  return null
+}
+
+function extractClientAttachments(description: string | null | undefined): ParsedAttachment[] {
+  if (!description) {
+    return []
+  }
+
+  const lines = description.split('\n')
+  const attachments: ParsedAttachment[] = []
+  let inAttachmentsSection = false
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+
+    if (/^attachments:?$/i.test(trimmed)) {
+      inAttachmentsSection = true
+      continue
+    }
+
+    if (!inAttachmentsSection) {
+      continue
+    }
+
+    if (trimmed.length === 0) {
+      continue
+    }
+
+    const parsed = parseAttachmentLine(trimmed)
+    if (!parsed) {
+      inAttachmentsSection = false
+      continue
+    }
+
+    attachments.push({
+      name: parsed.name,
+      url: parsed.url,
+      isImage: isImageAttachmentUrl(parsed.url),
+    })
+  }
+
+  const uniqueByUrl = new Map<string, ParsedAttachment>()
+  for (const item of attachments) {
+    uniqueByUrl.set(item.url, item)
+  }
+
+  return Array.from(uniqueByUrl.values())
+}
+
+function stripAttachmentSection(description: string | null | undefined): string {
+  if (!description) {
+    return ''
+  }
+
+  const lines = description.split('\n')
+  const kept: string[] = []
+  let inAttachmentsSection = false
+
+  for (const line of lines) {
+    const trimmed = line.trim()
+
+    if (/^attachments:?$/i.test(trimmed)) {
+      inAttachmentsSection = true
+      continue
+    }
+
+    if (!inAttachmentsSection) {
+      kept.push(line)
+      continue
+    }
+
+    if (trimmed.length === 0) {
+      continue
+    }
+
+    const parsed = parseAttachmentLine(trimmed)
+    if (parsed) {
+      continue
+    }
+
+    inAttachmentsSection = false
+    kept.push(line)
+  }
+
+  return kept.join('\n').replace(/\n{3,}/g, '\n\n').trim()
+}
+
 export function TaskDetailsPage() {
   const navigate = useNavigate()
   const location = useLocation()
@@ -54,6 +182,8 @@ export function TaskDetailsPage() {
   const task = tasks.find((t) => t.id === taskId)
   const taskEstimateHours = task?.estimate_hours
   const taskStatus = task?.status ?? 'todo'
+  const attachments = extractClientAttachments(task?.description)
+  const descriptionText = stripAttachmentSection(task?.description)
 
   useEffect(() => {
     if (!task && taskId) {
@@ -326,7 +456,49 @@ export function TaskDetailsPage() {
                 </div>
               </div>
             ) : (
-              <p className="text-base leading-6 text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg border border-slate-200 p-4">{task.description || 'No description'}</p>
+              <div className="space-y-3">
+                <p className="text-base leading-6 text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg border border-slate-200 p-4">{descriptionText || 'No description'}</p>
+
+                {attachments.length > 0 ? (
+                  <div className="rounded-lg border border-slate-200 bg-white p-3">
+                    <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">Attachments ({attachments.length})</p>
+                    <div className="space-y-3">
+                      {attachments.map((attachment, index) => (
+                        attachment.isImage ? (
+                          <a
+                            key={attachment.url}
+                            href={attachment.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-block max-w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50 hover:border-sky-300"
+                          >
+                            <img
+                              src={attachment.url}
+                              alt={`Attachment preview: ${attachment.name || `Image ${index + 1}`}`}
+                              className="block h-auto max-h-[32rem] max-w-full object-left-top"
+                              loading="lazy"
+                            />
+                            <div className="border-t border-slate-200 px-3 py-2 text-xs font-medium text-slate-700">
+                              {attachment.name || `Image ${index + 1}`}
+                            </div>
+                          </a>
+                        ) : (
+                          <a
+                            key={attachment.url}
+                            href={attachment.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 transition hover:border-sky-300 hover:bg-sky-50"
+                          >
+                            <span className="truncate pr-3 font-medium">{attachment.name || `Attachment ${index + 1}`}</span>
+                            <span className="shrink-0 text-xs font-semibold text-sky-700">Open</span>
+                          </a>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             )}
           </div>
         </header>

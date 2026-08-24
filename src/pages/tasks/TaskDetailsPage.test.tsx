@@ -320,4 +320,47 @@ describe('TaskDetailsPage', () => {
       expect(editTaskMock).toHaveBeenCalledWith('t1', { description: 'New description value' })
     })
   })
+
+  it('renders attachment previews and file links from client intake description', () => {
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Client bug report',
+          description: [
+            'Client request submitted via public intake link.',
+            '',
+            'Request details:',
+            'UI issue with order summary.',
+            '',
+            'Attachments:',
+            '1. screenshot.png | https://cdn.example.com/files/screenshot.png',
+            '2. console-log.txt | https://cdn.example.com/files/console-log.txt',
+          ].join('\n'),
+          project_id: 'p1',
+          assigned_to: 'u1',
+        }),
+      ],
+      myRoleInSelectedProject: 'member',
+      canAssignAssignee: false,
+      canTakeUnassignedTasks: false,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+
+    expect(screen.getByRole('img', { name: /attachment preview: screenshot\.png/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /console-log\.txt/i })).toBeInTheDocument()
+  })
 })

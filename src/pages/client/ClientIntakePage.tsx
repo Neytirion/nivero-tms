@@ -4,6 +4,20 @@ import { submitClientIntake } from '../../lib/pm/client-intake'
 
 const MAX_ATTACHMENTS = 5
 const MAX_ATTACHMENT_SIZE_BYTES = 5 * 1024 * 1024
+const MIN_TITLE_LENGTH = 3
+const MAX_TITLE_LENGTH = 255
+const MIN_MESSAGE_LENGTH = 10
+const MAX_MESSAGE_LENGTH = 1000
+const MAX_CLIENT_NAME_LENGTH = 120
+const MAX_CLIENT_EMAIL_LENGTH = 254
+
+function isLikelyEmail(value: string) {
+  if (!value.trim()) {
+    return true
+  }
+
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim())
+}
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -29,9 +43,23 @@ export function ClientIntakePage() {
   const [status, setStatus] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
 
-  const titleIsValid = title.trim().length >= 3
-  const messageIsValid = message.trim().length >= 10
-  const canSubmit = Boolean(token) && titleIsValid && messageIsValid && !isSubmitting
+  const clientNameTrimmed = clientName.trim()
+  const clientEmailTrimmed = clientEmail.trim()
+  const titleTrimmed = title.trim()
+  const messageTrimmed = message.trim()
+
+  const clientNameIsValid = clientNameTrimmed.length <= MAX_CLIENT_NAME_LENGTH
+  const clientEmailIsValid = clientEmailTrimmed.length <= MAX_CLIENT_EMAIL_LENGTH && isLikelyEmail(clientEmailTrimmed)
+  const titleIsValid = titleTrimmed.length >= MIN_TITLE_LENGTH && titleTrimmed.length <= MAX_TITLE_LENGTH
+  const messageIsValid = messageTrimmed.length >= MIN_MESSAGE_LENGTH && messageTrimmed.length <= MAX_MESSAGE_LENGTH
+
+  const canSubmit =
+    Boolean(token) &&
+    clientNameIsValid &&
+    clientEmailIsValid &&
+    titleIsValid &&
+    messageIsValid &&
+    !isSubmitting
 
   const attachmentError = useMemo(() => {
     if (attachments.length > MAX_ATTACHMENTS) {
@@ -52,7 +80,7 @@ export function ClientIntakePage() {
       return
     }
 
-    const nextFiles = Array.from(files).filter((file) => file.type.startsWith('image/'))
+    const nextFiles = Array.from(files)
     setAttachments(nextFiles)
   }
 
@@ -75,10 +103,10 @@ export function ClientIntakePage() {
 
       await submitClientIntake({
         token,
-        clientName: clientName.trim() || undefined,
-        clientEmail: clientEmail.trim() || undefined,
-        title: title.trim(),
-        message: message.trim(),
+        clientName: clientNameTrimmed || undefined,
+        clientEmail: clientEmailTrimmed || undefined,
+        title: titleTrimmed,
+        message: messageTrimmed,
         attachments: encodedAttachments,
       })
 
@@ -111,8 +139,15 @@ export function ClientIntakePage() {
               value={clientName}
               onChange={(event) => setClientName(event.target.value)}
               placeholder="Jane Doe"
+              maxLength={MAX_CLIENT_NAME_LENGTH}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
             />
+            <div className="mt-1 flex items-center justify-between text-xs">
+              <span className={clientNameIsValid ? 'text-slate-500' : 'text-rose-600'}>
+                Max {MAX_CLIENT_NAME_LENGTH} characters
+              </span>
+              <span className="text-slate-400">{clientName.length}/{MAX_CLIENT_NAME_LENGTH}</span>
+            </div>
           </label>
 
           <label className="block">
@@ -122,8 +157,15 @@ export function ClientIntakePage() {
               value={clientEmail}
               onChange={(event) => setClientEmail(event.target.value)}
               placeholder="jane@company.com"
+              maxLength={MAX_CLIENT_EMAIL_LENGTH}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
             />
+            <div className="mt-1 flex items-center justify-between text-xs">
+              <span className={clientEmailIsValid ? 'text-slate-500' : 'text-rose-600'}>
+                Optional valid email, max {MAX_CLIENT_EMAIL_LENGTH} characters
+              </span>
+              <span className="text-slate-400">{clientEmail.length}/{MAX_CLIENT_EMAIL_LENGTH}</span>
+            </div>
           </label>
 
           <label className="block">
@@ -133,8 +175,15 @@ export function ClientIntakePage() {
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Fix checkout button overlap on mobile"
+              maxLength={MAX_TITLE_LENGTH}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
             />
+            <div className="mt-1 flex items-center justify-between text-xs">
+              <span className={titleIsValid || titleTrimmed.length === 0 ? 'text-slate-500' : 'text-rose-600'}>
+                {MIN_TITLE_LENGTH}-{MAX_TITLE_LENGTH} characters
+              </span>
+              <span className="text-slate-400">{title.length}/{MAX_TITLE_LENGTH}</span>
+            </div>
           </label>
 
           <label className="block">
@@ -143,16 +192,22 @@ export function ClientIntakePage() {
               value={message}
               onChange={(event) => setMessage(event.target.value)}
               placeholder="Describe what should be changed, expected result, and any context."
+              maxLength={MAX_MESSAGE_LENGTH}
               rows={6}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
             />
+            <div className="mt-1 flex items-center justify-between text-xs">
+              <span className={messageIsValid || messageTrimmed.length === 0 ? 'text-slate-500' : 'text-rose-600'}>
+                {MIN_MESSAGE_LENGTH}-{MAX_MESSAGE_LENGTH} characters
+              </span>
+              <span className="text-slate-400">{message.length}/{MAX_MESSAGE_LENGTH}</span>
+            </div>
           </label>
 
           <label className="block">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Images (optional)</span>
+            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Attachments (optional)</span>
             <input
               type="file"
-              accept="image/*"
               multiple
               onChange={(event) => handleAttachmentsChange(event.target.files)}
               className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700"

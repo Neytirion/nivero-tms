@@ -147,6 +147,7 @@ export function TaskDetailsPage() {
   const [descriptionDraft, setDescriptionDraft] = useState('')
   const [isDescriptionEditing, setIsDescriptionEditing] = useState(false)
   const [isDescriptionSaving, setIsDescriptionSaving] = useState(false)
+  const [previewAttachment, setPreviewAttachment] = useState<ParsedAttachment | null>(null)
 
   const backTo =
     typeof location.state === 'object' &&
@@ -228,6 +229,23 @@ export function TaskDetailsPage() {
       window.clearTimeout(syncTimerId)
     }
   }, [taskId, taskStatus])
+
+  useEffect(() => {
+    if (!previewAttachment) {
+      return
+    }
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setPreviewAttachment(null)
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+    }
+  }, [previewAttachment])
 
   if (!task) {
     return (
@@ -474,23 +492,22 @@ export function TaskDetailsPage() {
                     <div className="space-y-3">
                       {attachments.map((attachment, index) => (
                         attachment.isImage ? (
-                          <a
+                          <button
                             key={attachment.url}
-                            href={attachment.url}
-                            target="_blank"
-                            rel="noreferrer"
+                            type="button"
+                            onClick={() => setPreviewAttachment(attachment)}
                             className="inline-block max-w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50 hover:border-sky-300"
                           >
                             <img
                               src={attachment.url}
                               alt={`Attachment preview: ${attachment.name || `Image ${index + 1}`}`}
-                              className="block h-auto max-h-[32rem] max-w-full object-left-top"
+                              className="block h-auto max-h-80 max-w-[520px] object-left-top"
                               loading="lazy"
                             />
                             <div className="border-t border-slate-200 px-3 py-2 text-xs font-medium text-slate-700">
                               {attachment.name || `Image ${index + 1}`}
                             </div>
-                          </a>
+                          </button>
                         ) : (
                           <a
                             key={attachment.url}
@@ -763,6 +780,34 @@ export function TaskDetailsPage() {
 
         </div>
       </div>
+
+      {previewAttachment ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Attachment preview"
+          onClick={() => setPreviewAttachment(null)}
+        >
+          <div
+            className="relative max-h-full max-w-[min(96vw,1400px)]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setPreviewAttachment(null)}
+              className="absolute right-2 top-2 z-10 rounded-md bg-slate-900/70 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-900"
+            >
+              Close
+            </button>
+            <img
+              src={previewAttachment.url}
+              alt={previewAttachment.name || 'Attachment image'}
+              className="max-h-[90vh] max-w-[96vw] rounded-lg object-contain"
+            />
+          </div>
+        </div>
+      ) : null}
 
       <UserProfileDialog
         isOpen={Boolean(selectedProfile)}

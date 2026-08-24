@@ -1,6 +1,6 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTasksPageController } from './useTasksPageController'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { TaskLogTimeModal } from '../../features/tasks/components'
 import { TaskCommentsPanel } from '../../features/tasks/components/comments'
 import { ConfirmDialog, UserProfileDialog, type UserProfilePreview } from '../../shared/components'
@@ -182,8 +182,17 @@ export function TaskDetailsPage() {
   const task = tasks.find((t) => t.id === taskId)
   const taskEstimateHours = task?.estimate_hours
   const taskStatus = task?.status ?? 'todo'
-  const attachments = extractClientAttachments(task?.description)
-  const descriptionText = stripAttachmentSection(task?.description)
+  const descriptionViewModel = useMemo(() => {
+    const description = task?.description ?? ''
+
+    return {
+      attachments: extractClientAttachments(description),
+      descriptionText: stripAttachmentSection(description),
+    }
+  }, [task?.description])
+
+  const attachments = descriptionViewModel.attachments
+  const descriptionText = descriptionViewModel.descriptionText
 
   useEffect(() => {
     if (!task && taskId) {
@@ -390,7 +399,7 @@ export function TaskDetailsPage() {
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
         {/* Header */}
-        <header className="mb-8 rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm backdrop-blur">
+        <header className="mb-8 rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm">
           <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Task details</p>

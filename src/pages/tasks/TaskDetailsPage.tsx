@@ -13,6 +13,13 @@ type ParsedAttachment = {
   isImage: boolean
 }
 
+type ParsedClientIntakePayload = {
+  clientName: string | null
+  clientEmail: string | null
+  requestDetails: string
+  attachments: ParsedAttachment[]
+}
+
 function normalizeAttachmentUrl(value: string) {
   return value.trim().replace(/[),.;]+$/g, '')
 }
@@ -95,6 +102,53 @@ function extractClientAttachments(description: string | null | undefined): Parse
   }
 
   return Array.from(uniqueByUrl.values())
+}
+
+function parseClientIntakePayload(description: string | null | undefined): ParsedClientIntakePayload | null {
+  if (!description) {
+    return null
+  }
+
+  const normalized = description.replace(/\r\n/g, '\n')
+  if (!/^\s*Client request submitted via public intake link\./i.test(normalized)) {
+    return null
+  }
+
+  const clientNameMatch = normalized.match(/^Client name:\s*(.+)$/im)
+  const clientEmailMatch = normalized.match(/^Client email:\s*(.+)$/im)
+  const detailsMatch = normalized.match(/Request details:\s*\n([\s\S]*?)(?:\n\s*Attachments:\s*\n|$)/i)
+  const attachmentsMatch = normalized.match(/\n\s*Attachments:\s*\n([\s\S]*)$/i)
+
+  const rawClientName = (clientNameMatch?.[1] ?? '').trim()
+  const rawClientEmail = (clientEmailMatch?.[1] ?? '').trim()
+  const requestDetails = (detailsMatch?.[1] ?? '').trim()
+  const attachmentsSection = attachmentsMatch?.[1] ?? ''
+
+  const attachments: ParsedAttachment[] = []
+  for (const line of attachmentsSection.split('\n')) {
+    const parsed = parseAttachmentLine(line.trim())
+    if (!parsed) {
+      continue
+    }
+
+    attachments.push({
+      name: parsed.name,
+      url: parsed.url,
+      isImage: isImageAttachmentUrl(parsed.url),
+    })
+  }
+
+  const uniqueByUrl = new Map<string, ParsedAttachment>()
+  for (const attachment of attachments) {
+    uniqueByUrl.set(attachment.url, attachment)
+  }
+
+  return {
+    clientName: rawClientName.toLowerCase() === 'not provided' || rawClientName.length === 0 ? null : rawClientName,
+    clientEmail: rawClientEmail.toLowerCase() === 'not provided' || rawClientEmail.length === 0 ? null : rawClientEmail,
+    requestDetails,
+    attachments: Array.from(uniqueByUrl.values()),
+  }
 }
 
 function stripAttachmentSection(description: string | null | undefined): string {
@@ -185,13 +239,24 @@ export function TaskDetailsPage() {
   const taskStatus = task?.status ?? 'todo'
   const descriptionViewModel = useMemo(() => {
     const description = task?.description ?? ''
+    const clientIntakePayload = parseClientIntakePayload(description)
+
+    if (clientIntakePayload) {
+      return {
+        clientIntakePayload,
+        attachments: clientIntakePayload.attachments,
+        descriptionText: '',
+      }
+    }
 
     return {
+      clientIntakePayload: null,
       attachments: extractClientAttachments(description),
       descriptionText: stripAttachmentSection(description),
     }
   }, [task?.description])
 
+  const clientIntakePayload = descriptionViewModel.clientIntakePayload
   const attachments = descriptionViewModel.attachments
   const descriptionText = descriptionViewModel.descriptionText
 
@@ -484,7 +549,30 @@ export function TaskDetailsPage() {
               </div>
             ) : (
               <div className="space-y-3">
-                <p className="text-base leading-6 text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg border border-slate-200 p-4">{descriptionText || 'No description'}</p>
+                {clientIntakePayload ? (
+                  <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Client name</p>
+                        <p className="mt-1 text-sm font-medium text-slate-800">{clientIntakePayload.clientName ?? 'Not provided'}</p>
+                      </div>
+
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Client email</p>
+                        <p className="mt-1 text-sm font-medium text-slate-800">{clientIntakePayload.clientEmail ?? 'Not provided'}</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Request details</p>
+                      <p className="text-base leading-6 whitespace-pre-wrap text-slate-700">
+                        {clientIntakePayload.requestDetails || 'No details provided'}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-base leading-6 text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg border border-slate-200 p-4">{descriptionText || 'No description'}</p>
+                )}
 
                 {attachments.length > 0 ? (
                   <div className="rounded-lg border border-slate-200 bg-white p-3">

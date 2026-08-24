@@ -360,6 +360,13 @@ describe('TaskDetailsPage', () => {
 
     renderTaskDetails('/app/tasks/t1')
 
+    expect(screen.getByText(/client name/i)).toBeInTheDocument()
+    expect(screen.getByText(/client email/i)).toBeInTheDocument()
+    expect(screen.getByText(/request details/i)).toBeInTheDocument()
+    expect(screen.getAllByText('Not provided')).toHaveLength(2)
+    expect(screen.getByText('UI issue with order summary.')).toBeInTheDocument()
+    expect(screen.queryByText(/Client request submitted via public intake link\./i)).not.toBeInTheDocument()
+
     expect(screen.getByRole('img', { name: /attachment preview: screenshot\.png/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /console-log\.txt/i })).toBeInTheDocument()
   })

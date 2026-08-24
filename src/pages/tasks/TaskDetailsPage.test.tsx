@@ -529,6 +529,70 @@ describe('TaskDetailsPage', () => {
     })
   })
 
+  it('allows admin to remove client-request attachment', async () => {
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Client bug report',
+          description: [
+            'Client request submitted via public intake link.',
+            '',
+            'Client name: John',
+            'Client email: john@example.com',
+            '',
+            'Request details:',
+            'Please fix checkout behavior.',
+            '',
+            'Attachments:',
+            '1. screenshot.png | https://cdn.example.com/files/screenshot.png',
+            '2. console-log.txt | https://cdn.example.com/files/console-log.txt',
+          ].join('\n'),
+          project_id: 'p1',
+          assigned_to: 'u1',
+        }),
+      ],
+      myRoleInSelectedProject: 'admin',
+      canAssignAssignee: true,
+      canTakeUnassignedTasks: true,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+
+    fireEvent.click(screen.getByRole('button', { name: /^edit$/i }))
+    const removeButtons = screen.getAllByRole('button', { name: /remove/i })
+    fireEvent.click(removeButtons[0])
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+
+    await waitFor(() => {
+      expect(editTaskMock).toHaveBeenCalledWith(
+        't1',
+        expect.objectContaining({
+          description: expect.not.stringContaining('https://cdn.example.com/files/screenshot.png'),
+        }),
+      )
+    })
+
+    expect(editTaskMock).toHaveBeenCalledWith(
+      't1',
+      expect.objectContaining({
+        description: expect.stringContaining('https://cdn.example.com/files/console-log.txt'),
+      }),
+    )
+  })
+
   it('allows member to edit task title', async () => {
     mockUseTasksPageController.mockReturnValue({
       tasks: [

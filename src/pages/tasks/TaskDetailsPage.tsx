@@ -238,6 +238,7 @@ export function TaskDetailsPage() {
   const [clientNameDraft, setClientNameDraft] = useState('')
   const [clientEmailDraft, setClientEmailDraft] = useState('')
   const [clientRequestDetailsDraft, setClientRequestDetailsDraft] = useState('')
+  const [clientAttachmentsDraft, setClientAttachmentsDraft] = useState<ParsedAttachment[]>([])
   const [titleDraft, setTitleDraft] = useState('')
   const [isTaskEditing, setIsTaskEditing] = useState(false)
   const [isTaskSaving, setIsTaskSaving] = useState(false)
@@ -366,6 +367,11 @@ export function TaskDetailsPage() {
   const canEditClientRequest = isClientIntakeTask && !isLocked && isOwnerOrAdmin
   const canEditTask = !isLocked
   const canEditDescription = !isLocked
+  const clientRequestAttachments = isTaskEditing && canEditClientRequest ? clientAttachmentsDraft : attachments
+  const descriptionImageAttachments = attachments.filter((attachment) => attachment.isImage)
+  const descriptionFileAttachments = attachments.filter((attachment) => !attachment.isImage)
+  const clientRequestImageAttachments = clientRequestAttachments.filter((attachment) => attachment.isImage)
+  const clientRequestFileAttachments = clientRequestAttachments.filter((attachment) => !attachment.isImage)
   const progressPct = estimateHours > 0
     ? Math.min(100, Math.round((actualHours / estimateHours) * 100))
     : 0
@@ -409,6 +415,7 @@ export function TaskDetailsPage() {
     setClientNameDraft(clientIntakePayload?.clientName ?? '')
     setClientEmailDraft(clientIntakePayload?.clientEmail ?? '')
     setClientRequestDetailsDraft(clientIntakePayload?.requestDetails ?? '')
+    setClientAttachmentsDraft(clientIntakePayload?.attachments ?? [])
     setIsTaskEditing(true)
   }
 
@@ -422,6 +429,7 @@ export function TaskDetailsPage() {
     setClientNameDraft(clientIntakePayload?.clientName ?? '')
     setClientEmailDraft(clientIntakePayload?.clientEmail ?? '')
     setClientRequestDetailsDraft(clientIntakePayload?.requestDetails ?? '')
+    setClientAttachmentsDraft(clientIntakePayload?.attachments ?? [])
     setIsTaskEditing(false)
   }
 
@@ -464,6 +472,7 @@ export function TaskDetailsPage() {
         nextPayload.clientName = clientNameDraft.trim() || null
         nextPayload.clientEmail = clientEmailDraft.trim() || null
         nextPayload.requestDetails = clientRequestDetailsDraft
+        nextPayload.attachments = clientAttachmentsDraft
       }
 
       const composedDescription = formatClientIntakePayload(nextPayload)
@@ -526,6 +535,10 @@ export function TaskDetailsPage() {
     }
 
     await editTask(task.id, { assignedTo: currentUserId })
+  }
+
+  const removeClientAttachmentHandler = (urlToRemove: string) => {
+    setClientAttachmentsDraft((prev) => prev.filter((attachment) => attachment.url !== urlToRemove))
   }
 
   const getDaysUntilDue = (dueDateRaw: string | null | undefined) => {
@@ -652,36 +665,36 @@ export function TaskDetailsPage() {
                   <div className="rounded-lg border border-slate-200 bg-white p-3">
                     <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">Attachments ({attachments.length})</p>
                     <div className="space-y-3">
-                      {attachments.map((attachment, index) => (
-                        attachment.isImage ? (
-                          <button
-                            key={attachment.url}
-                            type="button"
-                            onClick={() => setPreviewAttachment(attachment)}
-                            className="inline-block max-w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50 hover:border-sky-300"
-                          >
-                            <img
-                              src={attachment.url}
-                              alt={`Attachment preview: ${attachment.name || `Image ${index + 1}`}`}
-                              className="block h-auto max-h-80 max-w-[520px] object-left-top"
-                              loading="lazy"
-                            />
-                            <div className="border-t border-slate-200 px-3 py-2 text-xs font-medium text-slate-700">
-                              {attachment.name || `Image ${index + 1}`}
-                            </div>
-                          </button>
-                        ) : (
-                          <a
-                            key={attachment.url}
-                            href={attachment.url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 transition hover:border-sky-300 hover:bg-sky-50"
-                          >
-                            <span className="truncate pr-3 font-medium">{attachment.name || `Attachment ${index + 1}`}</span>
-                            <span className="shrink-0 text-xs font-semibold text-sky-700">Open</span>
-                          </a>
-                        )
+                      {descriptionImageAttachments.map((attachment, index) => (
+                        <button
+                          key={attachment.url}
+                          type="button"
+                          onClick={() => setPreviewAttachment(attachment)}
+                          className="inline-block max-w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50 hover:border-sky-300"
+                        >
+                          <img
+                            src={attachment.url}
+                            alt={`Attachment preview: ${attachment.name || `Image ${index + 1}`}`}
+                            className="block h-auto max-h-80 max-w-[520px] object-left-top"
+                            loading="lazy"
+                          />
+                          <div className="border-t border-slate-200 px-3 py-2 text-xs font-medium text-slate-700">
+                            {attachment.name || `Image ${index + 1}`}
+                          </div>
+                        </button>
+                      ))}
+
+                      {descriptionFileAttachments.map((attachment, index) => (
+                        <a
+                          key={attachment.url}
+                          href={attachment.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 transition hover:border-sky-300 hover:bg-sky-50"
+                        >
+                          <span className="truncate pr-3 font-medium">{attachment.name || `Attachment ${index + 1}`}</span>
+                          <span className="shrink-0 text-xs font-semibold text-sky-700">Open</span>
+                        </a>
                       ))}
                     </div>
                   </div>
@@ -743,17 +756,16 @@ export function TaskDetailsPage() {
                 )}
               </div>
 
-              {attachments.length > 0 ? (
+              {clientRequestAttachments.length > 0 ? (
                 <div className="rounded-lg border border-slate-200 bg-white p-3">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">Attachments ({attachments.length})</p>
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">Attachments ({clientRequestAttachments.length})</p>
                   <div className="space-y-3">
-                    {attachments.map((attachment, index) => (
-                      attachment.isImage ? (
+                    {clientRequestImageAttachments.map((attachment, index) => (
+                      <div key={attachment.url} className="inline-block max-w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
                         <button
-                          key={attachment.url}
                           type="button"
                           onClick={() => setPreviewAttachment(attachment)}
-                          className="inline-block max-w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50 hover:border-sky-300"
+                          className="block hover:border-sky-300"
                         >
                           <img
                             src={attachment.url}
@@ -761,22 +773,48 @@ export function TaskDetailsPage() {
                             className="block h-auto max-h-80 max-w-[520px] object-left-top"
                             loading="lazy"
                           />
-                          <div className="border-t border-slate-200 px-3 py-2 text-xs font-medium text-slate-700">
-                            {attachment.name || `Image ${index + 1}`}
-                          </div>
                         </button>
-                      ) : (
+                        <div className="flex items-center justify-between gap-2 border-t border-slate-200 px-3 py-2 text-xs font-medium text-slate-700">
+                          <span className="truncate">{attachment.name || `Image ${index + 1}`}</span>
+                          {isTaskEditing && canEditClientRequest ? (
+                            <button
+                              type="button"
+                              onClick={() => removeClientAttachmentHandler(attachment.url)}
+                              className="shrink-0 rounded border border-rose-300 bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 hover:bg-rose-100"
+                            >
+                              Remove
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
+                    ))}
+
+                    {clientRequestFileAttachments.map((attachment, index) => (
+                      <div
+                        key={attachment.url}
+                        className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700"
+                      >
                         <a
-                          key={attachment.url}
                           href={attachment.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 transition hover:border-sky-300 hover:bg-sky-50"
+                          className="truncate pr-3 font-medium text-slate-700 hover:text-sky-700"
                         >
-                          <span className="truncate pr-3 font-medium">{attachment.name || `Attachment ${index + 1}`}</span>
-                          <span className="shrink-0 text-xs font-semibold text-sky-700">Open</span>
+                          {attachment.name || `Attachment ${index + 1}`}
                         </a>
-                      )
+                        <div className="flex items-center gap-2">
+                          <span className="shrink-0 text-xs font-semibold text-sky-700">Open</span>
+                          {isTaskEditing && canEditClientRequest ? (
+                            <button
+                              type="button"
+                              onClick={() => removeClientAttachmentHandler(attachment.url)}
+                              className="shrink-0 rounded border border-rose-300 bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 hover:bg-rose-100"
+                            >
+                              Remove
+                            </button>
+                          ) : null}
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>

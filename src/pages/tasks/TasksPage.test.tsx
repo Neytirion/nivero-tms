@@ -11,6 +11,7 @@ import {
   getProjectWorkPackageDisplayProfileById,
   hasProjectEstimateVersion,
 } from '../../lib/pm'
+import { getProjectTaskCardFieldPreferences } from '../../lib/pm/work-packages'
 
 vi.mock('../../features/dashboard/workspace-context.tsx', () => ({
   useWorkspace: vi.fn(),
@@ -26,6 +27,10 @@ vi.mock('../../lib/pm', () => ({
   hasProjectEstimateVersion: vi.fn(),
   getProjectUseEstimates: vi.fn(),
   getProjectWorkPackageDisplayProfileById: vi.fn(),
+}))
+
+vi.mock('../../lib/pm/work-packages', () => ({
+  getProjectTaskCardFieldPreferences: vi.fn(),
 }))
 
 let lastKanbanProps: unknown = null
@@ -46,6 +51,7 @@ const mockGetProjectTaskWorkPackages = vi.mocked(getProjectTaskWorkPackages)
 const mockHasProjectEstimateVersion = vi.mocked(hasProjectEstimateVersion)
 const mockGetProjectUseEstimates = vi.mocked(getProjectUseEstimates)
 const mockGetProjectWorkPackageDisplayProfileById = vi.mocked(getProjectWorkPackageDisplayProfileById)
+const mockGetProjectTaskCardFieldPreferences = vi.mocked(getProjectTaskCardFieldPreferences)
 
 function mockTaskForm(overrides: Record<string, unknown> = {}) {
   mockUseTaskForm.mockReturnValue({
@@ -76,6 +82,14 @@ describe('TasksPage', () => {
     lastKanbanProps = null
     kanbanPropsCalls = []
     mockTaskForm()
+    mockGetProjectTaskCardFieldPreferences.mockResolvedValue({
+      showDescription: true,
+      showPriority: true,
+      showDueState: true,
+      showDueDate: true,
+      showAssignee: true,
+      showWorkPackage: true,
+    })
     mockGetProjectTaskWorkPackages.mockResolvedValue([
       { id: 'wp1', name: 'Backend', estimated_hours: 20 },
     ] as never)
@@ -234,7 +248,9 @@ describe('TasksPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'List' }))
 
-    expect(screen.getByRole('button', { name: 'Bob Smith' })).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Bob Smith' })).toBeInTheDocument()
+    })
   })
 
   it('passes drop handler to board columns', async () => {
@@ -381,7 +397,9 @@ describe('TasksPage', () => {
 
       // ✅ Check BEHAVIOR: Page state shows no blocking data
       // The component should not allow circular dependencies
-      expect(lastKanbanProps).not.toBeNull()
+      await waitFor(() => {
+        expect(lastKanbanProps).not.toBeNull()
+      })
     })
   })
 })

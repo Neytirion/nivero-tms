@@ -140,11 +140,13 @@ export function TaskCard({
         <span className={`text-xs transition ${isLocked ? 'text-slate-400 group-hover:text-slate-600' : 'text-slate-300 group-hover:text-sky-600'}`}>↗</span>
       </div>
 
-      <div className="mt-1.5 min-h-10">
-        {fieldPreferences.showDescription && descriptionPreview ? (
-          <p className={`line-clamp-2 text-xs leading-5 ${isLocked ? 'text-slate-500' : 'text-slate-500'}`}>{descriptionPreview}</p>
-        ) : null}
-      </div>
+      {fieldPreferences.showDescription ? (
+        <div className="mt-1.5">
+          {descriptionPreview ? (
+            <p className={`line-clamp-2 text-xs leading-5 ${isLocked ? 'text-slate-500' : 'text-slate-500'}`}>{descriptionPreview}</p>
+          ) : null}
+        </div>
+      ) : null}
 
       {fieldPreferences.showPriority || fieldPreferences.showDueState || fieldPreferences.showDueDate ? (
         <div className="mt-3 flex flex-wrap items-center gap-1.5">

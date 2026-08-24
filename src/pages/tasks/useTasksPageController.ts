@@ -77,6 +77,7 @@ export function useTasksPageController() {
     tasksTotalCount,
     loadMoreTasks,
   } = useWorkspace()
+  const [isTaskCardPreferencesLoading, setIsTaskCardPreferencesLoading] = useState(Boolean(selectedProjectId))
 
   const selectedProject = useMemo(
     () => projects.find((project) => project.id === selectedProjectId) ?? null,
@@ -139,14 +140,19 @@ export function useTasksPageController() {
     const loadTaskCardPreferences = async () => {
       if (!selectedProjectId) {
         setTaskCardFieldPreferences(DEFAULT_TASK_CARD_FIELD_PREFERENCES)
+        setIsTaskCardPreferencesLoading(false)
         return
       }
+
+      setIsTaskCardPreferencesLoading(true)
 
       try {
         const preferences = await getProjectTaskCardFieldPreferences(selectedProjectId)
         setTaskCardFieldPreferences(preferences)
       } catch {
         setTaskCardFieldPreferences(DEFAULT_TASK_CARD_FIELD_PREFERENCES)
+      } finally {
+        setIsTaskCardPreferencesLoading(false)
       }
     }
 
@@ -342,6 +348,7 @@ export function useTasksPageController() {
     workPackageLabelById,
     workPackageColorById,
     taskCardFieldPreferences,
+    isTaskCardPreferencesLoading,
     assigneeOptions,
     canSubmit,
     logTimeTask,

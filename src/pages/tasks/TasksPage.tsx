@@ -22,6 +22,7 @@ export function TasksPage() {
     canTakeUnassignedTasks,
     hasEstimateVersion,
     isWorkPackagesLoading,
+    isTaskCardPreferencesLoading,
     currentUserProfile,
     assigneeLabelByUserId,
     assigneeAvatarUrlByUserId,
@@ -114,6 +115,7 @@ export function TasksPage() {
         taskViewMode={taskViewMode}
         onTaskViewModeChange={setTaskViewMode}
         isWorkPackagesLoading={isWorkPackagesLoading}
+        isTaskCardPreferencesLoading={isTaskCardPreferencesLoading}
         tasks={tasks}
         assigneeLabelByUserId={assigneeLabelByUserId}
         assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}

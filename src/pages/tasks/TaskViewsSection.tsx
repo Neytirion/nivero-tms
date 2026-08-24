@@ -22,6 +22,7 @@ type TaskViewsSectionProps = {
   taskViewMode: TaskViewMode
   onTaskViewModeChange: (mode: TaskViewMode) => void
   isWorkPackagesLoading: boolean
+  isTaskCardPreferencesLoading?: boolean
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
   assigneeAvatarUrlByUserId: Record<string, string>
@@ -44,6 +45,7 @@ export function TaskViewsSection({
   taskViewMode,
   onTaskViewModeChange,
   isWorkPackagesLoading,
+  isTaskCardPreferencesLoading = false,
   tasks,
   assigneeLabelByUserId,
   assigneeAvatarUrlByUserId,
@@ -75,7 +77,7 @@ export function TaskViewsSection({
     return task.title
   }
 
-  const shouldDeferTaskViews = isWorkPackagesLoading && tasks.length > 0
+  const shouldDeferTaskViews = taskViewMode === 'board' && (isWorkPackagesLoading || isTaskCardPreferencesLoading) && tasks.length > 0
 
   return (
     <section className="page-section border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">

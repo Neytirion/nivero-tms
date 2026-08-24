@@ -77,6 +77,15 @@ function mockTaskForm(overrides: Record<string, unknown> = {}) {
   })
 }
 
+function createDeferred<T>() {
+  let resolve!: (value: T) => void
+  const promise = new Promise<T>((resolver) => {
+    resolve = resolver
+  })
+
+  return { promise, resolve }
+}
+
 describe('TasksPage', () => {
   beforeEach(() => {
     lastKanbanProps = null
@@ -250,6 +259,56 @@ describe('TasksPage', () => {
 
     await waitFor(() => {
       expect(screen.getByRole('button', { name: 'Bob Smith' })).toBeInTheDocument()
+    })
+  })
+
+  it('defers board rendering while card field preferences are loading', async () => {
+    const deferredPreferences = createDeferred<{
+      showDescription: boolean
+      showPriority: boolean
+      showDueState: boolean
+      showDueDate: boolean
+      showAssignee: boolean
+      showWorkPackage: boolean
+    }>()
+    mockGetProjectTaskCardFieldPreferences.mockReturnValueOnce(deferredPreferences.promise)
+
+    const workspace = createWorkspaceState({
+      selectedProjectId: 'p1',
+      projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
+      tasks: [
+        createTaskPreview({
+          id: 't-board-1',
+          title: 'Board task loading gate',
+          project_id: 'p1',
+          assigned_to: 'u1',
+        }),
+      ],
+    })
+    mockUseWorkspace.mockReturnValue(workspace)
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      expect(document.querySelector('[aria-busy="true"]')).not.toBeNull()
+    })
+    expect(screen.queryByText('kanban-column')).not.toBeInTheDocument()
+
+    deferredPreferences.resolve({
+      showDescription: true,
+      showPriority: true,
+      showDueState: true,
+      showDueDate: true,
+      showAssignee: true,
+      showWorkPackage: true,
+    })
+
+    await waitFor(() => {
+      expect(screen.getAllByText('kanban-column')).toHaveLength(5)
     })
   })
 

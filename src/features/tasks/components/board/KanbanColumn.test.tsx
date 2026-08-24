@@ -97,4 +97,45 @@ describe('KanbanColumn', () => {
     expect(capturedTaskCardProps[0].workPackageLabel).toBe('Fallback WP 2')
     expect(capturedTaskCardProps[0].workPackageColor).toBe('#10b981')
   })
+
+  it('does not use embedded work package values for linked tasks when map is not ready', () => {
+    render(
+      <KanbanColumn
+        status="todo"
+        label="To Do"
+        tasks={[
+          {
+            id: 't3',
+            work_package_id: 'wp3',
+            title: 'Task with stale embedded package',
+            description: null,
+            status: 'todo',
+            priority: 'medium',
+            assigned_to: 'u3',
+            created_by: 'u3',
+            estimate_hours: 2,
+            actual_hours: 0,
+            blocked_by_task_id: null,
+            due_date: null,
+            project_id: 'p1',
+            created_at: '2026-08-19T00:00:00.000Z',
+            work_package: { name: 'Old Embedded WP', color: '#ef4444' },
+          },
+        ] as never}
+        assigneeLabelByUserId={{ u3: 'Carol' }}
+        assigneeAvatarUrlByUserId={{}}
+        workPackageLabelById={{}}
+        workPackageColorById={{}}
+        onOpenUserProfile={() => undefined}
+        onDropTask={() => undefined}
+        onDragOver={(event) => event.preventDefault()}
+        onDragTaskStart={() => undefined}
+        canManageTask={() => true}
+      />,
+    )
+
+    expect(capturedTaskCardProps).toHaveLength(1)
+    expect(capturedTaskCardProps[0].workPackageLabel).toBeNull()
+    expect(capturedTaskCardProps[0].workPackageColor).toBeNull()
+  })
 })

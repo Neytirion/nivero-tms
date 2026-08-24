@@ -62,12 +62,12 @@ export function KanbanColumn({
               task={task}
               workPackageLabel={
                 task.work_package_id
-                  ? (workPackageLabelById[task.work_package_id] ?? task.work_package?.name ?? null)
+                  ? (workPackageLabelById[task.work_package_id] ?? null)
                   : (task.work_package?.name ?? null)
               }
               workPackageColor={
                 task.work_package_id
-                  ? (workPackageColorById[task.work_package_id] ?? task.work_package?.color ?? null)
+                  ? (workPackageColorById[task.work_package_id] ?? null)
                   : (task.work_package?.color ?? null)
               }
               assigneeUserId={task.assigned_to ?? task.created_by}

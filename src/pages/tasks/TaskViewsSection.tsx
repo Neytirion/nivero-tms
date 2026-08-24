@@ -8,6 +8,7 @@ export type TaskViewMode = 'list' | 'board'
 type TaskViewsSectionProps = {
   taskViewMode: TaskViewMode
   onTaskViewModeChange: (mode: TaskViewMode) => void
+  isWorkPackagesLoading: boolean
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
   assigneeAvatarUrlByUserId: Record<string, string>
@@ -28,6 +29,7 @@ type TaskViewsSectionProps = {
 export function TaskViewsSection({
   taskViewMode,
   onTaskViewModeChange,
+  isWorkPackagesLoading,
   tasks,
   assigneeLabelByUserId,
   assigneeAvatarUrlByUserId,
@@ -54,6 +56,8 @@ export function TaskViewsSection({
 
     return new Date(dueDateRaw).toLocaleDateString()
   }
+
+  const shouldDeferTaskViews = isWorkPackagesLoading && tasks.length > 0
 
   return (
     <section className="page-section border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)]">
@@ -82,6 +86,25 @@ export function TaskViewsSection({
         </div>
       </div>
 
+      {shouldDeferTaskViews ? (
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]" aria-live="polite" aria-busy="true">
+          <div className="min-w-0 space-y-3">
+            {[0, 1, 2].map((row) => (
+              <div key={row} className="animate-pulse rounded-xl border border-slate-200 bg-white p-3">
+                <div className="h-4 w-1/3 rounded bg-slate-200" />
+                <div className="mt-2 h-3 w-11/12 rounded bg-slate-100" />
+                <div className="mt-2 h-3 w-8/12 rounded bg-slate-100" />
+              </div>
+            ))}
+          </div>
+          <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3">
+            <div className="animate-pulse space-y-2">
+              <div className="h-4 w-2/3 rounded bg-cyan-100" />
+              <div className="h-16 rounded-lg border border-cyan-200 bg-white" />
+            </div>
+          </aside>
+        </div>
+      ) : (
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0">
           {taskViewMode === 'board' ? (
@@ -168,6 +191,7 @@ export function TaskViewsSection({
           )}
         </aside>
       </div>
+      )}
     </section>
   )
 }

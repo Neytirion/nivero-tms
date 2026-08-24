@@ -9,7 +9,7 @@ import {
   type EstimateWithPackages,
   type WorkPackagePreview,
 } from '../../../../lib/pm'
-import { useWorkspace } from '../../../dashboard/workspace-context'
+import { useWorkspace } from '../../../dashboard/workspace-context.tsx'
 
 export interface EditableWorkPackage {
   name: string

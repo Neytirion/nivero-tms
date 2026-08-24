@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AiProjectGeneratorModal } from '../../features/projects/ai'
-import { useWorkspace } from '../../features/dashboard/workspace-context'
+import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
 import type { AiProjectDraft } from '../../lib/ai'
 import { createInitialEstimateVersion } from '../../lib/pm/estimates'
 import { inviteProjectMemberByEmail } from '../../lib/pm/members'

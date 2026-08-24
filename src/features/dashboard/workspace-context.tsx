@@ -9,7 +9,18 @@ export type WorkspaceCoreState = ReturnType<typeof useDashboardPreview>
 /** Combined workspace state: core + tasks domain (backward-compatible) */
 export type WorkspaceState = WorkspaceCoreState & ReturnType<typeof useWorkspaceTasks>
 
-const WorkspaceCoreContext = createContext<WorkspaceCoreState | null>(null)
+type GlobalWorkspaceCoreContextStore = typeof globalThis & {
+  __niveroWorkspaceCoreContext?: ReturnType<typeof createContext<WorkspaceCoreState | null>>
+}
+
+const globalWorkspaceCoreStore = globalThis as GlobalWorkspaceCoreContextStore
+
+const WorkspaceCoreContext = globalWorkspaceCoreStore.__niveroWorkspaceCoreContext
+  ?? createContext<WorkspaceCoreState | null>(null)
+
+if (!globalWorkspaceCoreStore.__niveroWorkspaceCoreContext) {
+  globalWorkspaceCoreStore.__niveroWorkspaceCoreContext = WorkspaceCoreContext
+}
 
 interface WorkspaceProviderProps {
   children: ReactNode

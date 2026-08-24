@@ -1,11 +1,22 @@
 import { createContext, useContext } from 'react'
 import type { ReactNode } from 'react'
 import { useWorkspaceTasksDomain } from './useWorkspaceTasksDomain'
-import { useWorkspaceCore } from './workspace-context'
+import { useWorkspaceCore } from './workspace-context.tsx'
 
 export type WorkspaceTasksState = ReturnType<typeof useWorkspaceTasksDomain>
 
-const WorkspaceTasksContext = createContext<WorkspaceTasksState | null>(null)
+type GlobalWorkspaceTasksContextStore = typeof globalThis & {
+  __niveroWorkspaceTasksContext?: ReturnType<typeof createContext<WorkspaceTasksState | null>>
+}
+
+const globalWorkspaceTasksStore = globalThis as GlobalWorkspaceTasksContextStore
+
+const WorkspaceTasksContext = globalWorkspaceTasksStore.__niveroWorkspaceTasksContext
+  ?? createContext<WorkspaceTasksState | null>(null)
+
+if (!globalWorkspaceTasksStore.__niveroWorkspaceTasksContext) {
+  globalWorkspaceTasksStore.__niveroWorkspaceTasksContext = WorkspaceTasksContext
+}
 
 interface WorkspaceTasksProviderProps {
   children: ReactNode

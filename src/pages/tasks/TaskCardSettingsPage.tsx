@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { getProjectTaskCardColorSettings, type ProjectTaskCardColorSetting, updateProjectTaskCardColor } from '../../lib/pm'
-import { useWorkspace } from '../../features/dashboard/workspace-context'
+import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
 
 export function TaskCardSettingsPage() {
   const navigate = useNavigate()

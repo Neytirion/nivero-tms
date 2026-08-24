@@ -644,6 +644,60 @@ export interface Database {
           },
         ]
       }
+      project_task_card_preferences: {
+        Row: {
+          project_id: string
+          show_description: boolean
+          show_priority: boolean
+          show_due_state: boolean
+          show_due_date: boolean
+          show_assignee: boolean
+          show_work_package: boolean
+          updated_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          project_id: string
+          show_description?: boolean
+          show_priority?: boolean
+          show_due_state?: boolean
+          show_due_date?: boolean
+          show_assignee?: boolean
+          show_work_package?: boolean
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          project_id?: string
+          show_description?: boolean
+          show_priority?: boolean
+          show_due_state?: boolean
+          show_due_date?: boolean
+          show_assignee?: boolean
+          show_work_package?: boolean
+          updated_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'project_task_card_preferences_project_id_fkey'
+            columns: ['project_id']
+            isOneToOne: true
+            referencedRelation: 'projects'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'project_task_card_preferences_updated_by_fkey'
+            columns: ['updated_by']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       users: {
         Row: {
           id: string

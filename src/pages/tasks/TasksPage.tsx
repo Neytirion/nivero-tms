@@ -11,6 +11,7 @@ export function TasksPage() {
   const {
     selectedProject,
     selectedProjectId,
+    myRoleInSelectedProject,
     projectMembers,
     tasks,
     taskViewMode,
@@ -27,11 +28,14 @@ export function TasksPage() {
     dependencyLabelByTaskId,
     workPackageLabelById,
     workPackageColorById,
+    taskCardFieldPreferences,
     moveTaskToStatus,
     claimTaskHandler,
     selectProject,
     resetPageState,
   } = useTasksPageController()
+
+  const canOpenCardSettings = myRoleInSelectedProject === 'admin' || myRoleInSelectedProject === 'owner'
 
   // Restore selected project from URL when page loads or URL changes
   useEffect(() => {
@@ -89,13 +93,15 @@ export function TasksPage() {
             >
               ← Back to Project Details
             </button>
-            <button
-              type="button"
-              onClick={() => navigate(`/app/tasks/card-settings?projectId=${selectedProjectId}`)}
-              className="inline-flex items-center gap-2 rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-sm font-semibold text-cyan-900 transition hover:bg-cyan-100"
-            >
-              Edit Card Settings
-            </button>
+            {canOpenCardSettings ? (
+              <button
+                type="button"
+                onClick={() => navigate(`/app/tasks/card-settings?projectId=${selectedProjectId}`)}
+                className="inline-flex items-center gap-2 rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-sm font-semibold text-cyan-900 transition hover:bg-cyan-100"
+              >
+                Edit Card Settings
+              </button>
+            ) : null}
           </div>
         )}
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Kanban Board</p>
@@ -124,6 +130,7 @@ export function TasksPage() {
         canManageTask={canManageTask}
         canTakeUnassignedTasks={canTakeUnassignedTasks}
         currentUserId={currentUserProfile?.userId ?? null}
+        taskCardFieldPreferences={taskCardFieldPreferences}
         onTakeTask={(taskId) => {
           void claimTaskHandler(taskId)
         }}

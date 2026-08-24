@@ -1,4 +1,5 @@
 import type { TaskPreview } from '../../../../lib/pm'
+import type { ProjectTaskCardFieldPreferences } from '../../../../lib/pm'
 import type { DragEvent } from 'react'
 import type { TaskStatus } from '../../constants'
 import { TaskCard } from '../card'
@@ -17,6 +18,7 @@ interface KanbanColumnProps {
   onDragTaskStart: (taskId: string) => void
   onTaskClick?: (taskId: string) => void
   canManageTask: (task: TaskPreview) => boolean
+  taskCardFieldPreferences?: ProjectTaskCardFieldPreferences
 }
 
 export function KanbanColumn({
@@ -33,6 +35,7 @@ export function KanbanColumn({
   onDragTaskStart,
   onTaskClick,
   canManageTask,
+  taskCardFieldPreferences,
 }: KanbanColumnProps) {
   return (
     <div
@@ -88,6 +91,7 @@ export function KanbanColumn({
               onTaskClick={onTaskClick}
               onOpenUserProfile={onOpenUserProfile}
               isLocked={!canManageTask(task)}
+              fieldPreferences={taskCardFieldPreferences}
             />
           </div>
         ))}

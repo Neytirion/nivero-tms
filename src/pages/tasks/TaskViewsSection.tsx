@@ -1,8 +1,20 @@
 import type { TaskStatus } from '../../features/tasks/constants.ts'
 import { TaskCard } from '../../features/tasks/components/card'
-import type { TaskPreview } from '../../lib/pm'
+import {
+  type ProjectTaskCardFieldPreferences,
+  type TaskPreview,
+} from '../../lib/pm'
 import { TaskBoardView } from './views/TaskBoardView'
 import { TaskListView } from './views/TaskListView'
+
+const DEFAULT_TASK_CARD_FIELD_PREFERENCES: ProjectTaskCardFieldPreferences = {
+  showDescription: true,
+  showPriority: true,
+  showDueState: true,
+  showDueDate: true,
+  showAssignee: true,
+  showWorkPackage: true,
+}
 
 export type TaskViewMode = 'list' | 'board'
 
@@ -25,6 +37,7 @@ type TaskViewsSectionProps = {
   canTakeUnassignedTasks: boolean
   currentUserId: string | null
   onTakeTask: (taskId: string) => void
+  taskCardFieldPreferences?: ProjectTaskCardFieldPreferences
 }
 
 export function TaskViewsSection({
@@ -46,7 +59,9 @@ export function TaskViewsSection({
   canTakeUnassignedTasks,
   currentUserId,
   onTakeTask,
+  taskCardFieldPreferences,
 }: TaskViewsSectionProps) {
+  const effectiveTaskCardFieldPreferences = taskCardFieldPreferences ?? DEFAULT_TASK_CARD_FIELD_PREFERENCES
   const sharedQueueTasks = tasks.filter((task) => !task.assigned_to)
   const assignedTasks = tasks.filter((task) => Boolean(task.assigned_to))
 
@@ -123,6 +138,7 @@ export function TaskViewsSection({
               onMoveTaskToStatus={onMoveTaskToStatus}
               onTaskClick={onTaskClick}
               canManageTask={canManageTask}
+              taskCardFieldPreferences={effectiveTaskCardFieldPreferences}
             />
           ) : null}
 
@@ -178,6 +194,7 @@ export function TaskViewsSection({
                     onTaskClick={onTaskClick}
                     onOpenUserProfile={onOpenUserProfile}
                     isLocked={!canManageTask(task)}
+                    fieldPreferences={effectiveTaskCardFieldPreferences}
                   />
 
                   {canTakeUnassignedTasks && currentUserId ? (

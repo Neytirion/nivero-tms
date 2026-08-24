@@ -23,6 +23,24 @@ export interface ProjectTaskCardColorSetting {
   linkedPackageCount: number
 }
 
+export interface ProjectTaskCardFieldPreferences {
+  showDescription: boolean
+  showPriority: boolean
+  showDueState: boolean
+  showDueDate: boolean
+  showAssignee: boolean
+  showWorkPackage: boolean
+}
+
+export const DEFAULT_TASK_CARD_FIELD_PREFERENCES: ProjectTaskCardFieldPreferences = {
+  showDescription: true,
+  showPriority: true,
+  showDueState: true,
+  showDueDate: true,
+  showAssignee: true,
+  showWorkPackage: true,
+}
+
 export interface ProjectWorkPackageDisplayProfile {
   displayName: string
   color: string
@@ -214,6 +232,75 @@ export async function updateProjectTaskCardColor(
     .from('work_packages')
     .update({ color: normalizedColor })
     .in('id', matchingIds)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
+function normalizeTaskCardFieldPreferences(
+  input: Partial<ProjectTaskCardFieldPreferences> | null | undefined,
+): ProjectTaskCardFieldPreferences {
+  return {
+    showDescription: input?.showDescription ?? DEFAULT_TASK_CARD_FIELD_PREFERENCES.showDescription,
+    showPriority: input?.showPriority ?? DEFAULT_TASK_CARD_FIELD_PREFERENCES.showPriority,
+    showDueState: input?.showDueState ?? DEFAULT_TASK_CARD_FIELD_PREFERENCES.showDueState,
+    showDueDate: input?.showDueDate ?? DEFAULT_TASK_CARD_FIELD_PREFERENCES.showDueDate,
+    showAssignee: input?.showAssignee ?? DEFAULT_TASK_CARD_FIELD_PREFERENCES.showAssignee,
+    showWorkPackage: input?.showWorkPackage ?? DEFAULT_TASK_CARD_FIELD_PREFERENCES.showWorkPackage,
+  }
+}
+
+export async function getProjectTaskCardFieldPreferences(projectId: string): Promise<ProjectTaskCardFieldPreferences> {
+  const { data, error } = await supabase
+    .from('project_task_card_preferences')
+    .select('show_description,show_priority,show_due_state,show_due_date,show_assignee,show_work_package')
+    .eq('project_id', projectId)
+    .maybeSingle()
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  if (!data) {
+    return DEFAULT_TASK_CARD_FIELD_PREFERENCES
+  }
+
+  return normalizeTaskCardFieldPreferences({
+    showDescription: data.show_description,
+    showPriority: data.show_priority,
+    showDueState: data.show_due_state,
+    showDueDate: data.show_due_date,
+    showAssignee: data.show_assignee,
+    showWorkPackage: data.show_work_package,
+  })
+}
+
+export async function updateProjectTaskCardFieldPreferences(
+  projectId: string,
+  nextPreferences: ProjectTaskCardFieldPreferences,
+) {
+  const normalized = normalizeTaskCardFieldPreferences(nextPreferences)
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+
+  if (userError) {
+    throw new Error(userError.message)
+  }
+
+  const userId = userData.user?.id ?? null
+
+  const { error } = await supabase
+    .from('project_task_card_preferences')
+    .upsert({
+      project_id: projectId,
+      show_description: normalized.showDescription,
+      show_priority: normalized.showPriority,
+      show_due_state: normalized.showDueState,
+      show_due_date: normalized.showDueDate,
+      show_assignee: normalized.showAssignee,
+      show_work_package: normalized.showWorkPackage,
+      updated_by: userId,
+    })
 
   if (error) {
     throw new Error(error.message)

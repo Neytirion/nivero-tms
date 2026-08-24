@@ -4,11 +4,24 @@ import type { TaskStatus } from '../../features/tasks/constants.ts'
 import {
   type TaskPreview,
 } from '../../lib/pm'
+import {
+  getProjectTaskCardFieldPreferences,
+  type ProjectTaskCardFieldPreferences,
+} from '../../lib/pm/work-packages'
 import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
 import { useTaskControllerActions } from './useTaskControllerActions'
 import { useTaskCreationRequirements } from './useTaskCreationRequirements'
 import { useTaskWorkPackagesLoader } from './useTaskWorkPackagesLoader'
 import type { TaskViewMode } from './index'
+
+const DEFAULT_TASK_CARD_FIELD_PREFERENCES: ProjectTaskCardFieldPreferences = {
+  showDescription: true,
+  showPriority: true,
+  showDueState: true,
+  showDueDate: true,
+  showAssignee: true,
+  showWorkPackage: true,
+}
 
 export function useTasksPageController() {
   const {
@@ -37,6 +50,9 @@ export function useTasksPageController() {
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [taskViewMode, setTaskViewMode] = useState<TaskViewMode>('board')
   const [optimisticStatusByTaskId, setOptimisticStatusByTaskId] = useState<Record<string, TaskStatus>>({})
+  const [taskCardFieldPreferences, setTaskCardFieldPreferences] = useState<ProjectTaskCardFieldPreferences>(
+    DEFAULT_TASK_CARD_FIELD_PREFERENCES,
+  )
   const optimisticResetTimersRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   const {
@@ -110,12 +126,31 @@ export function useTasksPageController() {
 
   useEffect(() => {
     if (!selectedProjectId) {
+      setTaskCardFieldPreferences(DEFAULT_TASK_CARD_FIELD_PREFERENCES)
       return
     }
 
     void selectProject(selectedProjectId)
     // Intentionally track selected project only to refresh tasks/members snapshot on page entry.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId])
+
+  useEffect(() => {
+    const loadTaskCardPreferences = async () => {
+      if (!selectedProjectId) {
+        setTaskCardFieldPreferences(DEFAULT_TASK_CARD_FIELD_PREFERENCES)
+        return
+      }
+
+      try {
+        const preferences = await getProjectTaskCardFieldPreferences(selectedProjectId)
+        setTaskCardFieldPreferences(preferences)
+      } catch {
+        setTaskCardFieldPreferences(DEFAULT_TASK_CARD_FIELD_PREFERENCES)
+      }
+    }
+
+    void loadTaskCardPreferences()
   }, [selectedProjectId])
 
   const canAssignAssignee = selectedProject ? canAssignTasksInProject(selectedProject.id) : false
@@ -306,6 +341,7 @@ export function useTasksPageController() {
     dependencyLabelByTaskId,
     workPackageLabelById,
     workPackageColorById,
+    taskCardFieldPreferences,
     assigneeOptions,
     canSubmit,
     logTimeTask,

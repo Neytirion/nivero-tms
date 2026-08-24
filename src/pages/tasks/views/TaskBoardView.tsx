@@ -1,6 +1,6 @@
 import { KANBAN_COLUMNS, type TaskStatus } from '../../../features/tasks/constants.ts'
 import { KanbanColumn } from '../../../features/tasks/components'
-import type { TaskPreview } from '../../../lib/pm'
+import type { ProjectTaskCardFieldPreferences, TaskPreview } from '../../../lib/pm'
 import { normalizeTaskStatus, sortTasksForBoardColumn } from '../tasks-page.utils'
 
 interface TaskBoardViewProps {
@@ -15,6 +15,7 @@ interface TaskBoardViewProps {
   onMoveTaskToStatus: (taskId: string, status: TaskStatus) => void
   onTaskClick?: (taskId: string) => void
   canManageTask: (task: TaskPreview) => boolean
+  taskCardFieldPreferences?: ProjectTaskCardFieldPreferences
 }
 
 export function TaskBoardView({
@@ -29,6 +30,7 @@ export function TaskBoardView({
   onMoveTaskToStatus,
   onTaskClick,
   canManageTask,
+  taskCardFieldPreferences,
 }: TaskBoardViewProps) {
   return (
     <div className="grid gap-4 xl:grid-cols-5">
@@ -59,6 +61,7 @@ export function TaskBoardView({
               onDragTaskStart={onDragTaskIdChange}
               onTaskClick={onTaskClick}
               canManageTask={canManageTask}
+              taskCardFieldPreferences={taskCardFieldPreferences}
             />
           )
         })}

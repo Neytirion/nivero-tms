@@ -25,29 +25,20 @@ describe('ClientIntakePage', () => {
     mockSubmitClientIntake.mockReset()
   })
 
-  it('keeps send button disabled until required fields are valid', () => {
+  it('shows required field errors on submit when title/details are empty', async () => {
     renderPage()
 
     const sendButton = screen.getByRole('button', { name: /send request/i })
-    expect(sendButton).toBeDisabled()
-
-    fireEvent.change(screen.getByLabelText(/task title/i), {
-      target: { value: 'Fi' },
-    })
-    fireEvent.change(screen.getByLabelText(/details/i), {
-      target: { value: 'Too short' },
-    })
-
-    expect(sendButton).toBeDisabled()
-
-    fireEvent.change(screen.getByLabelText(/task title/i), {
-      target: { value: 'Fix checkout on mobile' },
-    })
-    fireEvent.change(screen.getByLabelText(/details/i), {
-      target: { value: 'Checkout button overlaps the footer on iPhone SE.' },
-    })
-
     expect(sendButton).toBeEnabled()
+
+    fireEvent.click(sendButton)
+
+    await waitFor(() => {
+      expect(screen.getByText(/task title is required/i)).toBeInTheDocument()
+      expect(screen.getByText(/details is required/i)).toBeInTheDocument()
+    })
+
+    expect(mockSubmitClientIntake).not.toHaveBeenCalled()
   })
 
   it('submits trimmed payload and shows success status', async () => {
@@ -142,6 +133,14 @@ describe('ClientIntakePage', () => {
 
     const detailsField = screen.getByLabelText(/details/i)
     expect(detailsField).toHaveAttribute('maxLength', '1000')
+  })
+
+  it('uses 50-character limit for name, email, and task title fields', () => {
+    renderPage()
+
+    expect(screen.getByLabelText(/your name/i)).toHaveAttribute('maxLength', '50')
+    expect(screen.getByLabelText(/your email/i)).toHaveAttribute('maxLength', '50')
+    expect(screen.getByLabelText(/task title/i)).toHaveAttribute('maxLength', '50')
   })
 
   it('disables submit for invalid optional email format', () => {

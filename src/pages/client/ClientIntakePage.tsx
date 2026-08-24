@@ -4,12 +4,10 @@ import { submitClientIntake } from '../../lib/pm/client-intake'
 
 const MAX_ATTACHMENTS = 10
 const MAX_ATTACHMENT_SIZE_BYTES = 5 * 1024 * 1024
-const MIN_TITLE_LENGTH = 3
-const MAX_TITLE_LENGTH = 255
-const MIN_MESSAGE_LENGTH = 10
+const MAX_TITLE_LENGTH = 50
 const MAX_MESSAGE_LENGTH = 1000
-const MAX_CLIENT_NAME_LENGTH = 120
-const MAX_CLIENT_EMAIL_LENGTH = 254
+const MAX_CLIENT_NAME_LENGTH = 50
+const MAX_CLIENT_EMAIL_LENGTH = 50
 
 function isLikelyEmail(value: string) {
   if (!value.trim()) {
@@ -60,6 +58,8 @@ export function ClientIntakePage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
+  const [titleError, setTitleError] = useState('')
+  const [detailsError, setDetailsError] = useState('')
 
   const clientNameTrimmed = clientName.trim()
   const clientEmailTrimmed = clientEmail.trim()
@@ -68,8 +68,8 @@ export function ClientIntakePage() {
 
   const clientNameIsValid = clientNameTrimmed.length <= MAX_CLIENT_NAME_LENGTH
   const clientEmailIsValid = clientEmailTrimmed.length <= MAX_CLIENT_EMAIL_LENGTH && isLikelyEmail(clientEmailTrimmed)
-  const titleIsValid = titleTrimmed.length >= MIN_TITLE_LENGTH && titleTrimmed.length <= MAX_TITLE_LENGTH
-  const messageIsValid = messageTrimmed.length >= MIN_MESSAGE_LENGTH && messageTrimmed.length <= MAX_MESSAGE_LENGTH
+  const titleIsValid = titleTrimmed.length <= MAX_TITLE_LENGTH
+  const messageIsValid = messageTrimmed.length <= MAX_MESSAGE_LENGTH
 
   const canSubmit =
     Boolean(token) &&
@@ -108,6 +108,17 @@ export function ClientIntakePage() {
 
   const handleSubmit = async () => {
     if (!token || !canSubmit || attachmentError) {
+      return
+    }
+
+    const nextTitleError = titleTrimmed.length === 0 ? 'Task Title is required.' : ''
+    const nextDetailsError = messageTrimmed.length === 0 ? 'Details is required.' : ''
+    setTitleError(nextTitleError)
+    setDetailsError(nextDetailsError)
+
+    if (nextTitleError || nextDetailsError) {
+      setStatus('Please fill in required fields before sending.')
+      setIsSuccess(false)
       return
     }
 
@@ -164,10 +175,7 @@ export function ClientIntakePage() {
               maxLength={MAX_CLIENT_NAME_LENGTH}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
             />
-            <div className="mt-1 flex items-center justify-between text-xs">
-              <span className={clientNameIsValid ? 'text-slate-500' : 'text-rose-600'}>
-                Max {MAX_CLIENT_NAME_LENGTH} characters
-              </span>
+            <div className="mt-1 flex justify-end text-xs">
               <span className="text-slate-400">{clientName.length}/{MAX_CLIENT_NAME_LENGTH}</span>
             </div>
           </label>
@@ -182,10 +190,7 @@ export function ClientIntakePage() {
               maxLength={MAX_CLIENT_EMAIL_LENGTH}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
             />
-            <div className="mt-1 flex items-center justify-between text-xs">
-              <span className={clientEmailIsValid ? 'text-slate-500' : 'text-rose-600'}>
-                Optional valid email, max {MAX_CLIENT_EMAIL_LENGTH} characters
-              </span>
+            <div className="mt-1 flex justify-end text-xs">
               <span className="text-slate-400">{clientEmail.length}/{MAX_CLIENT_EMAIL_LENGTH}</span>
             </div>
           </label>
@@ -195,35 +200,43 @@ export function ClientIntakePage() {
             <input
               type="text"
               value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={(event) => {
+                setTitle(event.target.value)
+                if (titleError && event.target.value.trim().length > 0) {
+                  setTitleError('')
+                }
+              }}
               placeholder="Fix checkout button overlap on mobile"
               maxLength={MAX_TITLE_LENGTH}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
             />
-            <div className="mt-1 flex items-center justify-between text-xs">
-              <span className={titleIsValid || titleTrimmed.length === 0 ? 'text-slate-500' : 'text-rose-600'}>
-                {MIN_TITLE_LENGTH}-{MAX_TITLE_LENGTH} characters
-              </span>
+            <div className="mt-1 flex justify-end text-xs">
               <span className="text-slate-400">{title.length}/{MAX_TITLE_LENGTH}</span>
             </div>
+            {titleError ? <p className="mt-1 text-xs text-rose-600">{titleError}</p> : null}
           </label>
 
           <label className="block">
             <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Details</span>
             <textarea
               value={message}
-              onChange={(event) => setMessage(event.target.value)}
+              onChange={(event) => {
+                setMessage(event.target.value)
+                event.currentTarget.style.height = 'auto'
+                event.currentTarget.style.height = `${event.currentTarget.scrollHeight}px`
+                if (detailsError && event.target.value.trim().length > 0) {
+                  setDetailsError('')
+                }
+              }}
               placeholder="Describe what should be changed, expected result, and any context."
               maxLength={MAX_MESSAGE_LENGTH}
-              rows={6}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
+              rows={10}
+              className="w-full min-h-[220px] resize-y overflow-y-hidden rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
             />
-            <div className="mt-1 flex items-center justify-between text-xs">
-              <span className={messageIsValid || messageTrimmed.length === 0 ? 'text-slate-500' : 'text-rose-600'}>
-                {MIN_MESSAGE_LENGTH}-{MAX_MESSAGE_LENGTH} characters
-              </span>
+            <div className="mt-1 flex justify-end text-xs">
               <span className="text-slate-400">{message.length}/{MAX_MESSAGE_LENGTH}</span>
             </div>
+            {detailsError ? <p className="mt-1 text-xs text-rose-600">{detailsError}</p> : null}
           </label>
 
           <label className="block">

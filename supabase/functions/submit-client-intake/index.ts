@@ -10,12 +10,10 @@ declare const Deno: {
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-const MAX_TITLE_LENGTH = 255
-const MIN_TITLE_LENGTH = 3
-const MIN_MESSAGE_LENGTH = 10
+const MAX_TITLE_LENGTH = 50
 const MAX_MESSAGE_LENGTH = 1000
-const MAX_CLIENT_NAME_LENGTH = 120
-const MAX_CLIENT_EMAIL_LENGTH = 254
+const MAX_CLIENT_NAME_LENGTH = 50
+const MAX_CLIENT_EMAIL_LENGTH = 50
 const MAX_ATTACHMENTS = 10
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
 
@@ -114,12 +112,12 @@ Deno.serve(async (req: Request) => {
     return json(req, { success: false, error: 'Invalid project link token' }, 400)
   }
 
-  if (title.length < MIN_TITLE_LENGTH || title.length > MAX_TITLE_LENGTH) {
-    return json(req, { success: false, error: `Task title must be ${MIN_TITLE_LENGTH}-${MAX_TITLE_LENGTH} characters` }, 400)
+  if (title.length === 0 || title.length > MAX_TITLE_LENGTH) {
+    return json(req, { success: false, error: `Task title is required and must be at most ${MAX_TITLE_LENGTH} characters` }, 400)
   }
 
-  if (message.length < MIN_MESSAGE_LENGTH || message.length > MAX_MESSAGE_LENGTH) {
-    return json(req, { success: false, error: `Details must be ${MIN_MESSAGE_LENGTH}-${MAX_MESSAGE_LENGTH} characters` }, 400)
+  if (message.length === 0 || message.length > MAX_MESSAGE_LENGTH) {
+    return json(req, { success: false, error: `Details is required and must be at most ${MAX_MESSAGE_LENGTH} characters` }, 400)
   }
 
   if (clientName.length > MAX_CLIENT_NAME_LENGTH) {

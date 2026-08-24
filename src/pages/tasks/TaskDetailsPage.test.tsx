@@ -155,9 +155,10 @@ describe('TaskDetailsPage', () => {
 
     renderTaskDetails('/app/tasks/t1')
 
+    fireEvent.click(screen.getByRole('button', { name: /^edit$/i }))
     const estimateInput = screen.getByLabelText(/estimate hours/i)
     fireEvent.change(estimateInput, { target: { value: '12.5' } })
-    fireEvent.blur(estimateInput)
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
 
     await waitFor(() => {
       expect(editTaskMock).toHaveBeenCalledWith('t1', { estimateHours: 12.5 })
@@ -360,18 +361,20 @@ describe('TaskDetailsPage', () => {
 
     renderTaskDetails('/app/tasks/t1')
 
+    expect(screen.getByText(/client request/i)).toBeInTheDocument()
     expect(screen.getByText(/client name/i)).toBeInTheDocument()
     expect(screen.getByText(/client email/i)).toBeInTheDocument()
     expect(screen.getByText(/request details/i)).toBeInTheDocument()
     expect(screen.getAllByText('Not provided')).toHaveLength(2)
     expect(screen.getByText('UI issue with order summary.')).toBeInTheDocument()
+    expect(screen.getByText('No description')).toBeInTheDocument()
     expect(screen.queryByText(/Client request submitted via public intake link\./i)).not.toBeInTheDocument()
 
     expect(screen.getByRole('img', { name: /attachment preview: screenshot\.png/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /console-log\.txt/i })).toBeInTheDocument()
   })
 
-  it('hides description edit button for members on client-intake tasks', () => {
+  it('shows unified edit button for members on assigned client-intake tasks', () => {
     mockUseTasksPageController.mockReturnValue({
       tasks: [
         createTaskPreview({
@@ -409,6 +412,160 @@ describe('TaskDetailsPage', () => {
 
     renderTaskDetails('/app/tasks/t1')
 
-    expect(screen.queryByRole('button', { name: /^edit$/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^edit$/i })).toBeInTheDocument()
+  })
+
+  it('edits only internal description for members on client-intake tasks', async () => {
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Client bug report',
+          description: [
+            'Client request submitted via public intake link.',
+            '',
+            'Client name: John',
+            'Client email: john@example.com',
+            '',
+            'Request details:',
+            'Please fix checkout behavior.',
+            '',
+            'Attachments:',
+            '1. screenshot.png | https://cdn.example.com/files/screenshot.png',
+          ].join('\n'),
+          project_id: 'p1',
+          assigned_to: 'u1',
+        }),
+      ],
+      myRoleInSelectedProject: 'member',
+      canAssignAssignee: false,
+      canTakeUnassignedTasks: false,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+
+    fireEvent.click(screen.getByRole('button', { name: /^edit$/i }))
+
+    const descriptionInput = screen.getByPlaceholderText(/add description/i) as HTMLTextAreaElement
+    expect(descriptionInput.value).toBe('')
+    expect(screen.queryByPlaceholderText(/client name/i)).not.toBeInTheDocument()
+
+    fireEvent.change(descriptionInput, { target: { value: 'Team note for implementation' } })
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+
+    await waitFor(() => {
+      expect(editTaskMock).toHaveBeenCalledWith(
+        't1',
+        expect.objectContaining({
+          description: expect.stringContaining('Internal description:\nTeam note for implementation'),
+        }),
+      )
+    })
+  })
+
+  it('allows admin to edit client request block', async () => {
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Client bug report',
+          description: [
+            'Client request submitted via public intake link.',
+            '',
+            'Client name: John',
+            'Client email: john@example.com',
+            '',
+            'Request details:',
+            'Please fix checkout behavior.',
+          ].join('\n'),
+          project_id: 'p1',
+          assigned_to: 'u1',
+        }),
+      ],
+      myRoleInSelectedProject: 'admin',
+      canAssignAssignee: true,
+      canTakeUnassignedTasks: true,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+
+    fireEvent.click(screen.getByRole('button', { name: /^edit$/i }))
+
+    const clientNameInput = screen.getByPlaceholderText(/client name/i)
+    fireEvent.change(clientNameInput, { target: { value: 'Jane' } })
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+
+    await waitFor(() => {
+      expect(editTaskMock).toHaveBeenCalledWith(
+        't1',
+        expect.objectContaining({
+          description: expect.stringContaining('Client name: Jane'),
+        }),
+      )
+    })
+  })
+
+  it('allows member to edit task title', async () => {
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Task A',
+          description: 'Task description',
+          project_id: 'p1',
+          assigned_to: 'u1',
+        }),
+      ],
+      myRoleInSelectedProject: 'member',
+      canAssignAssignee: false,
+      canTakeUnassignedTasks: false,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+
+    fireEvent.click(screen.getByRole('button', { name: /^edit$/i }))
+    const titleInput = screen.getByPlaceholderText(/task title/i)
+    fireEvent.change(titleInput, { target: { value: 'Task A renamed by member' } })
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+
+    await waitFor(() => {
+      expect(editTaskMock).toHaveBeenCalledWith('t1', { title: 'Task A renamed by member' })
+    })
   })
 })

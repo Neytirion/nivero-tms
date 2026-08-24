@@ -6,6 +6,7 @@ import { TaskCommentsPanel } from '../../features/tasks/components/comments'
 import { ConfirmDialog, UserProfileDialog, type UserProfilePreview } from '../../shared/components'
 
 const TASK_DESCRIPTION_MAX_LENGTH = 250
+const TASK_TITLE_MAX_LENGTH = 120
 
 type ParsedAttachment = {
   name: string
@@ -18,6 +19,7 @@ type ParsedClientIntakePayload = {
   clientEmail: string | null
   requestDetails: string
   attachments: ParsedAttachment[]
+  internalDescription: string
 }
 
 function normalizeAttachmentUrl(value: string) {
@@ -116,13 +118,15 @@ function parseClientIntakePayload(description: string | null | undefined): Parse
 
   const clientNameMatch = normalized.match(/^Client name:\s*(.+)$/im)
   const clientEmailMatch = normalized.match(/^Client email:\s*(.+)$/im)
-  const detailsMatch = normalized.match(/Request details:\s*\n([\s\S]*?)(?:\n\s*Attachments:\s*\n|$)/i)
-  const attachmentsMatch = normalized.match(/\n\s*Attachments:\s*\n([\s\S]*)$/i)
+  const detailsMatch = normalized.match(/Request details:\s*\n([\s\S]*?)(?:\n\s*Attachments:\s*\n|\n\s*Internal description:\s*\n|$)/i)
+  const attachmentsMatch = normalized.match(/\n\s*Attachments:\s*\n([\s\S]*?)(?:\n\s*Internal description:\s*\n|$)/i)
+  const internalDescriptionMatch = normalized.match(/\n\s*Internal description:\s*\n([\s\S]*)$/i)
 
   const rawClientName = (clientNameMatch?.[1] ?? '').trim()
   const rawClientEmail = (clientEmailMatch?.[1] ?? '').trim()
   const requestDetails = (detailsMatch?.[1] ?? '').trim()
   const attachmentsSection = attachmentsMatch?.[1] ?? ''
+  const internalDescription = (internalDescriptionMatch?.[1] ?? '').trim()
 
   const attachments: ParsedAttachment[] = []
   for (const line of attachmentsSection.split('\n')) {
@@ -148,7 +152,37 @@ function parseClientIntakePayload(description: string | null | undefined): Parse
     clientEmail: rawClientEmail.toLowerCase() === 'not provided' || rawClientEmail.length === 0 ? null : rawClientEmail,
     requestDetails,
     attachments: Array.from(uniqueByUrl.values()),
+    internalDescription,
   }
+}
+
+function formatClientIntakePayload(input: ParsedClientIntakePayload): string {
+  const lines: string[] = []
+
+  lines.push('Client request submitted via public intake link.')
+  lines.push('')
+  lines.push(`Client name: ${input.clientName?.trim() || 'Not provided'}`)
+  lines.push(`Client email: ${input.clientEmail?.trim() || 'Not provided'}`)
+  lines.push('')
+  lines.push('Request details:')
+  lines.push(input.requestDetails.trim() || 'Not provided')
+
+  if (input.attachments.length > 0) {
+    lines.push('')
+    lines.push('Attachments:')
+    for (const [index, attachment] of input.attachments.entries()) {
+      const displayName = attachment.name?.trim() || `Attachment ${index + 1}`
+      lines.push(`${index + 1}. ${displayName} | ${attachment.url}`)
+    }
+  }
+
+  if (input.internalDescription.trim().length > 0) {
+    lines.push('')
+    lines.push('Internal description:')
+    lines.push(input.internalDescription.trim())
+  }
+
+  return lines.join('\n')
 }
 
 function stripAttachmentSection(description: string | null | undefined): string {
@@ -198,9 +232,15 @@ export function TaskDetailsPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [estimateHoursDraft, setEstimateHoursDraft] = useState('0')
   const [taskStatusDraft, setTaskStatusDraft] = useState('todo')
+  const [taskPriorityDraft, setTaskPriorityDraft] = useState('medium')
+  const [taskDueDateDraft, setTaskDueDateDraft] = useState('')
   const [descriptionDraft, setDescriptionDraft] = useState('')
-  const [isDescriptionEditing, setIsDescriptionEditing] = useState(false)
-  const [isDescriptionSaving, setIsDescriptionSaving] = useState(false)
+  const [clientNameDraft, setClientNameDraft] = useState('')
+  const [clientEmailDraft, setClientEmailDraft] = useState('')
+  const [clientRequestDetailsDraft, setClientRequestDetailsDraft] = useState('')
+  const [titleDraft, setTitleDraft] = useState('')
+  const [isTaskEditing, setIsTaskEditing] = useState(false)
+  const [isTaskSaving, setIsTaskSaving] = useState(false)
   const [previewAttachment, setPreviewAttachment] = useState<ParsedAttachment | null>(null)
 
   const backTo =
@@ -226,7 +266,6 @@ export function TaskDetailsPage() {
     dependencyLabelByTaskId,
     projectMembers,
     currentUserProfile,
-    updateTaskDueDateHandler,
     removeTask,
     logTimeTask,
     setLogTimeTask,
@@ -235,8 +274,6 @@ export function TaskDetailsPage() {
   } = useTasksPageController()
 
   const task = tasks.find((t) => t.id === taskId)
-  const taskEstimateHours = task?.estimate_hours
-  const taskStatus = task?.status ?? 'todo'
   const descriptionViewModel = useMemo(() => {
     const description = task?.description ?? ''
     const clientIntakePayload = parseClientIntakePayload(description)
@@ -245,7 +282,7 @@ export function TaskDetailsPage() {
       return {
         clientIntakePayload,
         attachments: clientIntakePayload.attachments,
-        descriptionText: '',
+        descriptionText: clientIntakePayload.internalDescription,
       }
     }
 
@@ -265,35 +302,6 @@ export function TaskDetailsPage() {
       navigate(backTo, { replace: true })
     }
   }, [task, taskId, navigate, backTo])
-
-  useEffect(() => {
-    if (!taskId) {
-      return
-    }
-
-    const estimateHours = taskEstimateHours ?? 0
-    const syncTimerId = window.setTimeout(() => {
-      setEstimateHoursDraft(String(estimateHours))
-    }, 0)
-
-    return () => {
-      window.clearTimeout(syncTimerId)
-    }
-  }, [taskId, taskEstimateHours])
-
-  useEffect(() => {
-    if (!taskId) {
-      return
-    }
-
-    const syncTimerId = window.setTimeout(() => {
-      setTaskStatusDraft(taskStatus)
-    }, 0)
-
-    return () => {
-      window.clearTimeout(syncTimerId)
-    }
-  }, [taskId, taskStatus])
 
   useEffect(() => {
     if (!previewAttachment) {
@@ -326,7 +334,6 @@ export function TaskDetailsPage() {
   }
 
   const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'
-  const dueDateInputValue = task.due_date?.slice(0, 10) ?? ''
   const assigneeUserId = task.assigned_to ?? task.created_by
   const assigneeLabel = task.assigned_to
     ? assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to
@@ -356,7 +363,9 @@ export function TaskDetailsPage() {
   const isOwnerOrAdmin = normalizedRole === 'owner' || normalizedRole === 'admin'
   const canEditEstimateHours = !isLocked && isOwnerOrAdmin
   const isClientIntakeTask = Boolean(clientIntakePayload)
-  const canEditDescription = !isLocked && !(isClientIntakeTask && normalizedRole === 'member')
+  const canEditClientRequest = isClientIntakeTask && !isLocked && isOwnerOrAdmin
+  const canEditTask = !isLocked
+  const canEditDescription = !isLocked
   const progressPct = estimateHours > 0
     ? Math.min(100, Math.round((actualHours / estimateHours) * 100))
     : 0
@@ -386,49 +395,128 @@ export function TaskDetailsPage() {
     })
   }
 
-  const updateTaskStatusHandler = async (taskId: string, status: string) => {
-    setTaskStatusDraft(status)
-    await editTask(taskId, { status })
+  const startTaskEditing = () => {
+    if (!canEditTask) {
+      return
+    }
+
+    setTitleDraft(task.title)
+    setDescriptionDraft(descriptionText)
+    setTaskStatusDraft(task.status ?? 'todo')
+    setTaskPriorityDraft(task.priority ?? 'medium')
+    setTaskDueDateDraft(task.due_date?.slice(0, 10) ?? '')
+    setEstimateHoursDraft(String(task.estimate_hours ?? 0))
+    setClientNameDraft(clientIntakePayload?.clientName ?? '')
+    setClientEmailDraft(clientIntakePayload?.clientEmail ?? '')
+    setClientRequestDetailsDraft(clientIntakePayload?.requestDetails ?? '')
+    setIsTaskEditing(true)
   }
 
-  const updateTaskPriorityHandler = async (taskId: string, priority: string) => {
-    await editTask(taskId, { priority })
+  const cancelTaskEditing = () => {
+    setTitleDraft(task.title)
+    setDescriptionDraft(descriptionText)
+    setTaskStatusDraft(task.status ?? 'todo')
+    setTaskPriorityDraft(task.priority ?? 'medium')
+    setTaskDueDateDraft(task.due_date?.slice(0, 10) ?? '')
+    setEstimateHoursDraft(String(task.estimate_hours ?? 0))
+    setClientNameDraft(clientIntakePayload?.clientName ?? '')
+    setClientEmailDraft(clientIntakePayload?.clientEmail ?? '')
+    setClientRequestDetailsDraft(clientIntakePayload?.requestDetails ?? '')
+    setIsTaskEditing(false)
   }
 
-  const startDescriptionEditing = () => {
+  const saveTaskEditsHandler = async (taskId: string) => {
+    if (!canEditTask) {
+      setIsTaskEditing(false)
+      return
+    }
+
+    const nextTitle = titleDraft.trim()
+    if (!nextTitle) {
+      return
+    }
+
     if (!canEditDescription) {
+      setIsTaskEditing(false)
       return
     }
 
-    setDescriptionDraft(task.description ?? '')
-    setIsDescriptionEditing(true)
-  }
+    const patch: {
+      title?: string
+      description?: string
+      status?: string
+      priority?: string
+      dueDate?: string
+      estimateHours?: number
+    } = {}
 
-  const cancelDescriptionEditing = () => {
-    setDescriptionDraft(task.description ?? '')
-    setIsDescriptionEditing(false)
-  }
+    if (nextTitle !== task.title) {
+      patch.title = nextTitle
+    }
 
-  const saveTaskDescriptionHandler = async (taskId: string) => {
-    if (!canEditDescription) {
-      setIsDescriptionEditing(false)
+    if (isClientIntakeTask && clientIntakePayload) {
+      const nextPayload: ParsedClientIntakePayload = {
+        ...clientIntakePayload,
+        internalDescription: descriptionDraft,
+      }
+
+      if (canEditClientRequest) {
+        nextPayload.clientName = clientNameDraft.trim() || null
+        nextPayload.clientEmail = clientEmailDraft.trim() || null
+        nextPayload.requestDetails = clientRequestDetailsDraft
+      }
+
+      const composedDescription = formatClientIntakePayload(nextPayload)
+      const currentDescription = task.description ?? ''
+      if (composedDescription !== currentDescription) {
+        patch.description = composedDescription
+      }
+    } else {
+      const currentDescription = task.description ?? ''
+      if (descriptionDraft !== currentDescription) {
+        patch.description = descriptionDraft
+      }
+    }
+
+    const currentStatus = task.status ?? 'todo'
+    if (taskStatusDraft !== currentStatus) {
+      patch.status = taskStatusDraft
+    }
+
+    const currentPriority = task.priority ?? 'medium'
+    if (taskPriorityDraft !== currentPriority) {
+      patch.priority = taskPriorityDraft
+    }
+
+    const currentDueDate = task.due_date?.slice(0, 10) ?? ''
+    if (taskDueDateDraft !== currentDueDate) {
+      patch.dueDate = taskDueDateDraft || undefined
+    }
+
+    if (canEditEstimateHours) {
+      const normalizedEstimateHours = estimateHoursDraft.trim()
+      const parsedEstimateHours = Number.parseFloat(normalizedEstimateHours)
+      if (!Number.isFinite(parsedEstimateHours) || parsedEstimateHours < 0) {
+        return
+      }
+
+      const currentEstimateHours = task.estimate_hours ?? 0
+      if (parsedEstimateHours !== currentEstimateHours) {
+        patch.estimateHours = parsedEstimateHours
+      }
+    }
+
+    if (Object.keys(patch).length === 0) {
+      setIsTaskEditing(false)
       return
     }
 
-    const nextDescription = descriptionDraft
-    const currentDescription = task.description ?? ''
-
-    if (nextDescription === currentDescription) {
-      setIsDescriptionEditing(false)
-      return
-    }
-
-    setIsDescriptionSaving(true)
+    setIsTaskSaving(true)
     try {
-      await editTask(taskId, { description: nextDescription })
-      setIsDescriptionEditing(false)
+      await editTask(taskId, patch)
+      setIsTaskEditing(false)
     } finally {
-      setIsDescriptionSaving(false)
+      setIsTaskSaving(false)
     }
   }
 
@@ -438,28 +526,6 @@ export function TaskDetailsPage() {
     }
 
     await editTask(task.id, { assignedTo: currentUserId })
-  }
-
-  const updateTaskEstimateHoursHandler = async (taskId: string, nextValue: string) => {
-    const normalized = nextValue.trim()
-
-    if (!normalized) {
-      setEstimateHoursDraft(String(estimateHours))
-      return
-    }
-
-    const parsedEstimateHours = Number.parseFloat(normalized)
-    if (!Number.isFinite(parsedEstimateHours) || parsedEstimateHours < 0) {
-      setEstimateHoursDraft(String(estimateHours))
-      return
-    }
-
-    if (parsedEstimateHours === estimateHours) {
-      setEstimateHoursDraft(String(estimateHours))
-      return
-    }
-
-    await editTask(taskId, { estimateHours: parsedEstimateHours })
   }
 
   const getDaysUntilDue = (dueDateRaw: string | null | undefined) => {
@@ -497,7 +563,33 @@ export function TaskDetailsPage() {
           <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Task details</p>
-              <h1 className="mt-1 text-3xl font-bold text-slate-900 break-words">{task.title}</h1>
+              {isTaskEditing ? (
+                <div className="mt-2 max-w-2xl">
+                  <input
+                    value={titleDraft}
+                    onChange={(event) => setTitleDraft(event.target.value)}
+                    maxLength={TASK_TITLE_MAX_LENGTH}
+                    placeholder="Task title"
+                    className="w-full rounded-xl border border-slate-300 bg-white px-4 py-2 text-2xl font-semibold text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+                  />
+                  <p className="text-right text-xs text-slate-500">
+                    {titleDraft.length}/{TASK_TITLE_MAX_LENGTH}
+                  </p>
+                </div>
+              ) : (
+                <div className="mt-1 flex items-start justify-between gap-3">
+                  <h1 className="text-3xl font-bold text-slate-900 break-words">{task.title}</h1>
+                  {canEditTask ? (
+                    <button
+                      type="button"
+                      onClick={startTaskEditing}
+                      className="shrink-0 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+                    >
+                      Edit
+                    </button>
+                  ) : null}
+                </div>
+              )}
             </div>
             {canTakeCurrentTask ? (
               <button
@@ -511,22 +603,34 @@ export function TaskDetailsPage() {
             ) : null}
           </div>
 
+          {isTaskEditing ? (
+            <div className="mb-4 flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void saveTaskEditsHandler(task.id)}
+                disabled={isTaskSaving}
+                className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isTaskSaving ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                type="button"
+                onClick={cancelTaskEditing}
+                disabled={isTaskSaving}
+                className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : null}
+
           {/* Description */}
           <div>
             <div className="mb-2 flex items-center justify-between gap-2">
               <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Description</label>
-              {canEditDescription && !isDescriptionEditing ? (
-                <button
-                  type="button"
-                  onClick={startDescriptionEditing}
-                  className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
-                >
-                  Edit
-                </button>
-              ) : null}
             </div>
 
-            {isDescriptionEditing ? (
+            {isTaskEditing && canEditDescription ? (
               <div>
                 <textarea
                   value={descriptionDraft}
@@ -539,53 +643,12 @@ export function TaskDetailsPage() {
                 <p className="mt-1 text-right text-xs text-slate-500">
                   {descriptionDraft.length}/{TASK_DESCRIPTION_MAX_LENGTH}
                 </p>
-                <div className="mt-2 flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void saveTaskDescriptionHandler(task.id)}
-                    disabled={isDescriptionSaving}
-                    className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isDescriptionSaving ? 'Saving...' : 'Save'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={cancelDescriptionEditing}
-                    disabled={isDescriptionSaving}
-                    className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    Cancel
-                  </button>
-                </div>
               </div>
             ) : (
               <div className="space-y-3">
-                {clientIntakePayload ? (
-                  <div className="space-y-3">
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Client name</p>
-                        <p className="mt-1 text-sm font-medium text-slate-800">{clientIntakePayload.clientName ?? 'Not provided'}</p>
-                      </div>
+                <p className="text-base leading-6 text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg border border-slate-200 p-4">{descriptionText || 'No description'}</p>
 
-                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Client email</p>
-                        <p className="mt-1 text-sm font-medium text-slate-800">{clientIntakePayload.clientEmail ?? 'Not provided'}</p>
-                      </div>
-                    </div>
-
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Request details</p>
-                      <p className="text-base leading-6 whitespace-pre-wrap text-slate-700">
-                        {clientIntakePayload.requestDetails || 'No details provided'}
-                      </p>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-base leading-6 text-slate-700 whitespace-pre-wrap bg-slate-50 rounded-lg border border-slate-200 p-4">{descriptionText || 'No description'}</p>
-                )}
-
-                {attachments.length > 0 ? (
+                {!clientIntakePayload && attachments.length > 0 ? (
                   <div className="rounded-lg border border-slate-200 bg-white p-3">
                     <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">Attachments ({attachments.length})</p>
                     <div className="space-y-3">
@@ -628,6 +691,100 @@ export function TaskDetailsPage() {
           </div>
         </header>
 
+        {clientIntakePayload ? (
+          <section className="mb-8 rounded-2xl border border-sky-200 bg-gradient-to-b from-sky-50 to-white p-5 shadow-sm">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-sky-700">Client request</p>
+
+            <div className="mt-3 space-y-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-slate-200 bg-white p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Client name</p>
+                  {isTaskEditing && canEditClientRequest ? (
+                    <input
+                      value={clientNameDraft}
+                      onChange={(event) => setClientNameDraft(event.target.value)}
+                      placeholder="Client name"
+                      className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+                    />
+                  ) : (
+                    <p className="mt-1 text-sm font-medium text-slate-800">{clientIntakePayload.clientName ?? 'Not provided'}</p>
+                  )}
+                </div>
+
+                <div className="rounded-lg border border-slate-200 bg-white p-3">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Client email</p>
+                  {isTaskEditing && canEditClientRequest ? (
+                    <input
+                      value={clientEmailDraft}
+                      onChange={(event) => setClientEmailDraft(event.target.value)}
+                      placeholder="Client email"
+                      className="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+                    />
+                  ) : (
+                    <p className="mt-1 text-sm font-medium text-slate-800">{clientIntakePayload.clientEmail ?? 'Not provided'}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-slate-200 bg-white p-4">
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">Request details</p>
+                {isTaskEditing && canEditClientRequest ? (
+                  <textarea
+                    value={clientRequestDetailsDraft}
+                    onChange={(event) => setClientRequestDetailsDraft(event.target.value)}
+                    rows={4}
+                    placeholder="Client request details"
+                    className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm leading-6 text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-200"
+                  />
+                ) : (
+                  <p className="text-base leading-6 whitespace-pre-wrap text-slate-700">
+                    {clientIntakePayload.requestDetails || 'No details provided'}
+                  </p>
+                )}
+              </div>
+
+              {attachments.length > 0 ? (
+                <div className="rounded-lg border border-slate-200 bg-white p-3">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-600">Attachments ({attachments.length})</p>
+                  <div className="space-y-3">
+                    {attachments.map((attachment, index) => (
+                      attachment.isImage ? (
+                        <button
+                          key={attachment.url}
+                          type="button"
+                          onClick={() => setPreviewAttachment(attachment)}
+                          className="inline-block max-w-full overflow-hidden rounded-lg border border-slate-200 bg-slate-50 hover:border-sky-300"
+                        >
+                          <img
+                            src={attachment.url}
+                            alt={`Attachment preview: ${attachment.name || `Image ${index + 1}`}`}
+                            className="block h-auto max-h-80 max-w-[520px] object-left-top"
+                            loading="lazy"
+                          />
+                          <div className="border-t border-slate-200 px-3 py-2 text-xs font-medium text-slate-700">
+                            {attachment.name || `Image ${index + 1}`}
+                          </div>
+                        </button>
+                      ) : (
+                        <a
+                          key={attachment.url}
+                          href={attachment.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700 transition hover:border-sky-300 hover:bg-sky-50"
+                        >
+                          <span className="truncate pr-3 font-medium">{attachment.name || `Attachment ${index + 1}`}</span>
+                          <span className="shrink-0 text-xs font-semibold text-sky-700">Open</span>
+                        </a>
+                      )
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </section>
+        ) : null}
+
         {/* Content Grid */}
         <div className="grid gap-6">
           {/* Main Content */}
@@ -639,10 +796,10 @@ export function TaskDetailsPage() {
                 {/* Status */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Status</label>
-                  {!isLocked ? (
+                  {isTaskEditing ? (
                     <select
                       value={taskStatusDraft}
-                      onChange={(event) => void updateTaskStatusHandler(task.id, event.target.value)}
+                      onChange={(event) => setTaskStatusDraft(event.target.value)}
                       className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
                     >
                       <option value="backlog">Backlog</option>
@@ -661,10 +818,10 @@ export function TaskDetailsPage() {
                 {/* Priority */}
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Priority</label>
-                  {!isLocked ? (
+                  {isTaskEditing ? (
                     <select
-                      value={task.priority ?? 'medium'}
-                      onChange={(event) => void updateTaskPriorityHandler(task.id, event.target.value)}
+                      value={taskPriorityDraft}
+                      onChange={(event) => setTaskPriorityDraft(event.target.value)}
                       className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
                     >
                       <option value="low">Low</option>
@@ -687,14 +844,14 @@ export function TaskDetailsPage() {
                 {/* Due Date */}
                 <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3">
                   <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Due date</label>
-                  {!isLocked ? (
+                  {isTaskEditing ? (
                     <div className="flex flex-col gap-2">
                       <input
                         type="date"
-                        value={dueDateInputValue}
+                        value={taskDueDateDraft}
                         min={projectStartDate || undefined}
                         max={projectEndDate || undefined}
-                        onChange={(event) => void updateTaskDueDateHandler(task.id, event.target.value)}
+                        onChange={(event) => setTaskDueDateDraft(event.target.value)}
                         className="rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
                       />
                       {task.due_date && daysUntilDue !== null && (
@@ -779,7 +936,7 @@ export function TaskDetailsPage() {
               <div className="grid gap-3 sm:grid-cols-3 mb-4">
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Estimate</p>
-                  {canEditEstimateHours ? (
+                  {canEditEstimateHours && isTaskEditing ? (
                     <div className="mt-2">
                       <label htmlFor="task-estimate-hours" className="sr-only">Estimate hours</label>
                       <div className="flex items-center gap-2">
@@ -791,12 +948,6 @@ export function TaskDetailsPage() {
                           inputMode="decimal"
                           value={estimateHoursDraft}
                           onChange={(event) => setEstimateHoursDraft(event.target.value)}
-                          onBlur={() => void updateTaskEstimateHoursHandler(task.id, estimateHoursDraft)}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter') {
-                              event.currentTarget.blur()
-                            }
-                          }}
                           className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-base font-semibold text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
                         />
                         <span className="text-sm text-slate-500">h</span>

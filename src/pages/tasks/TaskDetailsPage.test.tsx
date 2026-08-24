@@ -370,4 +370,45 @@ describe('TaskDetailsPage', () => {
     expect(screen.getByRole('img', { name: /attachment preview: screenshot\.png/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /console-log\.txt/i })).toBeInTheDocument()
   })
+
+  it('hides description edit button for members on client-intake tasks', () => {
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Client bug report',
+          description: [
+            'Client request submitted via public intake link.',
+            '',
+            'Client name: John',
+            'Client email: john@example.com',
+            '',
+            'Request details:',
+            'Please fix checkout behavior.',
+          ].join('\n'),
+          project_id: 'p1',
+          assigned_to: 'u1',
+        }),
+      ],
+      myRoleInSelectedProject: 'member',
+      canAssignAssignee: false,
+      canTakeUnassignedTasks: false,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+
+    expect(screen.queryByRole('button', { name: /^edit$/i })).not.toBeInTheDocument()
+  })
 })

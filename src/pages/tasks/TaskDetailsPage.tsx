@@ -355,6 +355,8 @@ export function TaskDetailsPage() {
   const normalizedRole = (myRoleInSelectedProject ?? '').toLowerCase()
   const isOwnerOrAdmin = normalizedRole === 'owner' || normalizedRole === 'admin'
   const canEditEstimateHours = !isLocked && isOwnerOrAdmin
+  const isClientIntakeTask = Boolean(clientIntakePayload)
+  const canEditDescription = !isLocked && !(isClientIntakeTask && normalizedRole === 'member')
   const progressPct = estimateHours > 0
     ? Math.min(100, Math.round((actualHours / estimateHours) * 100))
     : 0
@@ -394,6 +396,10 @@ export function TaskDetailsPage() {
   }
 
   const startDescriptionEditing = () => {
+    if (!canEditDescription) {
+      return
+    }
+
     setDescriptionDraft(task.description ?? '')
     setIsDescriptionEditing(true)
   }
@@ -404,6 +410,11 @@ export function TaskDetailsPage() {
   }
 
   const saveTaskDescriptionHandler = async (taskId: string) => {
+    if (!canEditDescription) {
+      setIsDescriptionEditing(false)
+      return
+    }
+
     const nextDescription = descriptionDraft
     const currentDescription = task.description ?? ''
 
@@ -504,7 +515,7 @@ export function TaskDetailsPage() {
           <div>
             <div className="mb-2 flex items-center justify-between gap-2">
               <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600">Description</label>
-              {!isLocked && !isDescriptionEditing ? (
+              {canEditDescription && !isDescriptionEditing ? (
                 <button
                   type="button"
                   onClick={startDescriptionEditing}

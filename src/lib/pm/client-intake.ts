@@ -10,7 +10,7 @@ export interface SubmitClientIntakeInput {
   token: string
   clientName?: string
   clientEmail?: string
-  title: string
+  title?: string
   message: string
   attachments?: ClientIntakeAttachmentPayload[]
 }

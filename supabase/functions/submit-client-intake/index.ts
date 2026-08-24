@@ -10,12 +10,12 @@ declare const Deno: {
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-const MAX_TITLE_LENGTH = 50
 const MAX_MESSAGE_LENGTH = 1000
 const MAX_CLIENT_NAME_LENGTH = 50
 const MAX_CLIENT_EMAIL_LENGTH = 50
 const MAX_ATTACHMENTS = 10
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
+const GENERATED_TITLE_MAX_LENGTH = 120
 
 function isLikelyEmail(value: string): boolean {
   if (value.length === 0) {
@@ -75,9 +75,19 @@ interface IntakePayload {
   token: string
   clientName?: string
   clientEmail?: string
-  title: string
   message: string
   attachments?: AttachmentInput[]
+}
+
+function buildGeneratedTaskTitle(clientName: string, clientEmail: string): string {
+  const sender = clientName || clientEmail || 'Unknown sender'
+  const baseTitle = `Client request from ${sender}`
+
+  if (baseTitle.length <= GENERATED_TITLE_MAX_LENGTH) {
+    return baseTitle
+  }
+
+  return `${baseTitle.slice(0, GENERATED_TITLE_MAX_LENGTH - 1)}…`
 }
 
 Deno.serve(async (req: Request) => {
@@ -104,16 +114,11 @@ Deno.serve(async (req: Request) => {
   const token = payload.token?.trim() ?? ''
   const clientName = payload.clientName?.trim() ?? ''
   const clientEmail = payload.clientEmail?.trim() ?? ''
-  const title = payload.title?.trim() ?? ''
   const message = payload.message?.trim() ?? ''
   const attachments = payload.attachments ?? []
 
   if (!isUuid(token)) {
     return json(req, { success: false, error: 'Invalid project link token' }, 400)
-  }
-
-  if (title.length === 0 || title.length > MAX_TITLE_LENGTH) {
-    return json(req, { success: false, error: `Task title is required and must be at most ${MAX_TITLE_LENGTH} characters` }, 400)
   }
 
   if (message.length === 0 || message.length > MAX_MESSAGE_LENGTH) {
@@ -230,6 +235,8 @@ Deno.serve(async (req: Request) => {
     }
   }
 
+  const generatedTitle = buildGeneratedTaskTitle(clientName, clientEmail)
+
   const taskInsertResponse = await fetch(`${SUPABASE_URL}/rest/v1/tasks`, {
     method: 'POST',
     headers: {
@@ -240,7 +247,7 @@ Deno.serve(async (req: Request) => {
     },
     body: JSON.stringify({
       project_id: project.id,
-      title,
+      title: generatedTitle,
       description: descriptionParts.join('\n'),
       status: 'todo',
       priority: 'medium',

@@ -25,7 +25,7 @@ describe('ClientIntakePage', () => {
     mockSubmitClientIntake.mockReset()
   })
 
-  it('shows required field errors on submit when title/details are empty', async () => {
+  it('shows required field error on submit when details are empty', async () => {
     renderPage()
 
     const sendButton = screen.getByRole('button', { name: /send request/i })
@@ -34,7 +34,6 @@ describe('ClientIntakePage', () => {
     fireEvent.click(sendButton)
 
     await waitFor(() => {
-      expect(screen.getByText(/task title is required/i)).toBeInTheDocument()
       expect(screen.getByText(/details is required/i)).toBeInTheDocument()
     })
 
@@ -52,9 +51,6 @@ describe('ClientIntakePage', () => {
     fireEvent.change(screen.getByLabelText(/your email/i), {
       target: { value: '  jane@example.com  ' },
     })
-    fireEvent.change(screen.getByLabelText(/task title/i), {
-      target: { value: '  Improve dashboard loading  ' },
-    })
     fireEvent.change(screen.getByLabelText(/details/i), {
       target: { value: '  The dashboard takes 10+ seconds to load after login.  ' },
     })
@@ -66,7 +62,7 @@ describe('ClientIntakePage', () => {
         token: '11111111-1111-4111-8111-111111111111',
         clientName: 'Client Jane',
         clientEmail: 'jane@example.com',
-        title: 'Improve dashboard loading',
+        title: 'Client request from Client Jane',
         message: 'The dashboard takes 10+ seconds to load after login.',
         attachments: [],
       })
@@ -80,9 +76,6 @@ describe('ClientIntakePage', () => {
 
     renderPage()
 
-    fireEvent.change(screen.getByLabelText(/task title/i), {
-      target: { value: 'Fix profile image crop' },
-    })
     fireEvent.change(screen.getByLabelText(/details/i), {
       target: { value: 'Profile image gets cut off when saving in Safari browser.' },
     })
@@ -99,9 +92,6 @@ describe('ClientIntakePage', () => {
 
     renderPage()
 
-    fireEvent.change(screen.getByLabelText(/task title/i), {
-      target: { value: 'Share logs with team' },
-    })
     fireEvent.change(screen.getByLabelText(/details/i), {
       target: { value: 'Please review attached logs and screenshot for root cause analysis.' },
     })
@@ -135,20 +125,17 @@ describe('ClientIntakePage', () => {
     expect(detailsField).toHaveAttribute('maxLength', '1000')
   })
 
-  it('uses 50-character limit for name, email, and task title fields', () => {
+  it('uses 50-character limit for name and email fields', () => {
     renderPage()
 
     expect(screen.getByLabelText(/your name/i)).toHaveAttribute('maxLength', '50')
     expect(screen.getByLabelText(/your email/i)).toHaveAttribute('maxLength', '50')
-    expect(screen.getByLabelText(/task title/i)).toHaveAttribute('maxLength', '50')
+    expect(screen.queryByLabelText(/task title/i)).not.toBeInTheDocument()
   })
 
   it('disables submit for invalid optional email format', () => {
     renderPage()
 
-    fireEvent.change(screen.getByLabelText(/task title/i), {
-      target: { value: 'Fix checkout on mobile' },
-    })
     fireEvent.change(screen.getByLabelText(/details/i), {
       target: { value: 'Checkout button overlaps the footer on iPhone SE.' },
     })
@@ -164,9 +151,6 @@ describe('ClientIntakePage', () => {
 
     renderPage()
 
-    fireEvent.change(screen.getByLabelText(/task title/i), {
-      target: { value: 'Collect diagnostic package' },
-    })
     fireEvent.change(screen.getByLabelText(/details/i), {
       target: { value: 'Please check attached screenshot and logs for this issue.' },
     })
@@ -219,9 +203,6 @@ describe('ClientIntakePage', () => {
 
     renderPage()
 
-    fireEvent.change(screen.getByLabelText(/task title/i), {
-      target: { value: 'Validate attachment cleanup flow' },
-    })
     fireEvent.change(screen.getByLabelText(/details/i), {
       target: { value: 'Removing one file should keep only the remaining file in payload.' },
     })

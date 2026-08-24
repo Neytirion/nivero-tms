@@ -28,7 +28,6 @@ describe('pm.client-intake', () => {
     await expect(
       submitClientIntake({
         token: '11111111-1111-4111-8111-111111111111',
-        title: 'Checkout issue',
         message: 'Checkout button overlaps footer on mobile.',
       }),
     ).resolves.toEqual({ success: true, taskId: 'task-123' })
@@ -36,7 +35,6 @@ describe('pm.client-intake', () => {
     expect(mocks.invoke).toHaveBeenCalledWith('submit-client-intake', {
       body: {
         token: '11111111-1111-4111-8111-111111111111',
-        title: 'Checkout issue',
         message: 'Checkout button overlaps footer on mobile.',
       },
     })
@@ -51,7 +49,6 @@ describe('pm.client-intake', () => {
     await expect(
       submitClientIntake({
         token: '11111111-1111-4111-8111-111111111111',
-        title: 'Missing ID',
         message: 'Server returned malformed payload for created task.',
       }),
     ).rejects.toThrow('Failed to submit client request')
@@ -72,7 +69,6 @@ describe('pm.client-intake', () => {
     await expect(
       submitClientIntake({
         token: '11111111-1111-4111-8111-111111111111',
-        title: 'Bad token',
         message: 'Should return detailed server message to user.',
       }),
     ).rejects.toThrow('Project link is invalid or expired')
@@ -93,7 +89,6 @@ describe('pm.client-intake', () => {
     await expect(
       submitClientIntake({
         token: '11111111-1111-4111-8111-111111111111',
-        title: 'Auth issue',
         message: 'Should surface text body from edge function.',
       }),
     ).rejects.toThrow('Not authenticated')

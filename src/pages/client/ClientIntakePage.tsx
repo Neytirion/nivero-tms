@@ -4,7 +4,6 @@ import { submitClientIntake } from '../../lib/pm/client-intake'
 
 const MAX_ATTACHMENTS = 10
 const MAX_ATTACHMENT_SIZE_BYTES = 5 * 1024 * 1024
-const MAX_TITLE_LENGTH = 50
 const MAX_MESSAGE_LENGTH = 1000
 const MAX_CLIENT_NAME_LENGTH = 50
 const MAX_CLIENT_EMAIL_LENGTH = 50
@@ -48,34 +47,35 @@ function mergeUniqueFiles(existing: File[], incoming: File[]) {
   return Array.from(unique.values())
 }
 
+function buildLegacyCompatibleTitle(clientName: string, clientEmail: string) {
+  const sender = clientName || clientEmail || 'Unknown sender'
+  return `Client request from ${sender}`
+}
+
 export function ClientIntakePage() {
   const { token } = useParams<{ token: string }>()
   const [clientName, setClientName] = useState('')
   const [clientEmail, setClientEmail] = useState('')
-  const [title, setTitle] = useState('')
   const [message, setMessage] = useState('')
   const [attachments, setAttachments] = useState<File[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [status, setStatus] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
-  const [titleError, setTitleError] = useState('')
   const [detailsError, setDetailsError] = useState('')
 
   const clientNameTrimmed = clientName.trim()
   const clientEmailTrimmed = clientEmail.trim()
-  const titleTrimmed = title.trim()
   const messageTrimmed = message.trim()
+  const generatedTitle = buildLegacyCompatibleTitle(clientNameTrimmed, clientEmailTrimmed)
 
   const clientNameIsValid = clientNameTrimmed.length <= MAX_CLIENT_NAME_LENGTH
   const clientEmailIsValid = clientEmailTrimmed.length <= MAX_CLIENT_EMAIL_LENGTH && isLikelyEmail(clientEmailTrimmed)
-  const titleIsValid = titleTrimmed.length <= MAX_TITLE_LENGTH
   const messageIsValid = messageTrimmed.length <= MAX_MESSAGE_LENGTH
 
   const canSubmit =
     Boolean(token) &&
     clientNameIsValid &&
     clientEmailIsValid &&
-    titleIsValid &&
     messageIsValid &&
     !isSubmitting
 
@@ -111,12 +111,10 @@ export function ClientIntakePage() {
       return
     }
 
-    const nextTitleError = titleTrimmed.length === 0 ? 'Task Title is required.' : ''
     const nextDetailsError = messageTrimmed.length === 0 ? 'Details is required.' : ''
-    setTitleError(nextTitleError)
     setDetailsError(nextDetailsError)
 
-    if (nextTitleError || nextDetailsError) {
+    if (nextDetailsError) {
       setStatus('Please fill in required fields before sending.')
       setIsSuccess(false)
       return
@@ -138,14 +136,13 @@ export function ClientIntakePage() {
         token,
         clientName: clientNameTrimmed || undefined,
         clientEmail: clientEmailTrimmed || undefined,
-        title: titleTrimmed,
+        title: generatedTitle,
         message: messageTrimmed,
         attachments: encodedAttachments,
       })
 
       setIsSuccess(true)
       setStatus('Thanks. Your request has been sent to the project team.')
-      setTitle('')
       setMessage('')
       setAttachments([])
     } catch (error) {
@@ -193,27 +190,6 @@ export function ClientIntakePage() {
             <div className="mt-1 flex justify-end text-xs">
               <span className="text-slate-400">{clientEmail.length}/{MAX_CLIENT_EMAIL_LENGTH}</span>
             </div>
-          </label>
-
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Task Title</span>
-            <input
-              type="text"
-              value={title}
-              onChange={(event) => {
-                setTitle(event.target.value)
-                if (titleError && event.target.value.trim().length > 0) {
-                  setTitleError('')
-                }
-              }}
-              placeholder="Fix checkout button overlap on mobile"
-              maxLength={MAX_TITLE_LENGTH}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
-            />
-            <div className="mt-1 flex justify-end text-xs">
-              <span className="text-slate-400">{title.length}/{MAX_TITLE_LENGTH}</span>
-            </div>
-            {titleError ? <p className="mt-1 text-xs text-rose-600">{titleError}</p> : null}
           </label>
 
           <label className="block">

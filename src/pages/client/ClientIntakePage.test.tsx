@@ -159,4 +159,94 @@ describe('ClientIntakePage', () => {
 
     expect(screen.getByRole('button', { name: /send request/i })).toBeDisabled()
   })
+
+  it('appends files across multiple attachment selections instead of replacing them', async () => {
+    mockSubmitClientIntake.mockResolvedValue({ success: true, taskId: 'task-44' })
+
+    renderPage()
+
+    fireEvent.change(screen.getByLabelText(/task title/i), {
+      target: { value: 'Collect diagnostic package' },
+    })
+    fireEvent.change(screen.getByLabelText(/details/i), {
+      target: { value: 'Please check attached screenshot and logs for this issue.' },
+    })
+
+    const fileInput = screen.getByLabelText(/attachments/i)
+    const firstFile = new File(['img'], 'screen.png', { type: 'image/png' })
+    const secondFile = new File(['txt'], 'app.log', { type: 'text/plain' })
+
+    fireEvent.change(fileInput, {
+      target: {
+        files: [firstFile],
+      },
+    })
+
+    fireEvent.change(fileInput, {
+      target: {
+        files: [secondFile],
+      },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /send request/i }))
+
+    await waitFor(() => {
+      expect(mockSubmitClientIntake).toHaveBeenCalled()
+    })
+
+    const payload = mockSubmitClientIntake.mock.calls[0]?.[0]
+    expect(payload?.attachments).toHaveLength(2)
+    expect(payload?.attachments?.map((item: { name: string }) => item.name)).toEqual(['screen.png', 'app.log'])
+  })
+
+  it('shows an error when more than 10 files are attached', () => {
+    renderPage()
+
+    const fileInput = screen.getByLabelText(/attachments/i)
+    const files = Array.from({ length: 11 }, (_, index) => new File(['x'], `f-${index + 1}.txt`, { type: 'text/plain' }))
+
+    fireEvent.change(fileInput, {
+      target: {
+        files,
+      },
+    })
+
+    expect(screen.getByText(/you can upload up to 10 files/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /send request/i })).toBeDisabled()
+  })
+
+  it('removes an accidentally attached file when clicking the remove button', async () => {
+    mockSubmitClientIntake.mockResolvedValue({ success: true, taskId: 'task-45' })
+
+    renderPage()
+
+    fireEvent.change(screen.getByLabelText(/task title/i), {
+      target: { value: 'Validate attachment cleanup flow' },
+    })
+    fireEvent.change(screen.getByLabelText(/details/i), {
+      target: { value: 'Removing one file should keep only the remaining file in payload.' },
+    })
+
+    const fileInput = screen.getByLabelText(/attachments/i)
+    const firstFile = new File(['img'], 'screen.png', { type: 'image/png' })
+    const secondFile = new File(['txt'], 'trace.log', { type: 'text/plain' })
+
+    fireEvent.change(fileInput, {
+      target: {
+        files: [firstFile, secondFile],
+      },
+    })
+
+    fireEvent.click(screen.getByRole('button', { name: /remove screen\.png/i }))
+
+    fireEvent.click(screen.getByRole('button', { name: /send request/i }))
+
+    await waitFor(() => {
+      expect(mockSubmitClientIntake).toHaveBeenCalled()
+    })
+
+    const payload = mockSubmitClientIntake.mock.calls[0]?.[0]
+    expect(payload?.attachments).toHaveLength(1)
+    expect(payload?.attachments?.[0].name).toBe('trace.log')
+  })
 })

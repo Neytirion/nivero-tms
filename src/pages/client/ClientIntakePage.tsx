@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { submitClientIntake } from '../../lib/pm/client-intake'
 
-const MAX_ATTACHMENTS = 5
+const MAX_ATTACHMENTS = 10
 const MAX_ATTACHMENT_SIZE_BYTES = 5 * 1024 * 1024
 const MIN_TITLE_LENGTH = 3
 const MAX_TITLE_LENGTH = 255
@@ -30,6 +30,24 @@ function fileToBase64(file: File): Promise<string> {
     reader.onerror = () => reject(new Error('Failed to read file'))
     reader.readAsDataURL(file)
   })
+}
+
+function getFileKey(file: File) {
+  return `${file.name}:${file.size}:${file.lastModified}`
+}
+
+function mergeUniqueFiles(existing: File[], incoming: File[]) {
+  const unique = new Map<string, File>()
+
+  for (const file of existing) {
+    unique.set(getFileKey(file), file)
+  }
+
+  for (const file of incoming) {
+    unique.set(getFileKey(file), file)
+  }
+
+  return Array.from(unique.values())
 }
 
 export function ClientIntakePage() {
@@ -63,7 +81,7 @@ export function ClientIntakePage() {
 
   const attachmentError = useMemo(() => {
     if (attachments.length > MAX_ATTACHMENTS) {
-      return `You can upload up to ${MAX_ATTACHMENTS} images.`
+      return `You can upload up to ${MAX_ATTACHMENTS} files.`
     }
 
     const oversized = attachments.find((file) => file.size > MAX_ATTACHMENT_SIZE_BYTES)
@@ -75,13 +93,17 @@ export function ClientIntakePage() {
   }, [attachments])
 
   const handleAttachmentsChange = (files: FileList | null) => {
-    if (!files) {
-      setAttachments([])
+    if (!files || files.length === 0) {
       return
     }
 
     const nextFiles = Array.from(files)
-    setAttachments(nextFiles)
+    setAttachments((prev) => mergeUniqueFiles(prev, nextFiles))
+  }
+
+  const removeAttachment = (fileToRemove: File) => {
+    const targetKey = getFileKey(fileToRemove)
+    setAttachments((prev) => prev.filter((file) => getFileKey(file) !== targetKey))
   }
 
   const handleSubmit = async () => {
@@ -209,11 +231,31 @@ export function ClientIntakePage() {
             <input
               type="file"
               multiple
-              onChange={(event) => handleAttachmentsChange(event.target.files)}
+              onChange={(event) => {
+                handleAttachmentsChange(event.target.files)
+                event.currentTarget.value = ''
+              }}
               className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700"
             />
             {attachments.length > 0 ? (
-              <p className="mt-1 text-xs text-slate-500">Attached: {attachments.map((file) => file.name).join(', ')}</p>
+              <div className="mt-2 space-y-1.5">
+                <p className="text-xs text-slate-500">Attached ({attachments.length}/{MAX_ATTACHMENTS})</p>
+                <ul className="space-y-1">
+                  {attachments.map((file) => (
+                    <li key={getFileKey(file)} className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5">
+                      <span className="truncate text-xs text-slate-700">{file.name}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(file)}
+                        className="shrink-0 rounded border border-rose-200 bg-white px-1.5 py-0.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                        aria-label={`Remove ${file.name}`}
+                      >
+                        x
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ) : null}
             {attachmentError ? <p className="mt-1 text-xs text-rose-600">{attachmentError}</p> : null}
           </label>

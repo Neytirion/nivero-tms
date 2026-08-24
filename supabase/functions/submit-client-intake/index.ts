@@ -16,7 +16,7 @@ const MIN_MESSAGE_LENGTH = 10
 const MAX_MESSAGE_LENGTH = 1000
 const MAX_CLIENT_NAME_LENGTH = 120
 const MAX_CLIENT_EMAIL_LENGTH = 254
-const MAX_ATTACHMENTS = 5
+const MAX_ATTACHMENTS = 10
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
 
 function isLikelyEmail(value: string): boolean {

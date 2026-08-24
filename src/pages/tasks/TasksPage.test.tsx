@@ -253,6 +253,47 @@ describe('TasksPage', () => {
     })
   })
 
+  it('shows client label for intake task in unassigned section', async () => {
+    const workspace = createWorkspaceState({
+      selectedProjectId: 'p1',
+      projects: [createProjectPreview({ id: 'p1', name: 'Apollo' })],
+      tasks: [
+        createTaskPreview({
+          id: 't-client-1',
+          title: 'Original title',
+          project_id: 'p1',
+          assigned_to: null,
+          created_by: 'owner-1',
+          description: 'Client request submitted via public intake link.\nClient name: ACME',
+        }),
+      ],
+      projectMembers: [
+        {
+          member_id: 'm-owner',
+          project_id: 'p1',
+          user_id: 'owner-1',
+          role: 'owner',
+          joined_at: '2026-06-02T00:00:00.000Z',
+          full_name: 'Project Owner',
+          email: 'owner@example.com',
+        },
+      ],
+    })
+    mockUseWorkspace.mockReturnValue(workspace)
+
+    render(
+      <MemoryRouter>
+        <TasksPage />
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Task from client')).toBeInTheDocument()
+    })
+    expect(screen.getByText('Client')).toBeInTheDocument()
+    expect(screen.queryByText('Project Owner (creator)')).not.toBeInTheDocument()
+  })
+
   it('passes drop handler to board columns', async () => {
     const workspace = createWorkspaceState({
       selectedProjectId: 'p1',

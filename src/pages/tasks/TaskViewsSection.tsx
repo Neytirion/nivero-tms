@@ -67,10 +67,13 @@ export function TaskViewsSection({
   const sharedQueueTasks = tasks.filter((task) => !task.assigned_to)
   const assignedTasks = tasks.filter((task) => Boolean(task.assigned_to))
 
-  const getUnassignedTaskTitle = (task: TaskPreview) => {
+  const isClientIntakeTask = (task: TaskPreview) => {
     const description = task.description ?? ''
-    const isClientIntakeTask = /^\s*Client request submitted via public intake link\./i.test(description)
-    if (isClientIntakeTask) {
+    return /^\s*Client request submitted via public intake link\./i.test(description)
+  }
+
+  const getUnassignedTaskTitle = (task: TaskPreview) => {
+    if (isClientIntakeTask(task)) {
       return 'Task from client'
     }
 
@@ -169,7 +172,10 @@ export function TaskViewsSection({
             </p>
           ) : (
             <div className="space-y-2">
-              {sharedQueueTasks.map((task) => (
+              {sharedQueueTasks.map((task) => {
+                const clientIntakeTask = isClientIntakeTask(task)
+
+                return (
                 <div key={task.id} className="space-y-2">
                   <TaskCard
                     task={{
@@ -186,13 +192,19 @@ export function TaskViewsSection({
                         ? (workPackageColorById[task.work_package_id] ?? null)
                         : (task.work_package?.color ?? null)
                     }
-                    assigneeUserId={task.created_by}
+                    assigneeUserId={clientIntakeTask ? null : task.created_by}
                     assigneeLabel={
-                      task.created_by
+                      clientIntakeTask
+                        ? 'Client'
+                        : task.created_by
                         ? `${assigneeLabelByUserId[task.created_by] ?? task.created_by} (creator)`
                         : 'Unassigned'
                     }
-                    assigneeAvatarUrl={task.created_by ? (assigneeAvatarUrlByUserId[task.created_by] ?? null) : null}
+                    assigneeAvatarUrl={
+                      clientIntakeTask
+                        ? null
+                        : (task.created_by ? (assigneeAvatarUrlByUserId[task.created_by] ?? null) : null)
+                    }
                     onTaskClick={onTaskClick}
                     onOpenUserProfile={onOpenUserProfile}
                     isLocked={!canManageTask(task)}
@@ -212,7 +224,8 @@ export function TaskViewsSection({
                     </button>
                   ) : null}
                 </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </aside>

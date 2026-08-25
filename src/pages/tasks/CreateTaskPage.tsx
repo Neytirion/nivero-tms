@@ -13,7 +13,6 @@ export function CreateTaskPage() {
     isLoading,
     selectedProject,
     selectedProjectId,
-    myRoleInSelectedProject,
     useEstimates,
     isProjectMissing,
     isTaskTitleMissing,
@@ -71,15 +70,10 @@ export function CreateTaskPage() {
         <WorkspacePageHeader
           eyebrow="Tasks"
           title="Create Task"
-          description={selectedProject ? `Project: ${selectedProject.name}` : 'Choose a project to create a task.'}
           backButton={{
             label: '← Back to Tasks',
             onClick: () => navigate(activeProjectId ? `/app/tasks?projectId=${activeProjectId}` : '/app/tasks'),
           }}
-          badges={[
-            ...(selectedProject?.status ? [{ label: selectedProject.status, tone: 'neutral' as const }] : []),
-            ...(myRoleInSelectedProject ? [{ label: myRoleInSelectedProject, tone: 'cyan' as const }] : []),
-          ]}
         />
 
         <CreateTaskSection

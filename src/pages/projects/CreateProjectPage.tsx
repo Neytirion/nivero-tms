@@ -171,7 +171,6 @@ export function CreateProjectPage() {
           <WorkspacePageHeader
             eyebrow="Projects"
             title="Create Project with AI"
-            description="Generate a project draft and review it before creating the final project."
             backButton={{ label: '← Back to Mode Selection', onClick: () => setShowAIMode(false) }}
           />
           <AiProjectGeneratorModal
@@ -191,7 +190,6 @@ export function CreateProjectPage() {
         <WorkspacePageHeader
           eyebrow="Projects"
           title="Create Project"
-          description="Set project scope, timeline, team invites, and initial estimate baseline."
           backButton={{ label: '← Projects', onClick: () => navigate('/app/projects') }}
         />
         <ProjectCreationWizard

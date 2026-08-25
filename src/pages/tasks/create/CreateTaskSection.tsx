@@ -63,15 +63,6 @@ export function CreateTaskSection({
 
   return (
     <section className="page-section border border-slate-200 bg-[linear-gradient(170deg,#ffffff_0%,#f8fafc_58%,#eef2ff_100%)]">
-      <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3">
-        <div>
-          <h3 className="text-xl font-semibold text-slate-900">Create Task</h3>
-          <p className="mt-2 text-sm text-slate-600">
-            Current project: <span className="text-base font-semibold text-slate-800">{selectedProject?.name ?? 'No project selected'}</span>
-          </p>
-        </div>
-      </div>
-
       {hasAttemptedSubmit && missingRequiredFields.length > 0 ? (
         <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
           Missing required fields: {missingRequiredFields.join(', ')}.

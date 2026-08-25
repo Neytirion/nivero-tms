@@ -124,22 +124,6 @@ export function ProjectDetailsSection({
 
   return (
     <section className="page-section">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h3 className="text-2xl font-bold text-slate-900">
-            {selectedProject ? selectedProject.name : 'Select a project'}
-          </h3>
-          {selectedProject ? (
-            <p className="mt-0.5 text-sm text-slate-500">{selectedProject.status ?? 'active'}</p>
-          ) : (
-            <p className="mt-0.5 text-sm text-slate-500">Select a project from the table to open details</p>
-          )}
-          {myRoleInSelectedProject ? (
-            <p className="mt-1 text-xs text-cyan-700">Your role: {myRoleInSelectedProject}</p>
-          ) : null}
-        </div>
-      </div>
-
       {!selectedProject ? (
         <p className="mt-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-500">
           No project selected

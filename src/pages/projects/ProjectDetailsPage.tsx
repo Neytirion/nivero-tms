@@ -116,12 +116,7 @@ export function ProjectDetailsPage() {
       <WorkspacePageHeader
         eyebrow="Projects"
         title={selectedProject ? selectedProject.name : 'Project Details'}
-        description="Overview, collaboration, tasks, estimates, team access, and settings in one place."
         backButton={{ label: '← Projects', onClick: () => navigate('/app/projects') }}
-        badges={[
-          ...(selectedProject?.status ? [{ label: selectedProject.status, tone: 'neutral' as const }] : []),
-          ...(myRoleInSelectedProject ? [{ label: myRoleInSelectedProject, tone: 'cyan' as const }] : []),
-        ]}
       />
 
       {/* Content + sidebar nav */}

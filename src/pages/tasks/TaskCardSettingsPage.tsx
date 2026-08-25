@@ -210,15 +210,10 @@ export function TaskCardSettingsPage() {
       <WorkspacePageHeader
         eyebrow="Task Board"
         title="Card Settings"
-        description="Configure how task cards look in this project: choose visible fields and tune work package colors."
         backButton={{
           label: '← Back to Tasks',
           onClick: () => navigate(activeProjectId ? `/app/tasks?projectId=${activeProjectId}` : '/app/tasks'),
         }}
-        badges={[
-          ...(selectedProject?.status ? [{ label: selectedProject.status, tone: 'neutral' as const }] : []),
-          ...(activeProjectRole ? [{ label: activeProjectRole, tone: 'cyan' as const }] : []),
-        ]}
         gradientClassName="bg-[linear-gradient(120deg,rgba(20,184,166,0.08),rgba(14,165,233,0.06))]"
       />
 

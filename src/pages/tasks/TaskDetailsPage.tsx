@@ -255,7 +255,6 @@ export function TaskDetailsPage() {
   const {
     isLoading,
     tasks,
-    selectedProject,
     myRoleInSelectedProject,
     canTakeUnassignedTasks,
     canManageTask,
@@ -562,15 +561,10 @@ export function TaskDetailsPage() {
         <WorkspacePageHeader
           eyebrow="Tasks"
           title="Task Details"
-          description={selectedProject ? `Project: ${selectedProject.name}` : 'Task context and execution details.'}
           backButton={{
             label: backTo.startsWith('/app/projects/') ? '← Project Details' : '← Tasks',
             onClick: () => navigate(backTo),
           }}
-          badges={[
-            ...(selectedProject?.status ? [{ label: selectedProject.status, tone: 'neutral' as const }] : []),
-            ...(myRoleInSelectedProject ? [{ label: myRoleInSelectedProject, tone: 'cyan' as const }] : []),
-          ]}
           gradientClassName="bg-[linear-gradient(120deg,rgba(14,116,144,0.08),rgba(16,185,129,0.06))]"
         />
       </div>

@@ -155,7 +155,6 @@ export function MentionsPage() {
       <WorkspacePageHeader
         eyebrow="Inbox"
         title="Mentions"
-        description="Where teammates mentioned you in tasks and project chat."
         actions={(
           <>
             <button

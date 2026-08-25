@@ -86,7 +86,6 @@ export function TasksPage() {
       <WorkspacePageHeader
         eyebrow="Kanban Board"
         title={selectedProject?.name || 'Select a project'}
-        description="Track delivery, assignments, and due dates in one project-focused board."
         backButton={selectedProjectId ? { label: '← Back to Project Details', onClick: () => navigate(`/app/projects/${selectedProjectId}`) } : undefined}
         actions={canOpenCardSettings && selectedProjectId ? (
           <button
@@ -97,10 +96,6 @@ export function TasksPage() {
             Edit Card Settings
           </button>
         ) : null}
-        badges={[
-          ...(selectedProject?.status ? [{ label: selectedProject.status, tone: 'neutral' as const }] : []),
-          ...(myRoleInSelectedProject ? [{ label: myRoleInSelectedProject, tone: 'cyan' as const }] : []),
-        ]}
       />
 
       <TaskViewsSection

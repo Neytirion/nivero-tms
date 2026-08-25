@@ -1,9 +1,12 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useTasksPageController } from './useTasksPageController'
 import { CreateTaskSection } from '.'
 
 export function CreateTaskPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
   const {
     isLoading,
@@ -42,12 +45,22 @@ export function CreateTaskPage() {
     memberDisplayRoleByUserId,
     canSubmit,
     createTaskHandler,
+    selectProject,
   } = useTasksPageController()
+
+  const projectIdFromQuery = searchParams.get('projectId')
+  const activeProjectId = projectIdFromQuery ?? selectedProjectId
+
+  useEffect(() => {
+    if (projectIdFromQuery && projectIdFromQuery !== selectedProjectId) {
+      void selectProject(projectIdFromQuery)
+    }
+  }, [projectIdFromQuery, selectedProjectId, selectProject])
 
   const handleCreateTask = async () => {
     const wasCreated = await createTaskHandler()
     if (wasCreated) {
-      navigate(`/app/tasks?projectId=${selectedProjectId}`)
+      navigate(activeProjectId ? `/app/tasks?projectId=${activeProjectId}` : '/app/tasks')
     }
   }
 
@@ -57,7 +70,7 @@ export function CreateTaskPage() {
         {/* Header */}
         <div className="mb-8">
           <button
-            onClick={() => navigate(`/app/tasks?projectId=${selectedProjectId}`)}
+            onClick={() => navigate(activeProjectId ? `/app/tasks?projectId=${activeProjectId}` : '/app/tasks')}
             className="mb-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
           >
             ← Back to Tasks

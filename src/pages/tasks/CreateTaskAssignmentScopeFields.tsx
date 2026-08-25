@@ -203,7 +203,7 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
                 </div>
               ) : null}
 
-              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid auto-rows-fr gap-2 sm:grid-cols-2 xl:grid-cols-3">
                 {filteredMembers.map(({ member, userId, fullName, email, displayRole, recommendedForScope }) => {
                   const isSelected = props.taskAssigneeId === userId
 
@@ -212,44 +212,66 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
                       key={member.member_id}
                       type="button"
                       onClick={() => props.onTaskAssigneeIdChange(userId)}
-                      className={`text-left rounded-lg border p-2.5 transition ${
+                      className={`h-full text-left rounded-xl border p-3 transition ${
                         isSelected
-                          ? 'border-cyan-500 bg-cyan-50 shadow-sm'
-                          : 'border-slate-200 bg-white hover:border-cyan-300'
+                          ? 'border-cyan-500 bg-[linear-gradient(180deg,#ecfeff_0%,#f0f9ff_100%)] shadow-sm'
+                          : 'border-slate-200 bg-white hover:border-cyan-300 hover:shadow-sm'
                       }`}
                     >
-                      <div className="flex items-start gap-2.5">
-                        {member.avatar_url ? (
-                          <img
-                            src={member.avatar_url}
-                            alt={fullName}
-                            className="h-8 w-8 shrink-0 rounded-full border border-slate-200 object-cover"
-                          />
-                        ) : (
-                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-[10px] font-semibold text-slate-700">
-                            {getMemberInitials(fullName)}
-                          </span>
-                        )}
+                      <div className="flex h-full flex-col">
+                        <div className="flex items-start justify-between gap-2.5">
+                          <div className="flex min-w-0 items-start gap-2.5">
+                            {member.avatar_url ? (
+                              <img
+                                src={member.avatar_url}
+                                alt={fullName}
+                                className="h-9 w-9 shrink-0 rounded-full border border-slate-200 object-cover"
+                              />
+                            ) : (
+                              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-slate-100 text-[10px] font-semibold text-slate-700">
+                                {getMemberInitials(fullName)}
+                              </span>
+                            )}
 
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-semibold text-slate-900">{fullName}</p>
-                          <p className="truncate text-xs text-slate-500">{email || 'No email'}</p>
-                          <div className="mt-1.5 flex flex-wrap gap-1.5">
-                            <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700">
-                              {member.role ?? 'member'}
-                            </span>
-                            {displayRole ? (
-                              <span className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[10px] font-medium text-cyan-900">
-                                <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" aria-hidden="true" />
-                                {displayRole}
-                              </span>
-                            ) : null}
-                            {recommendedForScope ? (
-                              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-800">
-                                Matches work package
-                              </span>
-                            ) : null}
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-slate-900">{fullName}</p>
+                              <p className="mt-0.5 truncate text-xs text-slate-500">{email || 'No email'}</p>
+                            </div>
                           </div>
+
+                          <span
+                            className={`inline-flex h-5 shrink-0 items-center rounded-full px-2 text-[10px] font-semibold ${
+                              isSelected
+                                ? 'bg-cyan-600 text-white'
+                                : 'border border-slate-300 bg-white text-slate-600'
+                            }`}
+                          >
+                            {isSelected ? 'Selected' : 'Pick'}
+                          </span>
+                        </div>
+
+                        <div className="mt-2.5 flex flex-wrap gap-1.5">
+                          <span className="rounded-full bg-slate-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-slate-700">
+                            {member.role ?? 'member'}
+                          </span>
+                          {displayRole ? (
+                            <span className="inline-flex items-center gap-1 rounded-full border border-cyan-200 bg-cyan-50 px-2 py-0.5 text-[10px] font-medium text-cyan-900">
+                              <span className="h-1.5 w-1.5 rounded-full bg-cyan-500" aria-hidden="true" />
+                              {displayRole}
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <div className="mt-auto pt-2">
+                          {recommendedForScope ? (
+                            <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-800">
+                              Matches work package
+                            </span>
+                          ) : (
+                            <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+                              No package match
+                            </span>
+                          )}
                         </div>
                       </div>
                     </button>

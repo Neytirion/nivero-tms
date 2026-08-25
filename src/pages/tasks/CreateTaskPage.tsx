@@ -53,7 +53,7 @@ export function CreateTaskPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4">
-      <div className="mx-auto max-w-6xl">
+      <div className="mx-auto max-w-[1440px]">
         {/* Header */}
         <div className="mb-8">
           <button

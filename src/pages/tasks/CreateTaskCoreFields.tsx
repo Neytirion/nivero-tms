@@ -24,15 +24,13 @@ export function CreateTaskCoreFields(props: CoreTaskFieldsProps) {
 
         <div>
           <label className="mb-1 block text-sm font-medium text-slate-700">Description</label>
-          <div className="w-full md:w-11/12 lg:w-4/5">
-            <textarea
-              value={props.taskDescription}
-              onChange={(event) => props.onTaskDescriptionChange(event.target.value)}
-              rows={3}
-              placeholder="What exactly needs to be done"
-              className="w-full rounded-xl border-2 border-slate-300 bg-gradient-to-b from-slate-50 to-white px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-500 shadow-sm transition focus:border-sky-400 focus:shadow"
-            />
-          </div>
+          <textarea
+            value={props.taskDescription}
+            onChange={(event) => props.onTaskDescriptionChange(event.target.value)}
+            rows={3}
+            placeholder="What exactly needs to be done"
+            className="w-full rounded-xl border-2 border-slate-300 bg-gradient-to-b from-slate-50 to-white px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-500 shadow-sm transition focus:border-sky-400 focus:shadow"
+          />
         </div>
       </div>
     </div>

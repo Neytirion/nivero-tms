@@ -63,61 +63,67 @@ export function CreateTaskSection({
         </div>
       ) : null}
 
-      <div className="mt-4 grid gap-4">
-        <CreateTaskCoreFields
-          selectedProject={selectedProject}
-          hasAttemptedSubmit={hasAttemptedSubmit}
-          isProjectMissing={isProjectMissing}
-          isTaskTitleMissing={isTaskTitleMissing}
-          taskTitle={taskTitle}
-          taskDescription={taskDescription}
-          onTaskTitleChange={onTaskTitleChange}
-          onTaskDescriptionChange={onTaskDescriptionChange}
-        />
+      <div className="mt-4 grid gap-4 xl:grid-cols-12 xl:items-start">
+        <div className="space-y-4 xl:col-span-4">
+          <CreateTaskCoreFields
+            selectedProject={selectedProject}
+            hasAttemptedSubmit={hasAttemptedSubmit}
+            isProjectMissing={isProjectMissing}
+            isTaskTitleMissing={isTaskTitleMissing}
+            taskTitle={taskTitle}
+            taskDescription={taskDescription}
+            onTaskTitleChange={onTaskTitleChange}
+            onTaskDescriptionChange={onTaskDescriptionChange}
+          />
 
-        <CreateTaskPlanningFields
-          useEstimates={useEstimates}
-          hasAttemptedSubmit={hasAttemptedSubmit}
-          isEstimateHoursMissingOrInvalid={isEstimateHoursMissingOrInvalid}
-          taskEstimateHours={taskEstimateHours}
-          taskPriority={taskPriority}
-          taskDueDate={taskDueDate}
-          projectStartDate={projectStartDate}
-          projectEndDate={projectEndDate}
-          onTaskEstimateHoursChange={onTaskEstimateHoursChange}
-          onTaskPriorityChange={onTaskPriorityChange}
-          onTaskDueDateChange={onTaskDueDateChange}
-        />
+          <CreateTaskPlanningFields
+            useEstimates={useEstimates}
+            hasAttemptedSubmit={hasAttemptedSubmit}
+            isEstimateHoursMissingOrInvalid={isEstimateHoursMissingOrInvalid}
+            taskEstimateHours={taskEstimateHours}
+            taskPriority={taskPriority}
+            taskDueDate={taskDueDate}
+            projectStartDate={projectStartDate}
+            projectEndDate={projectEndDate}
+            onTaskEstimateHoursChange={onTaskEstimateHoursChange}
+            onTaskPriorityChange={onTaskPriorityChange}
+            onTaskDueDateChange={onTaskDueDateChange}
+          />
+        </div>
 
-        <CreateTaskAssignmentScopeFields
-          useEstimates={useEstimates}
-          selectedProjectId={selectedProjectId}
-          hasAttemptedSubmit={hasAttemptedSubmit}
-          isWorkPackageMissing={isWorkPackageMissing}
-          taskWorkPackageId={taskWorkPackageId}
-          taskBlockedByTaskId={taskBlockedByTaskId}
-          taskAssigneeId={taskAssigneeId}
-          workPackages={workPackages}
-          dependencyOptions={dependencyOptions}
-          canAssignAssignee={canAssignAssignee}
-          projectMembers={projectMembers}
-          memberDisplayRoleByUserId={memberDisplayRoleByUserId}
-          onTaskWorkPackageIdChange={onTaskWorkPackageIdChange}
-          onTaskBlockedByTaskIdChange={onTaskBlockedByTaskIdChange}
-          onTaskAssigneeIdChange={onTaskAssigneeIdChange}
-        />
+        <div className="xl:col-span-8">
+          <CreateTaskAssignmentScopeFields
+            useEstimates={useEstimates}
+            selectedProjectId={selectedProjectId}
+            hasAttemptedSubmit={hasAttemptedSubmit}
+            isWorkPackageMissing={isWorkPackageMissing}
+            taskWorkPackageId={taskWorkPackageId}
+            taskBlockedByTaskId={taskBlockedByTaskId}
+            taskAssigneeId={taskAssigneeId}
+            workPackages={workPackages}
+            dependencyOptions={dependencyOptions}
+            canAssignAssignee={canAssignAssignee}
+            projectMembers={projectMembers}
+            memberDisplayRoleByUserId={memberDisplayRoleByUserId}
+            onTaskWorkPackageIdChange={onTaskWorkPackageIdChange}
+            onTaskBlockedByTaskIdChange={onTaskBlockedByTaskIdChange}
+            onTaskAssigneeIdChange={onTaskAssigneeIdChange}
+          />
+        </div>
       </div>
 
-      <CreateTaskFooter
-        selectedProject={selectedProject}
-        selectedProjectId={selectedProjectId}
-        canSubmit={canSubmit}
-        missingRequiredFields={missingRequiredFields}
-        isLoading={isLoading}
-        onCreateTask={onCreateTask}
-        isCreationBlocked={isCreationBlocked}
-        onSetHasAttemptedSubmit={onSetHasAttemptedSubmit}
-      />
+      <div className="mt-5 flex justify-end">
+        <CreateTaskFooter
+          selectedProject={selectedProject}
+          selectedProjectId={selectedProjectId}
+          canSubmit={canSubmit}
+          missingRequiredFields={missingRequiredFields}
+          isLoading={isLoading}
+          onCreateTask={onCreateTask}
+          isCreationBlocked={isCreationBlocked}
+          onSetHasAttemptedSubmit={onSetHasAttemptedSubmit}
+        />
+      </div>
     </section>
   )
 }

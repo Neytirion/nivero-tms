@@ -64,7 +64,7 @@ export function CreateTaskSection({
       ) : null}
 
       <div className="mt-4 grid gap-4 xl:grid-cols-12 xl:items-start">
-        <div className="space-y-4 xl:col-span-4">
+        <div className="space-y-4 xl:col-span-4 2xl:col-span-3">
           <CreateTaskCoreFields
             selectedProject={selectedProject}
             hasAttemptedSubmit={hasAttemptedSubmit}
@@ -91,7 +91,7 @@ export function CreateTaskSection({
           />
         </div>
 
-        <div className="xl:col-span-8">
+        <div className="xl:col-span-8 2xl:col-span-9">
           <CreateTaskAssignmentScopeFields
             useEstimates={useEstimates}
             selectedProjectId={selectedProjectId}

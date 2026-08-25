@@ -203,7 +203,7 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
                 </div>
               ) : null}
 
-              <div className="grid auto-rows-fr gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid auto-rows-fr gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {filteredMembers.map(({ member, userId, fullName, email, displayRole, recommendedForScope }) => {
                   const isSelected = props.taskAssigneeId === userId
 
@@ -326,7 +326,7 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
                 />
               </div>
 
-              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {filteredWorkPackages.map((workPackage) => {
                   const isSelected = props.taskWorkPackageId === workPackage.id
 
@@ -398,7 +398,7 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
               />
             </div>
 
-            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {filteredDependencies.map((task) => {
                 const isSelected = props.taskBlockedByTaskId === task.id
 

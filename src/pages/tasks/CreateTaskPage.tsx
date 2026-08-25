@@ -9,8 +9,6 @@ export function CreateTaskPage() {
     isLoading,
     selectedProject,
     selectedProjectId,
-    isMemberInSelectedProject,
-    hasEstimateVersion,
     useEstimates,
     isProjectMissing,
     isTaskTitleMissing,
@@ -73,9 +71,7 @@ export function CreateTaskPage() {
 
         <CreateTaskSection
           useEstimates={useEstimates}
-          hasEstimateVersion={hasEstimateVersion}
           selectedProjectId={selectedProjectId}
-          isMemberInSelectedProject={isMemberInSelectedProject}
           selectedProject={selectedProject}
           isProjectMissing={isProjectMissing}
           isTaskTitleMissing={isTaskTitleMissing}

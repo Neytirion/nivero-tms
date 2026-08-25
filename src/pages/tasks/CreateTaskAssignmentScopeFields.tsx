@@ -13,7 +13,7 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
       <div className="mt-3 space-y-3">
         {props.useEstimates ? (
           <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Work package *</label>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Work package (optional)</label>
             <select
               value={props.taskWorkPackageId}
               onChange={(event) => props.onTaskWorkPackageIdChange(event.target.value)}
@@ -23,14 +23,14 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
                   : 'border-slate-300'
               }`}
             >
-              <option value="">Select work package</option>
+              <option value="">No work package</option>
               {props.workPackages.map((workPackage) => (
                 <option key={workPackage.id} value={workPackage.id}>
                   {workPackage.name}
                 </option>
               ))}
             </select>
-            {props.workPackages.length === 0 && props.selectedProjectId && props.hasEstimateVersion === true ? (
+            {props.workPackages.length === 0 && props.selectedProjectId ? (
               <p className="mt-1 text-[11px] text-rose-600">
                 No active work packages found. Add packages in Project Details {'->'} Estimates.
               </p>

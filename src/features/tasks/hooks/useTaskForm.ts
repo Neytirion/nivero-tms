@@ -10,13 +10,7 @@ export function useTaskForm() {
   const [taskBlockedByTaskId, setTaskBlockedByTaskId] = useState('')
   const [taskDueDate, setTaskDueDate] = useState('')
 
-  const parsedEstimateHours = Number.parseFloat(taskEstimateHours)
-  const canSubmit =
-    taskTitle.trim().length > 0 &&
-    taskEstimateHours.trim().length > 0 &&
-    taskWorkPackageId.trim().length > 0 &&
-    Number.isFinite(parsedEstimateHours) &&
-    parsedEstimateHours >= 0
+  const canSubmit = taskTitle.trim().length > 0
 
   const reset = () => {
     setTaskTitle('')

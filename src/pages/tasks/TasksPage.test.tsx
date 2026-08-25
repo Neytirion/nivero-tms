@@ -174,7 +174,7 @@ describe('TasksPage', () => {
     expect(firstCallProps.canManageTask(task)).toBe(false)
   })
 
-  it('disables task creation when estimate version is unavailable', async () => {
+  it('keeps task creation available when estimate version is unavailable', async () => {
     mockGetProjectUseEstimates.mockResolvedValue(true)
     mockHasProjectEstimateVersion.mockResolvedValue(false)
     const workspace = createWorkspaceState({
@@ -190,7 +190,7 @@ describe('TasksPage', () => {
     )
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /create a new task/i })).toBeDisabled()
+      expect(screen.getByRole('button', { name: /create a new task/i })).toBeEnabled()
     })
   })
 

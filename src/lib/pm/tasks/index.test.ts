@@ -3,8 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
   from: vi.fn(),
   getUser: vi.fn(),
-  hasProjectEstimateVersion: vi.fn(),
-  getProjectUseEstimates: vi.fn(),
   assertProjectEditable: vi.fn(),
   assertTaskDependencyValid: vi.fn(),
   assertTaskDueDateWithinProjectRange: vi.fn(),
@@ -23,14 +21,6 @@ vi.mock('../../supabase', () => ({
   },
 }))
 
-vi.mock('../estimates', () => ({
-  hasProjectEstimateVersion: mocks.hasProjectEstimateVersion,
-}))
-
-vi.mock('../projects', () => ({
-  getProjectUseEstimates: mocks.getProjectUseEstimates,
-}))
-
 vi.mock('../helpers', () => ({
   assertProjectEditable: mocks.assertProjectEditable,
   assertTaskDependencyValid: mocks.assertTaskDependencyValid,
@@ -47,8 +37,6 @@ describe('pm.tasks', () => {
   beforeEach(() => {
     mocks.from.mockReset()
     mocks.getUser.mockReset()
-    mocks.hasProjectEstimateVersion.mockReset()
-    mocks.getProjectUseEstimates.mockReset()
     mocks.assertProjectEditable.mockReset()
     mocks.assertTaskDependencyValid.mockReset()
     mocks.assertTaskDueDateWithinProjectRange.mockReset()
@@ -58,8 +46,6 @@ describe('pm.tasks', () => {
     mocks.getTaskProjectId.mockReset()
 
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
-    mocks.hasProjectEstimateVersion.mockResolvedValue(true)
-    mocks.getProjectUseEstimates.mockResolvedValue(false)
     mocks.assertProjectEditable.mockResolvedValue(undefined)
     mocks.assertTaskDependencyValid.mockResolvedValue(null)
     mocks.assertTaskDueDateWithinProjectRange.mockResolvedValue(undefined)
@@ -67,19 +53,6 @@ describe('pm.tasks', () => {
     mocks.assertUserCanModifyTask.mockResolvedValue(undefined)
     mocks.canUserAssignTasksInProject.mockResolvedValue(true)
     mocks.getTaskProjectId.mockResolvedValue('p1')
-  })
-
-  it('blocks task creation when estimate version is missing', async () => {
-    mocks.getProjectUseEstimates.mockResolvedValue(true)
-    mocks.hasProjectEstimateVersion.mockResolvedValue(false)
-
-    await expect(
-      createTask({
-        projectId: 'p1',
-        title: 'Implement API',
-        estimateHours: 4,
-      }),
-    ).rejects.toThrow('Cannot create task: create estimate version v1 first')
   })
 
   it('blocks assigning task to another user without permission', async () => {
@@ -245,9 +218,6 @@ describe('pm.tasks', () => {
     })
 
     it('rejects negative estimate hours', async () => {
-      mocks.getProjectUseEstimates.mockResolvedValue(true)
-      mocks.hasProjectEstimateVersion.mockResolvedValue(true)
-
       await expect(
         createTask({
           projectId: 'p1',
@@ -258,9 +228,6 @@ describe('pm.tasks', () => {
     })
 
     it('rejects non-finite estimate hours', async () => {
-      mocks.getProjectUseEstimates.mockResolvedValue(true)
-      mocks.hasProjectEstimateVersion.mockResolvedValue(true)
-
       await expect(
         createTask({
           projectId: 'p1',
@@ -271,9 +238,6 @@ describe('pm.tasks', () => {
     })
 
     it('accepts zero estimate hours', async () => {
-      mocks.getProjectUseEstimates.mockResolvedValue(true)
-      mocks.hasProjectEstimateVersion.mockResolvedValue(true)
-
       const insertedTask = {
         id: 't2',
         title: 'Task',
@@ -307,9 +271,7 @@ describe('pm.tasks', () => {
   })
 
   describe('estimate version requirement', () => {
-    it('allows task creation when project does not use estimates', async () => {
-      mocks.getProjectUseEstimates.mockResolvedValue(false)
-
+    it('allows task creation without estimate hours', async () => {
       const insertedTask = {
         id: 't3',
         title: 'Task',
@@ -342,17 +304,35 @@ describe('pm.tasks', () => {
       expect(result.id).toBe('t3')
     })
 
-    it('requires estimate hours when project uses estimates', async () => {
-      mocks.getProjectUseEstimates.mockResolvedValue(true)
-      mocks.hasProjectEstimateVersion.mockResolvedValue(true)
+    it('skips work package validation when work package is not provided', async () => {
+      const insertedTask = {
+        id: 't4',
+        title: 'Task',
+        estimate_hours: null,
+        project_id: 'p1',
+        created_by: 'u1',
+        status: 'todo',
+        priority: 'medium',
+        assigned_to: null,
+        actual_hours: 0,
+        work_package_id: null,
+        blocked_by_task_id: null,
+        due_date: null,
+        created_at: '2026-06-01T00:00:00.000Z',
+        description: null,
+      }
 
-      await expect(
-        createTask({
-          projectId: 'p1',
-          title: 'Task',
-          // ❌ Missing estimateHours when project requires estimates
-        }),
-      ).rejects.toThrow('Estimated hours is required')
+      const single = vi.fn().mockResolvedValue({ data: insertedTask, error: null })
+      const select = vi.fn().mockReturnValue({ single })
+      const insert = vi.fn().mockReturnValue({ select })
+      mocks.from.mockReturnValue({ insert })
+
+      await createTask({
+        projectId: 'p1',
+        title: 'Task',
+      })
+
+      expect(mocks.assertTaskWorkPackageValid).not.toHaveBeenCalled()
     })
   })
 })

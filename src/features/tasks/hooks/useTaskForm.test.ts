@@ -3,33 +3,25 @@ import { describe, expect, it } from 'vitest'
 import { useTaskForm } from './useTaskForm'
 
 describe('useTaskForm', () => {
-  it('requires title, estimate hours, and work package before submit', () => {
+  it('requires only title before submit', () => {
     const { result } = renderHook(() => useTaskForm())
 
     act(() => {
       result.current.setTaskTitle('Build login page')
-      result.current.setTaskEstimateHours('6')
-    })
-
-    expect(result.current.canSubmit).toBe(false)
-
-    act(() => {
-      result.current.setTaskWorkPackageId('wp-1')
     })
 
     expect(result.current.canSubmit).toBe(true)
   })
 
-  it('rejects invalid estimate values', () => {
+  it('keeps canSubmit true even with invalid estimate value when title is present', () => {
     const { result } = renderHook(() => useTaskForm())
 
     act(() => {
       result.current.setTaskTitle('Build login page')
-      result.current.setTaskWorkPackageId('wp-1')
       result.current.setTaskEstimateHours('-2')
     })
 
-    expect(result.current.canSubmit).toBe(false)
+    expect(result.current.canSubmit).toBe(true)
   })
 
   it('reset clears fields back to defaults', () => {

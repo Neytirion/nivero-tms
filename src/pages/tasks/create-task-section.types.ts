@@ -7,9 +7,7 @@ export type DependencyOption = {
 
 export type CreateTaskSectionProps = {
   useEstimates: boolean
-  hasEstimateVersion: boolean | null
   selectedProjectId: string | null
-  isMemberInSelectedProject: boolean
   selectedProject: ProjectPreview | null
   isProjectMissing: boolean
   isTaskTitleMissing: boolean
@@ -73,7 +71,6 @@ export type PlanningTaskFieldsProps = {
 export type AssignmentScopeFieldsProps = {
   useEstimates: boolean
   selectedProjectId: string | null
-  hasEstimateVersion: boolean | null
   hasAttemptedSubmit: boolean
   isWorkPackageMissing: boolean
   taskWorkPackageId: string
@@ -91,7 +88,6 @@ export type AssignmentScopeFieldsProps = {
 export type CreateTaskFooterProps = {
   selectedProject: ProjectPreview | null
   selectedProjectId: string | null
-  hasEstimateVersion: boolean | null
   canSubmit: boolean
   missingRequiredFields: string[]
   isLoading: boolean

@@ -6,9 +6,7 @@ import type { CreateTaskSectionProps } from './create-task-section.types'
 
 export function CreateTaskSection({
   useEstimates,
-  hasEstimateVersion,
   selectedProjectId,
-  isMemberInSelectedProject,
   selectedProject,
   isProjectMissing,
   isTaskTitleMissing,
@@ -45,7 +43,6 @@ export function CreateTaskSection({
 }: CreateTaskSectionProps) {
   const isCreationBlocked =
     !selectedProjectId ||
-    (useEstimates && hasEstimateVersion !== true) ||
     isLoading
 
   return (
@@ -58,14 +55,6 @@ export function CreateTaskSection({
           </p>
         </div>
       </div>
-
-      {useEstimates && hasEstimateVersion === false && selectedProjectId ? (
-        <p className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
-          {isMemberInSelectedProject
-            ? 'Estimate version is not created yet. Task creation is unavailable.'
-            : 'Create estimate version v1 in Project Details -> Estimates before creating tasks.'}
-        </p>
-      ) : null}
 
       {hasAttemptedSubmit && missingRequiredFields.length > 0 ? (
         <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2.5 text-sm text-rose-700">
@@ -102,7 +91,6 @@ export function CreateTaskSection({
         <CreateTaskAssignmentScopeFields
           useEstimates={useEstimates}
           selectedProjectId={selectedProjectId}
-          hasEstimateVersion={hasEstimateVersion}
           hasAttemptedSubmit={hasAttemptedSubmit}
           isWorkPackageMissing={isWorkPackageMissing}
           taskWorkPackageId={taskWorkPackageId}
@@ -121,7 +109,6 @@ export function CreateTaskSection({
       <CreateTaskFooter
         selectedProject={selectedProject}
         selectedProjectId={selectedProjectId}
-        hasEstimateVersion={hasEstimateVersion}
         canSubmit={canSubmit}
         missingRequiredFields={missingRequiredFields}
         isLoading={isLoading}

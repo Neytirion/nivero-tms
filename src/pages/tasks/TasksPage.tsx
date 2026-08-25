@@ -20,7 +20,6 @@ export function TasksPage() {
     setDragTaskId,
     canManageTask,
     canTakeUnassignedTasks,
-    hasEstimateVersion,
     isWorkPackagesLoading,
     isTaskCardPreferencesLoading,
     currentUserProfile,
@@ -148,7 +147,6 @@ export function TasksPage() {
       {selectedProject && (
         <button
           onClick={() => navigate('/app/tasks/create')}
-          disabled={hasEstimateVersion === false}
           className="fixed bottom-6 right-6 inline-flex items-center gap-2 rounded-full bg-blue-600 p-4 text-white hover:bg-blue-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
           title="Create a new task"
         >

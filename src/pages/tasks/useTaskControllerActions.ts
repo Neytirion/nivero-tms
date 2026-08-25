@@ -5,9 +5,7 @@ interface UseTaskControllerActionsInput {
   selectedProjectId: string | null
   useEstimates: boolean
   hasEstimateVersion: boolean | null
-  isMemberInSelectedProject: boolean
   canSubmit: boolean
-  isWorkPackageMissing: boolean
   taskEstimateHours: string
   taskDueDate: string
   projectStartDate: string
@@ -53,31 +51,8 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
       return false
     }
 
-    if (input.useEstimates && input.hasEstimateVersion === null) {
-      input.setStatus('Checking estimate version...')
-      return false
-    }
-
-    if (input.useEstimates && !input.hasEstimateVersion) {
-      input.setStatus(
-        input.isMemberInSelectedProject
-          ? 'Estimate version is not created yet. Task creation is unavailable.'
-          : 'Create estimate version v1 first before creating tasks',
-      )
-      return false
-    }
-
     if (!input.canSubmit) {
-      input.setStatus(
-        input.useEstimates
-          ? 'Task title, estimated hours, and work package are required'
-          : 'Task title is required',
-      )
-      return false
-    }
-
-    if (input.useEstimates && input.isWorkPackageMissing) {
-      input.setStatus('Work package is required')
+      input.setStatus('Task title is required')
       return false
     }
 
@@ -105,7 +80,7 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
       status: 'backlog',
       priority: input.taskPriority,
       estimateHours: input.taskEstimateHours.trim().length > 0 ? estimateHours : undefined,
-      workPackageId: input.useEstimates ? input.taskWorkPackageId : undefined,
+      workPackageId: input.taskWorkPackageId || undefined,
       assignedTo: input.canAssignAssignee ? input.taskAssigneeId || undefined : undefined,
       blockedByTaskId: input.taskBlockedByTaskId || undefined,
       dueDate: input.taskDueDate || undefined,

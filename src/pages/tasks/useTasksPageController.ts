@@ -112,7 +112,7 @@ export function useTasksPageController() {
     taskWorkPackageId,
   })
 
-  const canSubmit = useEstimates ? baseCanSubmit : taskTitle.trim().length > 0
+  const canSubmit = baseCanSubmit
 
   const canDeleteTaskInView = (task: TaskPreview) => {
     if (isMemberInSelectedProject) {
@@ -165,9 +165,7 @@ export function useTasksPageController() {
       selectedProjectId,
       useEstimates,
       hasEstimateVersion,
-      isMemberInSelectedProject,
       canSubmit,
-      isWorkPackageMissing,
       taskEstimateHours,
       taskDueDate,
       projectStartDate,

@@ -30,6 +30,7 @@ export function CreateTaskCoreFields(props: CoreTaskFieldsProps) {
             placeholder="What exactly needs to be done"
             className="w-full rounded-xl border-2 border-slate-300 bg-gradient-to-b from-slate-50 to-white px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-500 shadow-sm transition focus:border-sky-400 focus:shadow"
           />
+          <p className="mt-1.5 text-xs text-slate-500">Soon: ability to upload files and photos</p>
         </div>
       </div>
     </div>

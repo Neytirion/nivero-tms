@@ -35,9 +35,6 @@ type TaskViewsSectionProps = {
   onMoveTaskToStatus: (taskId: string, status: TaskStatus) => void
   onTaskClick?: (taskId: string) => void
   canManageTask: (task: TaskPreview) => boolean
-  canTakeUnassignedTasks: boolean
-  currentUserId: string | null
-  onTakeTask: (taskId: string) => void
   taskCardFieldPreferences?: ProjectTaskCardFieldPreferences
 }
 
@@ -58,9 +55,6 @@ export function TaskViewsSection({
   onMoveTaskToStatus,
   onTaskClick,
   canManageTask,
-  canTakeUnassignedTasks,
-  currentUserId,
-  onTakeTask,
   taskCardFieldPreferences,
 }: TaskViewsSectionProps) {
   const effectiveTaskCardFieldPreferences = taskCardFieldPreferences ?? DEFAULT_TASK_CARD_FIELD_PREFERENCES
@@ -79,6 +73,11 @@ export function TaskViewsSection({
 
     return task.title
   }
+
+  const sharedQueueTasksViewModel = sharedQueueTasks.map((task) => ({
+    ...task,
+    title: getUnassignedTaskTitle(task),
+  }))
 
   const shouldDeferTaskViews = taskViewMode === 'board' && (isWorkPackagesLoading || isTaskCardPreferencesLoading) && tasks.length > 0
 
@@ -127,10 +126,9 @@ export function TaskViewsSection({
             </div>
           </aside>
         </div>
-      ) : (
-      <div className="grid gap-4 xl:grid-cols-6">
-        <div className="min-w-0 xl:col-span-5">
-          {taskViewMode === 'board' ? (
+      ) : taskViewMode === 'board' ? (
+        <div className="grid gap-4 xl:grid-cols-6">
+          <div className="min-w-0 xl:col-span-5">
             <TaskBoardView
               tasks={assignedTasks}
               assigneeLabelByUserId={assigneeLabelByUserId}
@@ -145,91 +143,97 @@ export function TaskViewsSection({
               canManageTask={canManageTask}
               taskCardFieldPreferences={effectiveTaskCardFieldPreferences}
             />
-          ) : null}
-
-          {taskViewMode === 'list' ? (
-            <TaskListView
-              tasks={assignedTasks}
-              assigneeLabelByUserId={assigneeLabelByUserId}
-              workPackageLabelById={workPackageLabelById}
-              workPackageColorById={workPackageColorById}
-              dependencyLabelByTaskId={dependencyLabelByTaskId}
-              onOpenUserProfile={onOpenUserProfile}
-              onTaskClick={onTaskClick}
-              canManageTask={canManageTask}
-            />
-          ) : null}
-        </div>
-
-        <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3 xl:col-span-1">
-          <div className="mb-2">
-            <h4 className="text-sm font-semibold text-cyan-900">Unassigned Tasks ({sharedQueueTasks.length})</h4>
           </div>
 
-          {sharedQueueTasks.length === 0 ? (
-            <p className="rounded-lg border border-cyan-200 bg-white px-3 py-4 text-center text-xs text-slate-500">
-              No unassigned tasks
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {sharedQueueTasks.map((task) => {
-                const clientIntakeTask = isClientIntakeTask(task)
-
-                return (
-                <div key={task.id} className="space-y-2">
-                  <TaskCard
-                    task={{
-                      ...task,
-                      title: getUnassignedTaskTitle(task),
-                    }}
-                    workPackageLabel={
-                      task.work_package_id
-                        ? (workPackageLabelById[task.work_package_id] ?? null)
-                        : (task.work_package?.name ?? null)
-                    }
-                    workPackageColor={
-                      task.work_package_id
-                        ? (workPackageColorById[task.work_package_id] ?? null)
-                        : (task.work_package?.color ?? null)
-                    }
-                    assigneeUserId={clientIntakeTask ? null : task.created_by}
-                    assigneeLabel={
-                      clientIntakeTask
-                        ? 'Client'
-                        : task.created_by
-                        ? `${assigneeLabelByUserId[task.created_by] ?? task.created_by} (creator)`
-                        : 'Unassigned'
-                    }
-                    assigneeAvatarUrl={
-                      clientIntakeTask
-                        ? null
-                        : (task.created_by ? (assigneeAvatarUrlByUserId[task.created_by] ?? null) : null)
-                    }
-                    onTaskClick={onTaskClick}
-                    onOpenUserProfile={onOpenUserProfile}
-                    isLocked={!canManageTask(task)}
-                    fieldPreferences={effectiveTaskCardFieldPreferences}
-                  />
-
-                  {canTakeUnassignedTasks && currentUserId ? (
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation()
-                        onTakeTask(task.id)
-                      }}
-                      className="w-full rounded-md border border-cyan-300 bg-cyan-100 px-2 py-1 text-xs font-semibold text-cyan-900 hover:bg-cyan-200"
-                    >
-                      Take task
-                    </button>
-                  ) : null}
-                </div>
-                )
-              })}
+          <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3 xl:col-span-1">
+            <div className="mb-2">
+              <h4 className="text-sm font-semibold text-cyan-900">Unassigned Tasks ({sharedQueueTasksViewModel.length})</h4>
             </div>
-          )}
-        </aside>
-      </div>
+
+            {sharedQueueTasksViewModel.length === 0 ? (
+              <p className="rounded-lg border border-cyan-200 bg-white px-3 py-4 text-center text-xs text-slate-500">
+                No unassigned tasks
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {sharedQueueTasksViewModel.map((task) => {
+                  const clientIntakeTask = isClientIntakeTask(task)
+
+                  return (
+                    <TaskCard
+                      key={task.id}
+                      task={task}
+                      workPackageLabel={
+                        task.work_package_id
+                          ? (workPackageLabelById[task.work_package_id] ?? null)
+                          : (task.work_package?.name ?? null)
+                      }
+                      workPackageColor={
+                        task.work_package_id
+                          ? (workPackageColorById[task.work_package_id] ?? null)
+                          : (task.work_package?.color ?? null)
+                      }
+                      assigneeUserId={clientIntakeTask ? null : task.created_by}
+                      assigneeLabel={
+                        clientIntakeTask
+                          ? 'Client'
+                          : task.created_by
+                            ? `${assigneeLabelByUserId[task.created_by] ?? task.created_by} (creator)`
+                            : 'Unassigned'
+                      }
+                      assigneeAvatarUrl={
+                        clientIntakeTask
+                          ? null
+                          : (task.created_by ? (assigneeAvatarUrlByUserId[task.created_by] ?? null) : null)
+                      }
+                      onTaskClick={onTaskClick}
+                      onOpenUserProfile={onOpenUserProfile}
+                      isLocked={!canManageTask(task)}
+                      fieldPreferences={effectiveTaskCardFieldPreferences}
+                    />
+                  )
+                })}
+              </div>
+            )}
+          </aside>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <TaskListView
+            tasks={assignedTasks}
+            assigneeLabelByUserId={assigneeLabelByUserId}
+            workPackageLabelById={workPackageLabelById}
+            workPackageColorById={workPackageColorById}
+            dependencyLabelByTaskId={dependencyLabelByTaskId}
+            onOpenUserProfile={onOpenUserProfile}
+            onTaskClick={onTaskClick}
+            canManageTask={canManageTask}
+          />
+
+          <section className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3">
+            <div className="mb-2">
+              <h4 className="text-sm font-semibold text-cyan-900">Unassigned Tasks ({sharedQueueTasksViewModel.length})</h4>
+            </div>
+
+            {sharedQueueTasksViewModel.length === 0 ? (
+              <p className="rounded-lg border border-cyan-200 bg-white px-3 py-4 text-center text-xs text-slate-500">
+                No unassigned tasks
+              </p>
+            ) : (
+              <TaskListView
+                tasks={sharedQueueTasksViewModel}
+                assigneeLabelByUserId={assigneeLabelByUserId}
+                workPackageLabelById={workPackageLabelById}
+                workPackageColorById={workPackageColorById}
+                dependencyLabelByTaskId={dependencyLabelByTaskId}
+                onOpenUserProfile={onOpenUserProfile}
+                onTaskClick={onTaskClick}
+                canManageTask={canManageTask}
+                showFilters={false}
+              />
+            )}
+          </section>
+        </div>
       )}
     </section>
   )

@@ -1,4 +1,5 @@
 import { TaskViewsSection } from '.'
+import type { TaskStatus } from '../../features/tasks/constants.ts'
 import { UserProfileDialog, WorkspacePageHeader, type UserProfilePreview } from '../../shared/components'
 import { useTasksPageController } from './useTasksPageController'
 import { useEffect, useState } from 'react'
@@ -19,10 +20,8 @@ export function TasksPage() {
     dragTaskId,
     setDragTaskId,
     canManageTask,
-    canTakeUnassignedTasks,
     isWorkPackagesLoading,
     isTaskCardPreferencesLoading,
-    currentUserProfile,
     assigneeLabelByUserId,
     assigneeAvatarUrlByUserId,
     dependencyLabelByTaskId,
@@ -30,7 +29,6 @@ export function TasksPage() {
     workPackageColorById,
     taskCardFieldPreferences,
     moveTaskToStatus,
-    claimTaskHandler,
     selectProject,
     resetPageState,
   } = useTasksPageController()
@@ -112,17 +110,12 @@ export function TasksPage() {
         onOpenUserProfile={openUserProfile}
         dragTaskId={dragTaskId}
         onDragTaskIdChange={setDragTaskId}
-        onMoveTaskToStatus={(taskId, status) => {
+        onMoveTaskToStatus={(taskId: string, status: TaskStatus) => {
           void moveTaskToStatus(taskId, status)
         }}
-        onTaskClick={(taskId) => navigate(`/app/tasks/${taskId}`, { state: { backTo: `/app/tasks?projectId=${selectedProjectId}` } })}
+        onTaskClick={(taskId: string) => navigate(`/app/tasks/${taskId}`, { state: { backTo: `/app/tasks?projectId=${selectedProjectId}` } })}
         canManageTask={canManageTask}
-        canTakeUnassignedTasks={canTakeUnassignedTasks}
-        currentUserId={currentUserProfile?.userId ?? null}
         taskCardFieldPreferences={taskCardFieldPreferences}
-        onTakeTask={(taskId) => {
-          void claimTaskHandler(taskId)
-        }}
       />
 
       <UserProfileDialog

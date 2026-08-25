@@ -11,6 +11,7 @@ interface TaskListViewProps {
   onOpenUserProfile: (userId: string) => void
   onTaskClick?: (taskId: string) => void
   canManageTask: (task: TaskPreview) => boolean
+  showFilters?: boolean
 }
 
 export function TaskListView({
@@ -22,6 +23,7 @@ export function TaskListView({
   onOpenUserProfile,
   onTaskClick,
   canManageTask,
+  showFilters = true,
 }: TaskListViewProps) {
   const [priorityFilter, setPriorityFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'backlog' | 'todo' | 'in_progress' | 'review' | 'done'>('all')
@@ -54,6 +56,7 @@ export function TaskListView({
 
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-200">
+      {showFilters ? (
       <div className="flex flex-wrap items-end gap-2 border-b border-slate-200 bg-slate-50/70 px-3 py-2">
         <label className="flex min-w-[120px] flex-col gap-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
           Priority
@@ -110,6 +113,7 @@ export function TaskListView({
           Reset filters
         </button>
       </div>
+      ) : null}
 
       <table className="min-w-full bg-white text-sm">
         <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
@@ -127,7 +131,7 @@ export function TaskListView({
           {filteredTasks.length === 0 ? (
             <tr>
               <td colSpan={7} className="px-3 py-4 text-center text-slate-500">
-                No tasks match current filters
+                {showFilters ? 'No tasks match current filters' : 'No tasks'}
               </td>
             </tr>
           ) : (

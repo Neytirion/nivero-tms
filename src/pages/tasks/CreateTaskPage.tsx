@@ -75,12 +75,6 @@ export function CreateTaskPage() {
           >
             ← Back to Tasks
           </button>
-          <h1 className="text-3xl font-bold text-slate-900">Create Task</h1>
-          <p className="mt-2 text-slate-600">
-            {useEstimates
-              ? 'Create clear, estimate-linked tasks your team can execute immediately.'
-              : 'Create clear tasks your team can execute immediately.'}
-          </p>
         </div>
 
         <CreateTaskSection

@@ -103,7 +103,7 @@ export function CreateTaskSection({
         <div className="min-w-0 flex-1">
           <div className="grid gap-4 xl:grid-cols-12 xl:items-start">
             {(activeSection === 'basics' || activeSection === 'planning') ? (
-              <div className="space-y-4 xl:col-span-6 2xl:col-span-5">
+              <div className="mx-auto w-full max-w-3xl space-y-4 xl:col-span-8 xl:col-start-3 2xl:col-span-6 2xl:col-start-4">
                 {activeSection === 'basics' ? (
                   <CreateTaskCoreFields
                     selectedProject={selectedProject}

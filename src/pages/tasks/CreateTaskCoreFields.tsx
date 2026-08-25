@@ -7,7 +7,7 @@ export function CreateTaskCoreFields(props: CoreTaskFieldsProps) {
 
       <div className="mt-3 space-y-3">
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Task title</label>
+          <label className="mb-1 block text-sm font-medium text-slate-700">Title</label>
           <input
             type="text"
             value={props.taskTitle}

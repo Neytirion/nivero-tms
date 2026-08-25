@@ -134,11 +134,6 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
       <h4 className="text-sm font-semibold text-slate-900">Assignment & Scope</h4>
-      <p className="mt-1 text-xs text-slate-500">
-        {props.useEstimates
-          ? 'Link the task to estimate scope and optionally set an owner.'
-          : 'Assign dependencies and optionally set an owner.'}
-      </p>
 
       <div className="mt-3 space-y-3">
         {props.canAssignAssignee ? (
@@ -274,7 +269,7 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
         {props.useEstimates ? (
           <div>
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <label className="block text-sm font-medium text-slate-700">Work package (optional)</label>
+              <label className="block text-sm font-medium text-slate-700">Work package</label>
               <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600">
                 Current: {selectedWorkPackage?.name ?? 'No work package'}
               </span>

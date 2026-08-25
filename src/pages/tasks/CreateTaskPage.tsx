@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
 import { useTasksPageController } from './useTasksPageController'
 import { CreateTaskSection } from '.'
+import { WorkspacePageHeader } from '../../shared/components'
 
 export function CreateTaskPage() {
   const navigate = useNavigate()
@@ -12,6 +13,7 @@ export function CreateTaskPage() {
     isLoading,
     selectedProject,
     selectedProjectId,
+    myRoleInSelectedProject,
     useEstimates,
     isProjectMissing,
     isTaskTitleMissing,
@@ -65,17 +67,20 @@ export function CreateTaskPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 py-8">
-      <div className="w-full">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate(activeProjectId ? `/app/tasks?projectId=${activeProjectId}` : '/app/tasks')}
-            className="mb-4 text-sm text-blue-600 hover:text-blue-700 font-medium"
-          >
-            ← Back to Tasks
-          </button>
-        </div>
+    <div className="space-y-5">
+        <WorkspacePageHeader
+          eyebrow="Tasks"
+          title="Create Task"
+          description={selectedProject ? `Project: ${selectedProject.name}` : 'Choose a project to create a task.'}
+          backButton={{
+            label: '← Back to Tasks',
+            onClick: () => navigate(activeProjectId ? `/app/tasks?projectId=${activeProjectId}` : '/app/tasks'),
+          }}
+          badges={[
+            ...(selectedProject?.status ? [{ label: selectedProject.status, tone: 'neutral' as const }] : []),
+            ...(myRoleInSelectedProject ? [{ label: myRoleInSelectedProject, tone: 'cyan' as const }] : []),
+          ]}
+        />
 
         <CreateTaskSection
           useEstimates={useEstimates}
@@ -115,7 +120,6 @@ export function CreateTaskPage() {
           onCreateTask={handleCreateTask}
           onSetHasAttemptedSubmit={setHasAttemptedSubmit}
         />
-      </div>
     </div>
   )
 }

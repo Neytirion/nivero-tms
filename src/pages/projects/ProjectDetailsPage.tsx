@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ProjectDetailsSection } from '../../features/projects/components'
 import type { DetailsTab } from '../../features/projects/components'
-import { ConfirmDialog } from '../../shared/components'
+import { ConfirmDialog, WorkspacePageHeader } from '../../shared/components'
 import { useProjectsPageController } from '../../features/projects/hooks/useProjectsPageController'
 
 const detailsTabs: DetailsTab[] = ['overview', 'collaboration', 'tasks', 'estimates', 'team', 'settings']
@@ -113,29 +113,16 @@ export function ProjectDetailsPage() {
 
   return (
     <div className="space-y-4">
-      <button
-        type="button"
-        onClick={() => navigate('/app/projects')}
-        className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-      >
-        ← Projects
-      </button>
-
-      <div className="px-1">
-        <h1 className="text-xl font-bold text-slate-900">
-          {selectedProject ? selectedProject.name : '—'}
-        </h1>
-        <div className="flex items-center gap-2">
-          {selectedProject && (
-            <span className="text-xs text-slate-400 capitalize">{selectedProject.status ?? 'active'}</span>
-          )}
-          {myRoleInSelectedProject && (
-            <span className="rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-cyan-800">
-              {myRoleInSelectedProject}
-            </span>
-          )}
-        </div>
-      </div>
+      <WorkspacePageHeader
+        eyebrow="Projects"
+        title={selectedProject ? selectedProject.name : 'Project Details'}
+        description="Overview, collaboration, tasks, estimates, team access, and settings in one place."
+        backButton={{ label: '← Projects', onClick: () => navigate('/app/projects') }}
+        badges={[
+          ...(selectedProject?.status ? [{ label: selectedProject.status, tone: 'neutral' as const }] : []),
+          ...(myRoleInSelectedProject ? [{ label: myRoleInSelectedProject, tone: 'cyan' as const }] : []),
+        ]}
+      />
 
       {/* Content + sidebar nav */}
       <div className="flex gap-4 items-start">

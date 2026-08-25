@@ -1,5 +1,6 @@
 export { ConfirmDialog } from './ConfirmDialog'
 export { UserProfileDialog } from './UserProfileDialog'
 export type { UserProfilePreview } from './UserProfileDialog'
+export { WorkspacePageHeader } from './WorkspacePageHeader'
 export { ToastProvider, useToast } from './Toast'
 export type { ToastType } from './Toast'

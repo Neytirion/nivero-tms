@@ -10,6 +10,7 @@ import {
   updateProjectTaskCardFieldPreferences,
 } from '../../lib/pm'
 import { TaskCard } from '../../features/tasks/components/card'
+import { WorkspacePageHeader } from '../../shared/components'
 import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 
 const FIELD_TOGGLE_META: Array<{
@@ -61,8 +62,9 @@ export function TaskCardSettingsPage() {
   const projectIdFromQuery = searchParams.get('projectId')
   const activeProjectId = projectIdFromQuery ?? selectedProjectId
   const selectedProject = projects.find((project) => project.id === activeProjectId) ?? null
+  const activeProjectRole = activeProjectId ? getProjectRole(activeProjectId) : null
   const canManageCardSettings = activeProjectId
-    ? ['owner', 'admin'].includes(getProjectRole(activeProjectId) ?? '')
+    ? ['owner', 'admin'].includes(activeProjectRole ?? '')
     : false
 
   const [isLoading, setIsLoading] = useState(false)
@@ -205,21 +207,20 @@ export function TaskCardSettingsPage() {
 
   return (
     <div className="space-y-5">
-      <section className="page-section bg-[linear-gradient(120deg,rgba(20,184,166,0.08),rgba(14,165,233,0.06))]">
-        <button
-          type="button"
-          onClick={() => navigate(activeProjectId ? `/app/tasks?projectId=${activeProjectId}` : '/app/tasks')}
-          className="mb-4 inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-        >
-          ← Back to Tasks
-        </button>
-
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Task Board</p>
-        <h2 className="mt-1 text-2xl font-bold text-slate-900">Card Settings</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          Configure how task cards look in this project: choose visible fields and tune work package colors.
-        </p>
-      </section>
+      <WorkspacePageHeader
+        eyebrow="Task Board"
+        title="Card Settings"
+        description="Configure how task cards look in this project: choose visible fields and tune work package colors."
+        backButton={{
+          label: '← Back to Tasks',
+          onClick: () => navigate(activeProjectId ? `/app/tasks?projectId=${activeProjectId}` : '/app/tasks'),
+        }}
+        badges={[
+          ...(selectedProject?.status ? [{ label: selectedProject.status, tone: 'neutral' as const }] : []),
+          ...(activeProjectRole ? [{ label: activeProjectRole, tone: 'cyan' as const }] : []),
+        ]}
+        gradientClassName="bg-[linear-gradient(120deg,rgba(20,184,166,0.08),rgba(14,165,233,0.06))]"
+      />
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
         {!selectedProject ? (

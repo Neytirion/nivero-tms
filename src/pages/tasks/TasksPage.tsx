@@ -1,5 +1,5 @@
 import { TaskViewsSection } from '.'
-import { UserProfileDialog, type UserProfilePreview } from '../../shared/components'
+import { UserProfileDialog, WorkspacePageHeader, type UserProfilePreview } from '../../shared/components'
 import { useTasksPageController } from './useTasksPageController'
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
@@ -83,32 +83,25 @@ export function TasksPage() {
 
   return (
     <div className="space-y-5">
-      <section className="page-section bg-[linear-gradient(120deg,rgba(14,116,144,0.08),rgba(16,185,129,0.06))]">
-        {selectedProjectId && (
-          <div className="mb-4 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => navigate(`/app/projects/${selectedProjectId}`)}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-            >
-              ← Back to Project Details
-            </button>
-            {canOpenCardSettings ? (
-              <button
-                type="button"
-                onClick={() => navigate(`/app/tasks/card-settings?projectId=${selectedProjectId}`)}
-                className="inline-flex items-center gap-2 rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-sm font-semibold text-cyan-900 transition hover:bg-cyan-100"
-              >
-                Edit Card Settings
-              </button>
-            ) : null}
-          </div>
-        )}
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Kanban Board</p>
-        <h2 className="mt-1 text-2xl font-bold text-slate-900">
-          {selectedProject?.name || 'Select a project'}
-        </h2>
-      </section>
+      <WorkspacePageHeader
+        eyebrow="Kanban Board"
+        title={selectedProject?.name || 'Select a project'}
+        description="Track delivery, assignments, and due dates in one project-focused board."
+        backButton={selectedProjectId ? { label: '← Back to Project Details', onClick: () => navigate(`/app/projects/${selectedProjectId}`) } : undefined}
+        actions={canOpenCardSettings && selectedProjectId ? (
+          <button
+            type="button"
+            onClick={() => navigate(`/app/tasks/card-settings?projectId=${selectedProjectId}`)}
+            className="inline-flex items-center gap-2 rounded-lg border border-cyan-300 bg-cyan-50 px-3 py-1.5 text-sm font-semibold text-cyan-900 transition hover:bg-cyan-100"
+          >
+            Edit Card Settings
+          </button>
+        ) : null}
+        badges={[
+          ...(selectedProject?.status ? [{ label: selectedProject.status, tone: 'neutral' as const }] : []),
+          ...(myRoleInSelectedProject ? [{ label: myRoleInSelectedProject, tone: 'cyan' as const }] : []),
+        ]}
+      />
 
       <TaskViewsSection
         taskViewMode={taskViewMode}

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AiProjectGeneratorModal } from '../../features/projects/ai'
+import { WorkspacePageHeader } from '../../shared/components'
 import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import type { AiProjectDraft } from '../../lib/ai'
 import { createInitialEstimateVersion } from '../../lib/pm/estimates'
@@ -167,14 +168,12 @@ export function CreateProjectPage() {
     return (
       <div className="min-h-screen bg-slate-50 py-8 px-4">
         <div className="mx-auto max-w-2xl">
-          <div className="mb-4">
-            <button
-              onClick={() => setShowAIMode(false)}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              ← Back to Mode Selection
-            </button>
-          </div>
+          <WorkspacePageHeader
+            eyebrow="Projects"
+            title="Create Project with AI"
+            description="Generate a project draft and review it before creating the final project."
+            backButton={{ label: '← Back to Mode Selection', onClick: () => setShowAIMode(false) }}
+          />
           <AiProjectGeneratorModal
             isOpen
             variant="inline"
@@ -188,7 +187,13 @@ export function CreateProjectPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4">
-      <div className="mx-auto max-w-3xl">
+      <div className="mx-auto max-w-3xl space-y-5">
+        <WorkspacePageHeader
+          eyebrow="Projects"
+          title="Create Project"
+          description="Set project scope, timeline, team invites, and initial estimate baseline."
+          backButton={{ label: '← Projects', onClick: () => navigate('/app/projects') }}
+        />
         <ProjectCreationWizard
           customerSuggestions={customerSuggestions}
           currentUserEmail={currentUserProfile?.email ?? null}

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getUserMentions, markMentionAsRead, type UserMentionPreview } from '../../lib/pm'
+import { WorkspacePageHeader } from '../../shared/components'
 import { supabase } from '../../lib/supabase'
 
 function formatTime(value: string) {
@@ -151,29 +152,34 @@ export function MentionsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">Mentions</h1>
-          <p className="text-sm text-slate-600">Where teammates mentioned you in tasks and project chat.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setShowOnlyUnread((prev) => !prev)}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            {showOnlyUnread ? 'Show all' : 'Show unread only'}
-          </button>
-          <button
-            type="button"
-            onClick={() => void markAllVisibleAsRead()}
-            disabled={isMarkingAllRead || unreadMentions.length === 0}
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
-          >
-            {isMarkingAllRead ? 'Marking…' : 'Mark visible as read'}
-          </button>
-        </div>
-      </div>
+      <WorkspacePageHeader
+        eyebrow="Inbox"
+        title="Mentions"
+        description="Where teammates mentioned you in tasks and project chat."
+        actions={(
+          <>
+            <button
+              type="button"
+              onClick={() => setShowOnlyUnread((prev) => !prev)}
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              {showOnlyUnread ? 'Show all' : 'Show unread only'}
+            </button>
+            <button
+              type="button"
+              onClick={() => void markAllVisibleAsRead()}
+              disabled={isMarkingAllRead || unreadMentions.length === 0}
+              className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+            >
+              {isMarkingAllRead ? 'Marking…' : 'Mark visible as read'}
+            </button>
+          </>
+        )}
+        badges={[
+          { label: `${unreadMentions.length} unread`, tone: 'neutral' },
+          { label: showOnlyUnread ? 'Unread filter' : 'All mentions', tone: 'cyan' },
+        ]}
+      />
 
       {statusMessage ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">

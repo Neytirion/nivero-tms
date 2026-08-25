@@ -3,7 +3,7 @@ import { useTasksPageController } from './useTasksPageController'
 import { useEffect, useMemo, useState } from 'react'
 import { TaskLogTimeModal } from '../../features/tasks/components'
 import { TaskCommentsPanel } from '../../features/tasks/components/comments'
-import { ConfirmDialog, UserProfileDialog, type UserProfilePreview } from '../../shared/components'
+import { ConfirmDialog, UserProfileDialog, WorkspacePageHeader, type UserProfilePreview } from '../../shared/components'
 
 const TASK_DESCRIPTION_MAX_LENGTH = 250
 const TASK_TITLE_MAX_LENGTH = 120
@@ -255,6 +255,7 @@ export function TaskDetailsPage() {
   const {
     isLoading,
     tasks,
+    selectedProject,
     myRoleInSelectedProject,
     canTakeUnassignedTasks,
     canManageTask,
@@ -557,17 +558,21 @@ export function TaskDetailsPage() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e0f2fe_0%,#f8fafc_28%,#f8fafc_100%)]">
-      <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6">
-        <button
-          type="button"
-          onClick={() => navigate(backTo)}
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-        >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          {backTo.startsWith('/app/projects/') ? 'Project Details' : 'Tasks'}
-        </button>
+      <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 space-y-5">
+        <WorkspacePageHeader
+          eyebrow="Tasks"
+          title="Task Details"
+          description={selectedProject ? `Project: ${selectedProject.name}` : 'Task context and execution details.'}
+          backButton={{
+            label: backTo.startsWith('/app/projects/') ? '← Project Details' : '← Tasks',
+            onClick: () => navigate(backTo),
+          }}
+          badges={[
+            ...(selectedProject?.status ? [{ label: selectedProject.status, tone: 'neutral' as const }] : []),
+            ...(myRoleInSelectedProject ? [{ label: myRoleInSelectedProject, tone: 'cyan' as const }] : []),
+          ]}
+          gradientClassName="bg-[linear-gradient(120deg,rgba(14,116,144,0.08),rgba(16,185,129,0.06))]"
+        />
       </div>
 
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">

@@ -1,7 +1,7 @@
 import type { User } from '@supabase/supabase-js'
 import { useEffect, useState } from 'react'
 import { Outlet, useNavigate, useLocation } from 'react-router-dom'
-import { WorkspaceProvider, useWorkspace } from '../features/dashboard/workspace-context.tsx'
+import { WorkspaceProvider, useWorkspace } from '../features/workspace/workspace-context.tsx'
 import { getUnreadUserMentionsCount } from '../lib/pm'
 import { ToastProvider } from '../shared/components'
 

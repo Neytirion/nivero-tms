@@ -9,10 +9,10 @@ import {
   getProjectTaskCardFieldPreferences,
   type ProjectTaskCardFieldPreferences,
 } from '../../lib/pm/work-packages'
-import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
-import { useTaskControllerActions } from './hooks/useTaskControllerActions'
-import { useTaskCreationRequirements } from './hooks/useTaskCreationRequirements'
-import { useTaskWorkPackagesLoader } from './hooks/useTaskWorkPackagesLoader'
+import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
+import { useTaskControllerActions } from '../../features/tasks/hooks/useTaskControllerActions'
+import { useTaskCreationRequirements } from '../../features/tasks/hooks/useTaskCreationRequirements'
+import { useTaskWorkPackagesLoader } from '../../features/tasks/hooks/useTaskWorkPackagesLoader'
 import type { TaskViewMode } from './index'
 
 const DEFAULT_TASK_CARD_FIELD_PREFERENCES: ProjectTaskCardFieldPreferences = {

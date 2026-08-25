@@ -10,7 +10,7 @@ import {
   updateProjectTaskCardFieldPreferences,
 } from '../../lib/pm'
 import { TaskCard } from '../../features/tasks/components/card'
-import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
+import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 
 const FIELD_TOGGLE_META: Array<{
   key: keyof ProjectTaskCardFieldPreferences

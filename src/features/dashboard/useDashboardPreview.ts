@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { useProjectActions } from './useProjectActions'
+import { useProjectActions } from '../projects/hooks/useProjectActions'
 import { createProjectSyncActions } from './project-sync'
 import { useAccessControl } from './useAccessControl'
-import { useWorkspaceAuth } from './useWorkspaceAuth'
+import { useWorkspaceAuth } from '../workspace/useWorkspaceAuth'
 import { useToast } from '../../shared/components'
 import {
   getMyProjects,

@@ -2,7 +2,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { TasksPage } from './TasksPage'
-import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
+import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import { useTaskForm } from '../../features/tasks/hooks/useTaskForm.ts'
 import { createProjectPreview, createWorkspaceState, createTaskPreview } from '../test-helpers.ts'
 import {
@@ -13,7 +13,7 @@ import {
 } from '../../lib/pm'
 import { getProjectTaskCardFieldPreferences } from '../../lib/pm/work-packages'
 
-vi.mock('../../features/dashboard/workspace-context.tsx', () => ({
+vi.mock('../../features/workspace/workspace-context.tsx', () => ({
   useWorkspace: vi.fn(),
 }))
 

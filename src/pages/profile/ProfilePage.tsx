@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
-import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
+import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import { supabase } from '../../lib/supabase'
 import { ConfirmDialog } from '../../shared/components'
 import { useAvatarUpload } from './useAvatarUpload'

@@ -6,7 +6,7 @@ import {
   removeProjectMember,
   updateProjectMemberRole,
   type ProjectMemberListItem,
-} from '../../lib/pm'
+} from '../../../lib/pm'
 
 type SetStatus = (value: string | ((prev: string) => string)) => void
 type SetIsLoading = (value: boolean | ((prev: boolean) => boolean)) => void

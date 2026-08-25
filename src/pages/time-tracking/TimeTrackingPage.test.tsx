@@ -2,11 +2,11 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { TimeTrackingPage } from './TimeTrackingPage'
-import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
+import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import { createTimeEntry, deleteTimeEntry, getProjectTasks, getTimeEntries, updateTimeEntry } from '../../lib/pm'
 import { createProjectPreview, createWorkspaceState } from '../test-helpers.ts'
 
-vi.mock('../../features/dashboard/workspace-context.tsx', () => ({
+vi.mock('../../features/workspace/workspace-context.tsx', () => ({
   useWorkspace: vi.fn(),
 }))
 

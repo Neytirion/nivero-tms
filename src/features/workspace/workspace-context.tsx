@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect } from 'react'
 import type { ReactNode } from 'react'
-import { useDashboardPreview } from './useDashboardPreview'
+import { useDashboardPreview } from '../dashboard/useDashboardPreview'
 import { WorkspaceTasksProvider, useWorkspaceTasks } from './workspace-tasks-context'
 
 /** Core workspace state: projects, auth, permissions, project CRUD */

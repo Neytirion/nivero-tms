@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
+import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import {
   getProjectMembers,
   getProjectTasks,

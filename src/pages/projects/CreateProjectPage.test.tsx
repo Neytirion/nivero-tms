@@ -2,12 +2,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { CreateProjectPage } from './CreateProjectPage'
-import { useWorkspace } from '../../features/dashboard/workspace-context'
+import { useWorkspace } from '../../features/workspace/workspace-context'
 import { createProjectPreview, createWorkspaceState } from '../test-helpers'
 import { inviteProjectMemberByEmail } from '../../lib/pm/members'
 import { getUserProfileByEmail } from '../../lib/pm/members'
 
-vi.mock('../../features/dashboard/workspace-context', () => ({
+vi.mock('../../features/workspace/workspace-context', () => ({
   useWorkspace: vi.fn(),
 }))
 

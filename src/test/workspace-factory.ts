@@ -1,5 +1,5 @@
 import { vi } from 'vitest'
-import type { WorkspaceState } from '../features/dashboard/workspace-context.tsx'
+import type { WorkspaceState } from '../features/workspace/workspace-context.tsx'
 import type { ProjectPreview, TaskPreview } from '../lib/pm'
 
 export function createProjectPreview(overrides: Partial<ProjectPreview> = {}): ProjectPreview {

@@ -7,8 +7,8 @@ import {
   updateProject,
   type TaskPreview,
   type ProjectPreview,
-} from '../../lib/pm'
-import { isTaskClosedStatus } from '../../shared/utils/task-status.ts'
+} from '../../../lib/pm'
+import { isTaskClosedStatus } from '../../../shared/utils/task-status.ts'
 
 type SetStatus = (value: string | ((prev: string) => string)) => void
 type SetIsLoading = (value: boolean | ((prev: boolean) => boolean)) => void

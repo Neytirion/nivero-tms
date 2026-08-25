@@ -2,11 +2,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { ProjectsPage } from './ProjectsPage'
-import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
+import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import { useProjectForm } from '../../features/projects/hooks/useProjectForm.ts'
 import { createProjectPreview, createWorkspaceState } from '../test-helpers.ts'
 
-vi.mock('../../features/dashboard/workspace-context.tsx', () => ({
+vi.mock('../../features/workspace/workspace-context.tsx', () => ({
   useWorkspace: vi.fn(),
 }))
 

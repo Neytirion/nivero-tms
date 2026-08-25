@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
+import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import { deriveBudgetConsumption, deriveForecastCompletionDate, deriveProgress, deriveRisk } from '../../features/projects/utils/project-metrics'
 import { getProjectTasks, type TaskPreview } from '../../lib/pm'
 import { compareDueDateAsc, countTasksDueThisWeek } from './dashboard-page.utils'

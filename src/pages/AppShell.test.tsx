@@ -6,7 +6,7 @@ import { AppShell } from './AppShell'
 
 const mockUseWorkspace = vi.fn()
 
-vi.mock('../features/dashboard/workspace-context.tsx', () => ({
+vi.mock('../features/workspace/workspace-context.tsx', () => ({
   WorkspaceProvider: ({ children }: { children: ReactNode }) => <>{children}</>,
   useWorkspace: () => mockUseWorkspace(),
 }))

@@ -1,6 +1,6 @@
 import { useCallback, useLayoutEffect, useRef } from 'react'
-import { createTask, deleteTask, updateTask, type TaskPreview } from '../../lib/pm'
-import { supabase } from '../../lib/supabase'
+import { createTask, deleteTask, updateTask, type TaskPreview } from '../../../lib/pm'
+import { supabase } from '../../../lib/supabase'
 
 type SetStatus = (value: string | ((prev: string) => string)) => void
 type SetIsLoading = (value: boolean | ((prev: boolean) => boolean)) => void

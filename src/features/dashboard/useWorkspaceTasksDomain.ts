@@ -5,8 +5,8 @@ import {
   type ProjectMemberListItem,
   type TaskPreview,
 } from '../../lib/pm'
-import { useTaskActions } from './useTaskActions'
-import { useMemberActions } from './useMemberActions'
+import { useTaskActions } from '../tasks/hooks/useTaskActions'
+import { useMemberActions } from '../members/hooks/useMemberActions'
 
 export interface WorkspaceTasksDeps {
   selectedProjectId: string | null

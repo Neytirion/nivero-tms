@@ -1,11 +1,11 @@
 import { render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DashboardPage } from './DashboardPage'
-import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
+import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import { getProjectTasks } from '../../lib/pm'
 import { createProjectPreview, createTaskPreview, createWorkspaceState } from '../test-helpers'
 
-vi.mock('../../features/dashboard/workspace-context.tsx', () => ({
+vi.mock('../../features/workspace/workspace-context.tsx', () => ({
   useWorkspace: vi.fn(),
 }))
 

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ResourcePlanningPage } from './ResourcePlanningPage'
-import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
+import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import { getProjectMembers, getProjectTasks, getTimeEntries } from '../../lib/pm'
 import { createProjectPreview, createWorkspaceState } from '../test-helpers'
 
@@ -17,7 +17,7 @@ function startOfWeek(date: Date) {
   return value
 }
 
-vi.mock('../../features/dashboard/workspace-context.tsx', () => ({
+vi.mock('../../features/workspace/workspace-context.tsx', () => ({
   useWorkspace: vi.fn(),
 }))
 

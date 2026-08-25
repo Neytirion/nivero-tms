@@ -1,7 +1,7 @@
 import { KANBAN_COLUMNS, type TaskStatus } from '../../../features/tasks/constants.ts'
 import { KanbanColumn } from '../../../features/tasks/components'
 import type { ProjectTaskCardFieldPreferences, TaskPreview } from '../../../lib/pm'
-import { normalizeTaskStatus, sortTasksForBoardColumn } from '../tasks-page.utils'
+import { normalizeTaskStatus, sortTasksForBoardColumn } from '../utils/tasks-page.utils'
 
 interface TaskBoardViewProps {
   tasks: TaskPreview[]

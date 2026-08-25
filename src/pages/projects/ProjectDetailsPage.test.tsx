@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ProjectDetailsPage } from './ProjectDetailsPage'
-import { useProjectsPageController } from './useProjectsPageController'
+import { useProjectsPageController } from './hooks/useProjectsPageController'
 
 let mockProjectId: string | undefined = 'p1'
 let mockSearchParams = new URLSearchParams()
@@ -59,7 +59,7 @@ vi.mock('../../shared/components', () => ({
   ),
 }))
 
-vi.mock('./useProjectsPageController', () => ({
+vi.mock('./hooks/useProjectsPageController', () => ({
   useProjectsPageController: vi.fn(),
 }))
 

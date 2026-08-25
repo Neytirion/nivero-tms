@@ -1,4 +1,4 @@
-import type { TimeEntryPreview } from '../../lib/pm'
+import type { TimeEntryPreview } from '../../../lib/pm'
 
 export function toDateInputValue(date: Date) {
   return date.toISOString().slice(0, 10)

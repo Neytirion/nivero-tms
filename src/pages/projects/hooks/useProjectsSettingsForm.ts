@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { ProjectPreview } from '../../lib/pm'
+import type { ProjectPreview } from '../../../lib/pm'
 
 interface SettingsDraftState {
   projectId: string | null

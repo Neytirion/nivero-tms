@@ -1,5 +1,5 @@
-import { useWorkspace } from '../../features/dashboard/workspace-context.tsx'
-import { useProjectForm } from '../../features/projects/hooks/useProjectForm.ts'
+import { useWorkspace } from '../../../features/dashboard/workspace-context.tsx'
+import { useProjectForm } from '../../../features/projects/hooks/useProjectForm.ts'
 import { useProjectsPageFilters } from './useProjectsPageFilters'
 import { useProjectsMemberForm } from './useProjectsMemberForm'
 import { useProjectsSettingsForm } from './useProjectsSettingsForm'

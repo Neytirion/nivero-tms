@@ -1,5 +1,5 @@
-import { createTimeEntry, type TaskPreview } from '../../lib/pm'
-import type { TaskStatus } from '../../features/tasks/constants.ts'
+import { createTimeEntry, type TaskPreview } from '../../../lib/pm'
+import type { TaskStatus } from '../../../features/tasks/constants.ts'
 
 interface UseTaskControllerActionsInput {
   selectedProjectId: string | null

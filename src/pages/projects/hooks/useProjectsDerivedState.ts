@@ -1,10 +1,10 @@
-import type { ProjectMemberListItem, ProjectPreview, TaskPreview } from '../../lib/pm'
-import { deriveRisk } from '../../features/projects/utils/project-metrics'
+import type { ProjectMemberListItem, ProjectPreview, TaskPreview } from '../../../lib/pm'
+import { deriveRisk } from '../../../features/projects/utils/project-metrics'
 import {
   hasProjectPermission,
   normalizeProjectRole,
   type ProjectRoleName,
-} from '../../shared/utils/permissions'
+} from '../../../shared/utils/permissions'
 
 interface UseProjectsDerivedStateInput {
   selectedProject: ProjectPreview | null

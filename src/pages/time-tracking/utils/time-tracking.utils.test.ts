@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { TimeEntryPreview } from '../../lib/pm'
+import type { TimeEntryPreview } from '../../../lib/pm'
 import {
   buildWeeklySummary,
   endOfWeek,

@@ -1,4 +1,4 @@
-import type { ProjectPreview } from '../../lib/pm'
+import type { ProjectPreview } from '../../../lib/pm'
 
 type TimeTrackingFiltersProps = {
   projects: ProjectPreview[]

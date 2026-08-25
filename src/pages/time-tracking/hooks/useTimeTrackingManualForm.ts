@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { toDateInputValue } from './time-tracking.utils'
-import type { TimeEntryPreview } from '../../lib/pm'
+import { toDateInputValue } from '../utils/time-tracking.utils'
+import type { TimeEntryPreview } from '../../../lib/pm'
 
 export interface UseTimeTrackingManualFormReturn {
   manualTaskId: string

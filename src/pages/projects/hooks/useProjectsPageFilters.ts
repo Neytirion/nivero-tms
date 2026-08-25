@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import type { DetailsTab } from '../../features/projects/components'
-import type { ProjectPreview } from '../../lib/pm'
+import type { DetailsTab } from '../../../features/projects/components'
+import type { ProjectPreview } from '../../../lib/pm'
 
 export interface UseProjectsPageFiltersReturn {
   searchValue: string

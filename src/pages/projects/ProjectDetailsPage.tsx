@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ProjectDetailsSection } from '../../features/projects/components'
 import type { DetailsTab } from '../../features/projects/components'
 import { ConfirmDialog } from '../../shared/components'
-import { useProjectsPageController } from './useProjectsPageController'
+import { useProjectsPageController } from './hooks/useProjectsPageController'
 
 const detailsTabs: DetailsTab[] = ['overview', 'collaboration', 'tasks', 'estimates', 'team', 'settings']
 

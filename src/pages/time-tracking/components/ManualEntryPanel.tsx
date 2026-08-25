@@ -1,4 +1,4 @@
-import type { TaskPreview } from '../../lib/pm'
+import type { TaskPreview } from '../../../lib/pm'
 
 type ManualEntryPanelProps = {
   activeProjectId: string

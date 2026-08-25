@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ProjectsSummaryCards, ProjectsTable } from '../../features/projects/components'
 import { deriveRisk } from '../../features/projects/utils/project-metrics'
-import { useProjectsPageController } from './useProjectsPageController'
+import { useProjectsPageController } from './hooks/useProjectsPageController'
 
 type ProjectSummaryFilter = 'all' | 'active' | 'completed' | 'risks'
 

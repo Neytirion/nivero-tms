@@ -5,7 +5,7 @@ import {
   type ProjectPreview,
   type TaskPreview,
   type TimeEntryPreview,
-} from '../../lib/pm'
+} from '../../../lib/pm'
 
 interface UseTimeTrackingLoadersInput {
   projects: ProjectPreview[]

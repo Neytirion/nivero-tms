@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
   deleteTimeEntry: vi.fn(),
 }))
 
-vi.mock('../../lib/pm', () => ({
+vi.mock('../../../lib/pm', () => ({
   createTimeEntry: mocks.createTimeEntry,
   updateTimeEntry: mocks.updateTimeEntry,
   deleteTimeEntry: mocks.deleteTimeEntry,

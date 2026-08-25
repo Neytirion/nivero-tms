@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { TimeEntryPreview } from '../../lib/pm'
+import type { TimeEntryPreview } from '../../../lib/pm'
 
 export interface UseTimeTrackingFiltersReturn {
   activeProjectId: string

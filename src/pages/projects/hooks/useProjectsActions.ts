@@ -1,6 +1,6 @@
-import type { AiProjectDraft } from '../../lib/ai'
-import { createProjectFromAiDraft } from '../../lib/ai/ai-mapper'
-import type { ProjectPreview } from '../../lib/pm'
+import type { AiProjectDraft } from '../../../lib/ai'
+import { createProjectFromAiDraft } from '../../../lib/ai/ai-mapper'
+import type { ProjectPreview } from '../../../lib/pm'
 
 export interface UseProjectsActionsInput {
   selectedProjectId: string | null

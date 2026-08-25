@@ -5,7 +5,7 @@ import {
   getProjectWorkPackageDisplayProfileById,
   hasProjectEstimateVersion,
   type WorkPackagePreview,
-} from '../../lib/pm'
+} from '../../../lib/pm'
 
 interface UseTaskWorkPackagesLoaderInput {
   selectedProjectId: string | null

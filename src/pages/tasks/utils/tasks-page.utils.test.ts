@@ -6,7 +6,7 @@ import {
   sortTasksForBoardColumn,
   shiftMonthValue,
 } from './tasks-page.utils'
-import { createTaskPreview } from '../../test/workspace-factory'
+import { createTaskPreview } from '../../../test/workspace-factory'
 
 describe('tasks-page.utils', () => {
   it('normalizes task status aliases', () => {

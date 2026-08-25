@@ -23,6 +23,7 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
   const [roleFilter, setRoleFilter] = useState<string>('all')
   const [memberQuery, setMemberQuery] = useState('')
   const [workPackageQuery, setWorkPackageQuery] = useState('')
+  const [dependencyQuery, setDependencyQuery] = useState('')
 
   const selectedWorkPackage = useMemo(
     () => props.workPackages.find((workPackage) => workPackage.id === props.taskWorkPackageId) ?? null,
@@ -37,6 +38,15 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
 
     return props.workPackages.filter((workPackage) => normalize(workPackage.name).includes(normalizedQuery))
   }, [props.workPackages, workPackageQuery])
+
+  const filteredDependencies = useMemo(() => {
+    const normalizedQuery = normalize(dependencyQuery)
+    if (!normalizedQuery) {
+      return props.dependencyOptions
+    }
+
+    return props.dependencyOptions.filter((task) => normalize(task.label).includes(normalizedQuery))
+  }, [dependencyQuery, props.dependencyOptions])
 
   const displayRoleOptions = useMemo(() => {
     const unique = new Set<string>()
@@ -115,6 +125,11 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
 
     return selected.full_name ?? selected.email ?? selected.user_id ?? 'Unassigned'
   }, [props.projectMembers, props.taskAssigneeId])
+
+  const selectedDependencyLabel = useMemo(() => {
+    const selected = props.dependencyOptions.find((task) => task.id === props.taskBlockedByTaskId)
+    return selected?.label ?? 'None'
+  }, [props.dependencyOptions, props.taskBlockedByTaskId])
 
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -206,19 +221,69 @@ export function CreateTaskAssignmentScopeFields(props: AssignmentScopeFieldsProp
         ) : null}
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-slate-700">Blocked by task</label>
-          <select
-            value={props.taskBlockedByTaskId}
-            onChange={(event) => props.onTaskBlockedByTaskIdChange(event.target.value)}
-            className="h-9 w-full rounded-lg border border-slate-300 bg-white px-2.5 text-sm text-slate-900 outline-none focus:border-slate-500"
-          >
-            <option value="">None</option>
-            {props.dependencyOptions.map((task) => (
-              <option key={task.id} value={task.id}>
-                {task.label}
-              </option>
-            ))}
-          </select>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <label className="block text-sm font-medium text-slate-700">Blocked by task</label>
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+              Current: {selectedDependencyLabel}
+            </span>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-2.5">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => props.onTaskBlockedByTaskIdChange('')}
+                className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${
+                  props.taskBlockedByTaskId
+                    ? 'border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
+                    : 'border-cyan-500 bg-cyan-100 text-cyan-900'
+                }`}
+              >
+                None
+              </button>
+
+              <input
+                type="text"
+                value={dependencyQuery}
+                onChange={(event) => setDependencyQuery(event.target.value)}
+                placeholder="Search task dependency"
+                className="h-8 min-w-[180px] flex-1 rounded-md border border-slate-300 bg-white px-2.5 text-xs text-slate-900 outline-none placeholder:text-slate-400 focus:border-cyan-600"
+              />
+            </div>
+
+            <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+              {filteredDependencies.map((task) => {
+                const isSelected = props.taskBlockedByTaskId === task.id
+
+                return (
+                  <button
+                    key={task.id}
+                    type="button"
+                    onClick={() => props.onTaskBlockedByTaskIdChange(task.id)}
+                    className={`text-left rounded-lg border p-2.5 transition ${
+                      isSelected
+                        ? 'border-cyan-500 bg-cyan-50 shadow-sm'
+                        : 'border-slate-200 bg-white hover:border-cyan-300'
+                    }`}
+                  >
+                    <p className="truncate text-sm font-semibold text-slate-900">{task.label}</p>
+                  </button>
+                )
+              })}
+            </div>
+
+            {props.dependencyOptions.length > 0 && filteredDependencies.length === 0 ? (
+              <p className="mt-2 rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-500">
+                No dependency tasks found for this search.
+              </p>
+            ) : null}
+
+            {props.dependencyOptions.length === 0 ? (
+              <p className="mt-2 rounded-md border border-slate-200 bg-white px-2.5 py-2 text-xs text-slate-500">
+                No available tasks to set as dependency.
+              </p>
+            ) : null}
+          </div>
         </div>
 
         {props.canAssignAssignee ? (

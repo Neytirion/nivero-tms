@@ -39,6 +39,7 @@ export function CreateTaskPage() {
     projectEndDate,
     canAssignAssignee,
     projectMembers,
+    memberDisplayRoleByUserId,
     canSubmit,
     createTaskHandler,
   } = useTasksPageController()
@@ -91,6 +92,7 @@ export function CreateTaskPage() {
           dependencyOptions={dependencyOptions}
           canAssignAssignee={canAssignAssignee}
           projectMembers={projectMembers}
+          memberDisplayRoleByUserId={memberDisplayRoleByUserId}
           missingRequiredFields={missingRequiredFields}
           hasAttemptedSubmit={hasAttemptedSubmit}
           isLoading={isLoading}

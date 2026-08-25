@@ -26,6 +26,7 @@ export function CreateTaskSection({
   dependencyOptions,
   canAssignAssignee,
   projectMembers,
+  memberDisplayRoleByUserId,
   missingRequiredFields,
   hasAttemptedSubmit,
   isLoading,
@@ -100,6 +101,7 @@ export function CreateTaskSection({
           dependencyOptions={dependencyOptions}
           canAssignAssignee={canAssignAssignee}
           projectMembers={projectMembers}
+          memberDisplayRoleByUserId={memberDisplayRoleByUserId}
           onTaskWorkPackageIdChange={onTaskWorkPackageIdChange}
           onTaskBlockedByTaskIdChange={onTaskBlockedByTaskIdChange}
           onTaskAssigneeIdChange={onTaskAssigneeIdChange}

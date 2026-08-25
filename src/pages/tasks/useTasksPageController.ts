@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTaskForm } from '../../features/tasks/hooks/useTaskForm.ts'
 import type { TaskStatus } from '../../features/tasks/constants.ts'
 import {
+  getProjectMemberDisplayRoles,
   type TaskPreview,
 } from '../../lib/pm'
 import {
@@ -50,6 +51,7 @@ export function useTasksPageController() {
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false)
   const [taskViewMode, setTaskViewMode] = useState<TaskViewMode>('board')
   const [optimisticStatusByTaskId, setOptimisticStatusByTaskId] = useState<Record<string, TaskStatus>>({})
+  const [memberDisplayRoleByUserId, setMemberDisplayRoleByUserId] = useState<Record<string, string>>({})
   const [taskCardFieldPreferences, setTaskCardFieldPreferences] = useState<ProjectTaskCardFieldPreferences>(
     DEFAULT_TASK_CARD_FIELD_PREFERENCES,
   )
@@ -133,6 +135,40 @@ export function useTasksPageController() {
     void selectProject(selectedProjectId)
     // Intentionally track selected project only to refresh tasks/members snapshot on page entry.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedProjectId])
+
+  useEffect(() => {
+    if (!selectedProjectId) {
+      return
+    }
+
+    let isMounted = true
+
+    const loadMemberDisplayRoles = async () => {
+      try {
+        const assignments = await getProjectMemberDisplayRoles(selectedProjectId)
+        if (!isMounted) {
+          return
+        }
+
+        setMemberDisplayRoleByUserId(
+          assignments.reduce<Record<string, string>>((acc, item) => {
+            acc[item.user_id] = item.display_role
+            return acc
+          }, {}),
+        )
+      } catch {
+        if (isMounted) {
+          setMemberDisplayRoleByUserId({})
+        }
+      }
+    }
+
+    void loadMemberDisplayRoles()
+
+    return () => {
+      isMounted = false
+    }
   }, [selectedProjectId])
 
   useEffect(() => {
@@ -310,6 +346,7 @@ export function useTasksPageController() {
     setDragTaskId,
     canAssignAssignee,
     canTakeUnassignedTasks: canAssignAssignee,
+    memberDisplayRoleByUserId: selectedProjectId ? memberDisplayRoleByUserId : {},
     canManageTask,
     canDeleteTaskInView,
     projectStartDate,

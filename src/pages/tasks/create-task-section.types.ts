@@ -27,6 +27,7 @@ export type CreateTaskSectionProps = {
   dependencyOptions: DependencyOption[]
   canAssignAssignee: boolean
   projectMembers: ProjectMemberListItem[]
+  memberDisplayRoleByUserId: Record<string, string>
   missingRequiredFields: string[]
   hasAttemptedSubmit: boolean
   isLoading: boolean
@@ -80,6 +81,7 @@ export type AssignmentScopeFieldsProps = {
   dependencyOptions: DependencyOption[]
   canAssignAssignee: boolean
   projectMembers: ProjectMemberListItem[]
+  memberDisplayRoleByUserId: Record<string, string>
   onTaskWorkPackageIdChange: (value: string) => void
   onTaskBlockedByTaskIdChange: (value: string) => void
   onTaskAssigneeIdChange: (value: string) => void

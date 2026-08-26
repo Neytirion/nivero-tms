@@ -38,6 +38,20 @@ vi.mock('../../features/projects/components', () => ({
 }))
 
 vi.mock('../../shared/components', () => ({
+  WorkspacePageHeader: ({
+    title,
+    backButton,
+  }: {
+    title: string
+    backButton?: { label: string; onClick: () => void }
+  }) => (
+    <div>
+      <h1>{title}</h1>
+      {backButton ? (
+        <button type="button" onClick={backButton.onClick}>{backButton.label}</button>
+      ) : null}
+    </div>
+  ),
   ConfirmDialog: ({
     isOpen,
     title,

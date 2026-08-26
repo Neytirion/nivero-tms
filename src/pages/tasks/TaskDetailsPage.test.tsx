@@ -89,7 +89,7 @@ describe('TaskDetailsPage', () => {
   it('falls back to tasks module when no origin is provided', async () => {
     renderTaskDetails('/app/tasks/t1')
 
-    fireEvent.click(screen.getByRole('button', { name: /^tasks$/i }))
+    fireEvent.click(screen.getByRole('button', { name: /tasks/i }))
 
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toBe('/app/tasks')

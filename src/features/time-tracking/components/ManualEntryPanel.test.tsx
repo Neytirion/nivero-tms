@@ -29,6 +29,7 @@ describe('ManualEntryPanel', () => {
     expect(screen.getByRole('combobox', { name: 'Task' })).toHaveDisplayValue('Select a task')
     expect(screen.getByRole('button', { name: 'Save manual entry' })).toBeDisabled()
     expect(screen.getByText('Allowed range: 2026-06-01 - 2026-06-30')).toBeInTheDocument()
+    expect(screen.getByLabelText('Time spent')).toBeInTheDocument()
   })
 
   it('enables submit and propagates changes when a task is selected', () => {

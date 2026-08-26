@@ -313,7 +313,7 @@ describe('TimeTrackingPage', () => {
         .find((element) => element.getAttribute('min') === '2026-06-01')
 
       expect(entryDateInput).toBeDefined()
-      expect(screen.getByDisplayValue('500.00')).toBeInTheDocument()
+      expect(screen.getByDisplayValue('500h')).toBeInTheDocument()
     })
 
     const manualEntryPanel = screen.getByText('Manual Time Entry').closest('article') as HTMLElement
@@ -322,7 +322,7 @@ describe('TimeTrackingPage', () => {
     expect(manualPanel.getByRole('button', { name: 'Update entry' })).toBeDisabled()
     fireEvent.change(manualPanel.getByRole('combobox', { name: 'Task' }), { target: { value: 't1' } })
 
-    fireEvent.change(screen.getByDisplayValue('500.00'), { target: { value: '2' } })
+    fireEvent.change(screen.getByDisplayValue('500h'), { target: { value: '2h' } })
     fireEvent.click(manualPanel.getByRole('button', { name: 'Update entry' }))
 
     await waitFor(() => {
@@ -356,7 +356,7 @@ describe('TimeTrackingPage', () => {
 
     const manualPanel = within(screen.getByText('Manual Time Entry').closest('article') as HTMLElement)
 
-    fireEvent.change(manualPanel.getByLabelText('Hours'), { target: { value: '0' } })
+    fireEvent.change(manualPanel.getByLabelText('Time spent'), { target: { value: '0' } })
 
     expect(manualPanel.getByRole('button', { name: 'Save manual entry' })).toBeDisabled()
     expect(mockCreateTimeEntry).not.toHaveBeenCalled()

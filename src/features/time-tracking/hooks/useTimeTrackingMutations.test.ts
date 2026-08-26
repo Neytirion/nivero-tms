@@ -85,7 +85,7 @@ describe('useTimeTrackingMutations', () => {
       })
     })
 
-    expect(setStatus).toHaveBeenCalledWith('Hours must be greater than 0')
+    expect(setStatus).toHaveBeenCalledWith('Invalid time format. Use 1.5, 1:30, 90m, or 1h 30m')
     expect(mocks.createTimeEntry).not.toHaveBeenCalled()
     expect(onSuccess).not.toHaveBeenCalled()
     expect(refreshAfterSave).not.toHaveBeenCalled()

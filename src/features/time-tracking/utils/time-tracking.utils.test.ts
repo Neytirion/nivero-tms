@@ -4,6 +4,7 @@ import {
   buildWeeklySummary,
   endOfWeek,
   formatHours,
+  parseTimeInputToHours,
   startOfWeek,
   toDateInputValue,
   toHours,
@@ -47,7 +48,19 @@ describe('time-tracking.utils', () => {
 
   it('converts and formats hours from minutes', () => {
     expect(toHours(90)).toBe(1.5)
-    expect(formatHours(90)).toBe('1.50h')
+    expect(formatHours(45)).toBe('45m')
+    expect(formatHours(60)).toBe('1h')
+    expect(formatHours(90)).toBe('1h 30m')
+  })
+
+  it('parses manual time input from multiple formats', () => {
+    expect(parseTimeInputToHours('1.5')).toBe(1.5)
+    expect(parseTimeInputToHours('1,5')).toBe(1.5)
+    expect(parseTimeInputToHours('1:30')).toBe(1.5)
+    expect(parseTimeInputToHours('90m')).toBe(1.5)
+    expect(parseTimeInputToHours('1h 30m')).toBe(1.5)
+    expect(parseTimeInputToHours('2h')).toBe(2)
+    expect(parseTimeInputToHours('bad input')).toBeNull()
   })
 
   it('builds weekly summary totals and daily buckets', () => {

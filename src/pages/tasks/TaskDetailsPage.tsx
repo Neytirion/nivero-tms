@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTasksPageController } from './useTasksPageController'
 import { useEffect, useMemo, useState } from 'react'
-import { TaskLogTimeModal } from '../../features/tasks/components'
+import { useGlobalTaskTimer } from '../../features/time-tracking/global/GlobalTaskTimerContext'
 import { TaskCommentsPanel } from '../../features/tasks/components/comments'
 import { ConfirmDialog, UserProfileDialog, WorkspacePageHeader, type UserProfilePreview } from '../../shared/components'
 
@@ -268,11 +268,10 @@ export function TaskDetailsPage() {
     projectMembers,
     currentUserProfile,
     removeTask,
-    logTimeTask,
-    setLogTimeTask,
-    submitTaskLogTime,
     editTask,
   } = useTasksPageController()
+
+  const { startTimerForTask, timerTaskId, isRunning: isGlobalTimerRunning } = useGlobalTaskTimer()
 
   const task = tasks.find((t) => t.id === taskId)
   const descriptionViewModel = useMemo(() => {
@@ -355,6 +354,7 @@ export function TaskDetailsPage() {
   const canTakeCurrentTask = Boolean(currentUserId && !task.assigned_to && canTakeUnassignedTasks)
   // Time logging is reserved for the assignee after task ownership is explicit.
   const canLogTime = isAssignee && !isLocked
+  const isCurrentTaskInTimer = timerTaskId === task.id
 
   const estimateHours = task.estimate_hours ?? 0
   const actualHours = task.actual_hours ?? 0
@@ -958,13 +958,13 @@ export function TaskDetailsPage() {
                 {canLogTime && (
                   <button
                     type="button"
-                    onClick={() => setLogTimeTask(task)}
+                    onClick={() => startTimerForTask(task)}
                     className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
                   >
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                     </svg>
-                    Log time
+                    {isCurrentTaskInTimer && isGlobalTimerRunning ? 'Timer running' : isCurrentTaskInTimer ? 'Resume timer' : 'Start timer'}
                   </button>
                 )}
               </div>
@@ -1116,13 +1116,6 @@ export function TaskDetailsPage() {
         }}
       />
 
-      <TaskLogTimeModal
-        isOpen={Boolean(logTimeTask)}
-        taskTitle={task.title}
-        onClose={() => setLogTimeTask(null)}
-        onSubmit={submitTaskLogTime}
-        isSubmitting={isLoading}
-      />
     </div>
   )
 }

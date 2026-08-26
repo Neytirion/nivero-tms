@@ -4,6 +4,8 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom'
 import { WorkspaceProvider, useWorkspace } from '../features/workspace/workspace-context.tsx'
 import { getUnreadUserMentionsCount } from '../lib/pm'
 import { ToastProvider } from '../shared/components'
+import { GlobalTaskTimerBar } from '../features/time-tracking/global/GlobalTaskTimerBar'
+import { GlobalTaskTimerProvider } from '../features/time-tracking/global/GlobalTaskTimerContext'
 
 const baseNavItems = [
   { to: '/app/projects', label: 'Projects' },
@@ -27,7 +29,15 @@ export function AppShell({ user }: AppShellProps) {
 function AppShellLayout({ user }: AppShellProps) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { projects, selectedProjectId, getProjectRole } = useWorkspace()
+  const {
+    projects,
+    selectedProjectId,
+    getProjectRole,
+    currentUserId,
+    setStatus,
+    reloadCurrentTasks,
+    loadDashboardPreview,
+  } = useWorkspace()
   const [unreadMentionsCount, setUnreadMentionsCount] = useState(0)
 
   const userId = typeof user.id === 'string' ? user.id : null
@@ -88,7 +98,14 @@ function AppShellLayout({ user }: AppShellProps) {
   }
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_0%_0%,_#cffafe_0%,_#ecfeff_16%,_#f8fafc_56%,_#f1f5f9_100%)]">
+    <GlobalTaskTimerProvider
+      projects={projects}
+      currentUserId={currentUserId}
+      setStatus={setStatus}
+      reloadCurrentTasks={reloadCurrentTasks}
+      loadDashboardPreview={loadDashboardPreview}
+    >
+      <main className="min-h-screen bg-[radial-gradient(circle_at_0%_0%,_#cffafe_0%,_#ecfeff_16%,_#f8fafc_56%,_#f1f5f9_100%)]">
         <section className="w-full min-h-screen bg-white/95">
             <aside className="border-b border-[#cfe5c8] bg-[#e3f1de] px-4 py-5 text-slate-800 lg:fixed lg:inset-y-0 lg:left-0 lg:z-20 lg:h-screen lg:w-[280px] lg:border-b-0 lg:border-r lg:px-5">
               <div className="flex h-full min-h-0 flex-col gap-5">
@@ -202,11 +219,13 @@ function AppShellLayout({ user }: AppShellProps) {
             <div className="min-h-screen lg:pl-[280px]">
               <div className="p-4 md:p-6 lg:p-8">
               <div className="space-y-5">
+                <GlobalTaskTimerBar />
                 <Outlet />
               </div>
             </div>
             </div>
         </section>
       </main>
+    </GlobalTaskTimerProvider>
   )
 }

@@ -2,7 +2,6 @@ import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import { ConfirmDialog } from '../../shared/components'
 import { TimeTrackingFilters } from '../../features/time-tracking/components/TimeTrackingFilters'
 import { ManualEntryPanel } from '../../features/time-tracking/components/ManualEntryPanel'
-import { TimerPanel } from '../../features/time-tracking/components/TimerPanel'
 import { MyLogsSection } from '../../features/time-tracking/sections/MyLogsSection'
 import { WeeklyOverviewSection } from '../../features/time-tracking/sections/WeeklyOverviewSection'
 import { useTimeTrackingController } from '../../features/time-tracking/hooks/useTimeTrackingController'
@@ -28,12 +27,6 @@ export function TimeTrackingPage() {
     manualHours,
     manualIsBillable,
     manualNotes,
-    timerTaskId,
-    timerIsBillable,
-    timerNotes,
-    timerStartedAt,
-    trackedTimerLabel,
-    isTimerSaving,
     weekAnchorDate,
     weekRange,
     visibleEntries,
@@ -45,14 +38,8 @@ export function TimeTrackingPage() {
     setManualHours,
     setManualIsBillable,
     setManualNotes,
-    setTimerTaskId,
-    setTimerIsBillable,
-    setTimerNotes,
     setEntryToDelete,
     submitManualEntry,
-    startTimer,
-    stopAndSaveTimer,
-    cancelTimer,
     cancelEditEntry,
     beginEditEntry,
     deleteEntryHandler,
@@ -82,7 +69,7 @@ export function TimeTrackingPage() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Time Tracking</p>
         <h2 className="mt-1 text-2xl font-bold text-slate-900">Track Work Hours</h2>
         <p className="mt-2 text-sm text-slate-600">
-          Manual entries, timer-based tracking, and weekly timesheet overview.
+          Manual entries and weekly timesheet overview. Active timer is shown globally at the top of the app.
         </p>
       </section>
 
@@ -114,23 +101,6 @@ export function TimeTrackingPage() {
           onManualIsBillableChange={setManualIsBillable}
           onManualNotesChange={setManualNotes}
           onSubmit={() => void submitManualEntry()}
-        />
-
-        <TimerPanel
-          activeProjectId={activeProjectId}
-          trackedTimerLabel={trackedTimerLabel}
-          timerTaskId={timerTaskId}
-          timerIsBillable={timerIsBillable}
-          timerNotes={timerNotes}
-          timerStartedAt={timerStartedAt}
-          isTimerSaving={isTimerSaving}
-          projectTasks={projectTasks}
-          onTimerTaskIdChange={setTimerTaskId}
-          onTimerIsBillableChange={setTimerIsBillable}
-          onTimerNotesChange={setTimerNotes}
-          onStartTimer={startTimer}
-          onStopAndSaveTimer={() => void stopAndSaveTimer()}
-          onCancelTimer={cancelTimer}
         />
       </section>
 

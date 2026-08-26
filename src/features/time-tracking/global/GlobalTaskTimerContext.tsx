@@ -93,7 +93,7 @@ export function GlobalTaskTimerProvider({
   const [activeTask, setActiveTask] = useState<ActiveTimerTask | null>(null)
   const [startedAtMs, setStartedAtMs] = useState<number | null>(null)
   const [elapsedBeforeRunSeconds, setElapsedBeforeRunSeconds] = useState(0)
-  const [tick, setTick] = useState(0)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const [timerNotes, setTimerNotes] = useState('')
   const [timerIsBillable, setTimerIsBillable] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
@@ -103,23 +103,21 @@ export function GlobalTaskTimerProvider({
       return
     }
 
+    const updateElapsed = () => {
+      const runningSeconds = Math.floor((Date.now() - startedAtMs) / 1000)
+      setElapsedSeconds(elapsedBeforeRunSeconds + Math.max(0, runningSeconds))
+    }
+
+    updateElapsed()
+
     const intervalId = window.setInterval(() => {
-      setTick((value) => value + 1)
+      updateElapsed()
     }, 1000)
 
     return () => {
       window.clearInterval(intervalId)
     }
-  }, [startedAtMs])
-
-  const elapsedSeconds = useMemo(() => {
-    if (!startedAtMs) {
-      return elapsedBeforeRunSeconds
-    }
-
-    const runningSeconds = Math.floor((Date.now() - startedAtMs) / 1000)
-    return elapsedBeforeRunSeconds + Math.max(0, runningSeconds)
-  }, [elapsedBeforeRunSeconds, startedAtMs, tick])
+  }, [elapsedBeforeRunSeconds, startedAtMs])
 
   const elapsedLabel = useMemo(() => formatElapsedSeconds(elapsedSeconds), [elapsedSeconds])
 
@@ -127,6 +125,7 @@ export function GlobalTaskTimerProvider({
     setActiveTask(null)
     setStartedAtMs(null)
     setElapsedBeforeRunSeconds(0)
+    setElapsedSeconds(0)
     setTimerNotes('')
     setTimerIsBillable(true)
   }
@@ -169,6 +168,7 @@ export function GlobalTaskTimerProvider({
 
     if (!activeTask) {
       setElapsedBeforeRunSeconds(0)
+      setElapsedSeconds(0)
       setTimerNotes('')
       setTimerIsBillable(true)
     }
@@ -182,7 +182,10 @@ export function GlobalTaskTimerProvider({
       return
     }
 
-    setElapsedBeforeRunSeconds(elapsedSeconds)
+    const runningSeconds = Math.floor((Date.now() - startedAtMs) / 1000)
+    const nextElapsedSeconds = elapsedBeforeRunSeconds + Math.max(0, runningSeconds)
+    setElapsedBeforeRunSeconds(nextElapsedSeconds)
+    setElapsedSeconds(nextElapsedSeconds)
     setStartedAtMs(null)
     setStatus('Timer paused')
   }
@@ -292,6 +295,7 @@ export function GlobalTaskTimerProvider({
   return <GlobalTaskTimerContext.Provider value={value}>{children}</GlobalTaskTimerContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useGlobalTaskTimer() {
   return useContext(GlobalTaskTimerContext)
 }

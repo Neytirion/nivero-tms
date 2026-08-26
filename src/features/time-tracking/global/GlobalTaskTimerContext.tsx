@@ -11,6 +11,14 @@ interface PersistedTimerState {
   timerIsBillable: boolean
 }
 
+interface HydratedTimerState {
+  activeTask: ActiveTimerTask | null
+  startedAtMs: number | null
+  elapsedBeforeRunSeconds: number
+  elapsedSeconds: number
+  timerIsBillable: boolean
+}
+
 interface GlobalTaskTimerProviderProps {
   children: ReactNode
   projects: ProjectPreview[]
@@ -130,6 +138,71 @@ function isMissingTaskReferenceError(error: unknown) {
   return isForeignKeyTaskError || isInvalidTaskIdError || isTaskNotFoundError
 }
 
+function readHydratedTimerState(): HydratedTimerState {
+  if (typeof window === 'undefined') {
+    return {
+      activeTask: null,
+      startedAtMs: null,
+      elapsedBeforeRunSeconds: 0,
+      elapsedSeconds: 0,
+      timerIsBillable: true,
+    }
+  }
+
+  try {
+    const raw = window.localStorage.getItem(TIMER_STORAGE_KEY)
+    if (!raw) {
+      return {
+        activeTask: null,
+        startedAtMs: null,
+        elapsedBeforeRunSeconds: 0,
+        elapsedSeconds: 0,
+        timerIsBillable: true,
+      }
+    }
+
+    const parsed: unknown = JSON.parse(raw)
+    if (!isValidPersistedTimerState(parsed)) {
+      window.localStorage.removeItem(TIMER_STORAGE_KEY)
+      return {
+        activeTask: null,
+        startedAtMs: null,
+        elapsedBeforeRunSeconds: 0,
+        elapsedSeconds: 0,
+        timerIsBillable: true,
+      }
+    }
+
+    if (parsed.startedAtMs) {
+      const runningSeconds = Math.max(0, Math.floor((Date.now() - parsed.startedAtMs) / 1000))
+      return {
+        activeTask: parsed.activeTask,
+        startedAtMs: parsed.startedAtMs,
+        elapsedBeforeRunSeconds: parsed.elapsedBeforeRunSeconds,
+        elapsedSeconds: parsed.elapsedBeforeRunSeconds + runningSeconds,
+        timerIsBillable: parsed.timerIsBillable,
+      }
+    }
+
+    return {
+      activeTask: parsed.activeTask,
+      startedAtMs: null,
+      elapsedBeforeRunSeconds: parsed.elapsedBeforeRunSeconds,
+      elapsedSeconds: parsed.elapsedBeforeRunSeconds,
+      timerIsBillable: parsed.timerIsBillable,
+    }
+  } catch {
+    window.localStorage.removeItem(TIMER_STORAGE_KEY)
+    return {
+      activeTask: null,
+      startedAtMs: null,
+      elapsedBeforeRunSeconds: 0,
+      elapsedSeconds: 0,
+      timerIsBillable: true,
+    }
+  }
+}
+
 const GlobalTaskTimerContext = createContext<GlobalTaskTimerContextValue>(defaultGlobalTaskTimerContext)
 
 export function GlobalTaskTimerProvider({
@@ -140,44 +213,14 @@ export function GlobalTaskTimerProvider({
   reloadCurrentTasks = async () => undefined,
   loadDashboardPreview = async () => undefined,
 }: GlobalTaskTimerProviderProps) {
-  const [activeTask, setActiveTask] = useState<ActiveTimerTask | null>(null)
-  const [startedAtMs, setStartedAtMs] = useState<number | null>(null)
-  const [elapsedBeforeRunSeconds, setElapsedBeforeRunSeconds] = useState(0)
-  const [elapsedSeconds, setElapsedSeconds] = useState(0)
-  const [timerIsBillable, setTimerIsBillable] = useState(true)
+  const [hydratedState] = useState(readHydratedTimerState)
+  const [activeTask, setActiveTask] = useState<ActiveTimerTask | null>(hydratedState.activeTask)
+  const [startedAtMs, setStartedAtMs] = useState<number | null>(hydratedState.startedAtMs)
+  const [elapsedBeforeRunSeconds, setElapsedBeforeRunSeconds] = useState(hydratedState.elapsedBeforeRunSeconds)
+  const [elapsedSeconds, setElapsedSeconds] = useState(hydratedState.elapsedSeconds)
+  const [timerIsBillable, setTimerIsBillable] = useState(hydratedState.timerIsBillable)
   const [isSaving, setIsSaving] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
-
-  useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(TIMER_STORAGE_KEY)
-      if (!raw) {
-        return
-      }
-
-      const parsed: unknown = JSON.parse(raw)
-      if (!isValidPersistedTimerState(parsed)) {
-        window.localStorage.removeItem(TIMER_STORAGE_KEY)
-        return
-      }
-
-      setActiveTask(parsed.activeTask)
-      setElapsedBeforeRunSeconds(parsed.elapsedBeforeRunSeconds)
-      setTimerIsBillable(parsed.timerIsBillable)
-
-      if (parsed.startedAtMs) {
-        const now = Date.now()
-        const runningSeconds = Math.max(0, Math.floor((now - parsed.startedAtMs) / 1000))
-        setStartedAtMs(parsed.startedAtMs)
-        setElapsedSeconds(parsed.elapsedBeforeRunSeconds + runningSeconds)
-      } else {
-        setStartedAtMs(null)
-        setElapsedSeconds(parsed.elapsedBeforeRunSeconds)
-      }
-    } catch {
-      window.localStorage.removeItem(TIMER_STORAGE_KEY)
-    }
-  }, [])
 
   useEffect(() => {
     if (!activeTask) {
@@ -216,6 +259,14 @@ export function GlobalTaskTimerProvider({
     }
   }, [elapsedBeforeRunSeconds, startedAtMs])
 
+  const clearTimerState = () => {
+    setActiveTask(null)
+    setStartedAtMs(null)
+    setElapsedBeforeRunSeconds(0)
+    setElapsedSeconds(0)
+    setTimerIsBillable(true)
+  }
+
   useEffect(() => {
     const onTaskDeleted = (event: Event) => {
       const customEvent = event as CustomEvent<{ taskId?: string }>
@@ -239,14 +290,6 @@ export function GlobalTaskTimerProvider({
   }, [activeTask, setStatus])
 
   const elapsedLabel = useMemo(() => formatElapsedSeconds(elapsedSeconds), [elapsedSeconds])
-
-  const clearTimerState = () => {
-    setActiveTask(null)
-    setStartedAtMs(null)
-    setElapsedBeforeRunSeconds(0)
-    setElapsedSeconds(0)
-    setTimerIsBillable(true)
-  }
 
   const startTimerForTask = (task: TaskPreview) => {
     if (!currentUserId) {

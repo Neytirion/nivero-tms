@@ -1,7 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthPage } from './pages/auth/AuthPage.tsx'
 import { AppShell } from './pages/AppShell.tsx'
-import { DashboardPage } from './pages/dashboard/DashboardPage.tsx'
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage.tsx'
 import { ProfilePage } from './pages/profile/ProfilePage.tsx'
 import { ProjectsPage } from './pages/projects/ProjectsPage.tsx'
@@ -45,7 +44,6 @@ function App() {
           path="/app"
           element={user ? <AppShell user={user} /> : <Navigate to="/auth" replace />}
         >
-          <Route path="dashboard" element={<DashboardPage />} />
           <Route path="profile" element={<ProfilePage user={user!} />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="projects/create" element={<CreateProjectPage />} />

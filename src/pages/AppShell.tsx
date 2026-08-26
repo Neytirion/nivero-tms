@@ -7,7 +7,6 @@ import { ToastProvider } from '../shared/components'
 
 const baseNavItems = [
   { to: '/app/projects', label: 'Projects' },
-  { to: '/app/dashboard', label: 'Dashboard' },
   { to: '/app/time-tracking', label: 'Time Tracking' },
 ]
 
@@ -95,7 +94,7 @@ function AppShellLayout({ user }: AppShellProps) {
               <div className="flex h-full min-h-0 flex-col gap-5">
                 <button
                   type="button"
-                  onClick={() => navigate('/app/dashboard')}
+                  onClick={() => navigate('/app/projects')}
                   className="text-left text-base font-semibold text-slate-900 hover:text-slate-700"
                 >
                   Nivero PM Tool
@@ -122,7 +121,7 @@ function AppShellLayout({ user }: AppShellProps) {
                       <nav className="space-y-2">
                         {activeNavItems.map((item) => {
                           const isActive = location.pathname === item.to
-                          const isDemoModule = item.to === '/app/dashboard' || item.to === '/app/time-tracking' || item.to === '/app/resources'
+                          const isDemoModule = item.to === '/app/time-tracking' || item.to === '/app/resources'
                           return (
                             <button
                               key={item.to}

@@ -31,6 +31,7 @@ interface GlobalTaskTimerContextValue {
   isRunning: boolean
   isPaused: boolean
   isSaving: boolean
+  lastSavedAt: number | null
   startTimerForTask: (task: TaskPreview) => void
   pauseTimer: () => void
   resumeTimer: () => void
@@ -53,6 +54,7 @@ const defaultGlobalTaskTimerContext: GlobalTaskTimerContextValue = {
   isRunning: false,
   isPaused: false,
   isSaving: false,
+  lastSavedAt: null,
   startTimerForTask: () => undefined,
   pauseTimer: () => undefined,
   resumeTimer: () => undefined,
@@ -97,6 +99,7 @@ export function GlobalTaskTimerProvider({
   const [timerNotes, setTimerNotes] = useState('')
   const [timerIsBillable, setTimerIsBillable] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
 
   useEffect(() => {
     if (!startedAtMs) {
@@ -212,24 +215,35 @@ export function GlobalTaskTimerProvider({
       return
     }
 
-    if (elapsedSeconds <= 0) {
+    const effectiveElapsedSeconds = startedAtMs
+      ? elapsedBeforeRunSeconds + Math.max(0, Math.floor((Date.now() - startedAtMs) / 1000))
+      : elapsedBeforeRunSeconds
+
+    if (effectiveElapsedSeconds <= 0) {
       setStatus('Timer has no tracked time yet')
       return
     }
 
     setIsSaving(true)
 
+    const endedAt = new Date()
+    const startedAt = new Date(endedAt.getTime() - (effectiveElapsedSeconds * 1000))
+
     try {
       await createTimeEntry({
         projectId: activeTask.projectId,
         taskId: activeTask.taskId,
         entryDate: toEntryDate(),
-        hoursSpent: Math.max(1 / 60, elapsedSeconds / 3600),
+        hoursSpent: effectiveElapsedSeconds / 3600,
+        durationSeconds: effectiveElapsedSeconds,
         isBillable: timerIsBillable,
         notes: timerNotes,
+        startedAt: startedAt.toISOString(),
+        endedAt: endedAt.toISOString(),
       })
 
       await refreshAfterSave()
+      setLastSavedAt(Date.now())
       setStatus(`Timer saved: ${activeTask.taskTitle}`)
       clearTimerState()
     } catch (error) {
@@ -262,6 +276,7 @@ export function GlobalTaskTimerProvider({
       })
 
       await refreshAfterSave()
+      setLastSavedAt(Date.now())
       setStatus(`Manual time saved: ${activeTask.taskTitle}`)
     } catch (error) {
       setStatus(error instanceof Error ? `Manual time save error: ${error.message}` : 'Manual time save error')
@@ -283,6 +298,7 @@ export function GlobalTaskTimerProvider({
     isRunning: Boolean(activeTask && startedAtMs),
     isPaused: Boolean(activeTask && !startedAtMs),
     isSaving,
+    lastSavedAt,
     startTimerForTask,
     pauseTimer,
     resumeTimer,

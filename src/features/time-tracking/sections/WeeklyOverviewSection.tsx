@@ -1,11 +1,11 @@
 import type { ProjectPreview, TimeEntryPreview } from '../../../lib/pm'
-import { formatDurationFromMinutes, formatHours } from '../utils/time-tracking.utils'
+import { formatDurationFromSeconds, getEntryDurationSeconds } from '../utils/time-tracking.utils'
 
 type WeeklySummary = {
   byDay: Record<string, number>
-  totalMinutes: number
-  billableMinutes: number
-  nonBillableMinutes: number
+  totalSeconds: number
+  billableSeconds: number
+  nonBillableSeconds: number
 }
 
 type WeeklyOverviewSectionProps = {
@@ -30,12 +30,12 @@ export function WeeklyOverviewSection({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-sm font-semibold text-slate-900">Weekly Timesheet Overview</h3>
         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600">
-          <span className="rounded-full bg-slate-100 px-2 py-1">Total: {formatHours(weeklySummary.totalMinutes)}</span>
+          <span className="rounded-full bg-slate-100 px-2 py-1">Total: {formatDurationFromSeconds(weeklySummary.totalSeconds)}</span>
           <span className="rounded-full bg-emerald-100 px-2 py-1 text-emerald-800">
-            Billable: {formatHours(weeklySummary.billableMinutes)}
+            Billable: {formatDurationFromSeconds(weeklySummary.billableSeconds)}
           </span>
           <span className="rounded-full bg-amber-100 px-2 py-1 text-amber-800">
-            Non-billable: {formatHours(weeklySummary.nonBillableMinutes)}
+            Non-billable: {formatDurationFromSeconds(weeklySummary.nonBillableSeconds)}
           </span>
         </div>
       </div>
@@ -88,7 +88,7 @@ export function WeeklyOverviewSection({
                         {entry.is_billable ? 'Billable' : 'Non-billable'}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-slate-700">{formatDurationFromMinutes(entry.minutes_spent)}</td>
+                    <td className="px-3 py-2 text-slate-700">{formatDurationFromSeconds(getEntryDurationSeconds(entry))}</td>
                     <td className="px-3 py-2 text-slate-500">{entry.notes || '—'}</td>
                   </tr>
                 )
@@ -106,10 +106,10 @@ export function WeeklyOverviewSection({
           ) : (
             Object.entries(weeklySummary.byDay)
               .sort(([left], [right]) => left.localeCompare(right))
-              .map(([date, minutes]) => (
+              .map(([date, seconds]) => (
                 <div key={date} className="rounded-md border border-slate-200 bg-white px-2 py-1.5">
                   <p className="text-[11px] text-slate-500">{date}</p>
-                  <p className="text-sm font-semibold text-slate-800">{formatHours(minutes)}</p>
+                  <p className="text-sm font-semibold text-slate-800">{formatDurationFromSeconds(seconds)}</p>
                 </div>
               ))
           )}

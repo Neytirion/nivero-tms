@@ -28,20 +28,37 @@ export function formatHours(minutes: number) {
   return formatDurationFromMinutes(minutes)
 }
 
-export function formatDurationFromMinutes(minutes: number) {
-  const safeMinutes = Math.max(0, Math.round(minutes))
-  const hoursPart = Math.floor(safeMinutes / 60)
-  const minutesPart = safeMinutes % 60
+export function formatDurationFromSeconds(seconds: number) {
+  const safeSeconds = Math.max(0, Math.round(seconds))
+  const hoursPart = Math.floor(safeSeconds / 3600)
+  const minutesPart = Math.floor((safeSeconds % 3600) / 60)
+  const secondsPart = safeSeconds % 60
 
-  if (hoursPart === 0) {
-    return `${minutesPart}m`
-  }
+  if (hoursPart > 0) {
+    if (secondsPart > 0) {
+      return `${hoursPart}h ${minutesPart}m ${secondsPart}s`
+    }
 
-  if (minutesPart === 0) {
+    if (minutesPart > 0) {
+      return `${hoursPart}h ${minutesPart}m`
+    }
+
     return `${hoursPart}h`
   }
 
-  return `${hoursPart}h ${minutesPart}m`
+  if (minutesPart > 0) {
+    if (secondsPart > 0) {
+      return `${minutesPart}m ${secondsPart}s`
+    }
+
+    return `${minutesPart}m`
+  }
+
+  return `${secondsPart}s`
+}
+
+export function formatDurationFromMinutes(minutes: number) {
+  return formatDurationFromSeconds(minutes * 60)
 }
 
 export function formatDurationFromHours(hours: number) {
@@ -88,24 +105,37 @@ export function parseTimeInputToHours(input: string): number | null {
   return null
 }
 
+export function getEntryDurationSeconds(entry: Pick<TimeEntryPreview, 'minutes_spent' | 'started_at' | 'ended_at'>) {
+  if (entry.started_at && entry.ended_at) {
+    const startedMs = Date.parse(entry.started_at)
+    const endedMs = Date.parse(entry.ended_at)
+
+    if (Number.isFinite(startedMs) && Number.isFinite(endedMs) && endedMs > startedMs) {
+      return Math.floor((endedMs - startedMs) / 1000)
+    }
+  }
+
+  return Math.max(0, Math.round(entry.minutes_spent * 60))
+}
+
 export function buildWeeklySummary(entries: TimeEntryPreview[]) {
   const byDay = entries.reduce<Record<string, number>>((acc, entry) => {
     const key = entry.entry_date
-    acc[key] = (acc[key] ?? 0) + entry.minutes_spent
+    acc[key] = (acc[key] ?? 0) + getEntryDurationSeconds(entry)
     return acc
   }, {})
 
-  const totalMinutes = entries.reduce((sum, entry) => sum + entry.minutes_spent, 0)
-  const billableMinutes = entries
+  const totalSeconds = entries.reduce((sum, entry) => sum + getEntryDurationSeconds(entry), 0)
+  const billableSeconds = entries
     .filter((entry) => entry.is_billable)
-    .reduce((sum, entry) => sum + entry.minutes_spent, 0)
+    .reduce((sum, entry) => sum + getEntryDurationSeconds(entry), 0)
 
-  const nonBillableMinutes = totalMinutes - billableMinutes
+  const nonBillableSeconds = totalSeconds - billableSeconds
 
   return {
     byDay,
-    totalMinutes,
-    billableMinutes,
-    nonBillableMinutes,
+    totalSeconds,
+    billableSeconds,
+    nonBillableSeconds,
   }
 }

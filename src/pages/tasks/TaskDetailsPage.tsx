@@ -2,7 +2,8 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTasksPageController } from './useTasksPageController'
 import { useEffect, useMemo, useState } from 'react'
 import { useGlobalTaskTimer } from '../../features/time-tracking/global/GlobalTaskTimerContext'
-import { formatDurationFromHours } from '../../features/time-tracking/utils/time-tracking.utils'
+import { getTimeEntries } from '../../lib/pm'
+import { formatDurationFromSeconds, getEntryDurationSeconds } from '../../features/time-tracking/utils/time-tracking.utils'
 import { TaskCommentsPanel } from '../../features/tasks/components/comments'
 import { ConfirmDialog, UserProfileDialog, WorkspacePageHeader, type UserProfilePreview } from '../../shared/components'
 
@@ -244,6 +245,7 @@ export function TaskDetailsPage() {
   const [isTaskEditing, setIsTaskEditing] = useState(false)
   const [isTaskSaving, setIsTaskSaving] = useState(false)
   const [previewAttachment, setPreviewAttachment] = useState<ParsedAttachment | null>(null)
+  const [preciseLoggedByTaskId, setPreciseLoggedByTaskId] = useState<{ taskId: string; seconds: number } | null>(null)
 
   const backTo =
     typeof location.state === 'object' &&
@@ -272,7 +274,7 @@ export function TaskDetailsPage() {
     editTask,
   } = useTasksPageController()
 
-  const { startTimerForTask, timerTaskId, isRunning: isGlobalTimerRunning } = useGlobalTaskTimer()
+  const { startTimerForTask, timerTaskId, isRunning: isGlobalTimerRunning, lastSavedAt } = useGlobalTaskTimer()
 
   const task = tasks.find((t) => t.id === taskId)
   const descriptionViewModel = useMemo(() => {
@@ -321,6 +323,43 @@ export function TaskDetailsPage() {
     }
   }, [previewAttachment])
 
+  useEffect(() => {
+    if (!task?.project_id || !task?.id) {
+      return
+    }
+
+    const projectId = task.project_id
+    const taskId = task.id
+
+    let cancelled = false
+
+    const loadTaskTimeEntries = async () => {
+      try {
+        const entries = await getTimeEntries({
+          projectId,
+          taskId,
+        })
+
+        if (cancelled) {
+          return
+        }
+
+        const totalSeconds = entries.reduce((sum, entry) => sum + getEntryDurationSeconds(entry), 0)
+        setPreciseLoggedByTaskId({ taskId, seconds: totalSeconds })
+      } catch {
+        if (!cancelled) {
+          setPreciseLoggedByTaskId(null)
+        }
+      }
+    }
+
+    void loadTaskTimeEntries()
+
+    return () => {
+      cancelled = true
+    }
+  }, [task?.id, task?.project_id, lastSavedAt])
+
   if (!task) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-slate-50">
@@ -359,13 +398,17 @@ export function TaskDetailsPage() {
 
   const estimateHours = task.estimate_hours ?? 0
   const actualHours = task.actual_hours ?? 0
-  const remainingHours = Math.max(0, Math.round((estimateHours - actualHours) * 100) / 100)
-  const overBudgetHours = Math.max(0, actualHours - estimateHours)
-  const estimateDurationLabel = formatDurationFromHours(estimateHours)
-  const actualDurationLabel = formatDurationFromHours(actualHours)
-  const remainingDurationLabel = formatDurationFromHours(remainingHours)
-  const overBudgetDurationLabel = formatDurationFromHours(overBudgetHours)
-  const isOverBudget = estimateHours > 0 && actualHours > estimateHours
+  const preciseLoggedSeconds = preciseLoggedByTaskId?.taskId === task.id ? preciseLoggedByTaskId.seconds : null
+  const estimateSeconds = Math.max(0, Math.round(estimateHours * 3600))
+  const fallbackActualSeconds = Math.max(0, Math.round(actualHours * 3600))
+  const actualSeconds = preciseLoggedSeconds ?? fallbackActualSeconds
+  const remainingSeconds = Math.max(0, estimateSeconds - actualSeconds)
+  const overBudgetSeconds = Math.max(0, actualSeconds - estimateSeconds)
+  const estimateDurationLabel = formatDurationFromSeconds(estimateSeconds)
+  const actualDurationLabel = formatDurationFromSeconds(actualSeconds)
+  const remainingDurationLabel = formatDurationFromSeconds(remainingSeconds)
+  const overBudgetDurationLabel = formatDurationFromSeconds(overBudgetSeconds)
+  const isOverBudget = estimateSeconds > 0 && actualSeconds > estimateSeconds
   const normalizedRole = (myRoleInSelectedProject ?? '').toLowerCase()
   const isOwnerOrAdmin = normalizedRole === 'owner' || normalizedRole === 'admin'
   const canEditEstimateHours = !isLocked && isOwnerOrAdmin
@@ -378,8 +421,8 @@ export function TaskDetailsPage() {
   const descriptionFileAttachments = attachments.filter((attachment) => !attachment.isImage)
   const clientRequestImageAttachments = clientRequestAttachments.filter((attachment) => attachment.isImage)
   const clientRequestFileAttachments = clientRequestAttachments.filter((attachment) => !attachment.isImage)
-  const progressPct = estimateHours > 0
-    ? Math.min(100, Math.round((actualHours / estimateHours) * 100))
+  const progressPct = estimateSeconds > 0
+    ? Math.min(100, Math.round((actualSeconds / estimateSeconds) * 100))
     : 0
 
   const openUserProfile = (userId: string) => {

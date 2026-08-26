@@ -20,6 +20,10 @@ export async function getTimeEntries(input: GetTimeEntriesInput = {}) {
     query = query.eq('project_id', input.projectId)
   }
 
+  if (input.taskId) {
+    query = query.eq('task_id', input.taskId)
+  }
+
   if (input.fromDate) {
     query = query.gte('entry_date', input.fromDate)
   }
@@ -50,8 +54,20 @@ export async function createTimeEntry(input: CreateTimeEntryInput) {
     throw new Error('User is not authenticated')
   }
 
-  const minutesSpent = Math.round(input.hoursSpent * 60)
-  if (minutesSpent <= 0) {
+  const hasExplicitSeconds = Number.isFinite(input.durationSeconds)
+  const durationSeconds = hasExplicitSeconds
+    ? Math.max(0, Math.round(input.durationSeconds as number))
+    : null
+
+  if (hasExplicitSeconds && durationSeconds === 0) {
+    throw new Error('Duration must be greater than 0 seconds')
+  }
+
+  const minutesSpent = durationSeconds !== null
+    ? Math.floor(durationSeconds / 60)
+    : Math.round(input.hoursSpent * 60)
+
+  if (!hasExplicitSeconds && minutesSpent <= 0) {
     throw new Error('Hours spent must be greater than 0')
   }
 
@@ -65,6 +81,8 @@ export async function createTimeEntry(input: CreateTimeEntryInput) {
       minutes_spent: minutesSpent,
       is_billable: input.isBillable,
       notes: input.notes?.trim() ? input.notes.trim() : null,
+      started_at: input.startedAt ?? null,
+      ended_at: input.endedAt ?? null,
     })
     .select(timeEntrySelect)
     .single()

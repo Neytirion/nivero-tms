@@ -173,4 +173,137 @@ describe('GlobalTaskTimerContext', () => {
 
     vi.useRealTimers()
   })
+
+  it('saves timer as unlinked when active task was deleted', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-26T10:00:00.000Z'))
+
+    mocks.createTimeEntry
+      .mockRejectedValueOnce(new Error('insert or update on table "time_entries" violates foreign key constraint "time_entries_task_id_fkey"'))
+      .mockResolvedValueOnce({ id: 'te-1' })
+
+    const setStatus = vi.fn()
+    const projects = [{ id: 'p1', name: 'Apollo' } as ProjectPreview]
+
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <GlobalTaskTimerProvider
+        projects={projects}
+        currentUserId="u1"
+        setStatus={setStatus}
+      >
+        {children}
+      </GlobalTaskTimerProvider>
+    )
+
+    const { result } = renderHook(() => useGlobalTaskTimer(), { wrapper })
+
+    act(() => {
+      result.current.startTimerForTask(createTask({ id: 't-deleted', title: 'Deleted task' }))
+    })
+
+    await act(async () => {
+      vi.advanceTimersByTime(3200)
+      await result.current.stopAndSaveTimer()
+    })
+
+    expect(mocks.createTimeEntry).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        projectId: 'p1',
+        taskId: 't-deleted',
+      }),
+    )
+    expect(mocks.createTimeEntry).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        projectId: 'p1',
+        taskId: undefined,
+      }),
+    )
+    expect(result.current.activeTask).toBeNull()
+
+    vi.useRealTimers()
+  })
+
+  it('saves timer as unlinked when backend returns "Invalid task_id: task not found"', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-26T10:00:00.000Z'))
+
+    mocks.createTimeEntry
+      .mockRejectedValueOnce(new Error('Invalid task_id: task not found'))
+      .mockResolvedValueOnce({ id: 'te-1' })
+
+    const setStatus = vi.fn()
+    const projects = [{ id: 'p1', name: 'Apollo' } as ProjectPreview]
+
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <GlobalTaskTimerProvider
+        projects={projects}
+        currentUserId="u1"
+        setStatus={setStatus}
+      >
+        {children}
+      </GlobalTaskTimerProvider>
+    )
+
+    const { result } = renderHook(() => useGlobalTaskTimer(), { wrapper })
+
+    act(() => {
+      result.current.startTimerForTask(createTask({ id: 't-missing', title: 'Missing task' }))
+    })
+
+    await act(async () => {
+      vi.advanceTimersByTime(2200)
+      await result.current.stopAndSaveTimer()
+    })
+
+    expect(mocks.createTimeEntry).toHaveBeenNthCalledWith(
+      1,
+      expect.objectContaining({
+        projectId: 'p1',
+        taskId: 't-missing',
+      }),
+    )
+    expect(mocks.createTimeEntry).toHaveBeenNthCalledWith(
+      2,
+      expect.objectContaining({
+        projectId: 'p1',
+        taskId: undefined,
+      }),
+    )
+    expect(result.current.activeTask).toBeNull()
+
+    vi.useRealTimers()
+  })
+
+  it('stops active timer when the active task is deleted', () => {
+    const setStatus = vi.fn()
+    const projects = [{ id: 'p1', name: 'Apollo' } as ProjectPreview]
+
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <GlobalTaskTimerProvider
+        projects={projects}
+        currentUserId="u1"
+        setStatus={setStatus}
+      >
+        {children}
+      </GlobalTaskTimerProvider>
+    )
+
+    const { result } = renderHook(() => useGlobalTaskTimer(), { wrapper })
+
+    act(() => {
+      result.current.startTimerForTask(createTask({ id: 't-active', title: 'Active task' }))
+    })
+
+    expect(result.current.activeTask?.taskId).toBe('t-active')
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('tasks:deleted', { detail: { taskId: 't-active' } }))
+    })
+
+    expect(result.current.activeTask).toBeNull()
+    expect(result.current.isRunning).toBe(false)
+    expect(setStatus).toHaveBeenCalledWith('Active timer stopped because the task was deleted')
+  })
 })

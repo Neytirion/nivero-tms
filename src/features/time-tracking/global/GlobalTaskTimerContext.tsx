@@ -117,6 +117,19 @@ function isValidPersistedTimerState(value: unknown): value is PersistedTimerStat
   return hasValidTask && hasValidElapsed && hasValidStartedAt && typeof candidate.timerIsBillable === 'boolean'
 }
 
+function isMissingTaskReferenceError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  const message = error.message.toLowerCase()
+  const isForeignKeyTaskError = message.includes('task_id') && message.includes('foreign key')
+  const isInvalidTaskIdError = message.includes('invalid task_id')
+  const isTaskNotFoundError = message.includes('task not found')
+
+  return isForeignKeyTaskError || isInvalidTaskIdError || isTaskNotFoundError
+}
+
 const GlobalTaskTimerContext = createContext<GlobalTaskTimerContextValue>(defaultGlobalTaskTimerContext)
 
 export function GlobalTaskTimerProvider({
@@ -202,6 +215,28 @@ export function GlobalTaskTimerProvider({
       window.clearInterval(intervalId)
     }
   }, [elapsedBeforeRunSeconds, startedAtMs])
+
+  useEffect(() => {
+    const onTaskDeleted = (event: Event) => {
+      const customEvent = event as CustomEvent<{ taskId?: string }>
+      const deletedTaskId = customEvent.detail?.taskId
+      if (!deletedTaskId || !activeTask) {
+        return
+      }
+
+      if (activeTask.taskId !== deletedTaskId) {
+        return
+      }
+
+      clearTimerState()
+      setStatus('Active timer stopped because the task was deleted')
+    }
+
+    window.addEventListener('tasks:deleted', onTaskDeleted)
+    return () => {
+      window.removeEventListener('tasks:deleted', onTaskDeleted)
+    }
+  }, [activeTask, setStatus])
 
   const elapsedLabel = useMemo(() => formatElapsedSeconds(elapsedSeconds), [elapsedSeconds])
 
@@ -289,6 +324,32 @@ export function GlobalTaskTimerProvider({
     }
   }
 
+  const createTimerEntryWithTaskFallback = async (input: {
+    projectId: string
+    taskId: string
+    entryDate: string
+    hoursSpent: number
+    durationSeconds?: number
+    isBillable: boolean
+    startedAt?: string
+    endedAt?: string
+  }) => {
+    try {
+      await createTimeEntry(input)
+    } catch (error) {
+      if (!isMissingTaskReferenceError(error)) {
+        throw error
+      }
+
+      await createTimeEntry({
+        ...input,
+        taskId: undefined,
+      })
+
+      setStatus('Active task was deleted. Time was saved as unlinked.')
+    }
+  }
+
   const stopAndSaveTimer = async () => {
     if (!activeTask || isSaving) {
       return
@@ -309,7 +370,7 @@ export function GlobalTaskTimerProvider({
     const startedAt = new Date(endedAt.getTime() - (effectiveElapsedSeconds * 1000))
 
     try {
-      await createTimeEntry({
+      await createTimerEntryWithTaskFallback({
         projectId: activeTask.projectId,
         taskId: activeTask.taskId,
         entryDate: toEntryDate(),
@@ -344,7 +405,7 @@ export function GlobalTaskTimerProvider({
     setIsSaving(true)
 
     try {
-      await createTimeEntry({
+      await createTimerEntryWithTaskFallback({
         projectId: activeTask.projectId,
         taskId: activeTask.taskId,
         entryDate: toEntryDate(),

@@ -197,6 +197,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
 
       try {
         await deleteTask(taskId)
+        window.dispatchEvent(new CustomEvent('tasks:deleted', { detail: { taskId } }))
         if (selectedProjectId) {
           await reloadTasksAndMembers(selectedProjectId)
         }

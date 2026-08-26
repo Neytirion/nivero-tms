@@ -9,7 +9,7 @@ import { GlobalTaskTimerProvider } from '../features/time-tracking/global/Global
 
 const baseNavItems = [
   { to: '/app/projects', label: 'Projects' },
-  { to: '/app/time-tracking', label: 'Time Tracking' },
+  { to: '/app/time-tracking', label: 'Reports' },
 ]
 
 interface AppShellProps {
@@ -138,7 +138,7 @@ function AppShellLayout({ user }: AppShellProps) {
                       <nav className="space-y-2">
                         {activeNavItems.map((item) => {
                           const isActive = location.pathname === item.to
-                          const isDemoModule = item.to === '/app/time-tracking' || item.to === '/app/resources'
+                          const isDemoModule = item.to === '/app/resources'
                           return (
                             <button
                               key={item.to}

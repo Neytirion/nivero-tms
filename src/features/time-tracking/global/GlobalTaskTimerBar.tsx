@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useGlobalTaskTimer } from './GlobalTaskTimerContext'
 
 function normalizeNumberInput(value: string) {
@@ -56,8 +57,22 @@ export function GlobalTaskTimerBar() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-cyan-800">Active Timer</p>
-          <p className="truncate text-sm font-semibold text-slate-900">
-            {activeTask.projectName} • {activeTask.taskTitle}
+          <p className="flex items-center gap-1 truncate text-sm font-semibold text-slate-900">
+            <Link
+              to={`/app/projects/${activeTask.projectId}`}
+              className="truncate text-cyan-900 underline decoration-cyan-300 underline-offset-2 hover:text-cyan-700"
+              title={`Open project: ${activeTask.projectName}`}
+            >
+              {activeTask.projectName}
+            </Link>
+            <span aria-hidden="true">•</span>
+            <Link
+              to={`/app/tasks/${activeTask.taskId}`}
+              className="truncate text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-slate-700"
+              title={`Open task: ${activeTask.taskTitle}`}
+            >
+              {activeTask.taskTitle}
+            </Link>
           </p>
           <p className="text-xl font-bold text-cyan-900">{elapsedLabel}</p>
         </div>

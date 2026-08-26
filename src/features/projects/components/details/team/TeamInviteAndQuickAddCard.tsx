@@ -111,6 +111,11 @@ export function TeamInviteAndQuickAddCard({
                     >
                       {candidate.fullName ?? candidate.email}
                     </button>
+                    {candidate.fullName ? (
+                      <p className="truncate text-[11px] text-slate-500" title={candidate.email}>
+                        {candidate.email}
+                      </p>
+                    ) : null}
                   </div>
                 </div>
 

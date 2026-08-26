@@ -157,7 +157,6 @@ describe('TimeTrackingPage', () => {
         entry_date: '2026-06-05',
         minutes_spent: 120,
         is_billable: true,
-        notes: 'worked on shared task',
         started_at: null,
         ended_at: null,
         created_at: '2026-06-05T10:00:00.000Z',
@@ -192,7 +191,6 @@ describe('TimeTrackingPage', () => {
         entry_date: '2026-06-05',
         minutes_spent: 120,
         is_billable: true,
-        notes: 'cross-project log',
         started_at: null,
         ended_at: null,
         created_at: '2026-06-05T10:00:00.000Z',
@@ -261,7 +259,6 @@ describe('TimeTrackingPage', () => {
         entry_date: '2026-06-05',
         minutes_spent: 120,
         is_billable: true,
-        notes: 'cross-project log',
         started_at: null,
         ended_at: null,
         created_at: '2026-06-05T10:00:00.000Z',
@@ -290,7 +287,6 @@ describe('TimeTrackingPage', () => {
         entry_date: '2026-06-05',
         minutes_spent: 30000,
         is_billable: true,
-        notes: 'bad log',
         started_at: null,
         ended_at: null,
         created_at: '2026-06-05T10:00:00.000Z',
@@ -303,7 +299,7 @@ describe('TimeTrackingPage', () => {
       </MemoryRouter>,
     )
 
-    expect((await screen.findAllByText('bad log')).length).toBeGreaterThan(0)
+    expect((await screen.findAllByText('500h')).length).toBeGreaterThan(0)
 
     fireEvent.click(screen.getByText('Edit'))
 

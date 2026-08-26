@@ -46,7 +46,6 @@ describe('useTimeTrackingMutations', () => {
         manualDate: '2026-06-10',
         manualHours: '1',
         manualIsBillable: true,
-        manualNotes: 'Worked on docs',
         onSuccess,
       })
     })
@@ -80,7 +79,6 @@ describe('useTimeTrackingMutations', () => {
         manualDate: '2026-06-10',
         manualHours: '0',
         manualIsBillable: false,
-        manualNotes: 'Worked on docs',
         onSuccess,
       })
     })
@@ -114,7 +112,6 @@ describe('useTimeTrackingMutations', () => {
         manualDate: '2026-06-10',
         manualHours: '1.5',
         manualIsBillable: false,
-        manualNotes: 'Worked on docs',
         onSuccess,
       })
     })
@@ -125,7 +122,6 @@ describe('useTimeTrackingMutations', () => {
       entryDate: '2026-06-10',
       hoursSpent: 1.5,
       isBillable: false,
-      notes: 'Worked on docs',
     })
     expect(onSuccess).toHaveBeenCalledTimes(1)
     expect(refreshAfterSave).toHaveBeenCalledTimes(1)
@@ -156,7 +152,6 @@ describe('useTimeTrackingMutations', () => {
         manualDate: '2026-06-10',
         manualHours: '2',
         manualIsBillable: true,
-        manualNotes: 'Worked on API',
         onSuccess,
       })
     })

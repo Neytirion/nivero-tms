@@ -5,13 +5,11 @@ type TimerPanelProps = {
   trackedTimerLabel: string
   timerTaskId: string
   timerIsBillable: boolean
-  timerNotes: string
   timerStartedAt: number | null
   isTimerSaving: boolean
   projectTasks: TaskPreview[]
   onTimerTaskIdChange: (value: string) => void
   onTimerIsBillableChange: (value: boolean) => void
-  onTimerNotesChange: (value: string) => void
   onStartTimer: () => void
   onStopAndSaveTimer: () => void
   onCancelTimer: () => void
@@ -22,13 +20,11 @@ export function TimerPanel({
   trackedTimerLabel,
   timerTaskId,
   timerIsBillable,
-  timerNotes,
   timerStartedAt,
   isTimerSaving,
   projectTasks,
   onTimerTaskIdChange,
   onTimerIsBillableChange,
-  onTimerNotesChange,
   onStartTimer,
   onStopAndSaveTimer,
   onCancelTimer,
@@ -73,16 +69,6 @@ export function TimerPanel({
           </select>
         </label>
 
-        <label className="block sm:col-span-2">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Notes</span>
-          <input
-            type="text"
-            value={timerNotes}
-            onChange={(event) => onTimerNotesChange(event.target.value)}
-            placeholder="Short work log"
-            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
-          />
-        </label>
       </div>
 
       <div className="mt-3 flex flex-wrap gap-2">

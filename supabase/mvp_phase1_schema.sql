@@ -120,7 +120,6 @@ create table if not exists public.time_entries (
   minutes_spent integer not null,
   is_billable boolean not null default true,
   category text not null default 'delivery',
-  notes text,
   started_at timestamptz,
   ended_at timestamptz,
   created_at timestamptz not null default now(),

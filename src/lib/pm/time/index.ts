@@ -7,7 +7,7 @@ import type {
 } from '../types'
 import { assertProjectEditable } from '../helpers'
 
-const timeEntrySelect = 'id,user_id,project_id,task_id,entry_date,minutes_spent,is_billable,notes,started_at,ended_at,created_at'
+const timeEntrySelect = 'id,user_id,project_id,task_id,entry_date,minutes_spent,is_billable,started_at,ended_at,created_at'
 
 export async function getTimeEntries(input: GetTimeEntriesInput = {}) {
   let query = supabase
@@ -80,7 +80,6 @@ export async function createTimeEntry(input: CreateTimeEntryInput) {
       entry_date: input.entryDate,
       minutes_spent: minutesSpent,
       is_billable: input.isBillable,
-      notes: input.notes?.trim() ? input.notes.trim() : null,
       started_at: input.startedAt ?? null,
       ended_at: input.endedAt ?? null,
     })
@@ -119,7 +118,6 @@ export async function updateTimeEntry(timeEntryId: string, input: UpdateTimeEntr
       entry_date: input.entryDate,
       minutes_spent: minutesSpent,
       is_billable: input.isBillable,
-      notes: input.notes?.trim() ? input.notes.trim() : null,
     })
     .eq('id', timeEntryId)
     .select(timeEntrySelect)

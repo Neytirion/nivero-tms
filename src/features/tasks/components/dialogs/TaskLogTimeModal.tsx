@@ -4,7 +4,7 @@ interface TaskLogTimeModalProps {
   isOpen: boolean
   taskTitle: string
   onClose: () => void
-  onSubmit: (hours: number, comment: string) => void | Promise<void>
+  onSubmit: (hours: number) => void | Promise<void>
   isSubmitting?: boolean
 }
 
@@ -16,7 +16,6 @@ export function TaskLogTimeModal({
   isSubmitting = false,
 }: TaskLogTimeModalProps) {
   const [hours, setHours] = useState('1')
-  const [comment, setComment] = useState('')
 
   if (!isOpen) {
     return null
@@ -48,16 +47,6 @@ export function TaskLogTimeModal({
             />
           </label>
 
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Comment</span>
-            <input
-              type="text"
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              placeholder="Implemented authentication"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
-            />
-          </label>
         </div>
 
         <div className="mt-5 flex justify-end gap-2">
@@ -70,7 +59,7 @@ export function TaskLogTimeModal({
           </button>
           <button
             type="button"
-            onClick={() => void onSubmit(Number(hours) || 0, comment)}
+            onClick={() => void onSubmit(Number(hours) || 0)}
             disabled={isSubmitting}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
           >

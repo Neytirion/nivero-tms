@@ -204,7 +204,6 @@ describeRls('Supabase RLS integration', () => {
       entry_date: '2026-06-24',
       minutes_spent: 60,
       is_billable: true,
-      notes: 'Should be blocked by RLS',
     })
 
     expect(error).not.toBeNull()
@@ -221,7 +220,6 @@ describeRls('Supabase RLS integration', () => {
         entry_date: '2026-06-24',
         minutes_spent: 45,
         is_billable: false,
-        notes: 'RLS happy path',
       })
       .select('id,user_id,project_id,task_id,minutes_spent')
       .single()

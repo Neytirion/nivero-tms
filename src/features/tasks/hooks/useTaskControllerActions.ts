@@ -127,7 +127,7 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
     })
   }
 
-  const submitTaskLogTime = async (hours: number, comment: string) => {
+  const submitTaskLogTime = async (hours: number) => {
     if (!input.logTimeTask || !input.selectedProjectId) {
       input.setStatus('Select project and task before logging time')
       return
@@ -144,7 +144,6 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
       entryDate: new Date().toISOString().slice(0, 10),
       hoursSpent: hours,
       isBillable: true,
-      notes: comment,
     })
 
     await input.reloadCurrentTasks()

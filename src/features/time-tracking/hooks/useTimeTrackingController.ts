@@ -46,12 +46,10 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
     manualDate,
     manualHours,
     manualIsBillable,
-    manualNotes,
     setManualTaskId,
     setManualDate,
     setManualHours,
     setManualIsBillable,
-    setManualNotes,
     resetManualEntryForm: resetManualForm,
     beginEditEntry,
     cancelEditEntry,
@@ -61,14 +59,12 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
   const {
     timerTaskId,
     timerIsBillable,
-    timerNotes,
     timerStartedAt,
     timerElapsedSec,
     isTimerSaving,
     trackedTimerLabel,
     setTimerTaskId,
     setTimerIsBillable,
-    setTimerNotes,
     setTimerStartedAt,
     setIsTimerSaving,
     startTimer: timerStartRaw,
@@ -130,7 +126,6 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
       manualDate,
       manualHours,
       manualIsBillable,
-      manualNotes,
       onSuccess: () => {
         resetManualForm()
         setWeekAnchorDate(manualDate)
@@ -163,11 +158,9 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
         activeProjectId,
         timerTaskId,
         timerIsBillable,
-        timerNotes,
         elapsedSec: timerElapsedSec,
         onSuccess: () => {
           setTimerStartedAt(null)
-          setTimerNotes('')
           const now = new Date()
           const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
           setWeekAnchorDate(dateStr)
@@ -199,14 +192,12 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
     manualDate,
     manualHours,
     manualIsBillable,
-    manualNotes,
     manualDateMin,
     manualDateMax,
 
     // Timer state
     timerTaskId,
     timerIsBillable,
-    timerNotes,
     timerStartedAt,
     trackedTimerLabel,
     isTimerSaving,
@@ -223,10 +214,8 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
     setManualDate,
     setManualHours,
     setManualIsBillable,
-    setManualNotes,
     setTimerTaskId,
     setTimerIsBillable,
-    setTimerNotes,
     setEntryToDelete,
 
     // Actions

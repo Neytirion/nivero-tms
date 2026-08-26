@@ -33,7 +33,6 @@ export interface UseTimeTrackingActionsReturn {
     manualDate: string
     manualHours: string
     manualIsBillable: boolean
-    manualNotes: string
     onSuccess: () => void
   }) => Promise<void>
   deleteEntryHandler: (entry: TimeEntryPreview) => Promise<void>
@@ -41,7 +40,6 @@ export interface UseTimeTrackingActionsReturn {
     activeProjectId: string
     timerTaskId: string
     timerIsBillable: boolean
-    timerNotes: string
     elapsedSec: number
     onSuccess: () => void
   }) => Promise<void>

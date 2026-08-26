@@ -26,7 +26,6 @@ interface GlobalTaskTimerContextValue {
   timerTaskTitle: string | null
   elapsedSeconds: number
   elapsedLabel: string
-  timerNotes: string
   timerIsBillable: boolean
   isRunning: boolean
   isPaused: boolean
@@ -36,8 +35,7 @@ interface GlobalTaskTimerContextValue {
   pauseTimer: () => void
   resumeTimer: () => void
   stopAndSaveTimer: () => Promise<void>
-  saveManualTime: (hours: number, notes: string) => Promise<void>
-  setTimerNotes: (value: string) => void
+  saveManualTime: (hours: number) => Promise<void>
   setTimerIsBillable: (value: boolean) => void
 }
 
@@ -49,7 +47,6 @@ const defaultGlobalTaskTimerContext: GlobalTaskTimerContextValue = {
   timerTaskTitle: null,
   elapsedSeconds: 0,
   elapsedLabel: '00:00:00',
-  timerNotes: '',
   timerIsBillable: true,
   isRunning: false,
   isPaused: false,
@@ -60,7 +57,6 @@ const defaultGlobalTaskTimerContext: GlobalTaskTimerContextValue = {
   resumeTimer: () => undefined,
   stopAndSaveTimer: async () => undefined,
   saveManualTime: async () => undefined,
-  setTimerNotes: () => undefined,
   setTimerIsBillable: () => undefined,
 }
 
@@ -96,7 +92,6 @@ export function GlobalTaskTimerProvider({
   const [startedAtMs, setStartedAtMs] = useState<number | null>(null)
   const [elapsedBeforeRunSeconds, setElapsedBeforeRunSeconds] = useState(0)
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
-  const [timerNotes, setTimerNotes] = useState('')
   const [timerIsBillable, setTimerIsBillable] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
@@ -129,7 +124,6 @@ export function GlobalTaskTimerProvider({
     setStartedAtMs(null)
     setElapsedBeforeRunSeconds(0)
     setElapsedSeconds(0)
-    setTimerNotes('')
     setTimerIsBillable(true)
   }
 
@@ -172,7 +166,6 @@ export function GlobalTaskTimerProvider({
     if (!activeTask) {
       setElapsedBeforeRunSeconds(0)
       setElapsedSeconds(0)
-      setTimerNotes('')
       setTimerIsBillable(true)
     }
 
@@ -237,7 +230,6 @@ export function GlobalTaskTimerProvider({
         hoursSpent: effectiveElapsedSeconds / 3600,
         durationSeconds: effectiveElapsedSeconds,
         isBillable: timerIsBillable,
-        notes: timerNotes,
         startedAt: startedAt.toISOString(),
         endedAt: endedAt.toISOString(),
       })
@@ -253,7 +245,7 @@ export function GlobalTaskTimerProvider({
     }
   }
 
-  const saveManualTime = async (hours: number, notes: string) => {
+  const saveManualTime = async (hours: number) => {
     if (!activeTask || isSaving) {
       return
     }
@@ -272,7 +264,6 @@ export function GlobalTaskTimerProvider({
         entryDate: toEntryDate(),
         hoursSpent: hours,
         isBillable: timerIsBillable,
-        notes,
       })
 
       await refreshAfterSave()
@@ -293,7 +284,6 @@ export function GlobalTaskTimerProvider({
     timerTaskTitle: activeTask?.taskTitle ?? null,
     elapsedSeconds,
     elapsedLabel,
-    timerNotes,
     timerIsBillable,
     isRunning: Boolean(activeTask && startedAtMs),
     isPaused: Boolean(activeTask && !startedAtMs),
@@ -304,7 +294,6 @@ export function GlobalTaskTimerProvider({
     resumeTimer,
     stopAndSaveTimer,
     saveManualTime,
-    setTimerNotes,
     setTimerIsBillable,
   }
 

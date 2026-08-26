@@ -26,7 +26,6 @@ export function TimeTrackingPage() {
     manualDateMax,
     manualHours,
     manualIsBillable,
-    manualNotes,
     weekAnchorDate,
     weekRange,
     visibleEntries,
@@ -37,7 +36,6 @@ export function TimeTrackingPage() {
     setManualDate,
     setManualHours,
     setManualIsBillable,
-    setManualNotes,
     setEntryToDelete,
     submitManualEntry,
     cancelEditEntry,
@@ -92,14 +90,12 @@ export function TimeTrackingPage() {
           manualDateMax={manualDateMax}
           manualHours={manualHours}
           manualIsBillable={manualIsBillable}
-          manualNotes={manualNotes}
           editingEntryId={editingEntryId}
           isLoading={isLoading}
           onManualTaskIdChange={setManualTaskId}
           onManualDateChange={setManualDate}
           onManualHoursChange={setManualHours}
           onManualIsBillableChange={setManualIsBillable}
-          onManualNotesChange={setManualNotes}
           onSubmit={() => void submitManualEntry()}
         />
       </section>

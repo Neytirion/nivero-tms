@@ -50,20 +50,19 @@ export function MyLogsSection({
               <th className="px-3 py-2 text-left">Project</th>
               <th className="px-3 py-2 text-left">Task</th>
               <th className="px-3 py-2 text-left">Hours</th>
-              <th className="px-3 py-2 text-left">Notes</th>
               <th className="px-3 py-2 text-left">Actions</th>
             </tr>
           </thead>
           <tbody>
             {isEntriesLoading ? (
               <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-slate-500">
+                <td colSpan={5} className="px-3 py-4 text-center text-slate-500">
                   Loading entries...
                 </td>
               </tr>
             ) : visibleEntries.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-3 py-4 text-center text-slate-500">
+                <td colSpan={5} className="px-3 py-4 text-center text-slate-500">
                   No entries for selected week.
                 </td>
               </tr>
@@ -82,7 +81,6 @@ export function MyLogsSection({
                     <td className="px-3 py-2 text-slate-700">{projectName}</td>
                     <td className="px-3 py-2 text-slate-600">{taskName}</td>
                     <td className="px-3 py-2 text-slate-700">{formatDurationFromSeconds(getEntryDurationSeconds(entry))}</td>
-                    <td className="px-3 py-2 text-slate-500">{entry.notes || '—'}</td>
                     <td className="px-3 py-2">
                       <div className="flex flex-wrap gap-2">
                         <button

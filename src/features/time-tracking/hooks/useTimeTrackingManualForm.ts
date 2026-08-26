@@ -7,12 +7,10 @@ export interface UseTimeTrackingManualFormReturn {
   manualDate: string
   manualHours: string
   manualIsBillable: boolean
-  manualNotes: string
   setManualTaskId: (id: string) => void
   setManualDate: (date: string) => void
   setManualHours: (hours: string) => void
   setManualIsBillable: (billable: boolean) => void
-  setManualNotes: (notes: string) => void
   resetManualEntryForm: () => void
   beginEditEntry: (entry: TimeEntryPreview, setEditingEntryId: (id: string | null) => void, setActiveProjectId: (id: string) => void, setWeekAnchorDate: (date: string) => void) => void
   cancelEditEntry: () => void
@@ -26,14 +24,12 @@ export function useTimeTrackingManualForm(): UseTimeTrackingManualFormReturn {
   const [manualDate, setManualDate] = useState(() => toDateInputValue(new Date()))
   const [manualHours, setManualHours] = useState('1')
   const [manualIsBillable, setManualIsBillable] = useState(true)
-  const [manualNotes, setManualNotes] = useState('')
 
   const resetManualEntryForm = () => {
     setManualTaskId('')
     setManualDate(toDateInputValue(new Date()))
     setManualHours('1')
     setManualIsBillable(true)
-    setManualNotes('')
   }
 
   const beginEditEntry = (entry: TimeEntryPreview, setEditingEntryId: (id: string | null) => void, setActiveProjectId: (id: string) => void, setWeekAnchorDate: (date: string) => void) => {
@@ -44,7 +40,6 @@ export function useTimeTrackingManualForm(): UseTimeTrackingManualFormReturn {
     setManualDate(entry.entry_date)
     setManualHours(formatDurationFromSeconds(getEntryDurationSeconds(entry)))
     setManualIsBillable(entry.is_billable)
-    setManualNotes(entry.notes ?? '')
   }
 
   const cancelEditEntry = () => {
@@ -56,12 +51,10 @@ export function useTimeTrackingManualForm(): UseTimeTrackingManualFormReturn {
     manualDate,
     manualHours,
     manualIsBillable,
-    manualNotes,
     setManualTaskId,
     setManualDate,
     setManualHours,
     setManualIsBillable,
-    setManualNotes,
     resetManualEntryForm,
     beginEditEntry,
     cancelEditEntry,

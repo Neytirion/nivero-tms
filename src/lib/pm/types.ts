@@ -83,7 +83,6 @@ export type TimeEntryPreview = Pick<
   | 'entry_date'
   | 'minutes_spent'
   | 'is_billable'
-  | 'notes'
   | 'started_at'
   | 'ended_at'
   | 'created_at'
@@ -240,7 +239,6 @@ export interface CreateTimeEntryInput {
   hoursSpent: number
   durationSeconds?: number
   isBillable: boolean
-  notes?: string
   startedAt?: string
   endedAt?: string
 }
@@ -251,7 +249,6 @@ export interface UpdateTimeEntryInput {
   entryDate: string
   hoursSpent: number
   isBillable: boolean
-  notes?: string
 }
 
 export interface GetTimeEntriesInput {

@@ -9,14 +9,12 @@ type ManualEntryPanelProps = {
   manualDateMax?: string
   manualHours: string
   manualIsBillable: boolean
-  manualNotes: string
   editingEntryId: string | null
   isLoading: boolean
   onManualTaskIdChange: (value: string) => void
   onManualDateChange: (value: string) => void
   onManualHoursChange: (value: string) => void
   onManualIsBillableChange: (value: boolean) => void
-  onManualNotesChange: (value: string) => void
   onSubmit: () => void
 }
 
@@ -29,14 +27,12 @@ export function ManualEntryPanel({
   manualDateMax,
   manualHours,
   manualIsBillable,
-  manualNotes,
   editingEntryId,
   isLoading,
   onManualTaskIdChange,
   onManualDateChange,
   onManualHoursChange,
   onManualIsBillableChange,
-  onManualNotesChange,
   onSubmit,
 }: ManualEntryPanelProps) {
   return (
@@ -104,16 +100,6 @@ export function ManualEntryPanel({
           </select>
         </label>
 
-        <label className="block sm:col-span-2">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Notes</span>
-          <input
-            type="text"
-            value={manualNotes}
-            onChange={(event) => onManualNotesChange(event.target.value)}
-            placeholder="What was done"
-            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
-          />
-        </label>
       </div>
 
       <div className="mt-3 flex justify-end">

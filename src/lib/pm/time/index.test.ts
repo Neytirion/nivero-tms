@@ -167,7 +167,6 @@ describe('pm.time', () => {
         entryDate: '2026-06-06',
         hoursSpent: 3,
         isBillable: false,
-        notes: 'fixed',
       }),
     ).resolves.toMatchObject({ id: 'te-1', minutes_spent: 180 })
 

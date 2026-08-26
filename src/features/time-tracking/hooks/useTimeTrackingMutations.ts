@@ -17,7 +17,6 @@ interface SubmitManualEntryInput {
   manualDate: string
   manualHours: string
   manualIsBillable: boolean
-  manualNotes: string
   onSuccess: () => void
 }
 
@@ -25,7 +24,6 @@ interface StartTimerAndSaveInput {
   activeProjectId: string
   timerTaskId: string
   timerIsBillable: boolean
-  timerNotes: string
   elapsedSec: number
   onSuccess: () => void
 }
@@ -66,7 +64,6 @@ export function useTimeTrackingMutations(input: UseTimeTrackingMutationsInput) {
           entryDate: formInput.manualDate,
           hoursSpent: parsedHours,
           isBillable: formInput.manualIsBillable,
-          notes: formInput.manualNotes,
         })
         input.setStatus('Time entry updated')
       } else {
@@ -76,7 +73,6 @@ export function useTimeTrackingMutations(input: UseTimeTrackingMutationsInput) {
           entryDate: formInput.manualDate,
           hoursSpent: parsedHours,
           isBillable: formInput.manualIsBillable,
-          notes: formInput.manualNotes,
         })
         input.setStatus('Time entry created')
       }
@@ -123,7 +119,6 @@ export function useTimeTrackingMutations(input: UseTimeTrackingMutationsInput) {
         entryDate: timerEntryDate,
         hoursSpent: elapsedHours,
         isBillable: timerInput.timerIsBillable,
-        notes: timerInput.timerNotes,
       })
 
       timerInput.onSuccess()

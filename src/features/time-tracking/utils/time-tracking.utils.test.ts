@@ -21,7 +21,6 @@ function createTimeEntry(overrides: Partial<TimeEntryPreview> = {}): TimeEntryPr
     entry_date: '2026-06-17',
     minutes_spent: 60,
     is_billable: true,
-    notes: null,
     started_at: null,
     ended_at: null,
     created_at: '2026-06-17T10:00:00.000Z',

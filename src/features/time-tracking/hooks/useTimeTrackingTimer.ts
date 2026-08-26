@@ -3,14 +3,12 @@ import { useEffect, useMemo, useState } from 'react'
 export interface UseTimeTrackingTimerReturn {
   timerTaskId: string
   timerIsBillable: boolean
-  timerNotes: string
   timerStartedAt: number | null
   timerElapsedSec: number
   isTimerSaving: boolean
   trackedTimerLabel: string
   setTimerTaskId: (id: string) => void
   setTimerIsBillable: (billable: boolean) => void
-  setTimerNotes: (notes: string) => void
   setTimerStartedAt: (timestamp: number | null) => void
   setIsTimerSaving: (saving: boolean) => void
   startTimer: () => void
@@ -24,7 +22,6 @@ export interface UseTimeTrackingTimerReturn {
 export function useTimeTrackingTimer(): UseTimeTrackingTimerReturn {
   const [timerTaskId, setTimerTaskId] = useState('')
   const [timerIsBillable, setTimerIsBillable] = useState(true)
-  const [timerNotes, setTimerNotes] = useState('')
   const [timerStartedAt, setTimerStartedAt] = useState<number | null>(null)
   const [timerElapsedSec, setTimerElapsedSec] = useState(0)
   const [isTimerSaving, setIsTimerSaving] = useState(false)
@@ -76,14 +73,12 @@ export function useTimeTrackingTimer(): UseTimeTrackingTimerReturn {
   return {
     timerTaskId,
     timerIsBillable,
-    timerNotes,
     timerStartedAt,
     timerElapsedSec,
     isTimerSaving,
     trackedTimerLabel,
     setTimerTaskId,
     setTimerIsBillable,
-    setTimerNotes,
     setTimerStartedAt,
     setIsTimerSaving,
     startTimer,

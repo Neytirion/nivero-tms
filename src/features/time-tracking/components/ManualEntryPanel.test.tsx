@@ -14,14 +14,12 @@ describe('ManualEntryPanel', () => {
         manualDateMax="2026-06-30"
         manualHours="1"
         manualIsBillable
-        manualNotes=""
         editingEntryId={null}
         isLoading={false}
         onManualTaskIdChange={vi.fn()}
         onManualDateChange={vi.fn()}
         onManualHoursChange={vi.fn()}
         onManualIsBillableChange={vi.fn()}
-        onManualNotesChange={vi.fn()}
         onSubmit={vi.fn()}
       />,
     )
@@ -47,14 +45,12 @@ describe('ManualEntryPanel', () => {
         manualDate="2026-06-10"
         manualHours="1"
         manualIsBillable
-        manualNotes=""
         editingEntryId={null}
         isLoading={false}
         onManualTaskIdChange={onManualTaskIdChange}
         onManualDateChange={vi.fn()}
         onManualHoursChange={vi.fn()}
         onManualIsBillableChange={vi.fn()}
-        onManualNotesChange={vi.fn()}
         onSubmit={onSubmit}
       />,
     )
@@ -76,14 +72,12 @@ describe('ManualEntryPanel', () => {
         manualDate="2026-06-10"
         manualHours="1"
         manualIsBillable
-        manualNotes=""
         editingEntryId={null}
         isLoading={false}
         onManualTaskIdChange={onManualTaskIdChange}
         onManualDateChange={vi.fn()}
         onManualHoursChange={vi.fn()}
         onManualIsBillableChange={vi.fn()}
-        onManualNotesChange={vi.fn()}
         onSubmit={onSubmit}
       />,
     )

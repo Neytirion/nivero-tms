@@ -1,5 +1,5 @@
 import type { ProjectPreview, TimeEntryPreview } from '../../../lib/pm'
-import { formatHours, toHours } from '../utils/time-tracking.utils'
+import { formatDurationFromMinutes, formatHours } from '../utils/time-tracking.utils'
 
 type WeeklySummary = {
   byDay: Record<string, number>
@@ -88,7 +88,7 @@ export function WeeklyOverviewSection({
                         {entry.is_billable ? 'Billable' : 'Non-billable'}
                       </span>
                     </td>
-                    <td className="px-3 py-2 text-slate-700">{toHours(entry.minutes_spent).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-slate-700">{formatDurationFromMinutes(entry.minutes_spent)}</td>
                     <td className="px-3 py-2 text-slate-500">{entry.notes || '—'}</td>
                   </tr>
                 )

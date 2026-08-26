@@ -80,15 +80,16 @@ export function ManualEntryPanel({
         </label>
 
         <label className="block">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Hours</span>
+          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Time spent</span>
           <input
-            type="number"
-            min="0.25"
-            step="0.25"
+            type="text"
             value={manualHours}
             onChange={(event) => onManualHoursChange(event.target.value)}
+            placeholder="e.g. 45m, 1.5, 1:30, 1h 30m"
+            aria-label="Time spent"
             className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
           />
+          <p className="mt-1 text-[11px] text-slate-500">Accepted: decimal hours, HH:MM, Xm, Xh Ym.</p>
         </label>
 
         <label className="block">

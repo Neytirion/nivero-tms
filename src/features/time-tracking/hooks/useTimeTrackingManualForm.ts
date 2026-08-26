@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { toDateInputValue } from '../utils/time-tracking.utils'
+import { formatDurationFromMinutes, toDateInputValue } from '../utils/time-tracking.utils'
 import type { TimeEntryPreview } from '../../../lib/pm'
 
 export interface UseTimeTrackingManualFormReturn {
@@ -42,7 +42,7 @@ export function useTimeTrackingManualForm(): UseTimeTrackingManualFormReturn {
     setEditingEntryId(entry.id)
     setManualTaskId(entry.task_id ?? '')
     setManualDate(entry.entry_date)
-    setManualHours((entry.minutes_spent / 60).toFixed(2))
+    setManualHours(formatDurationFromMinutes(entry.minutes_spent))
     setManualIsBillable(entry.is_billable)
     setManualNotes(entry.notes ?? '')
   }

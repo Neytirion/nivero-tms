@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGlobalTaskTimer } from './GlobalTaskTimerContext'
+import { parseTimeInputToHours } from '../utils/time-tracking.utils'
 
 export function GlobalTaskTimerBar() {
   const {
@@ -17,7 +18,7 @@ export function GlobalTaskTimerBar() {
     setTimerIsBillable,
   } = useGlobalTaskTimer()
 
-  const [manualHours, setManualHours] = useState('0.5')
+  const [manualHours, setManualHours] = useState('30m')
   const [manualNotes, setManualNotes] = useState('')
   const [showManualForm, setShowManualForm] = useState(false)
 
@@ -26,10 +27,10 @@ export function GlobalTaskTimerBar() {
   }
 
   const submitManual = async () => {
-    const hours = Number.parseFloat(manualHours)
+    const hours = parseTimeInputToHours(manualHours) ?? 0
     await saveManualTime(hours, manualNotes || timerNotes)
     setManualNotes('')
-    setManualHours('0.5')
+    setManualHours('30m')
   }
 
   return (
@@ -105,13 +106,12 @@ export function GlobalTaskTimerBar() {
       {showManualForm ? (
         <div className="mt-3 grid gap-2 rounded-xl border border-slate-200 bg-white p-3 md:grid-cols-[120px_minmax(0,1fr)_auto] md:items-center">
           <input
-            type="number"
-            min="0.25"
-            step="0.25"
+            type="text"
             value={manualHours}
             onChange={(event) => setManualHours(event.target.value)}
+            placeholder="30m, 1:15, 1.5"
             className="h-9 rounded-lg border border-slate-300 px-3 text-sm text-slate-900 outline-none focus:border-cyan-600"
-            aria-label="Manual hours"
+            aria-label="Manual time"
           />
           <input
             type="text"

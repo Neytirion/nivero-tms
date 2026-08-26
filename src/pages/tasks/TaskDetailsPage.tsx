@@ -2,6 +2,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTasksPageController } from './useTasksPageController'
 import { useEffect, useMemo, useState } from 'react'
 import { useGlobalTaskTimer } from '../../features/time-tracking/global/GlobalTaskTimerContext'
+import { formatDurationFromHours } from '../../features/time-tracking/utils/time-tracking.utils'
 import { TaskCommentsPanel } from '../../features/tasks/components/comments'
 import { ConfirmDialog, UserProfileDialog, WorkspacePageHeader, type UserProfilePreview } from '../../shared/components'
 
@@ -359,6 +360,11 @@ export function TaskDetailsPage() {
   const estimateHours = task.estimate_hours ?? 0
   const actualHours = task.actual_hours ?? 0
   const remainingHours = Math.max(0, Math.round((estimateHours - actualHours) * 100) / 100)
+  const overBudgetHours = Math.max(0, actualHours - estimateHours)
+  const estimateDurationLabel = formatDurationFromHours(estimateHours)
+  const actualDurationLabel = formatDurationFromHours(actualHours)
+  const remainingDurationLabel = formatDurationFromHours(remainingHours)
+  const overBudgetDurationLabel = formatDurationFromHours(overBudgetHours)
   const isOverBudget = estimateHours > 0 && actualHours > estimateHours
   const normalizedRole = (myRoleInSelectedProject ?? '').toLowerCase()
   const isOwnerOrAdmin = normalizedRole === 'owner' || normalizedRole === 'admin'
@@ -991,13 +997,13 @@ export function TaskDetailsPage() {
                       </div>
                     </div>
                   ) : (
-                    <p className="mt-2 text-2xl font-bold text-slate-900">{estimateHours}<span className="text-sm text-slate-500">h</span></p>
+                    <p className="mt-2 text-2xl font-bold text-slate-900">{estimateDurationLabel}</p>
                   )}
                 </div>
 
                 <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Logged</p>
-                  <p className="mt-2 text-2xl font-bold text-slate-900">{actualHours}<span className="text-sm text-slate-500">h</span></p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900">{actualDurationLabel}</p>
                 </div>
 
                 <div className={`rounded-xl border p-4 ${isOverBudget ? 'border-rose-200 bg-rose-50' : 'border-slate-200 bg-slate-50'}`}>
@@ -1005,8 +1011,7 @@ export function TaskDetailsPage() {
                     {isOverBudget ? 'Over budget' : 'Remaining'}
                   </p>
                   <p className={`mt-2 text-2xl font-bold ${isOverBudget ? 'text-rose-700' : 'text-slate-900'}`}>
-                    {isOverBudget ? `+${Math.round((actualHours - estimateHours) * 100) / 100}` : remainingHours}
-                    <span className="text-sm text-slate-500">h</span>
+                    {isOverBudget ? `+${overBudgetDurationLabel}` : remainingDurationLabel}
                   </p>
                 </div>
               </div>

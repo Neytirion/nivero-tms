@@ -1,5 +1,5 @@
 import { createTimeEntry, deleteTimeEntry, updateTimeEntry, type TimeEntryPreview } from '../../../lib/pm'
-import { toDateInputValue } from '../utils/time-tracking.utils'
+import { parseTimeInputToHours, toDateInputValue } from '../utils/time-tracking.utils'
 
 interface UseTimeTrackingMutationsInput {
   editingEntryId: string | null
@@ -42,9 +42,9 @@ export function useTimeTrackingMutations(input: UseTimeTrackingMutationsInput) {
       return
     }
 
-    const parsedHours = Number.parseFloat(formInput.manualHours)
-    if (!Number.isFinite(parsedHours) || parsedHours <= 0) {
-      input.setStatus('Hours must be greater than 0')
+    const parsedHours = parseTimeInputToHours(formInput.manualHours)
+    if (!parsedHours) {
+      input.setStatus('Invalid time format. Use 1.5, 1:30, 90m, or 1h 30m')
       return
     }
 

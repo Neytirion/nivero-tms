@@ -1,5 +1,5 @@
 import type { ProjectPreview, TimeEntryPreview } from '../../../lib/pm'
-import { toHours } from '../utils/time-tracking.utils'
+import { formatDurationFromMinutes } from '../utils/time-tracking.utils'
 
 type MyLogsSectionProps = {
   editingEntryId: string | null
@@ -81,7 +81,7 @@ export function MyLogsSection({
                     <td className="px-3 py-2 text-slate-700">{entry.entry_date}</td>
                     <td className="px-3 py-2 text-slate-700">{projectName}</td>
                     <td className="px-3 py-2 text-slate-600">{taskName}</td>
-                    <td className="px-3 py-2 text-slate-700">{toHours(entry.minutes_spent).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-slate-700">{formatDurationFromMinutes(entry.minutes_spent)}</td>
                     <td className="px-3 py-2 text-slate-500">{entry.notes || '—'}</td>
                     <td className="px-3 py-2">
                       <div className="flex flex-wrap gap-2">

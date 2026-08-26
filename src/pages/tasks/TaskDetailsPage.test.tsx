@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { TaskDetailsPage } from './TaskDetailsPage'
 import { useTasksPageController } from './useTasksPageController'
 import { createTaskPreview } from '../test-helpers'
+import { getTimeEntries } from '../../lib/pm'
 
 vi.mock('./useTasksPageController', () => ({
   useTasksPageController: vi.fn(),
@@ -13,7 +14,12 @@ vi.mock('../../features/tasks/components/comments', () => ({
   TaskCommentsPanel: () => <div>comments</div>,
 }))
 
+vi.mock('../../lib/pm', () => ({
+  getTimeEntries: vi.fn(),
+}))
+
 const mockUseTasksPageController = vi.mocked(useTasksPageController)
+const mockGetTimeEntries = vi.mocked(getTimeEntries)
 
 function LocationProbe() {
   const location = useLocation()
@@ -45,6 +51,7 @@ describe('TaskDetailsPage', () => {
 
   beforeEach(() => {
     editTaskMock.mockClear()
+    mockGetTimeEntries.mockResolvedValue([] as never)
 
     mockUseTasksPageController.mockReturnValue({
       tasks: [

@@ -3,7 +3,9 @@ import type { TimeEntryPreview } from '../../../lib/pm'
 import {
   buildWeeklySummary,
   endOfWeek,
+  formatDurationFromSeconds,
   formatHours,
+  getEntryDurationSeconds,
   parseTimeInputToHours,
   startOfWeek,
   toDateInputValue,
@@ -51,6 +53,8 @@ describe('time-tracking.utils', () => {
     expect(formatHours(45)).toBe('45m')
     expect(formatHours(60)).toBe('1h')
     expect(formatHours(90)).toBe('1h 30m')
+    expect(formatDurationFromSeconds(45)).toBe('45s')
+    expect(formatDurationFromSeconds(75)).toBe('1m 15s')
   })
 
   it('parses manual time input from multiple formats', () => {
@@ -72,10 +76,20 @@ describe('time-tracking.utils', () => {
 
     const summary = buildWeeklySummary(entries)
 
-    expect(summary.byDay['2026-06-16']).toBe(150)
-    expect(summary.byDay['2026-06-17']).toBe(90)
-    expect(summary.totalMinutes).toBe(240)
-    expect(summary.billableMinutes).toBe(210)
-    expect(summary.nonBillableMinutes).toBe(30)
+    expect(summary.byDay['2026-06-16']).toBe(9000)
+    expect(summary.byDay['2026-06-17']).toBe(5400)
+    expect(summary.totalSeconds).toBe(14400)
+    expect(summary.billableSeconds).toBe(12600)
+    expect(summary.nonBillableSeconds).toBe(1800)
+  })
+
+  it('prefers timestamp delta over rounded minutes when entry has start/end', () => {
+    const entry = createTimeEntry({
+      minutes_spent: 1,
+      started_at: '2026-06-17T10:00:00.000Z',
+      ended_at: '2026-06-17T10:00:05.000Z',
+    })
+
+    expect(getEntryDurationSeconds(entry)).toBe(5)
   })
 })

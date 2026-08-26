@@ -1,8 +1,20 @@
 import { act, renderHook } from '@testing-library/react'
 import type { ReactNode } from 'react'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ProjectPreview, TaskPreview } from '../../../lib/pm'
 import { GlobalTaskTimerProvider, useGlobalTaskTimer } from './GlobalTaskTimerContext'
+
+const mocks = vi.hoisted(() => ({
+  createTimeEntry: vi.fn(),
+}))
+
+vi.mock('../../../lib/pm', async () => {
+  const actual = await vi.importActual<typeof import('../../../lib/pm')>('../../../lib/pm')
+  return {
+    ...actual,
+    createTimeEntry: mocks.createTimeEntry,
+  }
+})
 
 function createTask(input: Partial<TaskPreview> = {}): TaskPreview {
   return {
@@ -25,6 +37,11 @@ function createTask(input: Partial<TaskPreview> = {}): TaskPreview {
 }
 
 describe('GlobalTaskTimerContext', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mocks.createTimeEntry.mockResolvedValue({ id: 'te-1' })
+  })
+
   it('does not start timer for task assigned to another user', () => {
     const setStatus = vi.fn()
     const projects = [{ id: 'p1', name: 'Apollo' } as ProjectPreview]
@@ -75,5 +92,44 @@ describe('GlobalTaskTimerContext', () => {
 
     expect(result.current.activeTask?.taskId).toBe('t1')
     expect(setStatus).toHaveBeenLastCalledWith('Stop the active timer before starting another task')
+  })
+
+  it('saves short timer sessions in seconds without forcing a full minute', async () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-26T10:00:00.000Z'))
+
+    const setStatus = vi.fn()
+    const projects = [{ id: 'p1', name: 'Apollo' } as ProjectPreview]
+
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <GlobalTaskTimerProvider
+        projects={projects}
+        currentUserId="u1"
+        setStatus={setStatus}
+      >
+        {children}
+      </GlobalTaskTimerProvider>
+    )
+
+    const { result } = renderHook(() => useGlobalTaskTimer(), { wrapper })
+
+    act(() => {
+      result.current.startTimerForTask(createTask({ id: 't-short', title: 'Quick task' }))
+    })
+
+    await act(async () => {
+      vi.advanceTimersByTime(3200)
+      await result.current.stopAndSaveTimer()
+    })
+
+    expect(mocks.createTimeEntry).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectId: 'p1',
+        taskId: 't-short',
+        durationSeconds: 3,
+      }),
+    )
+
+    vi.useRealTimers()
   })
 })

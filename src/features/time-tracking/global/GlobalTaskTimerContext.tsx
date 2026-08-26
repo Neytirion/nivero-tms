@@ -2,6 +2,15 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { createTimeEntry, type ProjectPreview, type TaskPreview } from '../../../lib/pm'
 
+const TIMER_STORAGE_KEY = 'nivero:global-task-timer:v1'
+
+interface PersistedTimerState {
+  activeTask: ActiveTimerTask
+  elapsedBeforeRunSeconds: number
+  startedAtMs: number | null
+  timerIsBillable: boolean
+}
+
 interface GlobalTaskTimerProviderProps {
   children: ReactNode
   projects: ProjectPreview[]
@@ -78,6 +87,36 @@ function toEntryDate(date = new Date()) {
   return `${year}-${month}-${day}`
 }
 
+function isValidPersistedTimerState(value: unknown): value is PersistedTimerState {
+  if (!value || typeof value !== 'object') {
+    return false
+  }
+
+  const candidate = value as Partial<PersistedTimerState>
+  const activeTask = candidate.activeTask as Partial<ActiveTimerTask> | undefined
+
+  if (!activeTask) {
+    return false
+  }
+
+  const hasValidTask =
+    typeof activeTask.taskId === 'string' && activeTask.taskId.length > 0 &&
+    typeof activeTask.taskTitle === 'string' && activeTask.taskTitle.length > 0 &&
+    typeof activeTask.projectId === 'string' && activeTask.projectId.length > 0 &&
+    typeof activeTask.projectName === 'string' && activeTask.projectName.length > 0
+
+  const hasValidElapsed =
+    typeof candidate.elapsedBeforeRunSeconds === 'number' &&
+    Number.isFinite(candidate.elapsedBeforeRunSeconds) &&
+    candidate.elapsedBeforeRunSeconds >= 0
+
+  const hasValidStartedAt =
+    candidate.startedAtMs === null ||
+    (typeof candidate.startedAtMs === 'number' && Number.isFinite(candidate.startedAtMs) && candidate.startedAtMs > 0)
+
+  return hasValidTask && hasValidElapsed && hasValidStartedAt && typeof candidate.timerIsBillable === 'boolean'
+}
+
 const GlobalTaskTimerContext = createContext<GlobalTaskTimerContextValue>(defaultGlobalTaskTimerContext)
 
 export function GlobalTaskTimerProvider({
@@ -95,6 +134,53 @@ export function GlobalTaskTimerProvider({
   const [timerIsBillable, setTimerIsBillable] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(TIMER_STORAGE_KEY)
+      if (!raw) {
+        return
+      }
+
+      const parsed: unknown = JSON.parse(raw)
+      if (!isValidPersistedTimerState(parsed)) {
+        window.localStorage.removeItem(TIMER_STORAGE_KEY)
+        return
+      }
+
+      setActiveTask(parsed.activeTask)
+      setElapsedBeforeRunSeconds(parsed.elapsedBeforeRunSeconds)
+      setTimerIsBillable(parsed.timerIsBillable)
+
+      if (parsed.startedAtMs) {
+        const now = Date.now()
+        const runningSeconds = Math.max(0, Math.floor((now - parsed.startedAtMs) / 1000))
+        setStartedAtMs(parsed.startedAtMs)
+        setElapsedSeconds(parsed.elapsedBeforeRunSeconds + runningSeconds)
+      } else {
+        setStartedAtMs(null)
+        setElapsedSeconds(parsed.elapsedBeforeRunSeconds)
+      }
+    } catch {
+      window.localStorage.removeItem(TIMER_STORAGE_KEY)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!activeTask) {
+      window.localStorage.removeItem(TIMER_STORAGE_KEY)
+      return
+    }
+
+    const payload: PersistedTimerState = {
+      activeTask,
+      elapsedBeforeRunSeconds,
+      startedAtMs,
+      timerIsBillable,
+    }
+
+    window.localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(payload))
+  }, [activeTask, elapsedBeforeRunSeconds, startedAtMs, timerIsBillable])
 
   useEffect(() => {
     if (!startedAtMs) {

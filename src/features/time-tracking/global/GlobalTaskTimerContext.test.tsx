@@ -39,6 +39,7 @@ function createTask(input: Partial<TaskPreview> = {}): TaskPreview {
 describe('GlobalTaskTimerContext', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    window.localStorage.clear()
     mocks.createTimeEntry.mockResolvedValue({ id: 'te-1' })
   })
 
@@ -129,6 +130,46 @@ describe('GlobalTaskTimerContext', () => {
         durationSeconds: 3,
       }),
     )
+
+    vi.useRealTimers()
+  })
+
+  it('restores active timer state from localStorage after reload', () => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date('2026-08-26T10:00:00.000Z'))
+
+    const setStatus = vi.fn()
+    const projects = [{ id: 'p1', name: 'Apollo' } as ProjectPreview]
+
+    window.localStorage.setItem('nivero:global-task-timer:v1', JSON.stringify({
+      activeTask: {
+        taskId: 't-restored',
+        taskTitle: 'Restored task',
+        projectId: 'p1',
+        projectName: 'Apollo',
+      },
+      elapsedBeforeRunSeconds: 120,
+      startedAtMs: Date.now() - 30000,
+      timerIsBillable: false,
+    }))
+
+    const wrapper = ({ children }: { children: ReactNode }) => (
+      <GlobalTaskTimerProvider
+        projects={projects}
+        currentUserId="u1"
+        setStatus={setStatus}
+      >
+        {children}
+      </GlobalTaskTimerProvider>
+    )
+
+    const { result } = renderHook(() => useGlobalTaskTimer(), { wrapper })
+
+    expect(result.current.activeTask?.taskId).toBe('t-restored')
+    expect(result.current.timerIsBillable).toBe(false)
+    expect(result.current.isRunning).toBe(true)
+    expect(result.current.elapsedSeconds).toBe(150)
+    expect(result.current.elapsedLabel).toBe('00:02:30')
 
     vi.useRealTimers()
   })

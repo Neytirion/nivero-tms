@@ -1,4 +1,4 @@
-import type { BillableFilter, ReportsFilterState } from '../types/reports'
+import type { ReportsFilterState } from '../types/reports'
 import { DateRangePicker } from './DateRangePicker'
 
 interface ReportsFiltersProps {
@@ -53,9 +53,9 @@ export function ReportsFilters({
         </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-5">
         {/* Date Range Picker */}
-        <div className="md:col-span-2">
+        <div>
           <DateRangePicker
             dateFrom={filters.dateFrom}
             dateTo={filters.dateTo}
@@ -67,19 +67,25 @@ export function ReportsFilters({
         </div>
 
         {/* Billable Filter */}
-        <label className="block">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Type</span>
-          <select
-            value={filters.billableFilter}
-            onChange={(e) => onFilterChange('billableFilter', e.target.value as BillableFilter)}
-            disabled={isLoading}
-            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:bg-slate-100"
-          >
-            <option value="all">All hours</option>
-            <option value="billable">Billable only</option>
-            <option value="non-billable">Non-billable only</option>
-          </select>
-        </label>
+        <div>
+          <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Type</span>
+          <div className="flex gap-2">
+            {(['all', 'billable', 'non-billable'] as const).map((option) => (
+              <button
+                key={option}
+                onClick={() => onFilterChange('billableFilter', option)}
+                disabled={isLoading}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                  filters.billableFilter === option
+                    ? 'bg-slate-900 text-white'
+                    : 'border border-slate-300 bg-white text-slate-700 hover:border-slate-400 disabled:bg-slate-100'
+                }`}
+              >
+                {option === 'all' ? 'All' : option === 'billable' ? 'Billable' : 'Non-billable'}
+              </button>
+            ))}
+          </div>
+        </div>
 
         {/* Quick filter summary */}
         <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">

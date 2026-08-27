@@ -124,8 +124,8 @@ describe('ReportsFilters', () => {
       />,
     )
 
-    const typeSelect = screen.getByRole('combobox', { name: /Type/i })
-    fireEvent.change(typeSelect, { target: { value: 'billable' } })
+    const billableButton = screen.getByRole('button', { name: 'Billable' })
+    fireEvent.click(billableButton)
 
     expect(mockOnFilterChange).toHaveBeenCalledWith('billableFilter', 'billable')
   })
@@ -179,7 +179,7 @@ describe('ReportsFilters', () => {
       />,
     )
 
-    const typeSelect = screen.getByRole('combobox', { name: /Type/i })
-    expect(typeSelect).toBeDisabled()
+    const allButton = screen.getByText('All')
+    expect(allButton).toBeDisabled()
   })
 })

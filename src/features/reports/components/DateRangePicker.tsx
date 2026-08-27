@@ -254,7 +254,7 @@ export function DateRangePicker({ dateFrom, dateTo, onDateChange }: DateRangePic
       </button>
 
       {isOpen && (
-        <div className="absolute top-full left-0 z-50 mt-2 rounded-xl border border-slate-200 bg-white p-4 shadow-xl">
+        <div className="absolute top-full left-1/2 z-50 mt-2 -translate-x-1/2 transform rounded-xl border border-slate-200 bg-white p-4 shadow-xl min-w-max">
           <div className="grid gap-4 md:grid-cols-4">
             {/* Shortcuts */}
             <div className="flex flex-col gap-2 border-r border-slate-200 pr-4">

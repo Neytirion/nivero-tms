@@ -89,28 +89,6 @@ describe('ReportsFilters', () => {
     expect(mockOnReset).toHaveBeenCalled()
   })
 
-  it('displays active filter count', () => {
-    const filtersWithActiveFilters: ReportsFilterState = {
-      ...defaultFilters,
-      selectedMemberIds: ['user-1'],
-      selectedProjectIds: ['proj-1'],
-    }
-
-    render(
-      <ReportsFilters
-        filters={filtersWithActiveFilters}
-        isLoading={false}
-        projects={projects}
-        uniqueMembers={members}
-        uniqueClients={clients}
-        onFilterChange={mockOnFilterChange}
-        onReset={mockOnReset}
-      />,
-    )
-
-    expect(screen.getByText('2')).toBeInTheDocument() // 2 active filters
-  })
-
   it('changes billable filter', () => {
     render(
       <ReportsFilters

@@ -53,7 +53,7 @@ export function ReportsFilters({
         </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-5 items-end">
         {/* Date Range Picker */}
         <div>
           <DateRangePicker
@@ -67,8 +67,8 @@ export function ReportsFilters({
         </div>
 
         {/* Billable Filter */}
-        <div>
-          <span className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Type</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Type</span>
           <div className="flex gap-2">
             {(['all', 'billable', 'non-billable'] as const).map((option) => (
               <button
@@ -85,14 +85,6 @@ export function ReportsFilters({
               </button>
             ))}
           </div>
-        </div>
-
-        {/* Quick filter summary */}
-        <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Active filters</p>
-          <p className="mt-1 text-sm font-semibold text-slate-800">
-            {filters.selectedMemberIds.length + filters.selectedProjectIds.length + filters.selectedClientNames.length}
-          </p>
         </div>
       </div>
 

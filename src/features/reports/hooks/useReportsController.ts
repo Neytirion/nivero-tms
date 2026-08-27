@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
 import type { ReportsFilterState, TimeEntryReport } from '../types/reports'
 import { filterTimeEntries, getDateRangeDefaults } from '../utils/reports.utils'
@@ -10,6 +10,7 @@ interface Project {
 }
 
 export function useReportsController() {
+  const isMountedRef = useRef(true)
   const [isLoading, setIsLoading] = useState(true)
   const [isFilterLoading, setIsFilterLoading] = useState(false)
   const [timeEntries, setTimeEntries] = useState<TimeEntryReport[]>([])
@@ -37,9 +38,9 @@ export function useReportsController() {
         .order('name')
 
       if (err) throw err
-      setProjects(data || [])
+      if (isMountedRef.current) setProjects(data || [])
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load projects')
+      if (isMountedRef.current) setError(err instanceof Error ? err.message : 'Failed to load projects')
     }
   }, [])
 
@@ -98,11 +99,11 @@ export function useReportsController() {
         }
       })
 
-      setTimeEntries(entries)
+      if (isMountedRef.current) setTimeEntries(entries)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load time entries')
+      if (isMountedRef.current) setError(err instanceof Error ? err.message : 'Failed to load time entries')
     } finally {
-      setIsFilterLoading(false)
+      if (isMountedRef.current) setIsFilterLoading(false)
     }
   }, [filters.dateFrom, filters.dateTo, projects])
 
@@ -111,7 +112,7 @@ export function useReportsController() {
     const load = async () => {
       setIsLoading(true)
       await loadProjects()
-      setIsLoading(false)
+      if (isMountedRef.current) setIsLoading(false)
     }
 
     load()
@@ -157,6 +158,13 @@ export function useReportsController() {
       dateFrom,
       dateTo,
     })
+  }, [])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+    }
   }, [])
 
   return {

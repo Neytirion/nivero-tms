@@ -9,7 +9,8 @@ import { GlobalTaskTimerProvider } from '../features/time-tracking/global/Global
 
 const baseNavItems = [
   { to: '/app/projects', label: 'Projects' },
-  { to: '/app/time-tracking', label: 'Reports' },
+  { to: '/app/time-tracking', label: 'Time Tracking' },
+  { to: '/app/reports', label: 'Reports' },
 ]
 
 interface AppShellProps {

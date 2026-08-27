@@ -43,10 +43,11 @@ export function useReportsController() {
     }
   }, [])
 
-  // Load time entries
+  // Load time entries with member names
   const loadTimeEntries = useCallback(async () => {
     setIsFilterLoading(true)
     try {
+      // Load time entries
       const { data, error: err } = await supabase
         .from('time_entries')
         .select('id, user_id, project_id, task_id, entry_date, minutes_spent, is_billable, started_at, ended_at, created_at')
@@ -56,14 +57,34 @@ export function useReportsController() {
 
       if (err) throw err
 
+      // Get unique project IDs to load member names
+      const uniqueProjectIds = Array.from(new Set((data || []).map((e) => e.project_id)))
+
+      // Load member names from project members for each project
+      const memberNamesMap: Record<string, string> = {}
+      for (const projectId of uniqueProjectIds) {
+        const { data: members } = await supabase.rpc('get_project_members_with_profile', {
+          p_project_id: projectId,
+        })
+
+        if (members) {
+          members.forEach((member: { user_id: string; full_name: string | null }) => {
+            if (member.user_id && member.full_name) {
+              memberNamesMap[member.user_id] = member.full_name
+            }
+          })
+        }
+      }
+
       // Transform entries
       const entries: TimeEntryReport[] = (data || []).map((entry) => {
         const project = projects.find((p) => p.id === entry.project_id)
+        const memberName = memberNamesMap[entry.user_id] || entry.user_id.substring(0, 8)
 
         return {
           id: entry.id,
           userId: entry.user_id,
-          memberName: entry.user_id, // Use user ID as name for now
+          memberName,
           projectId: entry.project_id,
           projectName: project?.name || 'Unknown',
           clientName: project?.customer_name || null,

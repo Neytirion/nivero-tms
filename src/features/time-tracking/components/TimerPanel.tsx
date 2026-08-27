@@ -4,12 +4,10 @@ type TimerPanelProps = {
   activeProjectId: string
   trackedTimerLabel: string
   timerTaskId: string
-  timerIsBillable: boolean
   timerStartedAt: number | null
   isTimerSaving: boolean
   projectTasks: TaskPreview[]
   onTimerTaskIdChange: (value: string) => void
-  onTimerIsBillableChange: (value: boolean) => void
   onStartTimer: () => void
   onStopAndSaveTimer: () => void
   onCancelTimer: () => void
@@ -19,12 +17,10 @@ export function TimerPanel({
   activeProjectId,
   trackedTimerLabel,
   timerTaskId,
-  timerIsBillable,
   timerStartedAt,
   isTimerSaving,
   projectTasks,
   onTimerTaskIdChange,
-  onTimerIsBillableChange,
   onStartTimer,
   onStopAndSaveTimer,
   onCancelTimer,
@@ -54,18 +50,6 @@ export function TimerPanel({
                 {task.title}
               </option>
             ))}
-          </select>
-        </label>
-
-        <label className="block">
-          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Billing Type</span>
-          <select
-            value={timerIsBillable ? 'billable' : 'non-billable'}
-            onChange={(event) => onTimerIsBillableChange(event.target.value === 'billable')}
-            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
-          >
-            <option value="billable">Billable</option>
-            <option value="non-billable">Non-billable</option>
           </select>
         </label>
 

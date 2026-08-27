@@ -8,7 +8,6 @@ interface PersistedTimerState {
   activeTask: ActiveTimerTask
   elapsedBeforeRunSeconds: number
   startedAtMs: number | null
-  timerIsBillable: boolean
 }
 
 interface HydratedTimerState {
@@ -16,7 +15,6 @@ interface HydratedTimerState {
   startedAtMs: number | null
   elapsedBeforeRunSeconds: number
   elapsedSeconds: number
-  timerIsBillable: boolean
 }
 
 interface GlobalTaskTimerProviderProps {
@@ -43,7 +41,6 @@ interface GlobalTaskTimerContextValue {
   timerTaskTitle: string | null
   elapsedSeconds: number
   elapsedLabel: string
-  timerIsBillable: boolean
   isRunning: boolean
   isPaused: boolean
   isSaving: boolean
@@ -53,7 +50,6 @@ interface GlobalTaskTimerContextValue {
   resumeTimer: () => void
   stopAndSaveTimer: () => Promise<void>
   saveManualTime: (hours: number) => Promise<void>
-  setTimerIsBillable: (value: boolean) => void
 }
 
 const defaultGlobalTaskTimerContext: GlobalTaskTimerContextValue = {
@@ -64,7 +60,6 @@ const defaultGlobalTaskTimerContext: GlobalTaskTimerContextValue = {
   timerTaskTitle: null,
   elapsedSeconds: 0,
   elapsedLabel: '00:00:00',
-  timerIsBillable: true,
   isRunning: false,
   isPaused: false,
   isSaving: false,
@@ -74,7 +69,6 @@ const defaultGlobalTaskTimerContext: GlobalTaskTimerContextValue = {
   resumeTimer: () => undefined,
   stopAndSaveTimer: async () => undefined,
   saveManualTime: async () => undefined,
-  setTimerIsBillable: () => undefined,
 }
 
 function formatElapsedSeconds(totalSeconds: number) {
@@ -122,7 +116,7 @@ function isValidPersistedTimerState(value: unknown): value is PersistedTimerStat
     candidate.startedAtMs === null ||
     (typeof candidate.startedAtMs === 'number' && Number.isFinite(candidate.startedAtMs) && candidate.startedAtMs > 0)
 
-  return hasValidTask && hasValidElapsed && hasValidStartedAt && typeof candidate.timerIsBillable === 'boolean'
+  return hasValidTask && hasValidElapsed && hasValidStartedAt
 }
 
 function isMissingTaskReferenceError(error: unknown) {
@@ -145,7 +139,6 @@ function readHydratedTimerState(): HydratedTimerState {
       startedAtMs: null,
       elapsedBeforeRunSeconds: 0,
       elapsedSeconds: 0,
-      timerIsBillable: true,
     }
   }
 
@@ -157,7 +150,6 @@ function readHydratedTimerState(): HydratedTimerState {
         startedAtMs: null,
         elapsedBeforeRunSeconds: 0,
         elapsedSeconds: 0,
-        timerIsBillable: true,
       }
     }
 
@@ -169,7 +161,6 @@ function readHydratedTimerState(): HydratedTimerState {
         startedAtMs: null,
         elapsedBeforeRunSeconds: 0,
         elapsedSeconds: 0,
-        timerIsBillable: true,
       }
     }
 
@@ -180,7 +171,6 @@ function readHydratedTimerState(): HydratedTimerState {
         startedAtMs: parsed.startedAtMs,
         elapsedBeforeRunSeconds: parsed.elapsedBeforeRunSeconds,
         elapsedSeconds: parsed.elapsedBeforeRunSeconds + runningSeconds,
-        timerIsBillable: parsed.timerIsBillable,
       }
     }
 
@@ -189,7 +179,6 @@ function readHydratedTimerState(): HydratedTimerState {
       startedAtMs: null,
       elapsedBeforeRunSeconds: parsed.elapsedBeforeRunSeconds,
       elapsedSeconds: parsed.elapsedBeforeRunSeconds,
-      timerIsBillable: parsed.timerIsBillable,
     }
   } catch {
     window.localStorage.removeItem(TIMER_STORAGE_KEY)
@@ -198,7 +187,6 @@ function readHydratedTimerState(): HydratedTimerState {
       startedAtMs: null,
       elapsedBeforeRunSeconds: 0,
       elapsedSeconds: 0,
-      timerIsBillable: true,
     }
   }
 }
@@ -218,7 +206,6 @@ export function GlobalTaskTimerProvider({
   const [startedAtMs, setStartedAtMs] = useState<number | null>(hydratedState.startedAtMs)
   const [elapsedBeforeRunSeconds, setElapsedBeforeRunSeconds] = useState(hydratedState.elapsedBeforeRunSeconds)
   const [elapsedSeconds, setElapsedSeconds] = useState(hydratedState.elapsedSeconds)
-  const [timerIsBillable, setTimerIsBillable] = useState(hydratedState.timerIsBillable)
   const [isSaving, setIsSaving] = useState(false)
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null)
 
@@ -232,11 +219,10 @@ export function GlobalTaskTimerProvider({
       activeTask,
       elapsedBeforeRunSeconds,
       startedAtMs,
-      timerIsBillable,
     }
 
     window.localStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(payload))
-  }, [activeTask, elapsedBeforeRunSeconds, startedAtMs, timerIsBillable])
+  }, [activeTask, elapsedBeforeRunSeconds, startedAtMs])
 
   useEffect(() => {
     if (!startedAtMs) {
@@ -264,7 +250,6 @@ export function GlobalTaskTimerProvider({
     setStartedAtMs(null)
     setElapsedBeforeRunSeconds(0)
     setElapsedSeconds(0)
-    setTimerIsBillable(true)
   }
 
   useEffect(() => {
@@ -330,7 +315,6 @@ export function GlobalTaskTimerProvider({
     if (!activeTask) {
       setElapsedBeforeRunSeconds(0)
       setElapsedSeconds(0)
-      setTimerIsBillable(true)
     }
 
     setStartedAtMs(Date.now())
@@ -419,7 +403,7 @@ export function GlobalTaskTimerProvider({
         entryDate: toEntryDate(),
         hoursSpent: effectiveElapsedSeconds / 3600,
         durationSeconds: effectiveElapsedSeconds,
-        isBillable: timerIsBillable,
+        isBillable: true,
         startedAt: startedAt.toISOString(),
         endedAt: endedAt.toISOString(),
       })
@@ -453,7 +437,7 @@ export function GlobalTaskTimerProvider({
         taskId: activeTask.taskId,
         entryDate: toEntryDate(),
         hoursSpent: hours,
-        isBillable: timerIsBillable,
+        isBillable: true,
       })
 
       await refreshAfterSave()
@@ -474,7 +458,6 @@ export function GlobalTaskTimerProvider({
     timerTaskTitle: activeTask?.taskTitle ?? null,
     elapsedSeconds,
     elapsedLabel,
-    timerIsBillable,
     isRunning: Boolean(activeTask && startedAtMs),
     isPaused: Boolean(activeTask && !startedAtMs),
     isSaving,
@@ -484,7 +467,6 @@ export function GlobalTaskTimerProvider({
     resumeTimer,
     stopAndSaveTimer,
     saveManualTime,
-    setTimerIsBillable,
   }
 
   return <GlobalTaskTimerContext.Provider value={value}>{children}</GlobalTaskTimerContext.Provider>

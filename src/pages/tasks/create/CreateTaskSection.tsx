@@ -26,6 +26,7 @@ export function CreateTaskSection({
   taskEstimateHours,
   taskPriority,
   taskDueDate,
+  taskIsBillable,
   taskWorkPackageId,
   taskBlockedByTaskId,
   taskAssigneeId,
@@ -45,6 +46,7 @@ export function CreateTaskSection({
   onTaskEstimateHoursChange,
   onTaskPriorityChange,
   onTaskDueDateChange,
+  onTaskIsBillableChange,
   onTaskWorkPackageIdChange,
   onTaskBlockedByTaskIdChange,
   onTaskAssigneeIdChange,
@@ -116,11 +118,13 @@ export function CreateTaskSection({
                     taskEstimateHours={taskEstimateHours}
                     taskPriority={taskPriority}
                     taskDueDate={taskDueDate}
+                    taskIsBillable={taskIsBillable}
                     projectStartDate={projectStartDate}
                     projectEndDate={projectEndDate}
                     onTaskEstimateHoursChange={onTaskEstimateHoursChange}
                     onTaskPriorityChange={onTaskPriorityChange}
                     onTaskDueDateChange={onTaskDueDateChange}
+                    onTaskIsBillableChange={onTaskIsBillableChange}
                   />
                 ) : null}
               </div>

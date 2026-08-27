@@ -23,14 +23,12 @@ export function GlobalTaskTimerBar() {
   const {
     activeTask,
     elapsedLabel,
-    timerIsBillable,
     isRunning,
     isSaving,
     pauseTimer,
     resumeTimer,
     stopAndSaveTimer,
     saveManualTime,
-    setTimerIsBillable,
   } = useGlobalTaskTimer()
 
   const [manualHours, setManualHours] = useState('0')
@@ -149,16 +147,6 @@ export function GlobalTaskTimerBar() {
         {isExpanded ? (
           <>
             <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-cyan-200/60 pt-2.5">
-              <label className="inline-flex items-center gap-2 text-xs font-medium text-slate-700">
-                <input
-                  type="checkbox"
-                  checked={timerIsBillable}
-                  onChange={(event) => setTimerIsBillable(event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-cyan-700 focus:ring-cyan-600"
-                />
-                Billable
-              </label>
-
               <button
                 type="button"
                 onClick={() => setShowManualForm((value) => !value)}

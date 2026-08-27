@@ -18,6 +18,7 @@ export type CreateTaskSectionProps = {
   taskEstimateHours: string
   taskPriority: string
   taskDueDate: string
+  taskIsBillable: boolean
   taskWorkPackageId: string
   taskBlockedByTaskId: string
   taskAssigneeId: string
@@ -37,6 +38,7 @@ export type CreateTaskSectionProps = {
   onTaskEstimateHoursChange: (value: string) => void
   onTaskPriorityChange: (value: string) => void
   onTaskDueDateChange: (value: string) => void
+  onTaskIsBillableChange: (value: boolean) => void
   onTaskWorkPackageIdChange: (value: string) => void
   onTaskBlockedByTaskIdChange: (value: string) => void
   onTaskAssigneeIdChange: (value: string) => void
@@ -62,11 +64,13 @@ export type PlanningTaskFieldsProps = {
   taskEstimateHours: string
   taskPriority: string
   taskDueDate: string
+  taskIsBillable: boolean
   projectStartDate: string
   projectEndDate: string
   onTaskEstimateHoursChange: (value: string) => void
   onTaskPriorityChange: (value: string) => void
   onTaskDueDateChange: (value: string) => void
+  onTaskIsBillableChange: (value: boolean) => void
 }
 
 export type AssignmentScopeFieldsProps = {

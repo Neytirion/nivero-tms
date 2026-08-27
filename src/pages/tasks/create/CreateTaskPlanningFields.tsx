@@ -117,6 +117,16 @@ export function CreateTaskPlanningFields(props: PlanningTaskFieldsProps) {
             </p>
           ) : null}
         </div>
+
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={props.taskIsBillable}
+            onChange={(e) => props.onTaskIsBillableChange(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-600"
+          />
+          <span className="text-sm font-medium text-slate-700">Billable task</span>
+        </label>
       </div>
     </div>
   )

@@ -32,6 +32,7 @@ function createTask(input: Partial<TaskPreview> = {}): TaskPreview {
     due_date: null,
     project_id: 'p1',
     created_at: '2026-06-01T00:00:00.000Z',
+    is_billable: true,
     ...input,
   }
 }
@@ -150,7 +151,6 @@ describe('GlobalTaskTimerContext', () => {
       },
       elapsedBeforeRunSeconds: 120,
       startedAtMs: Date.now() - 30000,
-      timerIsBillable: false,
     }))
 
     const wrapper = ({ children }: { children: ReactNode }) => (
@@ -166,7 +166,6 @@ describe('GlobalTaskTimerContext', () => {
     const { result } = renderHook(() => useGlobalTaskTimer(), { wrapper })
 
     expect(result.current.activeTask?.taskId).toBe('t-restored')
-    expect(result.current.timerIsBillable).toBe(false)
     expect(result.current.isRunning).toBe(true)
     expect(result.current.elapsedSeconds).toBe(150)
     expect(result.current.elapsedLabel).toBe('00:02:30')

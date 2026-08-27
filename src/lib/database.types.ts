@@ -451,6 +451,7 @@ export interface Database {
           due_date: string | null
           created_at: string | null
           updated_at: string | null
+          is_billable: boolean
         }
         Insert: {
           id?: string
@@ -468,6 +469,7 @@ export interface Database {
           due_date?: string | null
           created_at?: string | null
           updated_at?: string | null
+          is_billable?: boolean
         }
         Update: {
           id?: string
@@ -485,6 +487,7 @@ export interface Database {
           due_date?: string | null
           created_at?: string | null
           updated_at?: string | null
+          is_billable?: boolean
         }
         Relationships: [
           {

@@ -31,6 +31,8 @@ export function CreateTaskPage() {
     setTaskPriority,
     taskDueDate,
     setTaskDueDate,
+    taskIsBillable,
+    setTaskIsBillable,
     taskWorkPackageId,
     setTaskWorkPackageId,
     taskBlockedByTaskId,
@@ -89,6 +91,7 @@ export function CreateTaskPage() {
           taskEstimateHours={taskEstimateHours}
           taskPriority={taskPriority}
           taskDueDate={taskDueDate}
+          taskIsBillable={taskIsBillable}
           taskWorkPackageId={taskWorkPackageId}
           taskBlockedByTaskId={taskBlockedByTaskId}
           taskAssigneeId={taskAssigneeId}
@@ -108,6 +111,7 @@ export function CreateTaskPage() {
           onTaskEstimateHoursChange={setTaskEstimateHours}
           onTaskPriorityChange={setTaskPriority}
           onTaskDueDateChange={setTaskDueDate}
+          onTaskIsBillableChange={setTaskIsBillable}
           onTaskWorkPackageIdChange={setTaskWorkPackageId}
           onTaskBlockedByTaskIdChange={setTaskBlockedByTaskId}
           onTaskAssigneeIdChange={setTaskAssigneeId}

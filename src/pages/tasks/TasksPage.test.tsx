@@ -71,6 +71,8 @@ function mockTaskForm(overrides: Record<string, unknown> = {}) {
     setTaskBlockedByTaskId: vi.fn(),
     taskDueDate: '2026-06-20',
     setTaskDueDate: vi.fn(),
+    taskIsBillable: true,
+    setTaskIsBillable: vi.fn(),
     canSubmit: true,
     reset: vi.fn(),
     ...overrides,

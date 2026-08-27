@@ -23,7 +23,6 @@ interface SubmitManualEntryInput {
 interface StartTimerAndSaveInput {
   activeProjectId: string
   timerTaskId: string
-  timerIsBillable: boolean
   elapsedSec: number
   onSuccess: () => void
 }
@@ -118,7 +117,7 @@ export function useTimeTrackingMutations(input: UseTimeTrackingMutationsInput) {
         taskId: timerInput.timerTaskId || undefined,
         entryDate: timerEntryDate,
         hoursSpent: elapsedHours,
-        isBillable: timerInput.timerIsBillable,
+        isBillable: true,
       })
 
       timerInput.onSuccess()

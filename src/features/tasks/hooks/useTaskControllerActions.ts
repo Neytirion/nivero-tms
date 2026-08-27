@@ -8,6 +8,7 @@ interface UseTaskControllerActionsInput {
   canSubmit: boolean
   taskEstimateHours: string
   taskDueDate: string
+  taskIsBillable: boolean
   projectStartDate: string
   projectEndDate: string
   taskTitle: string
@@ -29,6 +30,7 @@ interface UseTaskControllerActionsInput {
     assignedTo?: string
     blockedByTaskId?: string
     dueDate?: string
+    isBillable?: boolean
   }) => Promise<void>
   editTask: (taskId: string, patch: {
     status?: string
@@ -84,6 +86,7 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
       assignedTo: input.canAssignAssignee ? input.taskAssigneeId || undefined : undefined,
       blockedByTaskId: input.taskBlockedByTaskId || undefined,
       dueDate: input.taskDueDate || undefined,
+      isBillable: input.taskIsBillable,
     })
 
     input.setHasAttemptedSubmit(false)

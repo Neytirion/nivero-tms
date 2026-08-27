@@ -62,9 +62,10 @@ export async function createTask(input: CreateTaskInput) {
       actual_hours: input.actualHours ?? 0,
       blocked_by_task_id: input.blockedByTaskId ?? null,
       due_date: input.dueDate ?? null,
+      is_billable: input.isBillable ?? true,
       created_by: userData.user.id,
     })
-    .select('id,work_package_id,title,description,status,priority,assigned_to,created_by,estimate_hours,actual_hours,blocked_by_task_id,due_date,project_id,created_at')
+    .select('id,work_package_id,title,description,status,priority,assigned_to,created_by,estimate_hours,actual_hours,blocked_by_task_id,due_date,project_id,created_at,is_billable')
     .single()
 
   if (error) {
@@ -157,7 +158,7 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
       updated_at: new Date().toISOString(),
     })
     .eq('id', taskId)
-    .select('id,work_package_id,title,description,status,priority,assigned_to,created_by,estimate_hours,actual_hours,blocked_by_task_id,due_date,project_id,created_at')
+    .select('id,work_package_id,title,description,status,priority,assigned_to,created_by,estimate_hours,actual_hours,blocked_by_task_id,due_date,project_id,created_at,is_billable')
     .maybeSingle()
 
   if (error) {

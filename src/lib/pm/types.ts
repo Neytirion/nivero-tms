@@ -53,6 +53,7 @@ export type TaskPreview = Pick<
   | 'due_date'
   | 'project_id'
   | 'created_at'
+  | 'is_billable'
 > & {
   work_package?: Pick<WorkPackage, 'name' | 'color'> | null
 }
@@ -176,6 +177,7 @@ export interface CreateTaskInput {
   actualHours?: number
   blockedByTaskId?: string
   dueDate?: string
+  isBillable?: boolean
 }
 
 export interface UpdateTaskInput {

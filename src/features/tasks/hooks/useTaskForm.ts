@@ -9,6 +9,7 @@ export function useTaskForm() {
   const [taskAssigneeId, setTaskAssigneeId] = useState('')
   const [taskBlockedByTaskId, setTaskBlockedByTaskId] = useState('')
   const [taskDueDate, setTaskDueDate] = useState('')
+  const [taskIsBillable, setTaskIsBillable] = useState(true)
 
   const canSubmit = taskTitle.trim().length > 0
 
@@ -21,6 +22,7 @@ export function useTaskForm() {
     setTaskWorkPackageId('')
     setTaskAssigneeId('')
     setTaskBlockedByTaskId('')
+    setTaskIsBillable(true)
   }
 
   return {
@@ -40,6 +42,8 @@ export function useTaskForm() {
     setTaskBlockedByTaskId,
     taskDueDate,
     setTaskDueDate,
+    taskIsBillable,
+    setTaskIsBillable,
     canSubmit,
     reset,
   }

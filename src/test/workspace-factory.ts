@@ -44,6 +44,7 @@ export function createTaskPreview(overrides: Partial<TaskPreview> = {}): TaskPre
     due_date: null,
     project_id: 'project-1',
     created_at: '2026-06-01T00:00:00.000Z',
+    is_billable: true,
     ...overrides,
   }
 }

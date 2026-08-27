@@ -39,7 +39,6 @@ export interface UseTimeTrackingActionsReturn {
   startTimerAndSave: (input: {
     activeProjectId: string
     timerTaskId: string
-    timerIsBillable: boolean
     elapsedSec: number
     onSuccess: () => void
   }) => Promise<void>

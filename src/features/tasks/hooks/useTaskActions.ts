@@ -40,6 +40,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
       actualHours?: number
       blockedByTaskId?: string
       dueDate?: string
+      isBillable?: boolean
     }) => {
       const { selectedProjectId, ensureProjectEditable, canAssignTasksInProject, setStatus, setIsLoading, reloadTasksAndMembers } =
         depsRef.current
@@ -83,6 +84,7 @@ export function useTaskActions(deps: TaskActionsDeps) {
           actualHours: input.actualHours,
           blockedByTaskId: input.blockedByTaskId,
           dueDate: input.dueDate,
+          isBillable: input.isBillable,
         })
         await reloadTasksAndMembers(selectedProjectId)
         setStatus(`Task created: ${createdTask.title}`)

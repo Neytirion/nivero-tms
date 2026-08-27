@@ -58,13 +58,11 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
   // Timer
   const {
     timerTaskId,
-    timerIsBillable,
     timerStartedAt,
     timerElapsedSec,
     isTimerSaving,
     trackedTimerLabel,
     setTimerTaskId,
-    setTimerIsBillable,
     setTimerStartedAt,
     setIsTimerSaving,
     startTimer: timerStartRaw,
@@ -157,7 +155,6 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
       await startTimerAndSave({
         activeProjectId,
         timerTaskId,
-        timerIsBillable,
         elapsedSec: timerElapsedSec,
         onSuccess: () => {
           setTimerStartedAt(null)
@@ -197,7 +194,6 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
 
     // Timer state
     timerTaskId,
-    timerIsBillable,
     timerStartedAt,
     trackedTimerLabel,
     isTimerSaving,
@@ -215,7 +211,6 @@ export function useTimeTrackingController(input: UseTimeTrackingControllerInput)
     setManualHours,
     setManualIsBillable,
     setTimerTaskId,
-    setTimerIsBillable,
     setEntryToDelete,
 
     // Actions

@@ -203,6 +203,7 @@ export function TaskCardSettingsPage() {
     due_date: PREVIEW_TASK_DUE_DATE,
     project_id: activeProjectId ?? 'preview-project',
     created_at: PREVIEW_TASK_CREATED_AT,
+    is_billable: true,
   }), [activeProjectId])
 
   return (

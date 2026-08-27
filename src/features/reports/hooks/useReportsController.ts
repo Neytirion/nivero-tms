@@ -98,7 +98,11 @@ export function useReportsController() {
 
   // Load entries when date range changes
   useEffect(() => {
-    loadTimeEntries()
+    const load = async () => {
+      await loadTimeEntries()
+    }
+
+    load()
   }, [filters.dateFrom, filters.dateTo, projects, loadTimeEntries])
 
   const filteredEntries = useMemo(() => {

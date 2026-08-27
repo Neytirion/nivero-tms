@@ -2,7 +2,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { useTasksPageController } from './useTasksPageController'
 import { useEffect, useMemo, useState } from 'react'
 import { useGlobalTaskTimer } from '../../features/time-tracking/global/GlobalTaskTimerContext'
-import { getTimeEntries } from '../../lib/pm'
+import { getTimeEntries, createTimeEntry } from '../../lib/pm'
 import { formatDurationFromSeconds, getEntryDurationSeconds } from '../../features/time-tracking/utils/time-tracking.utils'
 import { TaskCommentsPanel } from '../../features/tasks/components/comments'
 import { ConfirmDialog, UserProfileDialog, WorkspacePageHeader, type UserProfilePreview } from '../../shared/components'
@@ -230,6 +230,7 @@ export function TaskDetailsPage() {
   const location = useLocation()
   const { taskId } = useParams<{ taskId: string }>()
   const [isCommentsOpen, setIsCommentsOpen] = useState(true)
+  const [isManualEntryOpen, setIsManualEntryOpen] = useState(false)
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [estimateHoursDraft, setEstimateHoursDraft] = useState('0')
@@ -246,6 +247,9 @@ export function TaskDetailsPage() {
   const [isTaskSaving, setIsTaskSaving] = useState(false)
   const [previewAttachment, setPreviewAttachment] = useState<ParsedAttachment | null>(null)
   const [preciseLoggedByTaskId, setPreciseLoggedByTaskId] = useState<{ taskId: string; seconds: number } | null>(null)
+  const [manualHours, setManualHours] = useState('0')
+  const [manualMinutes, setManualMinutes] = useState('0')
+  const [isManualLogging, setIsManualLogging] = useState(false)
 
   const backTo =
     typeof location.state === 'object' &&
@@ -604,6 +608,54 @@ export function TaskDetailsPage() {
   const isDueSoon = daysUntilDue !== null && daysUntilDue <= 3 && daysUntilDue >= 0
   const isOverdue = daysUntilDue !== null && daysUntilDue < 0
 
+  const handleManualTimeSubmit = async () => {
+    if (!task || !task.project_id) {
+      return
+    }
+
+    try {
+      setIsManualLogging(true)
+      
+      const hours = parseInt(manualHours, 10) || 0
+      const minutes = parseInt(manualMinutes, 10) || 0
+      const hoursSpent = hours + minutes / 60
+      
+      if (hoursSpent <= 0) {
+        alert('Please enter a valid time duration')
+        return
+      }
+
+      const today = new Date().toISOString().split('T')[0]
+
+      await createTimeEntry({
+        projectId: task.project_id,
+        taskId: task.id,
+        entryDate: today,
+        hoursSpent,
+        isBillable: task.is_billable,
+      })
+
+      // Reset form and close it
+      setManualHours('0')
+      setManualMinutes('0')
+      setIsManualEntryOpen(false)
+
+      // Reload time entries for this task
+      if (task.project_id && task.id) {
+        const entries = await getTimeEntries({
+          projectId: task.project_id,
+          taskId: task.id,
+        })
+        const totalSeconds = entries.reduce((sum, entry) => sum + getEntryDurationSeconds(entry), 0)
+        setPreciseLoggedByTaskId({ taskId: task.id, seconds: totalSeconds })
+      }
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Failed to log time')
+    } finally {
+      setIsManualLogging(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e0f2fe_0%,#f8fafc_28%,#f8fafc_100%)]">
       <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 space-y-5">
@@ -920,6 +972,23 @@ export function TaskDetailsPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Billing Type */}
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Billing Type</label>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5">
+                    <div className="flex items-center gap-2 text-sm text-slate-700 font-medium">
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                        {task.is_billable ? (
+                          <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        ) : (
+                          <path d="M6 18L18 6M6 6l12 12" />
+                        )}
+                      </svg>
+                      {task.is_billable ? 'Billable' : 'Non-billable'}
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* Divider */}
@@ -1005,16 +1074,28 @@ export function TaskDetailsPage() {
               <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
                 <h2 className="text-sm font-semibold text-slate-900">Time Tracking</h2>
                 {canLogTime && (
-                  <button
-                    type="button"
-                    onClick={() => startTimerForTask(task)}
-                    className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
-                  >
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                    </svg>
-                    {isCurrentTaskInTimer && isGlobalTimerRunning ? 'Timer running' : isCurrentTaskInTimer ? 'Resume timer' : 'Start timer'}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => startTimerForTask(task)}
+                      className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                      </svg>
+                      {isCurrentTaskInTimer && isGlobalTimerRunning ? 'Timer running' : isCurrentTaskInTimer ? 'Resume timer' : 'Start timer'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsManualEntryOpen(!isManualEntryOpen)}
+                      className="inline-flex items-center gap-2 rounded-lg bg-slate-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-500 focus:ring-offset-2"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Log time
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -1071,6 +1152,71 @@ export function TaskDetailsPage() {
                       className={`h-2 rounded-full transition-all ${isOverBudget ? 'bg-rose-500' : 'bg-sky-500'}`}
                       style={{ width: `${progressPct}%` }}
                     />
+                  </div>
+                </div>
+              )}
+
+              {/* Manual Time Entry Form */}
+              {isManualEntryOpen && canLogTime && (
+                <div className="mt-6 border-t border-slate-200 pt-6">
+                  <h3 className="text-sm font-semibold text-slate-900 mb-4">Log Time for Today</h3>
+                  <div className="flex gap-4 items-end">
+                    <label className="block">
+                      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Hours</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="24"
+                        value={manualHours}
+                        onChange={(event) => setManualHours(event.target.value)}
+                        className="h-10 w-20 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 text-center"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Minutes</span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="59"
+                        value={manualMinutes}
+                        onChange={(event) => setManualMinutes(event.target.value)}
+                        className="h-10 w-20 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 text-center"
+                      />
+                    </label>
+
+                    <div className="flex-1">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Type</p>
+                      <div className="inline-flex items-center gap-1 text-sm text-slate-600">
+                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                          {task.is_billable ? (
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          ) : (
+                            <path d="M6 18L18 6M6 6l12 12" />
+                          )}
+                        </svg>
+                        {task.is_billable ? 'Billable' : 'Non-billable'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsManualEntryOpen(false)}
+                      disabled={isManualLogging}
+                      className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void handleManualTimeSubmit()}
+                      disabled={isManualLogging || (parseInt(manualHours, 10) === 0 && parseInt(manualMinutes, 10) === 0)}
+                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {isManualLogging ? 'Saving...' : 'Save time entry'}
+                    </button>
                   </div>
                 </div>
               )}

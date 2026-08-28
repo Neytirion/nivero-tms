@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import type { TaskPreview } from '../../lib/pm'
-import { buildCalendarMeta, shiftMonthValue } from './utils/tasks-page.utils'
+import type { TaskPreview } from '../../../lib/pm'
+import { buildCalendarMeta, shiftMonthValue } from '../utils/tasks-page.utils'
 
 interface UseTaskCalendarMetaInput {
   calendarMonth: string

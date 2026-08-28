@@ -28,9 +28,8 @@ export function CreateTaskCoreFields(props: CoreTaskFieldsProps) {
             onChange={(event) => props.onTaskDescriptionChange(event.target.value)}
             rows={3}
             placeholder="What exactly needs to be done"
-            className="w-full rounded-xl border-2 border-slate-300 bg-gradient-to-b from-slate-50 to-white px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-500 shadow-sm transition focus:border-sky-400 focus:shadow"
+            className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
           />
-          <p className="mt-1.5 text-xs text-slate-500">Soon: ability to upload files and photos</p>
         </div>
       </div>
     </div>

@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useTaskForm } from '../../features/tasks/hooks/useTaskForm.ts'
-import type { TaskStatus } from '../../features/tasks/constants.ts'
+import { useTaskForm } from './useTaskForm.ts'
+import type { TaskStatus } from '../constants.ts'
 import {
   getProjectMemberDisplayRoles,
   type TaskPreview,
-} from '../../lib/pm'
+} from '../../../lib/pm'
 import {
   getProjectTaskCardFieldPreferences,
   type ProjectTaskCardFieldPreferences,
-} from '../../lib/pm/work-packages'
-import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
-import { useTaskControllerActions } from '../../features/tasks/hooks/useTaskControllerActions'
-import { useTaskCreationRequirements } from '../../features/tasks/hooks/useTaskCreationRequirements'
-import { useTaskWorkPackagesLoader } from '../../features/tasks/hooks/useTaskWorkPackagesLoader'
-import type { TaskViewMode } from './index'
+} from '../../../lib/pm/work-packages'
+import { useWorkspace } from '../../workspace/workspace-context.tsx'
+import { useTaskControllerActions } from './useTaskControllerActions'
+import { useTaskCreationRequirements } from './useTaskCreationRequirements'
+import { useTaskWorkPackagesLoader } from './useTaskWorkPackagesLoader'
+import type { TaskViewMode } from '../components/TaskViewsSection'
 
 const DEFAULT_TASK_CARD_FIELD_PREFERENCES: ProjectTaskCardFieldPreferences = {
   showDescription: true,

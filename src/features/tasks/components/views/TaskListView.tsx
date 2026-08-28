@@ -1,6 +1,6 @@
-import type { TaskPreview } from '../../../lib/pm'
+import type { TaskPreview } from '../../../../lib/pm'
 import { useMemo, useState } from 'react'
-import { getTaskPriorityBadgeClass } from '../utils/tasks-page.utils'
+import { getTaskPriorityBadgeClass } from '../../utils/tasks-page.utils'
 
 interface TaskListViewProps {
   tasks: TaskPreview[]

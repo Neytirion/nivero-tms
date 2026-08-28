@@ -1,9 +1,9 @@
-import type { TaskStatus } from '../../features/tasks/constants.ts'
-import { TaskCard } from '../../features/tasks/components/card'
+import type { TaskStatus } from '../constants.ts'
+import { TaskCard } from './card'
 import {
   type ProjectTaskCardFieldPreferences,
   type TaskPreview,
-} from '../../lib/pm'
+} from '../../../lib/pm'
 import { TaskBoardView } from './views/TaskBoardView'
 import { TaskListView } from './views/TaskListView'
 

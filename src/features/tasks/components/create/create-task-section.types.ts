@@ -1,4 +1,4 @@
-import type { ProjectMemberListItem, ProjectPreview, WorkPackagePreview } from '../../../lib/pm'
+import type { ProjectMemberListItem, ProjectPreview, WorkPackagePreview } from '../../../../lib/pm'
 
 export type DependencyOption = {
   id: string

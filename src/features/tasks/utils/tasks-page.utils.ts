@@ -1,6 +1,6 @@
 import type { TaskPreview } from '../../../lib/pm'
 import { toCanonicalTaskStatus } from '../../../shared/utils/task-status.ts'
-import type { TaskStatus } from '../../../features/tasks/constants.ts'
+import type { TaskStatus } from '../constants.ts'
 
 export function normalizeTaskStatus(value: string | null | undefined): TaskStatus {
   return toCanonicalTaskStatus(value)

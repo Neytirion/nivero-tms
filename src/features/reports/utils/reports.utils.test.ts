@@ -209,7 +209,6 @@ describe('reports.utils', () => {
       expect(summary.billableHours).toBe(0)
       expect(summary.nonBillableHours).toBe(0)
       expect(summary.entriesCount).toBe(0)
-      expect(summary.averageHourlyValue).toBe(0)
     })
   })
 

@@ -21,7 +21,7 @@ export function ReportsTable({ entries, summary, isLoading }: ReportsTableProps)
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-5">
       {/* Summary Cards */}
-      <div className="mb-6 grid gap-4 md:grid-cols-4">
+      <div className="mb-6 grid gap-4 md:grid-cols-3">
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Total Hours</p>
           <p className="mt-2 text-2xl font-bold text-slate-900">{hoursToDisplay(summary.totalHours)}</p>
@@ -42,12 +42,6 @@ export function ReportsTable({ entries, summary, isLoading }: ReportsTableProps)
           <p className="mt-1 text-xs text-purple-600">
             {summary.totalHours > 0 ? Math.round(((summary.totalHours - summary.billableHours) / summary.totalHours) * 100) : 0}%
           </p>
-        </div>
-
-        <div className="rounded-lg border border-slate-200 bg-blue-50 p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-blue-600">Est. Value</p>
-          <p className="mt-2 text-2xl font-bold text-blue-900">${summary.averageHourlyValue}</p>
-          <p className="mt-1 text-xs text-blue-600">@ $75/hr</p>
         </div>
       </div>
 

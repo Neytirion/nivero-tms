@@ -46,7 +46,6 @@ describe('ReportsTable', () => {
           billableHours: 2,
           nonBillableHours: 1.5,
           entriesCount: 2,
-          averageHourlyValue: 262,
         }}
         isLoading={false}
       />,
@@ -65,7 +64,6 @@ describe('ReportsTable', () => {
           billableHours: 2,
           nonBillableHours: 1.5,
           entriesCount: 2,
-          averageHourlyValue: 262,
         }}
         isLoading={false}
       />,
@@ -74,7 +72,6 @@ describe('ReportsTable', () => {
     expect(screen.getByText('Total Hours')).toBeInTheDocument()
     expect(screen.getByText('Billable Hours')).toBeInTheDocument()
     expect(screen.getByText('Non-billable Hours')).toBeInTheDocument()
-    expect(screen.getByText('Est. Value')).toBeInTheDocument()
   })
 
   it('displays correct summary values', () => {
@@ -86,7 +83,6 @@ describe('ReportsTable', () => {
           billableHours: 2,
           nonBillableHours: 1.5,
           entriesCount: 2,
-          averageHourlyValue: 262,
         }}
         isLoading={false}
       />,
@@ -104,7 +100,6 @@ describe('ReportsTable', () => {
           billableHours: 0,
           nonBillableHours: 0,
           entriesCount: 0,
-          averageHourlyValue: 0,
         }}
         isLoading={true}
       />,
@@ -122,7 +117,6 @@ describe('ReportsTable', () => {
           billableHours: 0,
           nonBillableHours: 0,
           entriesCount: 0,
-          averageHourlyValue: 0,
         }}
         isLoading={false}
       />,
@@ -140,7 +134,6 @@ describe('ReportsTable', () => {
           billableHours: 2,
           nonBillableHours: 1.5,
           entriesCount: 2,
-          averageHourlyValue: 262,
         }}
         isLoading={false}
       />,
@@ -161,7 +154,6 @@ describe('ReportsTable', () => {
           billableHours: 2,
           nonBillableHours: 0,
           entriesCount: 1,
-          averageHourlyValue: 150,
         }}
         isLoading={false}
       />,
@@ -179,7 +171,6 @@ describe('ReportsTable', () => {
           billableHours: 0,
           nonBillableHours: 1.5,
           entriesCount: 1,
-          averageHourlyValue: 0,
         }}
         isLoading={false}
       />,

@@ -69,15 +69,11 @@ export function calculateSummary(entries: TimeEntryReport[]): ReportsSummary {
   const billableMinutes = entries.reduce((sum, entry) => (entry.isBillable ? sum + entry.minutesSpent : sum), 0)
   const nonBillableMinutes = totalMinutes - billableMinutes
 
-  // Rough estimate: average billable rate
-  const averageHourlyValue = entries.length > 0 ? (totalMinutes / 60) * 75 : 0 // $75/hour default
-
   return {
     totalHours: minutesToHours(totalMinutes),
     billableHours: minutesToHours(billableMinutes),
     nonBillableHours: minutesToHours(nonBillableMinutes),
     entriesCount: entries.length,
-    averageHourlyValue: Math.round(averageHourlyValue),
   }
 }
 

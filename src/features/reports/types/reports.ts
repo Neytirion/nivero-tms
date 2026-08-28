@@ -30,5 +30,4 @@ export interface ReportsSummary {
   billableHours: number
   nonBillableHours: number
   entriesCount: number
-  averageHourlyValue: number
 }

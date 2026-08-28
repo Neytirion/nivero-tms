@@ -12,12 +12,10 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { TimeEntryReport } from '../types/reports'
-import type { DayChartData, ProjectChartData, MemberChartData } from '../utils/chart-data.utils'
 import { groupByDays, groupByProjects, groupByMembers } from '../utils/chart-data.utils'
 import { hoursToDisplay } from '../utils/reports.utils'
 
 type ChartMode = 'days' | 'projects' | 'members'
-type ChartData = DayChartData | ProjectChartData | MemberChartData
 
 interface ReportsChartsProps {
   entries: TimeEntryReport[]
@@ -49,7 +47,7 @@ export function ReportsCharts({ entries, isLoading }: ReportsChartsProps) {
   const projectData = groupByProjects(entries)
   const memberData = groupByMembers(entries)
 
-  const data: ChartData[] = (mode === 'days' ? dayData : mode === 'projects' ? projectData : memberData) as ChartData[]
+  const data = mode === 'days' ? dayData : mode === 'projects' ? projectData : memberData
   const isLineChart = mode === 'days'
 
   return (
@@ -97,7 +95,7 @@ export function ReportsCharts({ entries, isLoading }: ReportsChartsProps) {
                 label={{ value: 'Hours', angle: -90, position: 'insideLeft' }}
               />
               <Tooltip
-                formatter={(value) => hoursToDisplay(value as number)}
+                formatter={(value: number) => hoursToDisplay(value)}
                 contentStyle={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
                 labelStyle={{ color: '#1e293b' }}
               />
@@ -124,31 +122,26 @@ export function ReportsCharts({ entries, isLoading }: ReportsChartsProps) {
           ) : (
             <BarChart
               data={data}
-              margin={{ top: 5, right: 30, left: 0, bottom: 60 }}
+              layout="vertical"
+              margin={{ top: 5, right: 30, left: 200, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-              <XAxis
+              <XAxis type="number" tick={{ fontSize: 12, fill: '#64748b' }} />
+              <YAxis
                 dataKey="name"
                 type="category"
                 tick={{ fontSize: 12, fill: '#64748b' }}
-                angle={-45}
-                textAnchor="end"
-                height={80}
-              />
-              <YAxis
-                type="number"
-                tick={{ fontSize: 12, fill: '#64748b' }}
-                label={{ value: 'Hours', angle: -90, position: 'insideLeft' }}
+                width={190}
               />
               <Tooltip
-                formatter={(value) => hoursToDisplay(value as number)}
+                formatter={(value: number) => hoursToDisplay(value)}
                 contentStyle={{ backgroundColor: '#f8fafc', border: '1px solid #e2e8f0' }}
                 labelStyle={{ color: '#1e293b' }}
               />
               <Bar
                 dataKey="hours"
                 fill="#3b82f6"
-                radius={[4, 4, 0, 0]}
+                radius={[0, 4, 4, 0]}
                 name="Hours"
               />
             </BarChart>

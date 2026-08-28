@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { ReportsFilters, ReportsTable } from '../../features/reports/components'
+import { ReportsFilters, ReportsTable, ReportsCharts } from '../../features/reports/components'
 import { useReportsController } from '../../features/reports/hooks/useReportsController'
 import { calculateSummary } from '../../features/reports/utils/reports.utils'
 
@@ -54,6 +54,8 @@ export function ReportsPage() {
         onFilterChange={handleUpdateFilter}
         onReset={handleResetFilters}
       />
+
+      <ReportsCharts entries={timeEntries} isLoading={isFilterLoading} />
 
       <ReportsTable entries={timeEntries} summary={summary} isLoading={isFilterLoading} />
     </div>

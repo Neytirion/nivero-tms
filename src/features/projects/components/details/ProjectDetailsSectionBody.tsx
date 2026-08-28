@@ -101,24 +101,33 @@ export function ProjectDetailsSectionBody({
   const [estimates, setEstimates] = useState<EstimateWithPackages[] | null>(null)
 
   useEffect(() => {
+    let isMounted = true
+
+    // Reset estimates when project changes to ensure clean state
     if (!selectedProjectId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEstimates(null)
-      return
+      return () => {
+        isMounted = false
+      }
     }
 
-    setEstimates(null)
-
     const loadEstimates = async () => {
+      if (isMounted) setEstimates(null)
       try {
         const data = await getProjectEstimates(selectedProjectId)
-        setEstimates(data)
+        if (isMounted) setEstimates(data)
       } catch (error) {
         console.error('Failed to load estimates for overview:', error)
-        setEstimates([])
+        if (isMounted) setEstimates([])
       }
     }
 
     void loadEstimates()
+
+    return () => {
+      isMounted = false
+    }
   }, [selectedProjectId])
   return (
     <>

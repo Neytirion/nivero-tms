@@ -11,7 +11,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
-import type { TimeEntryReport } from '../types/reports'
+import type { TimeEntryReport, ReportsSummary } from '../types/reports'
 import type { DayChartData, ProjectChartData, MemberChartData } from '../utils/chart-data.utils'
 import { groupByDays, groupByProjects, groupByMembers } from '../utils/chart-data.utils'
 import { hoursToDisplay } from '../utils/reports.utils'
@@ -21,10 +21,11 @@ type ChartData = DayChartData | ProjectChartData | MemberChartData
 
 interface ReportsChartsProps {
   entries: TimeEntryReport[]
+  summary: ReportsSummary
   isLoading: boolean
 }
 
-export function ReportsCharts({ entries, isLoading }: ReportsChartsProps) {
+export function ReportsCharts({ entries, summary, isLoading }: ReportsChartsProps) {
   const [mode, setMode] = useState<ChartMode>('days')
 
   if (isLoading || entries.length === 0) {
@@ -53,28 +54,55 @@ export function ReportsCharts({ entries, isLoading }: ReportsChartsProps) {
   const isLineChart = mode === 'days'
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5">
-      {/* Mode Selector */}
-      <div className="mb-6 flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-900">Reports Analytics</h3>
-        <div className="flex gap-2">
-          {modes.map((m) => (
-            <button
-              key={m.id}
-              onClick={() => setMode(m.id)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                mode === m.id
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
-              }`}
-              title={m.label}
-            >
-              <span className="hidden sm:inline">{m.label}</span>
-              <span className="sm:hidden">{m.icon}</span>
-            </button>
-          ))}
+    <div className="space-y-5">
+      {/* Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Total Hours</p>
+          <p className="mt-2 text-2xl font-bold text-slate-900">{hoursToDisplay(summary.totalHours)}</p>
+          <p className="mt-1 text-xs text-slate-600">{summary.entriesCount} entries</p>
+        </div>
+
+        <div className="rounded-lg border border-slate-200 bg-emerald-50 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-emerald-600">Billable Hours</p>
+          <p className="mt-2 text-2xl font-bold text-emerald-900">{hoursToDisplay(summary.billableHours)}</p>
+          <p className="mt-1 text-xs text-emerald-600">
+            {summary.totalHours > 0 ? Math.round((summary.billableHours / summary.totalHours) * 100) : 0}%
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-slate-200 bg-purple-50 p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-purple-600">Non-billable Hours</p>
+          <p className="mt-2 text-2xl font-bold text-purple-900">{hoursToDisplay(summary.nonBillableHours)}</p>
+          <p className="mt-1 text-xs text-purple-600">
+            {summary.totalHours > 0 ? Math.round(((summary.totalHours - summary.billableHours) / summary.totalHours) * 100) : 0}%
+          </p>
         </div>
       </div>
+
+      {/* Chart Section */}
+      <section className="rounded-xl border border-slate-200 bg-white p-5">
+        {/* Mode Selector */}
+        <div className="mb-6 flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-slate-900">Reports Analytics</h3>
+          <div className="flex gap-2">
+            {modes.map((m) => (
+              <button
+                key={m.id}
+                onClick={() => setMode(m.id)}
+                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  mode === m.id
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'border border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
+                }`}
+                title={m.label}
+              >
+                <span className="hidden sm:inline">{m.label}</span>
+                <span className="sm:hidden">{m.icon}</span>
+              </button>
+            ))}
+          </div>
+        </div>
 
       {/* Chart */}
       <div className="h-80 w-full">
@@ -156,12 +184,13 @@ export function ReportsCharts({ entries, isLoading }: ReportsChartsProps) {
         </ResponsiveContainer>
       </div>
 
-      {/* Chart Info */}
-      <div className="mt-4 text-xs text-slate-500">
-        {mode === 'days' && 'Billable and non-billable hours tracked over time'}
-        {mode === 'projects' && `${projectData.length} projects tracked`}
-        {mode === 'members' && `${memberData.length} team members tracked`}
-      </div>
-    </section>
+        {/* Chart Info */}
+        <div className="mt-4 text-xs text-slate-500">
+          {mode === 'days' && 'Billable and non-billable hours tracked over time'}
+          {mode === 'projects' && `${projectData.length} projects tracked`}
+          {mode === 'members' && `${memberData.length} team members tracked`}
+        </div>
+      </section>
+    </div>
   )
 }

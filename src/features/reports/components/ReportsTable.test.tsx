@@ -41,12 +41,6 @@ describe('ReportsTable', () => {
     render(
       <ReportsTable
         entries={mockEntries}
-        summary={{
-          totalHours: 3.5,
-          billableHours: 2,
-          nonBillableHours: 1.5,
-          entriesCount: 2,
-        }}
         isLoading={false}
       />,
     )
@@ -55,52 +49,10 @@ describe('ReportsTable', () => {
     expect(screen.getByText('Jane Smith')).toBeInTheDocument()
   })
 
-  it('displays summary cards', () => {
-    render(
-      <ReportsTable
-        entries={mockEntries}
-        summary={{
-          totalHours: 3.5,
-          billableHours: 2,
-          nonBillableHours: 1.5,
-          entriesCount: 2,
-        }}
-        isLoading={false}
-      />,
-    )
-
-    expect(screen.getByText('Total Hours')).toBeInTheDocument()
-    expect(screen.getByText('Billable Hours')).toBeInTheDocument()
-    expect(screen.getByText('Non-billable Hours')).toBeInTheDocument()
-  })
-
-  it('displays correct summary values', () => {
-    render(
-      <ReportsTable
-        entries={mockEntries}
-        summary={{
-          totalHours: 3.5,
-          billableHours: 2,
-          nonBillableHours: 1.5,
-          entriesCount: 2,
-        }}
-        isLoading={false}
-      />,
-    )
-
-    expect(screen.getByText('2 entries')).toBeInTheDocument()
-  })
-
   it('shows loading state', () => {
     render(
       <ReportsTable
         entries={[]}
-        summary={{
-          totalHours: 0,
-          billableHours: 0,
-          nonBillableHours: 0,
-          entriesCount: 0,
-        }}
         isLoading={true}
       />,
     )
@@ -112,12 +64,6 @@ describe('ReportsTable', () => {
     render(
       <ReportsTable
         entries={[]}
-        summary={{
-          totalHours: 0,
-          billableHours: 0,
-          nonBillableHours: 0,
-          entriesCount: 0,
-        }}
         isLoading={false}
       />,
     )
@@ -129,12 +75,6 @@ describe('ReportsTable', () => {
     render(
       <ReportsTable
         entries={mockEntries}
-        summary={{
-          totalHours: 3.5,
-          billableHours: 2,
-          nonBillableHours: 1.5,
-          entriesCount: 2,
-        }}
         isLoading={false}
       />,
     )
@@ -149,12 +89,6 @@ describe('ReportsTable', () => {
     render(
       <ReportsTable
         entries={[mockEntries[0]]}
-        summary={{
-          totalHours: 2,
-          billableHours: 2,
-          nonBillableHours: 0,
-          entriesCount: 1,
-        }}
         isLoading={false}
       />,
     )
@@ -166,12 +100,6 @@ describe('ReportsTable', () => {
     render(
       <ReportsTable
         entries={[mockEntries[1]]}
-        summary={{
-          totalHours: 1.5,
-          billableHours: 0,
-          nonBillableHours: 1.5,
-          entriesCount: 1,
-        }}
         isLoading={false}
       />,
     )

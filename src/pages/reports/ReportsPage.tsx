@@ -55,9 +55,9 @@ export function ReportsPage() {
         onReset={handleResetFilters}
       />
 
-      <ReportsCharts entries={timeEntries} isLoading={isFilterLoading} />
+      <ReportsCharts entries={timeEntries} summary={summary} isLoading={isFilterLoading} />
 
-      <ReportsTable entries={timeEntries} summary={summary} isLoading={isFilterLoading} />
+      <ReportsTable entries={timeEntries} isLoading={isFilterLoading} />
     </div>
   )
 }

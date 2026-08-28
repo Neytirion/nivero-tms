@@ -1,5 +1,7 @@
-import type { ProjectPreview, TaskPreview } from '../../../../lib/pm'
+import type { ProjectPreview, TaskPreview, EstimateWithPackages } from '../../../../lib/pm'
 import type { ProjectRoleName } from '../../../../shared/utils/permissions'
+import { useEffect, useState } from 'react'
+import { getProjectEstimates } from '../../../../lib/pm'
 import { EstimatesTab } from '../estimates'
 import { ProjectCollaborationTab } from './ProjectCollaborationTab'
 import { TeamAccessSection } from './TeamAccessSection'
@@ -25,8 +27,6 @@ interface ProjectDetailsSectionBodyProps {
   onSettingsStartDateChange: (value: string) => void
   settingsDeadline: string
   onSettingsDeadlineChange: (value: string) => void
-  settingsBudgetAmount: string
-  onSettingsBudgetAmountChange: (value: string) => void
   selectedProjectClientIntakeToken: string | null
   canEditSelectedProject: boolean
   canDeleteSelectedProject?: boolean
@@ -71,8 +71,6 @@ export function ProjectDetailsSectionBody({
   onSettingsStartDateChange,
   settingsDeadline,
   onSettingsDeadlineChange,
-  settingsBudgetAmount,
-  onSettingsBudgetAmountChange,
   selectedProjectClientIntakeToken,
   canEditSelectedProject,
   canDeleteSelectedProject,
@@ -100,6 +98,27 @@ export function ProjectDetailsSectionBody({
   onOpenCompleteConfirm,
   onOpenSaveSettingsConfirm,
 }: ProjectDetailsSectionBodyProps) {
+  const [estimates, setEstimates] = useState<EstimateWithPackages[]>([])
+
+  // Load estimates for budget display in overview
+  useEffect(() => {
+    if (!selectedProjectId) {
+      setEstimates([])
+      return
+    }
+
+    const loadEstimates = async () => {
+      try {
+        const data = await getProjectEstimates(selectedProjectId)
+        setEstimates(data)
+      } catch (error) {
+        console.error('Failed to load estimates for overview:', error)
+        setEstimates([])
+      }
+    }
+
+    void loadEstimates()
+  }, [selectedProjectId])
   return (
     <>
       {activeTab === 'overview' ? (
@@ -110,6 +129,7 @@ export function ProjectDetailsSectionBody({
           teamMemberNames={teamMemberNames}
           projectMembers={projectMembers}
           currentUserProfile={currentUserProfile}
+          estimates={estimates}
         />
       ) : null}
 
@@ -151,8 +171,6 @@ export function ProjectDetailsSectionBody({
           onSettingsStartDateChange={onSettingsStartDateChange}
           settingsDeadline={settingsDeadline}
           onSettingsDeadlineChange={onSettingsDeadlineChange}
-          settingsBudgetAmount={settingsBudgetAmount}
-          onSettingsBudgetAmountChange={onSettingsBudgetAmountChange}
           selectedProjectClientIntakeToken={selectedProjectClientIntakeToken}
           canEditSelectedProject={canEditSelectedProject}
           canDeleteSelectedProject={canDeleteSelectedProject}

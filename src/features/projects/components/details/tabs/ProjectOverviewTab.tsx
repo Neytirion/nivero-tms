@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getProjectMemberDisplayRoles, type ProjectMemberListItem, type ProjectPreview, type TaskPreview } from '../../../../../lib/pm'
+import { getProjectMemberDisplayRoles, type ProjectMemberListItem, type ProjectPreview, type TaskPreview, type EstimateWithPackages } from '../../../../../lib/pm'
 import { UserProfileDialog, type UserProfilePreview } from '../../../../../shared/components'
 import { downloadClientBrief, type ClientBriefExportFormat } from '../../../utils/client-brief'
 import { deriveProgress, deriveRisk, formatDate } from '../../../utils/project-metrics'
@@ -34,6 +34,27 @@ function getDurationDays(startDate: string | null, endDate: string | null): numb
   return Math.floor((endTime - startTime) / dayInMs) + 1
 }
 
+function getEstimateBudget(estimates: EstimateWithPackages[]): { budget: number; pricePerHour: number | null; estimatedHours: number } | null {
+  if (estimates.length === 0) {
+    return null
+  }
+
+  // Get the latest estimate (first in sorted array - by version_number desc)
+  const latestEstimate = estimates[0]
+  
+  if (!latestEstimate || !latestEstimate.price_per_hour) {
+    return null
+  }
+
+  const totalHours = latestEstimate.work_packages.reduce((sum, pkg) => sum + (pkg.estimated_hours ?? 0), 0)
+  
+  return {
+    budget: latestEstimate.price_per_hour * totalHours,
+    pricePerHour: latestEstimate.price_per_hour,
+    estimatedHours: totalHours,
+  }
+}
+
 interface ProjectOverviewTabProps {
   selectedProject: ProjectPreview
   tasks: TaskPreview[]
@@ -41,6 +62,7 @@ interface ProjectOverviewTabProps {
   teamMemberNames: string[]
   projectMembers: ProjectMemberListItem[]
   currentUserProfile: UserProfilePreview | null
+  estimates?: EstimateWithPackages[]
 }
 
 export function ProjectOverviewTab({
@@ -50,6 +72,7 @@ export function ProjectOverviewTab({
   teamMemberNames,
   projectMembers,
   currentUserProfile,
+  estimates = [],
 }: ProjectOverviewTabProps) {
   const [exportFormat, setExportFormat] = useState<ClientBriefExportFormat>('pdf')
   const [isExporting, setIsExporting] = useState(false)
@@ -148,12 +171,23 @@ export function ProjectOverviewTab({
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Project Info</p>
           <dl className="mt-3 space-y-2">
-            {[
-              { label: 'Customer', value: selectedProject.customer_name ?? 'Not set' },
-              { label: 'Manager', value: projectManagerName ?? (selectedProject.project_manager_id ? 'Assigned' : 'Not set') },
-              { label: 'Budget', value: selectedProject.budget_amount != null ? `$${selectedProject.budget_amount.toLocaleString()}` : 'Not set' },
-              { label: 'Created', value: formatDate(selectedProject.created_at) },
-            ].map(({ label, value }) => (
+            {(() => {
+              const budgetData = getEstimateBudget(estimates)
+              const baseItems = [
+                { label: 'Customer', value: selectedProject.customer_name ?? 'Not set' },
+                { label: 'Manager', value: projectManagerName ?? (selectedProject.project_manager_id ? 'Assigned' : 'Not set') },
+                { label: 'Created', value: formatDate(selectedProject.created_at) },
+              ]
+              
+              if (budgetData) {
+                baseItems.push({
+                  label: 'Budget',
+                  value: `${budgetData.budget.toFixed(0)}kr (${budgetData.pricePerHour}kr/h)`,
+                })
+              }
+              
+              return baseItems
+            })().map(({ label, value }) => (
               <div key={label} className="flex items-baseline justify-between gap-2 border-b border-slate-100 pb-2 last:border-0 last:pb-0">
                 <dt className="shrink-0 text-xs text-slate-500">{label}</dt>
                 <dd className="truncate text-sm font-medium text-slate-800">{value}</dd>

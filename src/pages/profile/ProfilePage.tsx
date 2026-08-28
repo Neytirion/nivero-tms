@@ -3,9 +3,9 @@ import type { User } from '@supabase/supabase-js'
 import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import { supabase } from '../../lib/supabase'
 import { ConfirmDialog } from '../../shared/components'
-import { useAvatarUpload } from './useAvatarUpload'
-import { ABOUT_ME_MAX_LENGTH, useProfileDetails } from './useProfileDetails'
-import { usePasswordChange } from './usePasswordChange'
+import { useAvatarUpload } from '../../features/profile/hooks/useAvatarUpload'
+import { ABOUT_ME_MAX_LENGTH, useProfileDetails } from '../../features/profile/hooks/useProfileDetails'
+import { usePasswordChange } from '../../features/profile/hooks/usePasswordChange'
 
 interface ProfilePageProps {
   user: User

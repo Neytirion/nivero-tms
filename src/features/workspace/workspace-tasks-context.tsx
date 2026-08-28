@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 import type { ReactNode } from 'react'
-import { useWorkspaceTasksDomain } from '../dashboard/useWorkspaceTasksDomain'
+import { useWorkspaceTasksDomain } from '../dashboard/hooks/useWorkspaceTasksDomain'
 import { useWorkspaceCore } from './workspace-context.tsx'
 
 export type WorkspaceTasksState = ReturnType<typeof useWorkspaceTasksDomain>

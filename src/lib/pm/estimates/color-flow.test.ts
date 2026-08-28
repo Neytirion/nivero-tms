@@ -47,6 +47,7 @@ vi.mock('./mutations', () => ({
   markEstimateAsApproved: vi.fn(),
   markEstimateAsDraft: mocks.markEstimateAsDraft,
   updateExistingPackage: mocks.updateExistingPackage,
+  updateEstimatePricePerHour: vi.fn(),
   updateProjectEstimatedHours: vi.fn(),
 }))
 

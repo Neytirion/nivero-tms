@@ -25,6 +25,7 @@ import {
   insertEstimateVersion,
   markEstimateAsApproved,
   markEstimateAsDraft,
+  updateEstimatePricePerHour,
   updateExistingPackage,
   updateProjectEstimatedHours,
 } from './mutations'
@@ -239,6 +240,7 @@ export async function saveEstimateDraft(input: SaveEstimateDraftInput) {
     await archivePackages(packagesToArchive.map((item) => item.id))
   }
 
+  await updateEstimatePricePerHour(input.estimateId, input.pricePerHour)
   await markEstimateAsDraft(input.estimateId)
 }
 

@@ -92,7 +92,9 @@ export type TimeEntryPreview = Pick<
 export type EstimatePreview = Pick<
   Estimate,
   'id' | 'project_id' | 'version_number' | 'status' | 'created_by' | 'approved_at' | 'created_at' | 'updated_at'
->
+> & {
+  price_per_hour?: number | null
+}
 
 export type WorkPackagePreview = Pick<
   WorkPackage,
@@ -268,6 +270,7 @@ export interface SaveEstimateDraftInput {
     color?: string | null
   }>
   isFirstVersion?: boolean
+  pricePerHour?: number
 }
 
 export interface UploadProjectDocumentInput {

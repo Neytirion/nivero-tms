@@ -63,7 +63,7 @@ export async function getProjectMembershipRole(projectId: string, userId: string
 export async function getProjectEstimatePreviews(projectId: string, canViewDrafts: boolean) {
   let estimatesQuery = supabase
     .from('estimates')
-    .select('id,project_id,version_number,status,created_by,approved_at,created_at,updated_at')
+    .select('id,project_id,version_number,status,created_by,approved_at,price_per_hour,created_at,updated_at')
     .eq('project_id', projectId)
     .order('version_number', { ascending: false })
 

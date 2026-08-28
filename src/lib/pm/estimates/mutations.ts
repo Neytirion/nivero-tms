@@ -137,6 +137,21 @@ export async function markEstimateAsDraft(estimateId: string) {
   }
 }
 
+export async function updateEstimatePricePerHour(estimateId: string, pricePerHour?: number) {
+  if (pricePerHour === undefined) {
+    return
+  }
+
+  const { error } = await supabase
+    .from('estimates')
+    .update({ price_per_hour: pricePerHour, updated_at: new Date().toISOString() })
+    .eq('id', estimateId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
 export async function markEstimateAsApproved(estimateId: string) {
   const { error } = await supabase
     .from('estimates')

@@ -98,6 +98,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
   const [activeEstimateId, setActiveEstimateId] = useState<string | null>(null)
   const [packages, setPackages] = useState<EditableWorkPackage[]>(toEditablePackages(null))
   const [showArchived, setShowArchived] = useState(false)
+  const [pricePerHour, setPricePerHour] = useState<string>('')
 
   const totalHours = useMemo(
     () =>
@@ -162,6 +163,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
       if (data.length === 0) {
         setActiveEstimateId(null)
         setPackages(toEditablePackages(null))
+        setPricePerHour('')
         setStatus('No estimate versions yet. Create v1 to begin planning.')
         setIsLoading(false)
         return
@@ -171,8 +173,10 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
         ? preferredEstimateId
         : data[0].id
 
+      const targetEstimate = data.find((item: EstimateWithPackages) => item.id === targetId)
       setActiveEstimateId(targetId)
-      setPackages(toEditablePackages(data.find((item: EstimateWithPackages) => item.id === targetId) ?? null))
+      setPackages(toEditablePackages(targetEstimate ?? null))
+      setPricePerHour(String(targetEstimate?.price_per_hour ?? ''))
       setStatus('')
     } catch (error) {
       setStatus(error instanceof Error ? `Estimate load error: ${error.message}` : 'Estimate load error')
@@ -236,6 +240,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
           color: getWorkPackageColor(item.color, index),
         })),
         isFirstVersion,
+        pricePerHour: Number(pricePerHour) || undefined,
       })
 
       await loadEstimates(activeEstimateId)
@@ -323,6 +328,8 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
     setPackages,
     showArchived,
     setShowArchived,
+    pricePerHour,
+    setPricePerHour,
     displayedPackages,
     canEditActiveEstimate,
     canCreateNewVersion,

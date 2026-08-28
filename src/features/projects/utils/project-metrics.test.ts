@@ -200,19 +200,19 @@ describe('project-metrics', () => {
     it('calculates spent amount and burn percent correctly', () => {
       expect(
         deriveBudgetConsumption({
-          budget_amount: 10000,
-          estimated_hours: 100,
-          actual_hours: 25,
+          pricePerHour: 100,
+          estimatedHours: 100,
+          actualHours: 25,
         }),
       ).toEqual({ spentAmount: 2500, budgetAmount: 10000, burnPercent: 25 })
     })
 
-    it('returns null when budget is not set', () => {
+    it('returns null when price per hour is not set', () => {
       expect(
         deriveBudgetConsumption({
-          budget_amount: null,
-          estimated_hours: 100,
-          actual_hours: 25,
+          pricePerHour: null,
+          estimatedHours: 100,
+          actualHours: 25,
         }),
       ).toBeNull()
     })
@@ -220,9 +220,9 @@ describe('project-metrics', () => {
     it('returns null when estimated hours are zero', () => {
       expect(
         deriveBudgetConsumption({
-          budget_amount: 10000,
-          estimated_hours: 0,
-          actual_hours: 10,
+          pricePerHour: 100,
+          estimatedHours: 0,
+          actualHours: 10,
         }),
       ).toBeNull()
     })

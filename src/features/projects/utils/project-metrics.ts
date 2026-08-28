@@ -240,18 +240,23 @@ export function deriveForecastCompletionDate(
 }
 
 export function deriveBudgetConsumption(
-  project: Pick<ProjectPreview, 'budget_amount' | 'estimated_hours' | 'actual_hours'>,
+  input: {
+    pricePerHour: number | null | undefined
+    estimatedHours: number | null | undefined
+    actualHours: number | null | undefined
+  },
 ): { spentAmount: number; budgetAmount: number; burnPercent: number } | null {
-  const budget = project.budget_amount ?? 0
-  const estimated = project.estimated_hours ?? 0
-  const actual = project.actual_hours ?? 0
+  const pricePerHour = input.pricePerHour ?? 0
+  const estimated = input.estimatedHours ?? 0
+  const actual = input.actualHours ?? 0
 
-  if (budget <= 0 || estimated <= 0 || actual < 0) {
+  if (pricePerHour <= 0 || estimated <= 0 || actual < 0) {
     return null
   }
 
-  const spentAmount = Number(((actual / estimated) * budget).toFixed(2))
-  const burnPercent = Number(((spentAmount / budget) * 100).toFixed(1))
+  const budgetAmount = Number((pricePerHour * estimated).toFixed(2))
+  const spentAmount = Number((actual * pricePerHour).toFixed(2))
+  const burnPercent = Number(((spentAmount / budgetAmount) * 100).toFixed(1))
 
-  return { spentAmount, budgetAmount: budget, burnPercent }
+  return { spentAmount, budgetAmount, burnPercent }
 }

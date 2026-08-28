@@ -94,6 +94,7 @@ export interface Database {
           status: string
           created_by: string | null
           approved_at: string | null
+          price_per_hour: number | null
           created_at: string
           updated_at: string
         }
@@ -104,6 +105,7 @@ export interface Database {
           status?: string
           created_by?: string | null
           approved_at?: string | null
+          price_per_hour?: number | null
           created_at?: string
           updated_at?: string
         }
@@ -114,6 +116,7 @@ export interface Database {
           status?: string
           created_by?: string | null
           approved_at?: string | null
+          price_per_hour?: number | null
           created_at?: string
           updated_at?: string
         }

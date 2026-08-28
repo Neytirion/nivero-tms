@@ -24,6 +24,8 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
     canEditActiveEstimate,
     canCreateNewVersion,
     totalHours,
+    pricePerHour,
+    setPricePerHour,
     addWorkPackageRow,
     removeWorkPackageRow,
     createVersionHandler,
@@ -233,6 +235,29 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
             </div>
 
             <p className="mt-3 text-sm text-slate-700">Total: {totalHours.toFixed(1)}h</p>
+
+            {canEdit && isEditingPackages ? (
+              <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <label className="block text-sm font-semibold text-slate-900 mb-2">
+                  Price per Hour (kr)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={pricePerHour}
+                  onChange={(e) => setPricePerHour(e.target.value)}
+                  placeholder="Enter hourly rate (e.g., 50)"
+                  className="w-full max-w-xs rounded-md border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
+                />
+              </div>
+            ) : totalHours > 0 && pricePerHour ? (
+              <div className="mt-3 rounded-lg border border-cyan-200 bg-cyan-50 p-3">
+                <p className="text-sm text-slate-700">
+                  Budget (at {pricePerHour}kr/h): <span className="font-semibold text-cyan-900">{(totalHours * Number(pricePerHour)).toFixed(0)}kr</span>
+                </p>
+              </div>
+            ) : null}
 
             {canEdit ? (
               <div className="mt-3 flex flex-wrap gap-2">

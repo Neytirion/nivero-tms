@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, beforeEach, vi } from 'vitest'
 import {
   deriveBudgetConsumption,
   deriveForecastCompletionDate,
@@ -6,6 +6,8 @@ import {
   deriveRisk,
   deriveRiskFromProgressAndHours,
   formatDate,
+  countWorkingDays,
+  countElapsedWorkingDays,
 } from './project-metrics'
 
 describe('project-metrics', () => {
@@ -214,6 +216,122 @@ describe('project-metrics', () => {
           actual_hours: 10,
         }),
       ).toBeNull()
+    })
+  })
+
+  describe('countWorkingDays', () => {
+    it('counts working days correctly for a full week', () => {
+      // 2026-06-01 is Monday, 2026-06-05 is Friday = 5 days
+      expect(countWorkingDays('2026-06-01', '2026-06-05')).toBe(5)
+    })
+
+    it('excludes weekends', () => {
+      // 2026-06-01 (Mon) to 2026-06-08 (Mon) = 6 working days (Mon-Fri, skip Sat/Sun)
+      expect(countWorkingDays('2026-06-01', '2026-06-08')).toBe(6)
+    })
+
+    it('returns 1 for a single day on weekday', () => {
+      // 2026-06-01 is Monday
+      expect(countWorkingDays('2026-06-01', '2026-06-01')).toBe(1)
+    })
+
+    it('returns 0 for a weekend day', () => {
+      // 2026-06-06 is Saturday
+      expect(countWorkingDays('2026-06-06', '2026-06-06')).toBe(0)
+    })
+
+    it('returns 0 for null dates', () => {
+      expect(countWorkingDays(null, '2026-06-05')).toBe(0)
+      expect(countWorkingDays('2026-06-01', null)).toBe(0)
+      expect(countWorkingDays(null, null)).toBe(0)
+    })
+
+    it('handles invalid date strings', () => {
+      expect(countWorkingDays('invalid', '2026-06-05')).toBe(0)
+      expect(countWorkingDays('2026-06-01', 'invalid')).toBe(0)
+    })
+  })
+
+  describe('deriveRiskFromProgressAndHours with dates', () => {
+    // Mock today's date for consistent testing
+    beforeEach(() => {
+      vi.useFakeTimers()
+      vi.setSystemTime(new Date('2026-06-10').getTime()) // Wednesday
+    })
+
+    it('returns Green when on track with working day-based calculation', () => {
+      // Project: 2026-06-01 (Mon) to 2026-06-30 (Tue) = 22 working days
+      // Estimated: 100 hours = 4.55 hours/day
+      // Elapsed: 2026-06-01 to 2026-06-10 = 8 working days = 36.36 hours required
+      // Actual: 36 hours = 98.9% of required > 90% threshold = Green
+      expect(
+        deriveRiskFromProgressAndHours({
+          progressPercent: null,
+          estimatedHours: 100,
+          actualHours: 36,
+          startDate: '2026-06-01',
+          endDate: '2026-06-30',
+        }),
+      ).toBe('Green')
+    })
+
+    it('returns Amber when moderately behind on working day-based calculation', () => {
+      // Actual: 30 hours = 82.4% of 36.36 required
+      // Between 80% and 90% threshold = Amber
+      expect(
+        deriveRiskFromProgressAndHours({
+          progressPercent: null,
+          estimatedHours: 100,
+          actualHours: 30,
+          startDate: '2026-06-01',
+          endDate: '2026-06-30',
+        }),
+      ).toBe('Amber')
+    })
+
+    it('returns Red when significantly behind on working day-based calculation', () => {
+      // Project: 2026-06-01 (Mon) to 2026-06-30
+      // Estimated: 100 hours = 4.55 hours/day
+      // Elapsed: 8 working days = 36.36 hours required
+      // Actual: 28 hours = 76.9% of required < 80% threshold = Red
+      expect(
+        deriveRiskFromProgressAndHours({
+          progressPercent: null,
+          estimatedHours: 100,
+          actualHours: 28,
+          startDate: '2026-06-01',
+          endDate: '2026-06-30',
+        }),
+      ).toBe('Red')
+    })
+
+    it('returns Green when ahead on working day-based calculation', () => {
+      // Project: 2026-06-01 to 2026-06-30
+      // Estimated: 100 hours = 4.55 hours/day
+      // Elapsed: 8 working days = 36.36 hours required
+      // Actual: 42 hours = 115.4% of required > 90% threshold = Green
+      expect(
+        deriveRiskFromProgressAndHours({
+          progressPercent: null,
+          estimatedHours: 100,
+          actualHours: 42,
+          startDate: '2026-06-01',
+          endDate: '2026-06-30',
+        }),
+      ).toBe('Green')
+    })
+
+    it('returns Green when project is in future', () => {
+      // Project hasn't started yet
+      expect(
+        deriveRiskFromProgressAndHours({
+          progressPercent: null,
+          estimatedHours: 100,
+          actualHours: 0,
+          startDate: '2026-07-01',
+          endDate: '2026-07-31',
+        }),
+      ).toBe('Green')
     })
   })
 })

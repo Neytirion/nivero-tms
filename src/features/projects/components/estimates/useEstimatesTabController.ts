@@ -85,10 +85,11 @@ function validatePackages(packages: EditableWorkPackage[]): PackageFieldError[] 
 interface UseEstimatesTabControllerInput {
   projectId: string
   canEdit: boolean
+  onEstimateCreated?: (estimateId: string) => void
 }
 
 export function useEstimatesTabController(input: UseEstimatesTabControllerInput) {
-  const { projectId, canEdit } = input
+  const { projectId, canEdit, onEstimateCreated } = input
   const { loadDashboardPreview } = useWorkspace()
 
   const [isLoading, setIsLoading] = useState(false)
@@ -202,6 +203,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
     try {
       const created = await createEstimateVersion(projectId)
       await loadEstimates(created.id)
+      onEstimateCreated?.(created.id)
       setStatus(`Estimate v${created.version_number} created.`)
     } catch (error) {
       setStatus(error instanceof Error ? `Create version error: ${error.message}` : 'Create version error')
@@ -296,6 +298,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
       })
 
       await loadEstimates(created.id)
+      onEstimateCreated?.(created.id)
       setStatus(`Estimate v${created.version_number} created with standard work packages.`)
     } catch (error) {
       setStatus(error instanceof Error ? `Start estimates error: ${error.message}` : 'Start estimates error')

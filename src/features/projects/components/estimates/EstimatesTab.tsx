@@ -31,11 +31,22 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
     approveHandler,
     startStandardEstimatesHandler,
     packageValidationErrors,
-  } = useEstimatesTabController({ projectId, canEdit })
+  } = useEstimatesTabController({ 
+    projectId, 
+    canEdit,
+    onEstimateCreated: (estimateId) => {
+      // Automatically open edit mode when a new estimate is created
+      setEditingEstimateId(estimateId)
+    }
+  })
 
   const hasPackageValidationErrors = packageValidationErrors.length > 0
   const isEditingPackages = Boolean(activeEstimateId && editingEstimateId === activeEstimateId)
   const canModifyPackages = canEditActiveEstimate && Boolean(activeEstimateId) && isEditingPackages
+  
+  // Check if this is the first estimate version (no approved versions exist)
+  const hasApprovedVersions = estimates.some((est) => est.status === 'approved')
+  const isFirstVersion = canEditActiveEstimate && !hasApprovedVersions
 
   return (
     <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
@@ -201,9 +212,13 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
                             type="button"
                             onClick={() => removeWorkPackageRow(index)}
                             disabled={!canModifyPackages}
-                            className="rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-[11px] font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                            className={`rounded-md border px-2 py-1 text-[11px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-60 ${
+                              isFirstVersion
+                                ? 'border-orange-200 bg-orange-50 text-orange-700 hover:bg-orange-100'
+                                : 'border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100'
+                            }`}
                           >
-                            Archive
+                            {isFirstVersion ? 'Remove' : 'Archive'}
                           </button>
                         </td>
                       ) : canEdit && item.name.includes('(archived)') ? (

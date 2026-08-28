@@ -5,6 +5,15 @@ interface EstimatesStepProps {
   onWorkPackagesChange: (packages: WorkPackageRow[]) => void
 }
 
+const STANDARD_PACKAGES = [
+  { name: 'UX/UI', estimatedHours: '0' },
+  { name: 'Backend/Integrations', estimatedHours: '0' },
+  { name: 'Frontend', estimatedHours: '0' },
+  { name: 'Test and QA', estimatedHours: '0' },
+  { name: 'Iterations', estimatedHours: '0' },
+  { name: 'Project management', estimatedHours: '0' },
+]
+
 export function EstimatesStep({
   workPackages,
   onWorkPackagesChange,
@@ -25,6 +34,10 @@ export function EstimatesStep({
     const updated = [...workPackages]
     updated[index] = { ...updated[index], [field]: value }
     onWorkPackagesChange(updated)
+  }
+
+  const handleStartStandardEstimates = () => {
+    onWorkPackagesChange(STANDARD_PACKAGES)
   }
 
   const totalHours = workPackages.reduce((sum, pkg) => {
@@ -57,6 +70,26 @@ export function EstimatesStep({
       <h2 className="text-2xl font-bold text-slate-900 mb-6">Project Estimates</h2>
 
       <div className="space-y-4">
+        {/* Start Standard Estimates Button - Only show when empty */}
+        {workPackages.length === 0 && (
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={handleStartStandardEstimates}
+              className="flex-1 rounded-lg border-2 border-purple-600 bg-purple-50 px-4 py-3 text-sm font-semibold text-purple-700 transition hover:bg-purple-100"
+            >
+              ✨ Start Standard Estimates
+            </button>
+            <button
+              type="button"
+              onClick={handleAddPackage}
+              className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100"
+            >
+              + Add Custom Package
+            </button>
+          </div>
+        )}
+
         {/* Work Packages Table */}
         <>
             <div className="mt-6 overflow-x-auto rounded-lg border border-slate-200 bg-white">
@@ -71,8 +104,8 @@ export function EstimatesStep({
                 <tbody>
                   {workPackages.length === 0 ? (
                     <tr className="border-t border-slate-200">
-                      <td colSpan={3} className="px-3 py-3 text-xs text-slate-500 text-center">
-                        No work packages yet. Click "Add Work Package" to get started.
+                      <td colSpan={3} className="px-3 py-4 text-xs text-slate-500 text-center">
+                        Choose "Start Standard Estimates" above to get started quickly, or "Add Custom Package" to create your own.
                       </td>
                     </tr>
                   ) : null}
@@ -118,14 +151,16 @@ export function EstimatesStep({
               <p className="text-lg font-bold text-slate-900">{totalHours.toFixed(1)}h</p>
             </div>
 
-            {/* Add Package Button */}
-            <button
-              type="button"
-              onClick={handleAddPackage}
-              className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
-            >
-              + Add Work Package
-            </button>
+            {/* Add Package Button - Only show when there are already packages */}
+            {workPackages.length > 0 && (
+              <button
+                type="button"
+                onClick={handleAddPackage}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-100"
+              >
+                + Add More Package
+              </button>
+            )}
 
             {/* Empty field warning */}
             {hasEmptyPackages && (

@@ -98,14 +98,15 @@ export function ProjectDetailsSectionBody({
   onOpenCompleteConfirm,
   onOpenSaveSettingsConfirm,
 }: ProjectDetailsSectionBodyProps) {
-  const [estimates, setEstimates] = useState<EstimateWithPackages[]>([])
+  const [estimates, setEstimates] = useState<EstimateWithPackages[] | null>(null)
 
-  // Load estimates for budget display in overview
   useEffect(() => {
     if (!selectedProjectId) {
-      setEstimates([])
+      setEstimates(null)
       return
     }
+
+    setEstimates(null)
 
     const loadEstimates = async () => {
       try {
@@ -129,7 +130,7 @@ export function ProjectDetailsSectionBody({
           teamMemberNames={teamMemberNames}
           projectMembers={projectMembers}
           currentUserProfile={currentUserProfile}
-          estimates={estimates}
+          estimates={estimates ?? undefined}
         />
       ) : null}
 

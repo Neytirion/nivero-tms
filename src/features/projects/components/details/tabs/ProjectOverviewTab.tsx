@@ -72,7 +72,7 @@ export function ProjectOverviewTab({
   teamMemberNames,
   projectMembers,
   currentUserProfile,
-  estimates = [],
+  estimates,
 }: ProjectOverviewTabProps) {
   const [exportFormat, setExportFormat] = useState<ClientBriefExportFormat>('pdf')
   const [isExporting, setIsExporting] = useState(false)
@@ -172,21 +172,19 @@ export function ProjectOverviewTab({
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Project Info</p>
           <dl className="mt-3 space-y-2">
             {(() => {
-              const budgetData = getEstimateBudget(estimates)
-              const baseItems = [
+              const budgetData = estimates ? getEstimateBudget(estimates) : null
+              const budgetValue = !estimates
+                ? '—'
+                : budgetData
+                  ? `${budgetData.budget.toFixed(0)}kr (${budgetData.pricePerHour}kr/h)`
+                  : '—'
+
+              return [
                 { label: 'Customer', value: selectedProject.customer_name ?? 'Not set' },
                 { label: 'Manager', value: projectManagerName ?? (selectedProject.project_manager_id ? 'Assigned' : 'Not set') },
+                { label: 'Budget', value: budgetValue },
                 { label: 'Created', value: formatDate(selectedProject.created_at) },
               ]
-              
-              if (budgetData) {
-                baseItems.push({
-                  label: 'Budget',
-                  value: `${budgetData.budget.toFixed(0)}kr (${budgetData.pricePerHour}kr/h)`,
-                })
-              }
-              
-              return baseItems
             })().map(({ label, value }) => (
               <div key={label} className="flex items-baseline justify-between gap-2 border-b border-slate-100 pb-2 last:border-0 last:pb-0">
                 <dt className="shrink-0 text-xs text-slate-500">{label}</dt>

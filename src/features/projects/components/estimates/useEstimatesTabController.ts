@@ -264,6 +264,45 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
     }
   }
 
+  const startStandardEstimatesHandler = async () => {
+    if (!canEdit || estimates.length > 0) {
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      // Create first estimate version
+      const created = await createEstimateVersion(projectId)
+      
+      // Standard work packages provided by the team
+      const standardPackages = [
+        { name: 'UX/UI', estimatedHours: 0 },
+        { name: 'Backend/Integrations', estimatedHours: 0 },
+        { name: 'Frontend', estimatedHours: 0 },
+        { name: 'Test and QA', estimatedHours: 0 },
+        { name: 'Iterations', estimatedHours: 0 },
+        { name: 'Project management', estimatedHours: 0 },
+      ]
+
+      // Save with standard packages
+      await saveEstimateDraft({
+        estimateId: created.id,
+        workPackages: standardPackages.map((pkg, index) => ({
+          name: pkg.name,
+          estimatedHours: pkg.estimatedHours,
+          color: getDefaultWorkPackageColor(index),
+        })),
+      })
+
+      await loadEstimates(created.id)
+      setStatus(`Estimate v${created.version_number} created with standard work packages.`)
+    } catch (error) {
+      setStatus(error instanceof Error ? `Start estimates error: ${error.message}` : 'Start estimates error')
+      setIsLoading(false)
+    }
+  }
+
   return {
     isLoading,
     status,
@@ -284,6 +323,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
     createVersionHandler,
     saveDraftHandler,
     approveHandler,
+    startStandardEstimatesHandler,
     packageValidationErrors,
   }
 }

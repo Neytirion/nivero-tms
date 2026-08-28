@@ -7,7 +7,6 @@ import {
   deriveRiskFromProgressAndHours,
   formatDate,
   countWorkingDays,
-  countElapsedWorkingDays,
 } from './project-metrics'
 
 describe('project-metrics', () => {
@@ -65,6 +64,8 @@ describe('project-metrics', () => {
           progress_percent: null,
           estimated_hours: 100,
           actual_hours: 50,
+          start_date: null,
+          end_date: null,
         }),
       ).toBe('Red')
     })
@@ -76,6 +77,8 @@ describe('project-metrics', () => {
           progress_percent: null,
           estimated_hours: 100,
           actual_hours: 85,
+          start_date: null,
+          end_date: null,
         }),
       ).toBe('Amber')
     })
@@ -87,6 +90,8 @@ describe('project-metrics', () => {
           progress_percent: null,
           estimated_hours: 100,
           actual_hours: 101,
+          start_date: null,
+          end_date: null,
         }),
       ).toBe('Red')
     })
@@ -98,6 +103,8 @@ describe('project-metrics', () => {
           progress_percent: 20,
           estimated_hours: 100,
           actual_hours: 60,
+          start_date: null,
+          end_date: null,
         }),
       ).toBe('Red')
     })
@@ -109,6 +116,8 @@ describe('project-metrics', () => {
           progress_percent: 90,
           estimated_hours: 100,
           actual_hours: 85,
+          start_date: null,
+          end_date: null,
         }),
       ).toBe('Green')
     })

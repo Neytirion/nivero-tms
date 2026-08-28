@@ -1,4 +1,4 @@
-import { type ConsultantRow, useResourcePlanningController } from './useResourcePlanningController'
+import { type ConsultantRow, useResourcePlanningController } from '../../features/resource-planning/hooks/useResourcePlanningController'
 
 function statusBadge(status: ConsultantRow['status']) {
   if (status === 'overbooked') {

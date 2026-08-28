@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
+import { useWorkspace } from '../../workspace/workspace-context.tsx'
 import {
   getProjectMembers,
   getProjectTasks,
@@ -7,7 +7,7 @@ import {
   type ProjectMemberListItem,
   type TaskPreview,
   type TimeEntryPreview,
-} from '../../lib/pm'
+} from '../../../lib/pm'
 
 const WEEKLY_CAPACITY_HOURS = 40
 

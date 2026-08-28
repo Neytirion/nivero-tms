@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
-import { useTasksPageController } from './useTasksPageController'
-import { CreateTaskSection } from '.'
+import { useTasksPageController } from '../../features/tasks/hooks/useTasksPageController'
+import { CreateTaskSection } from '../../features/tasks/components'
 import { WorkspacePageHeader } from '../../shared/components'
 
 export function CreateTaskPage() {

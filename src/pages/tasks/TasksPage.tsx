@@ -1,7 +1,7 @@
-import { TaskViewsSection } from '.'
+import { TaskViewsSection } from '../../features/tasks/components'
 import type { TaskStatus } from '../../features/tasks/constants.ts'
 import { UserProfileDialog, WorkspacePageHeader, type UserProfilePreview } from '../../shared/components'
-import { useTasksPageController } from './useTasksPageController'
+import { useTasksPageController } from '../../features/tasks/hooks/useTasksPageController'
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 

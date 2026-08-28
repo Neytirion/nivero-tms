@@ -2,11 +2,11 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { TaskDetailsPage } from './TaskDetailsPage'
-import { useTasksPageController } from './useTasksPageController'
+import { useTasksPageController } from '../../features/tasks/hooks/useTasksPageController'
 import { createTaskPreview } from '../test-helpers'
 import { getTimeEntries } from '../../lib/pm'
 
-vi.mock('./useTasksPageController', () => ({
+vi.mock('../../features/tasks/hooks/useTasksPageController', () => ({
   useTasksPageController: vi.fn(),
 }))
 

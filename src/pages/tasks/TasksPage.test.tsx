@@ -36,13 +36,25 @@ vi.mock('../../lib/pm/work-packages', () => ({
 let lastKanbanProps: unknown = null
 let kanbanPropsCalls: unknown[] = []
 
-vi.mock('../../features/tasks/components', () => ({
+vi.mock('../../features/tasks/components', async () => {
+  const actual = await vi.importActual('../../features/tasks/components')
+  return {
+    ...actual,
+    KanbanColumn: (props: unknown) => {
+      lastKanbanProps = props
+      kanbanPropsCalls.push(props)
+      return <div>kanban-column</div>
+    },
+    TaskLogTimeModal: () => null,
+  }
+})
+
+vi.mock('../../features/tasks/components/board', () => ({
   KanbanColumn: (props: unknown) => {
     lastKanbanProps = props
     kanbanPropsCalls.push(props)
     return <div>kanban-column</div>
   },
-  TaskLogTimeModal: () => null,
 }))
 
 const mockUseWorkspace = vi.mocked(useWorkspace)

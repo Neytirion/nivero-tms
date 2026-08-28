@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
-import { useTasksPageController } from './useTasksPageController'
+import { useTasksPageController } from '../../features/tasks/hooks/useTasksPageController'
 import { useEffect, useMemo, useState } from 'react'
 import { useGlobalTaskTimer } from '../../features/time-tracking/global/GlobalTaskTimerContext'
 import { getTimeEntries, createTimeEntry } from '../../lib/pm'

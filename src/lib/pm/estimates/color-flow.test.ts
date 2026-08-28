@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   updateExistingPackage: vi.fn(),
   insertDraftPackage: vi.fn(),
   archivePackages: vi.fn(),
+  deletePackages: vi.fn(),
   markEstimateAsDraft: vi.fn(),
   insertEstimateVersion: vi.fn(),
 }))
@@ -37,6 +38,7 @@ vi.mock('./queries', () => ({
 
 vi.mock('./mutations', () => ({
   archivePackages: mocks.archivePackages,
+  deletePackages: mocks.deletePackages,
   cloneEstimateWorkPackages: vi.fn(),
   getEstimateTotalHours: vi.fn(),
   getExistingDraftPackages: mocks.getExistingDraftPackages,
@@ -88,6 +90,7 @@ describe('pm.estimates color flow', () => {
         { name: 'Build', estimatedHours: 8, color: '#ABCDEF' },
         { name: 'QA', estimatedHours: 3, color: 'invalid-color' },
       ],
+      isFirstVersion: true,
     })
 
     expect(mocks.insertDraftPackage).toHaveBeenNthCalledWith(
@@ -127,6 +130,7 @@ describe('pm.estimates color flow', () => {
       workPackages: [
         { name: 'Backend', estimatedHours: 4, color: '#FF00FF' },
       ],
+      isFirstVersion: true,
     })
 
     expect(mocks.updateExistingPackage).toHaveBeenCalledWith('wp1', 'Backend', 4, 0, '#ff00ff')

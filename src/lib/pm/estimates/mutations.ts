@@ -99,6 +99,18 @@ export async function insertDraftPackage(
   }
 }
 
+export async function deletePackages(packageIds: string[]) {
+  if (packageIds.length === 0) {
+    return
+  }
+
+  const { error } = await supabase.from('work_packages').delete().in('id', packageIds)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+}
+
 export async function archivePackages(packageIds: string[]) {
   if (packageIds.length === 0) {
     return

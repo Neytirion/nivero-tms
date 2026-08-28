@@ -17,6 +17,7 @@ import {
 } from './queries'
 import {
   archivePackages,
+  deletePackages,
   cloneEstimateWorkPackages,
   getEstimateTotalHours,
   getExistingDraftPackages,
@@ -230,7 +231,13 @@ export async function saveEstimateDraft(input: SaveEstimateDraftInput) {
 
   const packagesToArchive = existingPackages.filter((item) => !usedPackageIds.has(item.id))
 
-  await archivePackages(packagesToArchive.map((item) => item.id))
+  if (input.isFirstVersion) {
+    // For first version, delete packages that are not used (don't show in archived)
+    await deletePackages(packagesToArchive.map((item) => item.id))
+  } else {
+    // For subsequent versions, archive packages (soft delete)
+    await archivePackages(packagesToArchive.map((item) => item.id))
+  }
 
   await markEstimateAsDraft(input.estimateId)
 }

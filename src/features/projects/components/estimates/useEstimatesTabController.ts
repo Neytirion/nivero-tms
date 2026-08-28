@@ -224,6 +224,10 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
     setIsLoading(true)
 
     try {
+      const activeEstimate = estimates.find((est) => est.id === activeEstimateId)
+      const hasApprovedVersions = estimates.some((est) => est.status === 'approved')
+      const isFirstVersion = activeEstimate?.version_number === 1 && !hasApprovedVersions
+
       await saveEstimateDraft({
         estimateId: activeEstimateId,
         workPackages: packages.map((item, index) => ({
@@ -231,6 +235,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
           estimatedHours: Number(item.estimatedHours) || 0,
           color: getWorkPackageColor(item.color, index),
         })),
+        isFirstVersion,
       })
 
       await loadEstimates(activeEstimateId)
@@ -295,6 +300,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
           estimatedHours: pkg.estimatedHours,
           color: getDefaultWorkPackageColor(index),
         })),
+        isFirstVersion: true,
       })
 
       await loadEstimates(created.id)

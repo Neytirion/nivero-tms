@@ -267,6 +267,7 @@ export interface SaveEstimateDraftInput {
     estimatedHours: number
     color?: string | null
   }>
+  isFirstVersion?: boolean
 }
 
 export interface UploadProjectDocumentInput {

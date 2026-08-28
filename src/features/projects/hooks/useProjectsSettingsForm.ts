@@ -8,7 +8,6 @@ interface SettingsDraftState {
   customerName: string
   startDate: string
   deadline: string
-  budgetAmount: string
   useEstimates: boolean
 }
 
@@ -49,7 +48,6 @@ export function useProjectsSettingsForm(
     customerName: '',
     startDate: '',
     deadline: '',
-    budgetAmount: '',
     useEstimates: false,
   })
 
@@ -72,7 +70,6 @@ export function useProjectsSettingsForm(
       customerName: selectedProject.customer_name ?? '',
       startDate: selectedProject.start_date ?? '',
       deadline: selectedProject.end_date ?? selectedProject.deadline_at ?? '',
-      budgetAmount: selectedProject.budget_amount != null ? String(selectedProject.budget_amount) : '',
       useEstimates: selectedProject.use_estimates ?? false,
     }
   }, [selectedProject, settingsDraft])
@@ -94,7 +91,6 @@ export function useProjectsSettingsForm(
             customerName: selectedProject.customer_name ?? '',
             startDate: selectedProject.start_date ?? '',
             deadline: selectedProject.end_date ?? selectedProject.deadline_at ?? '',
-            budgetAmount: selectedProject.budget_amount != null ? String(selectedProject.budget_amount) : '',
             useEstimates: selectedProject.use_estimates ?? false,
           }
 
@@ -114,7 +110,6 @@ export function useProjectsSettingsForm(
       customerName: '',
       startDate: '',
       deadline: '',
-      budgetAmount: '',
       useEstimates: false,
     })
   }

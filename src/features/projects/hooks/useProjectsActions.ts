@@ -18,7 +18,6 @@ export interface UseProjectsActionsInput {
     customerName: string
     startDate: string
     deadline: string
-    budgetAmount: string
     useEstimates: boolean
   }
   setStatus: (status: string) => void
@@ -263,7 +262,6 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
         customerName: currentSettingsDraft.customerName || undefined,
         startDate: currentSettingsDraft.startDate || undefined,
         deadlineAt: currentSettingsDraft.deadline || undefined,
-        budgetAmount: currentSettingsDraft.budgetAmount || undefined,
         useEstimates: currentSettingsDraft.useEstimates,
       })
 

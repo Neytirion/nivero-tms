@@ -144,8 +144,6 @@ export function ProjectDetailsPage() {
             onSettingsStartDateChange={(value) => updateSettingsDraft({ startDate: value })}
             settingsDeadline={currentSettingsDraft.deadline}
             onSettingsDeadlineChange={(value) => updateSettingsDraft({ deadline: value })}
-            settingsBudgetAmount={currentSettingsDraft.budgetAmount}
-            onSettingsBudgetAmountChange={(value) => updateSettingsDraft({ budgetAmount: value })}
             selectedProjectClientIntakeToken={selectedProject?.client_intake_token ?? null}
             canEditSelectedProject={canEditSelectedProject}
             canDeleteSelectedProject={canDeleteSelectedProject}

@@ -41,10 +41,6 @@ export function CreateProjectPage() {
         name: data.projectName.trim(),
         description: data.projectDescription.trim() || undefined,
         customerName: data.companyName.trim() || undefined,
-        budgetAmount:
-          data.projectBudgetAmount.trim().length > 0 && Number.isFinite(Number(data.projectBudgetAmount))
-            ? Number(data.projectBudgetAmount)
-            : undefined,
         startDate: data.projectStartDate || undefined,
         endDate: data.projectEndDate || undefined,
         useEstimates: true,
@@ -61,7 +57,8 @@ export function CreateProjectPage() {
       // Create initial estimate version when work packages were provided in wizard.
       if (data.workPackages.length > 0) {
         try {
-          await createInitialEstimateVersion(projectId, data.workPackages)
+          const pricePerHour = data.pricePerHour.trim().length > 0 ? Number(data.pricePerHour) : undefined
+          await createInitialEstimateVersion(projectId, data.workPackages, pricePerHour)
         } catch (error) {
           console.error('Failed to create initial estimate version:', error)
           setStatus('Project created, but estimate version could not be initialized')

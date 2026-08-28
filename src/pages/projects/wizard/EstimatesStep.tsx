@@ -3,6 +3,8 @@ import type { WorkPackageRow } from './types'
 interface EstimatesStepProps {
   workPackages: WorkPackageRow[]
   onWorkPackagesChange: (packages: WorkPackageRow[]) => void
+  pricePerHour: string
+  onPricePerHourChange: (value: string) => void
 }
 
 const STANDARD_PACKAGES = [
@@ -17,6 +19,8 @@ const STANDARD_PACKAGES = [
 export function EstimatesStep({
   workPackages,
   onWorkPackagesChange,
+  pricePerHour,
+  onPricePerHourChange,
 }: EstimatesStepProps) {
   const handleAddPackage = () => {
     onWorkPackagesChange([...workPackages, { name: '', estimatedHours: '0' }])
@@ -150,6 +154,33 @@ export function EstimatesStep({
               <p className="text-sm font-medium text-slate-900">Total Estimated Hours:</p>
               <p className="text-lg font-bold text-slate-900">{totalHours.toFixed(1)}h</p>
             </div>
+
+            {/* Price per Hour */}
+            <label className="block">
+              <span className="mb-2 block text-sm font-semibold text-slate-700">
+                Price per Hour (kr) <span className="text-slate-500 font-normal">(optional)</span>
+              </span>
+              <input
+                type="number"
+                value={pricePerHour}
+                onChange={(event) => onPricePerHourChange(event.target.value)}
+                placeholder="1200"
+                step="50"
+                min="0"
+                className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors"
+              />
+              <p className="mt-1 text-xs text-slate-500">Hourly rate for budget calculation</p>
+            </label>
+
+            {/* Budget Preview */}
+            {pricePerHour && totalHours > 0 && (
+              <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <p className="text-sm text-blue-900">
+                  <span className="font-semibold">Budget: {(totalHours * Number(pricePerHour)).toLocaleString('nb-NO', { style: 'currency', currency: 'NOK', minimumFractionDigits: 0, maximumFractionDigits: 0 })} </span>
+                  <span className="text-blue-800">({totalHours.toFixed(1)}h × {Number(pricePerHour).toLocaleString('nb-NO')}kr/h)</span>
+                </p>
+              </div>
+            )}
 
             {/* Add Package Button - Only show when there are already packages */}
             {workPackages.length > 0 && (

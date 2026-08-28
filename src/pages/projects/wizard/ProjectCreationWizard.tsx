@@ -35,8 +35,8 @@ export function ProjectCreationWizard({
     projectStartDate: '',
     projectEndDate: '',
     projectDescription: '',
-    projectBudgetAmount: '',
     workPackages: [],
+    pricePerHour: '',
     teamInvitations: [],
   })
 
@@ -157,9 +157,7 @@ export function ProjectCreationWizard({
       {currentStep === 'details' && (
         <DetailsStep
           projectDescription={wizardData.projectDescription}
-          projectBudgetAmount={wizardData.projectBudgetAmount}
           onDescriptionChange={(value) => handleDataChange('projectDescription', value)}
-          onBudgetChange={(value) => handleDataChange('projectBudgetAmount', value)}
         />
       )}
 
@@ -167,6 +165,8 @@ export function ProjectCreationWizard({
         <EstimatesStep
           workPackages={wizardData.workPackages}
           onWorkPackagesChange={(packages) => handleDataChange('workPackages', packages)}
+          pricePerHour={wizardData.pricePerHour}
+          onPricePerHourChange={(value) => handleDataChange('pricePerHour', value)}
         />
       )}
 

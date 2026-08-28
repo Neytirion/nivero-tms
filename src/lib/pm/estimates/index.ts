@@ -255,6 +255,7 @@ export async function approveEstimate(estimateId: string) {
 export async function createInitialEstimateVersion(
   projectId: string,
   workPackages: Array<{ name: string; estimatedHours: string; color?: string }>,
+  pricePerHour?: number,
 ) {
   const { data: userData, error: userError } = await supabase.auth.getUser()
 
@@ -289,6 +290,11 @@ export async function createInitialEstimateVersion(
   for (const [index, pkg] of sanitizedWorkPackages.entries()) {
     const estimatedHours = Number.parseFloat(pkg.estimatedHours) || 0
     await insertDraftPackage(estimate.id, pkg.name, estimatedHours, index, getWorkPackageColor(pkg.color, index))
+  }
+
+  // Update price per hour if provided
+  if (pricePerHour) {
+    await updateEstimatePricePerHour(estimate.id, pricePerHour)
   }
 
   // Mark as draft

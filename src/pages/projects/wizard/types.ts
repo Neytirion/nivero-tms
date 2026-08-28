@@ -29,10 +29,10 @@ export type ProjectWizardData = {
 
   // Step 3: Details (optional)
   projectDescription: string
-  projectBudgetAmount: string
 
   // Step 4: Estimates
   workPackages: WorkPackageRow[]
+  pricePerHour: string
 
   // Step 5: Team (optional)
   teamInvitations: TeamInvitation[]

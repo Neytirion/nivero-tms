@@ -74,7 +74,7 @@ export function ReviewStep({ data }: ReviewStepProps) {
         </div>
 
         {/* Optional Details */}
-        {(data.projectDescription || data.projectBudgetAmount) && (
+        {data.projectDescription && (
           <div className="p-4 bg-slate-50 rounded-lg">
             <h3 className="font-semibold text-slate-900 mb-3">📝 Details</h3>
             <div className="space-y-2 text-sm">
@@ -83,12 +83,6 @@ export function ReviewStep({ data }: ReviewStepProps) {
                   <span className="text-slate-600">Description:</span>
                   <br />
                   <span className="font-medium text-slate-900">{data.projectDescription}</span>
-                </p>
-              )}
-              {data.projectBudgetAmount && (
-                <p>
-                  <span className="text-slate-600">Budget:</span>{' '}
-                  <span className="font-medium text-slate-900">${Number(data.projectBudgetAmount).toLocaleString()}</span>
                 </p>
               )}
             </div>
@@ -103,6 +97,12 @@ export function ReviewStep({ data }: ReviewStepProps) {
               <span className="text-slate-600">Status:</span>{' '}
               <span className="font-medium text-slate-900">✓ Enabled</span>
             </p>
+            {data.pricePerHour && (
+              <p>
+                <span className="text-slate-600">Price per Hour:</span>{' '}
+                <span className="font-medium text-slate-900">{Number(data.pricePerHour).toLocaleString('nb-NO')}kr</span>
+              </p>
+            )}
             {data.workPackages.length > 0 && (
               <>
                 <p className="text-slate-600 font-medium mt-3">Work Packages:</p>
@@ -114,12 +114,25 @@ export function ReviewStep({ data }: ReviewStepProps) {
                     </div>
                   ))}
                 </div>
-                <p className="pt-2 border-t border-slate-300 flex justify-between font-semibold">
-                  <span>Total:</span>
-                  <span className="text-slate-900">
-                    {data.workPackages.reduce((sum, pkg) => sum + (Number.parseFloat(pkg.estimatedHours) || 0), 0).toFixed(1)}h
-                  </span>
-                </p>
+                {(() => {
+                  const totalHours = data.workPackages.reduce((sum, pkg) => sum + (Number.parseFloat(pkg.estimatedHours) || 0), 0)
+                  return (
+                    <p className="pt-2 border-t border-slate-300 flex justify-between font-semibold">
+                      <span>Total:</span>
+                      <span className="text-slate-900">{totalHours.toFixed(1)}h</span>
+                    </p>
+                  )
+                })()}
+                {data.pricePerHour && (() => {
+                  const totalHours = data.workPackages.reduce((sum, pkg) => sum + (Number.parseFloat(pkg.estimatedHours) || 0), 0)
+                  const budget = totalHours * Number(data.pricePerHour)
+                  return (
+                    <p className="pt-1 flex justify-between font-semibold text-blue-900 bg-blue-50 px-2 py-1 rounded">
+                      <span>Budget:</span>
+                      <span>{budget.toLocaleString('nb-NO', { style: 'currency', currency: 'NOK', minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                    </p>
+                  )
+                })()}
               </>
             )}
           </div>

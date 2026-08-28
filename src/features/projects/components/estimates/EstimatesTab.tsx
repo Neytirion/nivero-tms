@@ -46,8 +46,7 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
   const isEditingPackages = Boolean(activeEstimateId && editingEstimateId === activeEstimateId)
   const canModifyPackages = canEditActiveEstimate && Boolean(activeEstimateId) && isEditingPackages
   
-  // Check if this is the first estimate version (no approved versions exist)
-  const hasApprovedVersions = estimates.some((est) => est.status === 'approved')
+  const hasApprovedVersions = (estimates ?? []).some((est) => est.status === 'approved')
   const isFirstVersion = canEditActiveEstimate && !hasApprovedVersions
 
   return (
@@ -57,7 +56,9 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
       </div>
 
       <>
-        {estimates.length === 0 ? (
+        {estimates === null ? (
+          <div className="mt-3 text-sm text-slate-500">Loading estimates...</div>
+        ) : estimates.length === 0 ? (
           // Show Start Estimates button when no versions exist
           canEdit ? (
             <div className="mt-3 flex flex-col gap-2">
@@ -78,7 +79,6 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
             </div>
           )
         ) : (
-          // Show full estimates UI when versions exist
           <>
             <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
               {canEdit ? (

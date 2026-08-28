@@ -94,7 +94,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
 
   const [isLoading, setIsLoading] = useState(false)
   const [status, setStatus] = useState('')
-  const [estimates, setEstimates] = useState<EstimateWithPackages[]>([])
+  const [estimates, setEstimates] = useState<EstimateWithPackages[] | null>(null)
   const [activeEstimateId, setActiveEstimateId] = useState<string | null>(null)
   const [packages, setPackages] = useState<EditableWorkPackage[]>(toEditablePackages(null))
   const [showArchived, setShowArchived] = useState(false)
@@ -109,7 +109,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
     [packages],
   )
 
-  const activeEstimate = estimates.find((item) => item.id === activeEstimateId) ?? null
+  const activeEstimate = estimates?.find((item) => item.id === activeEstimateId) ?? null
 
   const archivedPackages = useMemo(
     () =>
@@ -127,7 +127,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
   const displayedPackages = showArchived ? [...packages, ...archivedPackages] : packages
   const packageValidationErrors = useMemo(() => validatePackages(packages), [packages])
   const canEditActiveEstimate = canEdit && activeEstimate?.status !== 'approved'
-  const latestEstimate = estimates[0] ?? null
+  const latestEstimate = (estimates ?? [])[0] ?? null
   const canCreateNewVersion = canEdit && (!latestEstimate || (latestEstimate.status ?? '').toLowerCase() === 'approved')
 
   const addWorkPackageRow = () => {
@@ -164,14 +164,14 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
         setActiveEstimateId(null)
         setPackages(toEditablePackages(null))
         setPricePerHour('')
-        setStatus('No estimate versions yet. Create v1 to begin planning.')
+        setStatus('')
         setIsLoading(false)
         return
       }
 
-      const targetId = preferredEstimateId && data.some((item: EstimateWithPackages) => item.id === preferredEstimateId)
+      const targetId = preferredEstimateId && (data ?? []).some((item: EstimateWithPackages) => item.id === preferredEstimateId)
         ? preferredEstimateId
-        : data[0].id
+        : (data ?? [])[0]?.id
 
       const targetEstimate = data.find((item: EstimateWithPackages) => item.id === targetId)
       setActiveEstimateId(targetId)
@@ -228,8 +228,8 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
     setIsLoading(true)
 
     try {
-      const activeEstimate = estimates.find((est) => est.id === activeEstimateId)
-      const hasApprovedVersions = estimates.some((est) => est.status === 'approved')
+      const activeEstimate = (estimates ?? []).find((est) => est.id === activeEstimateId)
+      const hasApprovedVersions = (estimates ?? []).some((est) => est.status === 'approved')
       const isFirstVersion = activeEstimate?.version_number === 1 && !hasApprovedVersions
 
       await saveEstimateDraft({
@@ -277,7 +277,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
   }
 
   const startStandardEstimatesHandler = async () => {
-    if (!canEdit || estimates.length > 0) {
+    if (!canEdit || (estimates?.length ?? 0) > 0) {
       return
     }
 

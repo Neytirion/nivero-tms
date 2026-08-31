@@ -33,7 +33,8 @@ export function ReportsFilters({
         </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 items-end">
+      {/* Date Range and Type Filters */}
+      <div className="grid gap-4 md:grid-cols-2 items-end mb-4">
         {/* Date Range Picker */}
         <div>
           <DateRangePicker
@@ -66,7 +67,10 @@ export function ReportsFilters({
             ))}
           </div>
         </div>
+      </div>
 
+      {/* Multi-select Filters in One Row */}
+      <div className="grid gap-4 grid-cols-3">
         {/* Members */}
         {uniqueMembers.length > 0 && (
           <SearchableMultiSelect

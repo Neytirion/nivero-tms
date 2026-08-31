@@ -23,6 +23,7 @@ interface UseTimeEntriesViewerResult {
   setDeletingEntryId: (id: string | null) => void
   handleUpdate: (updatedEntry: Partial<TimeEntryPreview>) => Promise<void>
   handleDelete: (entry: TimeEntryPreview) => Promise<void>
+  refreshEntries: () => Promise<void>
 }
 
 export function useTimeEntriesViewer(): UseTimeEntriesViewerResult {
@@ -34,33 +35,37 @@ export function useTimeEntriesViewer(): UseTimeEntriesViewerResult {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // Load data on mount
-  useEffect(() => {
-    const loadData = async () => {
-      if (!user?.id) return
+  const loadData = async (userId: string) => {
+    try {
+      setIsLoading(true)
+      setError(null)
 
-      try {
-        setIsLoading(true)
-        setError(null)
+      const [entriesData, projectsData] = await Promise.all([
+        getTimeEntries({ userId }),
+        getMyProjects(),
+      ])
 
-        const [entriesData, projectsData] = await Promise.all([
-          getTimeEntries({ userId: user.id }),
-          getMyProjects(),
-        ])
-
-        setEntries(entriesData)
-        setProjects(projectsData)
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Failed to load time entries'
-        setError(message)
-        showToast(message, 'error')
-      } finally {
-        setIsLoading(false)
-      }
+      setEntries(entriesData)
+      setProjects(projectsData)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load time entries'
+      setError(message)
+      showToast(message, 'error')
+    } finally {
+      setIsLoading(false)
     }
+  }
 
-    loadData()
-  }, [user?.id, showToast])
+  useEffect(() => {
+    if (!user?.id) return
+    loadData(user.id)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
+
+  const refreshEntries = async () => {
+    if (!user?.id) return
+    await loadData(user.id)
+  }
 
   // Build task label map
   const taskLabelById = useMemo(() => {
@@ -154,5 +159,6 @@ export function useTimeEntriesViewer(): UseTimeEntriesViewerResult {
     setDeletingEntryId: management.setDeletingEntryId,
     handleUpdate,
     handleDelete,
+    refreshEntries,
   }
 }

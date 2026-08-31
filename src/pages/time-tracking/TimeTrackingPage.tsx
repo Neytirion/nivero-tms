@@ -3,9 +3,11 @@ import { TimeEntriesFilters } from '../../features/time-tracking/components/Time
 import { TimeEntriesGroupedByDay } from '../../features/time-tracking/components/TimeEntriesGroupedByDay'
 import { TimeEntriesChart } from '../../features/time-tracking/components/TimeEntriesChart'
 import { EditTimeEntryModal } from '../../features/time-tracking/components/EditTimeEntryModal'
+import { LogTimeModal } from '../../features/time-tracking/components/LogTimeModal'
 import { useTimeEntriesViewer } from '../../features/time-tracking/hooks/useTimeEntriesViewer'
 import type { TimeEntryPreview } from '../../lib/pm'
 import { useState } from 'react'
+import { Plus } from 'lucide-react'
 
 export function TimeTrackingPage() {
   const {
@@ -25,9 +27,11 @@ export function TimeTrackingPage() {
     setDeletingEntryId,
     handleUpdate,
     handleDelete,
+    refreshEntries,
   } = useTimeEntriesViewer()
 
   const [isSavingEdit, setIsSavingEdit] = useState(false)
+  const [isLogTimeOpen, setIsLogTimeOpen] = useState(false)
 
   const editingEntry = editingEntryId ? entries.find((e) => e.id === editingEntryId) : null
   const deletingEntry = deletingEntryId ? entries.find((e) => e.id === deletingEntryId) : null
@@ -74,11 +78,22 @@ export function TimeTrackingPage() {
   return (
     <div className="space-y-5">
       <section className="page-section bg-[linear-gradient(120deg,rgba(6,182,212,0.08),rgba(16,185,129,0.08))]">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Time Tracking</p>
-        <h2 className="mt-1 text-2xl font-bold text-slate-900">Time Logs</h2>
-        <p className="mt-2 text-sm text-slate-600">
-          View and manage your logged time. Filter by date, project, or billable status. Click edit to modify hours or dates.
-        </p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Time Tracking</p>
+            <h2 className="mt-1 text-2xl font-bold text-slate-900">Time Logs</h2>
+            <p className="mt-2 text-sm text-slate-600">
+              View and manage your logged time. Filter by date, project, or billable status.
+            </p>
+          </div>
+          <button
+            onClick={() => setIsLogTimeOpen(true)}
+            className="mt-1 flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+          >
+            <Plus size={16} />
+            Log Time
+          </button>
+        </div>
       </section>
 
       <TimeEntriesFilters
@@ -135,6 +150,13 @@ export function TimeTrackingPage() {
         tone="danger"
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeletingEntryId(null)}
+      />
+
+      <LogTimeModal
+        isOpen={isLogTimeOpen}
+        projects={projects}
+        onClose={() => setIsLogTimeOpen(false)}
+        onSaved={refreshEntries}
       />
     </div>
   )

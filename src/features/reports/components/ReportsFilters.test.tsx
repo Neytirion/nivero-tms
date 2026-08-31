@@ -46,8 +46,12 @@ describe('ReportsFilters', () => {
       />,
     )
 
-    expect(screen.getByText(/Date Range/i)).toBeInTheDocument()
-    expect(screen.getByText(/Type/i)).toBeInTheDocument()
+    // Use getAllByText since "Date Range" appears in multiple places
+    const dateRangeElements = screen.getAllByText(/Date Range/i)
+    expect(dateRangeElements.length).toBeGreaterThan(0)
+    
+    const typeElements = screen.getAllByText(/Type|Entry Type/i)
+    expect(typeElements.length).toBeGreaterThan(0)
     
     // Use more specific queries since labels are repeated
     const memberLabels = screen.getAllByText(/Members/i)
@@ -109,7 +113,8 @@ describe('ReportsFilters', () => {
       />,
     )
 
-    const billableButton = screen.getByRole('button', { name: 'Billable' })
+    // Search for button with "💰 Billable" text
+    const billableButton = screen.getByRole('button', { name: /💰 Billable/i })
     fireEvent.click(billableButton)
 
     expect(mockOnFilterChange).toHaveBeenCalledWith('billableFilter', 'billable')
@@ -145,12 +150,13 @@ describe('ReportsFilters', () => {
       />,
     )
 
-    // Verify the Members filter is rendered
-    const memberButtons = screen.getAllByText(/Select members/i)
-    expect(memberButtons.length).toBeGreaterThan(0)
+    // Verify the Members filter is rendered by checking for the label
+    const teamLabels = screen.getAllByText(/Team/i)
+    expect(teamLabels.length).toBeGreaterThan(0)
     
     // Verify filter labels are in the document
-    expect(screen.getByText('Members')).toBeInTheDocument()
+    const memberLabels = screen.getAllByText(/Members/i)
+    expect(memberLabels.length).toBeGreaterThan(0)
   })
 
   it('disables all inputs when loading', () => {

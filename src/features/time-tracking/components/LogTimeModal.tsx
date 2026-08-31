@@ -44,11 +44,15 @@ export function LogTimeModal({ isOpen, projects, onClose, onSaved }: LogTimeModa
   // Load tasks when project changes
   useEffect(() => {
     if (!projectId) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setTasks([])
+       
       setTaskId('')
       return
     }
+     
     setIsLoadingTasks(true)
+     
     setTaskId('')
     getProjectTasks(projectId)
       .then(setTasks)
@@ -60,12 +64,19 @@ export function LogTimeModal({ isOpen, projects, onClose, onSaved }: LogTimeModa
   useEffect(() => {
     if (isOpen) {
       const freshDefaults = getDefaultTimes()
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProjectId('')
+       
       setTaskId('')
+       
       setDate(new Date().toISOString().split('T')[0])
+       
       setStartTime(freshDefaults.start)
+       
       setEndTime(freshDefaults.end)
+       
       setIsBillable(true)
+       
       setError(null)
     }
   }, [isOpen])

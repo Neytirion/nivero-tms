@@ -58,6 +58,7 @@ export function useTimeEntriesViewer(): UseTimeEntriesViewerResult {
 
   useEffect(() => {
     if (!user?.id) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData(user.id)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])

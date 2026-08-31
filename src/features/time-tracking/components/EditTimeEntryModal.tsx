@@ -128,8 +128,8 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
         id: entry.id,
         minutes_spent: finalMinutes,
         entry_date: formData.entry_date,
-        started_at: startedAt as any,
-        ended_at: endedAt as any,
+        started_at: startedAt as string | null,
+        ended_at: endedAt as string | null,
       })
       onClose()
     } catch (err) {

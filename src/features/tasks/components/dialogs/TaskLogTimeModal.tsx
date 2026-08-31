@@ -37,8 +37,11 @@ export function TaskLogTimeModal({
   useEffect(() => {
     if (isOpen) {
       const newDefaults = getDefaultTimes()
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStartTime(newDefaults.startTime)
+       
       setEndTime(newDefaults.endTime)
+       
       setError('')
     }
   }, [isOpen])

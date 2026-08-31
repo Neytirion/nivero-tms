@@ -162,8 +162,10 @@ export async function deleteTimeEntry(timeEntryId: string) {
   } catch (err) {
     // .single() throws if no rows matched
     if (err instanceof Error && err.message.includes('No rows')) {
-      throw new Error('Permission denied: you cannot delete this time entry')
+      throw new Error('Permission denied: you cannot delete this time entry', { cause: err })
     }
-    throw err
+    throw err instanceof Error
+      ? new Error('Failed to delete time entry', { cause: err })
+      : err
   }
 }

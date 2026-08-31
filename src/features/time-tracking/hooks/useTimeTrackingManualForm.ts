@@ -6,10 +6,14 @@ export interface UseTimeTrackingManualFormReturn {
   manualTaskId: string
   manualDate: string
   manualHours: string
+  manualStartTime: string
+  manualEndTime: string
   manualIsBillable: boolean
   setManualTaskId: (id: string) => void
   setManualDate: (date: string) => void
   setManualHours: (hours: string) => void
+  setManualStartTime: (time: string) => void
+  setManualEndTime: (time: string) => void
   setManualIsBillable: (billable: boolean) => void
   resetManualEntryForm: () => void
   beginEditEntry: (entry: TimeEntryPreview, setEditingEntryId: (id: string | null) => void, setActiveProjectId: (id: string) => void, setWeekAnchorDate: (date: string) => void) => void
@@ -23,12 +27,16 @@ export function useTimeTrackingManualForm(): UseTimeTrackingManualFormReturn {
   const [manualTaskId, setManualTaskId] = useState('')
   const [manualDate, setManualDate] = useState(() => toDateInputValue(new Date()))
   const [manualHours, setManualHours] = useState('1')
+  const [manualStartTime, setManualStartTime] = useState('')
+  const [manualEndTime, setManualEndTime] = useState('')
   const [manualIsBillable, setManualIsBillable] = useState(true)
 
   const resetManualEntryForm = () => {
     setManualTaskId('')
     setManualDate(toDateInputValue(new Date()))
     setManualHours('1')
+    setManualStartTime('')
+    setManualEndTime('')
     setManualIsBillable(true)
   }
 
@@ -39,6 +47,8 @@ export function useTimeTrackingManualForm(): UseTimeTrackingManualFormReturn {
     setManualTaskId(entry.task_id ?? '')
     setManualDate(entry.entry_date)
     setManualHours(formatDurationFromSeconds(getEntryDurationSeconds(entry)))
+    setManualStartTime(entry.started_at ? entry.started_at.split('T')[1].substring(0, 5) : '')
+    setManualEndTime(entry.ended_at ? entry.ended_at.split('T')[1].substring(0, 5) : '')
     setManualIsBillable(entry.is_billable)
   }
 
@@ -50,10 +60,14 @@ export function useTimeTrackingManualForm(): UseTimeTrackingManualFormReturn {
     manualTaskId,
     manualDate,
     manualHours,
+    manualStartTime,
+    manualEndTime,
     manualIsBillable,
     setManualTaskId,
     setManualDate,
     setManualHours,
+    setManualStartTime,
+    setManualEndTime,
     setManualIsBillable,
     resetManualEntryForm,
     beginEditEntry,

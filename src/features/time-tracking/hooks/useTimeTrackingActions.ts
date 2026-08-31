@@ -32,6 +32,8 @@ export interface UseTimeTrackingActionsReturn {
     manualTaskId: string
     manualDate: string
     manualHours: string
+    manualStartTime: string
+    manualEndTime: string
     manualIsBillable: boolean
     onSuccess: () => void
   }) => Promise<void>

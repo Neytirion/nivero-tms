@@ -13,12 +13,16 @@ describe('ManualEntryPanel', () => {
         manualDateMin="2026-06-01"
         manualDateMax="2026-06-30"
         manualHours="1"
+        manualStartTime=""
+        manualEndTime=""
         manualIsBillable
         editingEntryId={null}
         isLoading={false}
         onManualTaskIdChange={vi.fn()}
         onManualDateChange={vi.fn()}
         onManualHoursChange={vi.fn()}
+        onManualStartTimeChange={vi.fn()}
+        onManualEndTimeChange={vi.fn()}
         onManualIsBillableChange={vi.fn()}
         onSubmit={vi.fn()}
       />,
@@ -44,12 +48,16 @@ describe('ManualEntryPanel', () => {
         manualTaskId=""
         manualDate="2026-06-10"
         manualHours="1"
+        manualStartTime=""
+        manualEndTime=""
         manualIsBillable
         editingEntryId={null}
         isLoading={false}
         onManualTaskIdChange={onManualTaskIdChange}
         onManualDateChange={vi.fn()}
         onManualHoursChange={vi.fn()}
+        onManualStartTimeChange={vi.fn()}
+        onManualEndTimeChange={vi.fn()}
         onManualIsBillableChange={vi.fn()}
         onSubmit={onSubmit}
       />,
@@ -71,12 +79,16 @@ describe('ManualEntryPanel', () => {
         manualTaskId="t2"
         manualDate="2026-06-10"
         manualHours="1"
+        manualStartTime=""
+        manualEndTime=""
         manualIsBillable
         editingEntryId={null}
         isLoading={false}
         onManualTaskIdChange={onManualTaskIdChange}
         onManualDateChange={vi.fn()}
         onManualHoursChange={vi.fn()}
+        onManualStartTimeChange={vi.fn()}
+        onManualEndTimeChange={vi.fn()}
         onManualIsBillableChange={vi.fn()}
         onSubmit={onSubmit}
       />,

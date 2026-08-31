@@ -253,6 +253,8 @@ export interface UpdateTimeEntryInput {
   entryDate: string
   hoursSpent: number
   isBillable: boolean
+  startedAt?: string
+  endedAt?: string
 }
 
 export interface GetTimeEntriesInput {

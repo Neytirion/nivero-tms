@@ -8,12 +8,16 @@ type ManualEntryPanelProps = {
   manualDateMin?: string
   manualDateMax?: string
   manualHours: string
+  manualStartTime: string
+  manualEndTime: string
   manualIsBillable: boolean
   editingEntryId: string | null
   isLoading: boolean
   onManualTaskIdChange: (value: string) => void
   onManualDateChange: (value: string) => void
   onManualHoursChange: (value: string) => void
+  onManualStartTimeChange: (value: string) => void
+  onManualEndTimeChange: (value: string) => void
   onManualIsBillableChange: (value: boolean) => void
   onSubmit: () => void
 }
@@ -26,12 +30,16 @@ export function ManualEntryPanel({
   manualDateMin,
   manualDateMax,
   manualHours,
+  manualStartTime,
+  manualEndTime,
   manualIsBillable,
   editingEntryId,
   isLoading,
   onManualTaskIdChange,
   onManualDateChange,
   onManualHoursChange,
+  onManualStartTimeChange,
+  onManualEndTimeChange,
   onManualIsBillableChange,
   onSubmit,
 }: ManualEntryPanelProps) {
@@ -86,6 +94,30 @@ export function ManualEntryPanel({
             className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
           />
           <p className="mt-1 text-[11px] text-slate-500">Accepted: decimal hours, HH:MM, Xm, Xh Ym.</p>
+        </label>
+
+        <label className="block">
+          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Start Time (HH:MM)</span>
+          <input
+            type="time"
+            value={manualStartTime}
+            onChange={(event) => onManualStartTimeChange(event.target.value)}
+            aria-label="Start time"
+            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
+          />
+          <p className="mt-1 text-[11px] text-slate-500">Optional. When work started.</p>
+        </label>
+
+        <label className="block">
+          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">End Time (HH:MM)</span>
+          <input
+            type="time"
+            value={manualEndTime}
+            onChange={(event) => onManualEndTimeChange(event.target.value)}
+            aria-label="End time"
+            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
+          />
+          <p className="mt-1 text-[11px] text-slate-500">Optional. When work ended. Must be after start time.</p>
         </label>
 
         <label className="block">

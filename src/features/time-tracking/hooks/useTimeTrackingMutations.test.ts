@@ -45,6 +45,8 @@ describe('useTimeTrackingMutations', () => {
         manualTaskId: '',
         manualDate: '2026-06-10',
         manualHours: '1',
+        manualStartTime: '',
+        manualEndTime: '',
         manualIsBillable: true,
         onSuccess,
       })
@@ -78,6 +80,8 @@ describe('useTimeTrackingMutations', () => {
         manualTaskId: 't2',
         manualDate: '2026-06-10',
         manualHours: '0',
+        manualStartTime: '',
+        manualEndTime: '',
         manualIsBillable: false,
         onSuccess,
       })
@@ -111,6 +115,8 @@ describe('useTimeTrackingMutations', () => {
         manualTaskId: 't2',
         manualDate: '2026-06-10',
         manualHours: '1.5',
+        manualStartTime: '',
+        manualEndTime: '',
         manualIsBillable: false,
         onSuccess,
       })
@@ -151,6 +157,8 @@ describe('useTimeTrackingMutations', () => {
         manualTaskId: 't1',
         manualDate: '2026-06-10',
         manualHours: '2',
+        manualStartTime: '',
+        manualEndTime: '',
         manualIsBillable: true,
         onSuccess,
       })

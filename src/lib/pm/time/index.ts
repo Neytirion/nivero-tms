@@ -118,6 +118,8 @@ export async function updateTimeEntry(timeEntryId: string, input: UpdateTimeEntr
       entry_date: input.entryDate,
       minutes_spent: minutesSpent,
       is_billable: input.isBillable,
+      started_at: input.startedAt ?? null,
+      ended_at: input.endedAt ?? null,
     })
     .eq('id', timeEntryId)
     .select(timeEntrySelect)

@@ -14,9 +14,13 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
   const [formData, setFormData] = useState<{
     minutes_spent: number
     entry_date: string
+    started_at: string | null
+    ended_at: string | null
   }>({
     minutes_spent: entry?.minutes_spent ?? 0,
     entry_date: entry?.entry_date ?? new Date().toISOString().split('T')[0],
+    started_at: entry?.started_at ? entry.started_at.split('T')[1].substring(0, 5) : null,
+    ended_at: entry?.ended_at ? entry.ended_at.split('T')[1].substring(0, 5) : null,
   })
 
   const [error, setError] = useState<string | null>(null)
@@ -26,6 +30,8 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
     setFormData({
       minutes_spent: entry.minutes_spent,
       entry_date: entry.entry_date,
+      started_at: entry.started_at ? entry.started_at.split('T')[1].substring(0, 5) : null,
+      ended_at: entry.ended_at ? entry.ended_at.split('T')[1].substring(0, 5) : null,
     })
   }
 
@@ -42,13 +48,42 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
       return
     }
 
+    // Validate time range if both times are provided
+    if (formData.started_at && formData.ended_at) {
+      if (formData.started_at >= formData.ended_at) {
+        setError('End time must be after start time')
+        return
+      }
+
+      // Validate that duration matches
+      const [startHour, startMin] = formData.started_at.split(':').map(Number)
+      const [endHour, endMin] = formData.ended_at.split(':').map(Number)
+      const startTotalMin = startHour * 60 + startMin
+      const endTotalMin = endHour * 60 + endMin
+      const durationMin = endTotalMin - startTotalMin
+      
+      if (Math.abs(durationMin - formData.minutes_spent) > 5) {
+        setError(`Duration mismatch: ${formData.minutes_spent} minutes logged but ${durationMin} minutes between start and end time`)
+        return
+      }
+    }
+
     if (!entry) return
 
     try {
+      const startedAt = formData.started_at 
+        ? `${formData.entry_date}T${formData.started_at}:00`
+        : null
+      const endedAt = formData.ended_at
+        ? `${formData.entry_date}T${formData.ended_at}:00`
+        : null
+
       await onSave({
         id: entry.id,
         minutes_spent: formData.minutes_spent,
         entry_date: formData.entry_date,
+        started_at: startedAt as any,
+        ended_at: endedAt as any,
       })
       onClose()
     } catch (err) {
@@ -96,6 +131,32 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
             />
           </div>
 
+          {/* Start Time */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Start Time (HH:MM)</label>
+            <input
+              type="time"
+              value={formData.started_at ?? ''}
+              onChange={(e) => setFormData((prev) => ({ ...prev, started_at: e.target.value || null }))}
+              disabled={isSaving}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
+            />
+            <p className="mt-1 text-xs text-slate-500">Optional. Leave empty to not track specific time range.</p>
+          </div>
+
+          {/* End Time */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">End Time (HH:MM)</label>
+            <input
+              type="time"
+              value={formData.ended_at ?? ''}
+              onChange={(e) => setFormData((prev) => ({ ...prev, ended_at: e.target.value || null }))}
+              disabled={isSaving}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
+            />
+            <p className="mt-1 text-xs text-slate-500">Optional. Must be after start time if provided.</p>
+          </div>
+
           {/* Hours and Minutes */}
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -139,6 +200,9 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
           {/* Total display */}
           <div className="rounded-lg bg-slate-50 p-3">
             <p className="text-xs text-slate-600">Total time: {hours}h {minutes}m ({formData.minutes_spent} minutes)</p>
+            {formData.started_at && formData.ended_at && (
+              <p className="text-xs text-slate-600 mt-1">Time range: {formData.started_at} - {formData.ended_at}</p>
+            )}
           </div>
         </div>
 

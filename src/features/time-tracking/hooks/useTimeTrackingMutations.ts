@@ -16,6 +16,8 @@ interface SubmitManualEntryInput {
   manualTaskId: string
   manualDate: string
   manualHours: string
+  manualStartTime: string
+  manualEndTime: string
   manualIsBillable: boolean
   onSuccess: () => void
 }
@@ -55,7 +57,34 @@ export function useTimeTrackingMutations(input: UseTimeTrackingMutationsInput) {
       return
     }
 
+    // Validate time range if both times are provided
+    if (formInput.manualStartTime && formInput.manualEndTime) {
+      if (formInput.manualStartTime >= formInput.manualEndTime) {
+        input.setStatus('End time must be after start time')
+        return
+      }
+
+      // Validate that duration approximately matches (allow 5 minutes tolerance)
+      const [startHour, startMin] = formInput.manualStartTime.split(':').map(Number)
+      const [endHour, endMin] = formInput.manualEndTime.split(':').map(Number)
+      const startTotalMin = startHour * 60 + startMin
+      const endTotalMin = endHour * 60 + endMin
+      const durationMin = endTotalMin - startTotalMin
+      
+      if (Math.abs(durationMin - (parsedHours * 60)) > 5) {
+        input.setStatus(`Duration mismatch: ${parsedHours} hours logged but ${(durationMin / 60).toFixed(1)} hours between start and end time`)
+        return
+      }
+    }
+
     try {
+      const startedAt = formInput.manualStartTime
+        ? `${formInput.manualDate}T${formInput.manualStartTime}:00`
+        : undefined
+      const endedAt = formInput.manualEndTime
+        ? `${formInput.manualDate}T${formInput.manualEndTime}:00`
+        : undefined
+
       if (input.editingEntryId) {
         await updateTimeEntry(input.editingEntryId, {
           projectId: formInput.activeProjectId,
@@ -63,6 +92,8 @@ export function useTimeTrackingMutations(input: UseTimeTrackingMutationsInput) {
           entryDate: formInput.manualDate,
           hoursSpent: parsedHours,
           isBillable: formInput.manualIsBillable,
+          startedAt,
+          endedAt,
         })
         input.setStatus('Time entry updated')
       } else {
@@ -72,6 +103,8 @@ export function useTimeTrackingMutations(input: UseTimeTrackingMutationsInput) {
           entryDate: formInput.manualDate,
           hoursSpent: parsedHours,
           isBillable: formInput.manualIsBillable,
+          startedAt,
+          endedAt,
         })
         input.setStatus('Time entry created')
       }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { X } from 'lucide-react'
 import type { TimeEntryPreview } from '../../../lib/pm'
 
@@ -16,56 +16,102 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
     entry_date: string
     started_at: string | null
     ended_at: string | null
+    manualHours: string
+    manualMinutes: string
   }>({
     minutes_spent: entry?.minutes_spent ?? 0,
     entry_date: entry?.entry_date ?? new Date().toISOString().split('T')[0],
     started_at: entry?.started_at ? entry.started_at.split('T')[1].substring(0, 5) : null,
     ended_at: entry?.ended_at ? entry.ended_at.split('T')[1].substring(0, 5) : null,
+    manualHours: '',
+    manualMinutes: '',
   })
 
   const [error, setError] = useState<string | null>(null)
 
   // Update form when entry changes
   if (entry && (formData.minutes_spent !== entry.minutes_spent || formData.entry_date !== entry.entry_date)) {
+    const hours = Math.floor(entry.minutes_spent / 60)
+    const minutes = entry.minutes_spent % 60
     setFormData({
       minutes_spent: entry.minutes_spent,
       entry_date: entry.entry_date,
       started_at: entry.started_at ? entry.started_at.split('T')[1].substring(0, 5) : null,
       ended_at: entry.ended_at ? entry.ended_at.split('T')[1].substring(0, 5) : null,
+      manualHours: String(hours),
+      manualMinutes: String(minutes),
     })
+  }
+
+  // Calculate duration from time range
+  const calculatedDuration = useMemo(() => {
+    if (!formData.started_at || !formData.ended_at) return null
+
+    const [startH, startM] = formData.started_at.split(':').map(Number)
+    const [endH, endM] = formData.ended_at.split(':').map(Number)
+    const startTotalMin = startH * 60 + startM
+    const endTotalMin = endH * 60 + endM
+
+    if (endTotalMin <= startTotalMin) return null
+
+    const totalMin = endTotalMin - startTotalMin
+    return {
+      minutes: totalMin,
+      hours: Math.floor(totalMin / 60),
+      mins: totalMin % 60,
+    }
+  }, [formData.started_at, formData.ended_at])
+
+  // When time range changes, update minutes_spent
+  const handleTimeChange = (newStarted: string | null, newEnded: string | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      started_at: newStarted,
+      ended_at: newEnded,
+    }))
+    setError(null)
+  }
+
+  const handleManualTimeChange = (newHours: string, newMinutes: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      manualHours: newHours,
+      manualMinutes: newMinutes,
+    }))
+    setError(null)
   }
 
   const handleSave = async () => {
     setError(null)
 
-    if (formData.minutes_spent <= 0) {
-      setError('Hours must be greater than 0')
+    // Determine which duration to use
+    let finalMinutes: number
+    
+    if (formData.started_at && formData.ended_at) {
+      // Use calculated duration from time range
+      if (!calculatedDuration) {
+        setError('End time must be after start time')
+        return
+      }
+      finalMinutes = calculatedDuration.minutes
+    } else if (formData.manualHours || formData.manualMinutes) {
+      // Use manually entered duration
+      const h = parseInt(formData.manualHours, 10) || 0
+      const m = parseInt(formData.manualMinutes, 10) || 0
+      finalMinutes = h * 60 + m
+    } else {
+      setError('Please set time range or enter hours/minutes manually')
+      return
+    }
+
+    if (finalMinutes <= 0) {
+      setError('Duration must be greater than 0')
       return
     }
 
     if (!formData.entry_date) {
       setError('Date is required')
       return
-    }
-
-    // Validate time range if both times are provided
-    if (formData.started_at && formData.ended_at) {
-      if (formData.started_at >= formData.ended_at) {
-        setError('End time must be after start time')
-        return
-      }
-
-      // Validate that duration matches
-      const [startHour, startMin] = formData.started_at.split(':').map(Number)
-      const [endHour, endMin] = formData.ended_at.split(':').map(Number)
-      const startTotalMin = startHour * 60 + startMin
-      const endTotalMin = endHour * 60 + endMin
-      const durationMin = endTotalMin - startTotalMin
-      
-      if (Math.abs(durationMin - formData.minutes_spent) > 5) {
-        setError(`Duration mismatch: ${formData.minutes_spent} minutes logged but ${durationMin} minutes between start and end time`)
-        return
-      }
     }
 
     if (!entry) return
@@ -80,7 +126,7 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
 
       await onSave({
         id: entry.id,
-        minutes_spent: formData.minutes_spent,
+        minutes_spent: finalMinutes,
         entry_date: formData.entry_date,
         started_at: startedAt as any,
         ended_at: endedAt as any,
@@ -94,9 +140,6 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
   if (!isOpen || !entry) {
     return null
   }
-
-  const hours = Math.floor(formData.minutes_spent / 60)
-  const minutes = formData.minutes_spent % 60
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -131,79 +174,80 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
             />
           </div>
 
-          {/* Start Time */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Start Time (HH:MM)</label>
-            <input
-              type="time"
-              value={formData.started_at ?? ''}
-              onChange={(e) => setFormData((prev) => ({ ...prev, started_at: e.target.value || null }))}
-              disabled={isSaving}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
-            />
-            <p className="mt-1 text-xs text-slate-500">Optional. Leave empty to not track specific time range.</p>
-          </div>
-
-          {/* End Time */}
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">End Time (HH:MM)</label>
-            <input
-              type="time"
-              value={formData.ended_at ?? ''}
-              onChange={(e) => setFormData((prev) => ({ ...prev, ended_at: e.target.value || null }))}
-              disabled={isSaving}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
-            />
-            <p className="mt-1 text-xs text-slate-500">Optional. Must be after start time if provided.</p>
-          </div>
-
-          {/* Hours and Minutes */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Hours</label>
-              <input
-                type="number"
-                min="0"
-                max="24"
-                value={hours}
-                onChange={(e) => {
-                  const h = Math.max(0, parseInt(e.target.value) || 0)
-                  setFormData((prev) => ({
-                    ...prev,
-                    minutes_spent: h * 60 + minutes,
-                  }))
-                }}
-                disabled={isSaving}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
-              />
+          {/* Time Range Section */}
+          <div className="border-t border-slate-200 pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-3">Time Range</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="start-time" className="block text-sm font-medium text-slate-700 mb-1">Start Time</label>
+                <input
+                  id="start-time"
+                  type="time"
+                  value={formData.started_at ?? ''}
+                  onChange={(e) => handleTimeChange(e.target.value || null, formData.ended_at)}
+                  disabled={isSaving}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
+                />
+              </div>
+              <div>
+                <label htmlFor="end-time" className="block text-sm font-medium text-slate-700 mb-1">End Time</label>
+                <input
+                  id="end-time"
+                  type="time"
+                  value={formData.ended_at ?? ''}
+                  onChange={(e) => handleTimeChange(formData.started_at, e.target.value || null)}
+                  disabled={isSaving}
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
+                />
+              </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Minutes</label>
-              <input
-                type="number"
-                min="0"
-                max="59"
-                value={minutes}
-                onChange={(e) => {
-                  const m = Math.max(0, Math.min(59, parseInt(e.target.value) || 0))
-                  setFormData((prev) => ({
-                    ...prev,
-                    minutes_spent: hours * 60 + m,
-                  }))
-                }}
-                disabled={isSaving}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
-              />
-            </div>
+            <p className="mt-1 text-xs text-slate-500">Optional. Duration will be calculated automatically.</p>
           </div>
 
-          {/* Total display */}
-          <div className="rounded-lg bg-slate-50 p-3">
-            <p className="text-xs text-slate-600">Total time: {hours}h {minutes}m ({formData.minutes_spent} minutes)</p>
-            {formData.started_at && formData.ended_at && (
-              <p className="text-xs text-slate-600 mt-1">Time range: {formData.started_at} - {formData.ended_at}</p>
-            )}
-          </div>
+          {/* Calculated Duration Display */}
+          {calculatedDuration && (
+            <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700 mb-1">Calculated Duration</p>
+              <p className="text-sm font-semibold text-emerald-900">
+                {calculatedDuration.hours}h {calculatedDuration.mins}m
+              </p>
+            </div>
+          )}
+
+          {/* Manual Entry Section (show only if no time range) */}
+          {!calculatedDuration && (
+            <div className="border-t border-slate-200 pt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-3">Manual Duration</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="manual-hours" className="block text-sm font-medium text-slate-700 mb-1">Hours</label>
+                  <input
+                    id="manual-hours"
+                    type="number"
+                    min="0"
+                    max="24"
+                    value={formData.manualHours}
+                    onChange={(e) => handleManualTimeChange(e.target.value, formData.manualMinutes)}
+                    disabled={isSaving}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="manual-minutes" className="block text-sm font-medium text-slate-700 mb-1">Minutes</label>
+                  <input
+                    id="manual-minutes"
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={formData.manualMinutes}
+                    onChange={(e) => handleManualTimeChange(formData.manualHours, e.target.value)}
+                    disabled={isSaving}
+                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Buttons */}

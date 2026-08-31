@@ -5,7 +5,6 @@ import type {
   TimeEntryPreview,
   UpdateTimeEntryInput,
 } from '../types'
-import { assertProjectEditable } from '../helpers'
 
 const timeEntrySelect = 'id,user_id,project_id,task_id,entry_date,minutes_spent,is_billable,started_at,ended_at,created_at'
 
@@ -15,6 +14,10 @@ export async function getTimeEntries(input: GetTimeEntriesInput = {}) {
     .select(timeEntrySelect)
     .order('entry_date', { ascending: false })
     .order('created_at', { ascending: false })
+
+  if (input.userId) {
+    query = query.eq('user_id', input.userId)
+  }
 
   if (input.projectId) {
     query = query.eq('project_id', input.projectId)
@@ -42,8 +45,6 @@ export async function getTimeEntries(input: GetTimeEntriesInput = {}) {
 }
 
 export async function createTimeEntry(input: CreateTimeEntryInput) {
-  await assertProjectEditable(input.projectId, 'log time')
-
   const { data: userData, error: userError } = await supabase.auth.getUser()
 
   if (userError) {
@@ -94,8 +95,6 @@ export async function createTimeEntry(input: CreateTimeEntryInput) {
 }
 
 export async function updateTimeEntry(timeEntryId: string, input: UpdateTimeEntryInput) {
-  await assertProjectEditable(input.projectId, 'edit time entry')
-
   const { data: userData, error: userError } = await supabase.auth.getUser()
 
   if (userError) {
@@ -147,18 +146,24 @@ export async function deleteTimeEntry(timeEntryId: string) {
     throw new Error('User is not authenticated')
   }
 
-  const { data, error } = await supabase
-    .from('time_entries')
-    .delete()
-    .eq('id', timeEntryId)
-    .select('id')
-    .maybeSingle()
+  // Delete the entry - RLS policy will enforce that only entry owner can delete
+  try {
+    const result = await supabase
+      .from('time_entries')
+      .delete()
+      .eq('id', timeEntryId)
+      .select()
+      .single()
 
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  if (!data) {
-    throw new Error('Permission denied: you cannot delete this time entry')
+    if (result.error) {
+      // Single() throws error if no rows matched
+      throw new Error('Permission denied: you cannot delete this time entry')
+    }
+  } catch (err) {
+    // .single() throws if no rows matched
+    if (err instanceof Error && err.message.includes('No rows')) {
+      throw new Error('Permission denied: you cannot delete this time entry')
+    }
+    throw err
   }
 }

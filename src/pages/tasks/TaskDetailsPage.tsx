@@ -1172,60 +1172,113 @@ export function TaskDetailsPage() {
               {/* Manual Time Entry Form */}
               {isManualEntryOpen && canLogTime && (
                 <div className="mt-6 border-t border-slate-200 pt-6">
-                  <h3 className="text-sm font-semibold text-slate-900 mb-4">Log Time for Today</h3>
-                  <div className="flex gap-4 items-end flex-wrap">
-                    <label className="block">
-                      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Start Time</span>
-                      <input
-                        type="time"
-                        value={manualStartTime}
-                        onChange={(event) => setManualStartTime(event.target.value)}
-                        className="h-10 w-24 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
-                      />
-                    </label>
+                  <div className="rounded-xl border border-slate-200 bg-gradient-to-br from-emerald-50 to-sky-50 p-5">
+                    <h3 className="text-sm font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                      <svg className="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                      </svg>
+                      Log Time for Today
+                    </h3>
 
-                    <label className="block">
-                      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">End Time</span>
-                      <input
-                        type="time"
-                        value={manualEndTime}
-                        onChange={(event) => setManualEndTime(event.target.value)}
-                        className="h-10 w-24 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
-                      />
-                    </label>
+                    <div className="space-y-4">
+                      {/* Time Inputs Row */}
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <label htmlFor="task-start-time" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+                            Start Time
+                          </label>
+                          <input
+                            id="task-start-time"
+                            type="time"
+                            value={manualStartTime}
+                            onChange={(event) => setManualStartTime(event.target.value)}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                          />
+                        </div>
 
-                    <div className="flex-1">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 mb-1">Type</p>
-                      <div className="inline-flex items-center gap-1 text-sm text-slate-600">
-                        <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                        <div>
+                          <label htmlFor="task-end-time" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">
+                            End Time
+                          </label>
+                          <input
+                            id="task-end-time"
+                            type="time"
+                            value={manualEndTime}
+                            onChange={(event) => setManualEndTime(event.target.value)}
+                            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Duration Preview */}
+                      {manualStartTime && manualEndTime && (() => {
+                        const [startH, startM] = manualStartTime.split(':').map(Number)
+                        const [endH, endM] = manualEndTime.split(':').map(Number)
+                        const startTotalMin = startH * 60 + startM
+                        const endTotalMin = endH * 60 + endM
+                        const durationMin = endTotalMin - startTotalMin
+
+                        if (durationMin > 0) {
+                          const hours = Math.floor(durationMin / 60)
+                          const minutes = durationMin % 60
+                          return (
+                            <div className="rounded-lg bg-white border border-emerald-200 p-3">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-1">Logged Duration</p>
+                              <div className="flex items-baseline gap-2">
+                                {hours > 0 && (
+                                  <>
+                                    <span className="text-xl font-bold text-emerald-700">{hours}</span>
+                                    <span className="text-sm font-medium text-slate-600">h</span>
+                                  </>
+                                )}
+                                {minutes > 0 && (
+                                  <>
+                                    <span className={`${hours > 0 ? 'text-lg' : 'text-xl'} font-bold text-emerald-700`}>{minutes}</span>
+                                    <span className="text-sm font-medium text-slate-600">m</span>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )
+                        }
+                        return null
+                      })()}
+
+                      {/* Billing Type */}
+                      <div className="flex items-center gap-3 rounded-lg bg-white border border-slate-200 px-3 py-2.5">
+                        <svg className="h-5 w-5 shrink-0" fill="currentColor" viewBox="0 0 24 24">
                           {task.is_billable ? (
                             <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                           ) : (
                             <path d="M6 18L18 6M6 6l12 12" />
                           )}
                         </svg>
-                        {task.is_billable ? 'Billable' : 'Non-billable'}
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Billing Type</p>
+                          <p className="text-sm font-medium text-slate-900">{task.is_billable ? 'Billable' : 'Non-billable'}</p>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsManualEntryOpen(false)}
+                          disabled={isManualLogging}
+                          className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleManualTimeSubmit()}
+                          disabled={isManualLogging || !manualStartTime || !manualEndTime}
+                          className="flex-1 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isManualLogging ? 'Saving...' : 'Log Time'}
+                        </button>
                       </div>
                     </div>
-                  </div>
-
-                  <div className="mt-4 flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setIsManualEntryOpen(false)}
-                      disabled={isManualLogging}
-                      className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => void handleManualTimeSubmit()}
-                      disabled={isManualLogging || !manualStartTime || !manualEndTime}
-                      className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {isManualLogging ? 'Saving...' : 'Save time entry'}
-                    </button>
                   </div>
                 </div>
               )}

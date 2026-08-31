@@ -1,6 +1,7 @@
 import { ConfirmDialog } from '../../shared/components'
 import { TimeEntriesFilters } from '../../features/time-tracking/components/TimeEntriesFilters'
 import { TimeEntriesGroupedByDay } from '../../features/time-tracking/components/TimeEntriesGroupedByDay'
+import { TimeEntriesChart } from '../../features/time-tracking/components/TimeEntriesChart'
 import { EditTimeEntryModal } from '../../features/time-tracking/components/EditTimeEntryModal'
 import { useTimeEntriesViewer } from '../../features/time-tracking/hooks/useTimeEntriesViewer'
 import type { TimeEntryPreview } from '../../lib/pm'
@@ -86,6 +87,11 @@ export function TimeTrackingPage() {
         onFilterChange={handleUpdateFilter}
         onReset={handleResetFilters}
       />
+
+      {/* Daily Time Distribution Chart */}
+      {entriesByDate.length > 0 && (
+        <TimeEntriesChart entriesByDate={entriesByDate} />
+      )}
 
       {/* Total Hours Summary */}
       {entriesByDate.length > 0 && (

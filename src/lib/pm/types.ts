@@ -262,6 +262,7 @@ export interface GetTimeEntriesInput {
   taskId?: string
   fromDate?: string
   toDate?: string
+  userId?: string
 }
 
 export interface SaveEstimateDraftInput {

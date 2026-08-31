@@ -44,7 +44,7 @@ export function useTimeEntriesViewer(): UseTimeEntriesViewerResult {
         setError(null)
 
         const [entriesData, projectsData] = await Promise.all([
-          getTimeEntries(),
+          getTimeEntries({ userId: user.id }),
           getMyProjects(),
         ])
 

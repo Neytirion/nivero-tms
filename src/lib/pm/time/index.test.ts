@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const mocks = vi.hoisted(() => ({
   from: vi.fn(),
   getUser: vi.fn(),
-  assertProjectEditable: vi.fn(),
 }))
 
 vi.mock('../../supabase', () => ({
@@ -15,10 +14,6 @@ vi.mock('../../supabase', () => ({
   },
 }))
 
-vi.mock('../helpers', () => ({
-  assertProjectEditable: mocks.assertProjectEditable,
-}))
-
 import { createTimeEntry, deleteTimeEntry, getTimeEntries, updateTimeEntry } from './index'
 
 const mockSupabase = {
@@ -28,12 +23,9 @@ const mockSupabase = {
   },
 }
 
-const mockAssertProjectEditable = mocks.assertProjectEditable
-
 describe('pm.time', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    mockAssertProjectEditable.mockResolvedValue(undefined)
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null } as never)
   })
 
@@ -103,8 +95,6 @@ describe('pm.time', () => {
         isBillable: true,
       }),
     ).resolves.toMatchObject({ id: 'te-1', user_id: 'u1' })
-
-    expect(mockAssertProjectEditable).toHaveBeenCalledWith('p1', 'log time')
   })
 
   it('creates short timer entries with seconds and zero rounded minutes', async () => {
@@ -169,8 +159,6 @@ describe('pm.time', () => {
         isBillable: false,
       }),
     ).resolves.toMatchObject({ id: 'te-1', minutes_spent: 180 })
-
-    expect(mockAssertProjectEditable).toHaveBeenCalledWith('p1', 'edit time entry')
   })
 
   it('rejects update when entry is not owned by user', async () => {
@@ -194,18 +182,20 @@ describe('pm.time', () => {
   })
 
   it('deletes an owned time entry', async () => {
-    const maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'te-1' }, error: null })
-    const select = vi.fn().mockReturnValue({ maybeSingle })
-    const deleteFn = vi.fn().mockReturnValue({ select, eq: vi.fn().mockReturnValue({ select, maybeSingle }) })
+    const single = vi.fn().mockResolvedValue({ data: { id: 'te-1' }, error: null })
+    const select = vi.fn().mockReturnValue({ single })
+    const deleteEq = vi.fn().mockReturnValue({ select })
+    const deleteFn = vi.fn().mockReturnValue({ eq: deleteEq })
     mockSupabase.from.mockReturnValue({ delete: deleteFn } as never)
 
     await expect(deleteTimeEntry('te-1')).resolves.toBeUndefined()
   })
 
   it('rejects delete when entry is not owned by user', async () => {
-    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null })
-    const select = vi.fn().mockReturnValue({ maybeSingle })
-    const deleteFn = vi.fn().mockReturnValue({ select, eq: vi.fn().mockReturnValue({ select, maybeSingle }) })
+    const single = vi.fn().mockRejectedValue(new Error('No rows were returned'))
+    const select = vi.fn().mockReturnValue({ single })
+    const deleteEq = vi.fn().mockReturnValue({ select })
+    const deleteFn = vi.fn().mockReturnValue({ eq: deleteEq })
     mockSupabase.from.mockReturnValue({ delete: deleteFn } as never)
 
     await expect(deleteTimeEntry('te-1')).rejects.toThrow('Permission denied: you cannot delete this time entry')

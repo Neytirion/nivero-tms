@@ -130,23 +130,42 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
     })
   }
 
-  const submitTaskLogTime = async (hours: number) => {
+  const submitTaskLogTime = async (startTime: string, endTime: string) => {
     if (!input.logTimeTask || !input.selectedProjectId) {
       input.setStatus('Select project and task before logging time')
       return
     }
 
-    if (!Number.isFinite(hours) || hours <= 0) {
-      input.setStatus('Hours must be a number greater than 0')
+    if (!startTime || !endTime) {
+      input.setStatus('Select both start and end time')
       return
     }
+
+    const [startH, startM] = startTime.split(':').map(Number)
+    const [endH, endM] = endTime.split(':').map(Number)
+    const startTotalMin = startH * 60 + startM
+    const endTotalMin = endH * 60 + endM
+
+    if (endTotalMin <= startTotalMin) {
+      input.setStatus('End time must be after start time')
+      return
+    }
+
+    const durationMin = endTotalMin - startTotalMin
+    const hoursSpent = durationMin / 60
+
+    const entryDate = new Date().toISOString().slice(0, 10)
+    const startedAt = `${entryDate}T${startTime}:00`
+    const endedAt = `${entryDate}T${endTime}:00`
 
     await createTimeEntry({
       projectId: input.selectedProjectId,
       taskId: input.logTimeTask.id,
-      entryDate: new Date().toISOString().slice(0, 10),
-      hoursSpent: hours,
+      entryDate,
+      hoursSpent,
       isBillable: true,
+      startedAt,
+      endedAt,
     })
 
     await input.reloadCurrentTasks()

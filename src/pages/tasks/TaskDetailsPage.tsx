@@ -247,8 +247,8 @@ export function TaskDetailsPage() {
   const [isTaskSaving, setIsTaskSaving] = useState(false)
   const [previewAttachment, setPreviewAttachment] = useState<ParsedAttachment | null>(null)
   const [preciseLoggedByTaskId, setPreciseLoggedByTaskId] = useState<{ taskId: string; seconds: number } | null>(null)
-  const [manualHours, setManualHours] = useState('0')
-  const [manualMinutes, setManualMinutes] = useState('0')
+  const [manualStartTime, setManualStartTime] = useState('09:00')
+  const [manualEndTime, setManualEndTime] = useState('10:00')
   const [isManualLogging, setIsManualLogging] = useState(false)
 
   const backTo =
@@ -615,17 +615,28 @@ export function TaskDetailsPage() {
 
     try {
       setIsManualLogging(true)
-      
-      const hours = parseInt(manualHours, 10) || 0
-      const minutes = parseInt(manualMinutes, 10) || 0
-      const hoursSpent = hours + minutes / 60
-      
-      if (hoursSpent <= 0) {
-        alert('Please enter a valid time duration')
+
+      if (!manualStartTime || !manualEndTime) {
+        alert('Select both start and end time')
         return
       }
 
+      const [startH, startM] = manualStartTime.split(':').map(Number)
+      const [endH, endM] = manualEndTime.split(':').map(Number)
+      const startTotalMin = startH * 60 + startM
+      const endTotalMin = endH * 60 + endM
+
+      if (endTotalMin <= startTotalMin) {
+        alert('End time must be after start time')
+        return
+      }
+
+      const durationMin = endTotalMin - startTotalMin
+      const hoursSpent = durationMin / 60
+
       const today = new Date().toISOString().split('T')[0]
+      const startedAt = `${today}T${manualStartTime}:00`
+      const endedAt = `${today}T${manualEndTime}:00`
 
       await createTimeEntry({
         projectId: task.project_id,
@@ -633,11 +644,13 @@ export function TaskDetailsPage() {
         entryDate: today,
         hoursSpent,
         isBillable: task.is_billable,
+        startedAt,
+        endedAt,
       })
 
       // Reset form and close it
-      setManualHours('0')
-      setManualMinutes('0')
+      setManualStartTime('09:00')
+      setManualEndTime('10:00')
       setIsManualEntryOpen(false)
 
       // Reload time entries for this task
@@ -1160,28 +1173,24 @@ export function TaskDetailsPage() {
               {isManualEntryOpen && canLogTime && (
                 <div className="mt-6 border-t border-slate-200 pt-6">
                   <h3 className="text-sm font-semibold text-slate-900 mb-4">Log Time for Today</h3>
-                  <div className="flex gap-4 items-end">
+                  <div className="flex gap-4 items-end flex-wrap">
                     <label className="block">
-                      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Hours</span>
+                      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Start Time</span>
                       <input
-                        type="number"
-                        min="0"
-                        max="24"
-                        value={manualHours}
-                        onChange={(event) => setManualHours(event.target.value)}
-                        className="h-10 w-20 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 text-center"
+                        type="time"
+                        value={manualStartTime}
+                        onChange={(event) => setManualStartTime(event.target.value)}
+                        className="h-10 w-24 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
                       />
                     </label>
 
                     <label className="block">
-                      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Minutes</span>
+                      <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">End Time</span>
                       <input
-                        type="number"
-                        min="0"
-                        max="59"
-                        value={manualMinutes}
-                        onChange={(event) => setManualMinutes(event.target.value)}
-                        className="h-10 w-20 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500 text-center"
+                        type="time"
+                        value={manualEndTime}
+                        onChange={(event) => setManualEndTime(event.target.value)}
+                        className="h-10 w-24 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
                       />
                     </label>
 
@@ -1212,7 +1221,7 @@ export function TaskDetailsPage() {
                     <button
                       type="button"
                       onClick={() => void handleManualTimeSubmit()}
-                      disabled={isManualLogging || (parseInt(manualHours, 10) === 0 && parseInt(manualMinutes, 10) === 0)}
+                      disabled={isManualLogging || !manualStartTime || !manualEndTime}
                       className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isManualLogging ? 'Saving...' : 'Save time entry'}

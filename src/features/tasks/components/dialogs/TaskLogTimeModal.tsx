@@ -1,10 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 interface TaskLogTimeModalProps {
   isOpen: boolean
   taskTitle: string
   onClose: () => void
-  onSubmit: (hours: number) => void | Promise<void>
+  onSubmit: (startTime: string, endTime: string) => void | Promise<void>
   isSubmitting?: boolean
 }
 
@@ -15,10 +15,47 @@ export function TaskLogTimeModal({
   onSubmit,
   isSubmitting = false,
 }: TaskLogTimeModalProps) {
-  const [hours, setHours] = useState('1')
+  const [startTime, setStartTime] = useState('09:00')
+  const [endTime, setEndTime] = useState('10:00')
+  const [error, setError] = useState('')
+
+  const durationHours = useMemo(() => {
+    if (!startTime || !endTime) return 0
+    const [startH, startM] = startTime.split(':').map(Number)
+    const [endH, endM] = endTime.split(':').map(Number)
+    const startTotalMin = startH * 60 + startM
+    const endTotalMin = endH * 60 + endM
+    
+    if (endTotalMin <= startTotalMin) {
+      return 0
+    }
+    
+    return (endTotalMin - startTotalMin) / 60
+  }, [startTime, endTime])
 
   if (!isOpen) {
     return null
+  }
+
+  const handleSubmit = () => {
+    setError('')
+    
+    if (!startTime || !endTime) {
+      setError('Select both start and end time')
+      return
+    }
+    
+    const [startH, startM] = startTime.split(':').map(Number)
+    const [endH, endM] = endTime.split(':').map(Number)
+    const startTotalMin = startH * 60 + startM
+    const endTotalMin = endH * 60 + endM
+    
+    if (endTotalMin <= startTotalMin) {
+      setError('End time must be after start time')
+      return
+    }
+    
+    void onSubmit(startTime, endTime)
   }
 
   return (
@@ -34,19 +71,42 @@ export function TaskLogTimeModal({
         <h2 className="text-lg font-semibold text-slate-900">Log Time</h2>
         <p className="mt-1 text-sm text-slate-500">Task: {taskTitle}</p>
 
-        <div className="mt-4 space-y-2">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Hours</span>
-            <input
-              type="number"
-              min="0.25"
-              step="0.25"
-              value={hours}
-              onChange={(event) => setHours(event.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
-            />
-          </label>
+        <div className="mt-4 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">Start Time</span>
+              <input
+                type="time"
+                value={startTime}
+                onChange={(event) => setStartTime(event.target.value)}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
+              />
+            </label>
 
+            <label className="block">
+              <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500">End Time</span>
+              <input
+                type="time"
+                value={endTime}
+                onChange={(event) => setEndTime(event.target.value)}
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500"
+              />
+            </label>
+          </div>
+
+          {durationHours > 0 && (
+            <div className="rounded-lg bg-slate-50 px-3 py-2">
+              <p className="text-sm text-slate-600">
+                Duration: <span className="font-semibold text-slate-900">{durationHours.toFixed(2)}h</span>
+              </p>
+            </div>
+          )}
+
+          {error && (
+            <div className="rounded-lg bg-rose-50 px-3 py-2">
+              <p className="text-sm text-rose-700">{error}</p>
+            </div>
+          )}
         </div>
 
         <div className="mt-5 flex justify-end gap-2">
@@ -59,8 +119,8 @@ export function TaskLogTimeModal({
           </button>
           <button
             type="button"
-            onClick={() => void onSubmit(Number(hours) || 0)}
-            disabled={isSubmitting}
+            onClick={handleSubmit}
+            disabled={isSubmitting || durationHours <= 0}
             className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Save time

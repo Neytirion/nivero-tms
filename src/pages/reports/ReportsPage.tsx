@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
-import { ReportsFilters, ReportsTable, ReportsCharts } from '../../features/reports/components'
+import { ReportsFilters, ReportsTable, ReportsCharts, ReportsDailyChart } from '../../features/reports/components'
 import { useReportsController } from '../../features/reports/hooks/useReportsController'
 import { calculateSummary } from '../../features/reports/utils/reports.utils'
+import { groupByDays } from '../../features/reports/utils/chart-data.utils'
 
 export function ReportsPage() {
   const {
@@ -56,6 +57,12 @@ export function ReportsPage() {
       />
 
       <ReportsCharts entries={timeEntries} summary={summary} isLoading={isFilterLoading} />
+
+      <ReportsDailyChart
+        data={groupByDays(timeEntries)}
+        dateFrom={filters.dateFrom}
+        dateTo={filters.dateTo}
+      />
 
       <ReportsTable entries={timeEntries} isLoading={isFilterLoading} />
     </div>

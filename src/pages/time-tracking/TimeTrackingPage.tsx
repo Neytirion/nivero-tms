@@ -105,7 +105,11 @@ export function TimeTrackingPage() {
 
       {/* Daily Time Distribution Chart */}
       {entriesByDate.length > 0 && (
-        <TimeEntriesChart entriesByDate={entriesByDate} />
+        <TimeEntriesChart
+          entriesByDate={entriesByDate}
+          dateFrom={filters.dateFrom}
+          dateTo={filters.dateTo}
+        />
       )}
 
       {/* Total Hours Summary */}

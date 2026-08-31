@@ -3,6 +3,8 @@ import type { TimeEntryPreview } from '../../../lib/pm'
 
 interface TimeEntriesChartProps {
   entriesByDate: Array<{ date: string; entries: TimeEntryPreview[] }>
+  dateFrom: string
+  dateTo: string
 }
 
 interface ChartDataPoint {
@@ -12,16 +14,35 @@ interface ChartDataPoint {
   entriesCount: number
 }
 
-export function TimeEntriesChart({ entriesByDate }: TimeEntriesChartProps) {
-  // Transform data for chart
-  const chartData: ChartDataPoint[] = entriesByDate
-    .sort((a, b) => a.date.localeCompare(b.date)) // Sort by date ascending for left-to-right view
-    .map(({ date, entries }) => ({
-      date: new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      fullDate: date,
-      hours: entries.reduce((sum, entry) => sum + entry.minutes_spent / 60, 0),
-      entriesCount: entries.length,
-    }))
+function generateDateRange(dateFrom: string, dateTo: string): string[] {
+  const dates: string[] = []
+  const current = new Date(dateFrom)
+  const end = new Date(dateTo)
+
+  while (current <= end) {
+    dates.push(current.toISOString().split('T')[0])
+    current.setDate(current.getDate() + 1)
+  }
+
+  return dates
+}
+
+export function TimeEntriesChart({ entriesByDate, dateFrom, dateTo }: TimeEntriesChartProps) {
+  // Create a map of entries by date for quick lookup
+  const entriesMap = new Map(entriesByDate.map(({ date, entries }) => [date, entries]))
+
+  // Generate full date range and create chart data
+  const allDates = generateDateRange(dateFrom, dateTo)
+  const chartData: ChartDataPoint[] = allDates
+    .map((fullDate) => {
+      const entries = entriesMap.get(fullDate) ?? []
+      return {
+        date: new Date(fullDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        fullDate,
+        hours: entries.reduce((sum, entry) => sum + entry.minutes_spent / 60, 0),
+        entriesCount: entries.length,
+      }
+    })
 
   if (chartData.length === 0) {
     return null
@@ -69,15 +90,28 @@ export function TimeEntriesChart({ entriesByDate }: TimeEntriesChartProps) {
         </BarChart>
       </ResponsiveContainer>
 
-      <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
-        {chartData.map(({ date, fullDate, hours, entriesCount }) => (
-          <div key={fullDate} className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs font-semibold text-slate-900">{date}</p>
-            <p className="mt-1 text-sm font-bold text-cyan-600">{hours.toFixed(1)}h</p>
-            <p className="text-xs text-slate-600">{entriesCount} entries</p>
-          </div>
-        ))}
-      </div>
+      {chartData.length <= 14 && (
+        <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+          {chartData.map(({ date, fullDate, hours, entriesCount }) => (
+            <div
+              key={fullDate}
+              className={`rounded-lg border p-3 transition ${
+                hours > 0
+                  ? 'border-slate-200 bg-white'
+                  : 'border-slate-100 bg-slate-50/40'
+              }`}
+            >
+              <p className="text-xs font-semibold text-slate-900">{date}</p>
+              <p className={`mt-1 text-sm font-bold ${hours > 0 ? 'text-cyan-600' : 'text-slate-300'}`}>
+                {hours.toFixed(1)}h
+              </p>
+              <p className={`text-xs ${hours > 0 ? 'text-slate-600' : 'text-slate-400'}`}>
+                {entriesCount} entries
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   )
 }

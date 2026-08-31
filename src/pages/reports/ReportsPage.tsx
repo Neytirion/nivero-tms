@@ -1,7 +1,5 @@
-import { useMemo } from 'react'
-import { ReportsFilters, ReportsTable, ReportsCharts, ReportsDailyChart } from '../../features/reports/components'
+import { ReportsFilters, ReportsTable, ReportsDailyChart } from '../../features/reports/components'
 import { useReportsController } from '../../features/reports/hooks/useReportsController'
-import { calculateSummary } from '../../features/reports/utils/reports.utils'
 import { groupByDays } from '../../features/reports/utils/chart-data.utils'
 
 export function ReportsPage() {
@@ -17,8 +15,6 @@ export function ReportsPage() {
     handleUpdateFilter,
     handleResetFilters,
   } = useReportsController()
-
-  const summary = useMemo(() => calculateSummary(timeEntries), [timeEntries])
 
   if (error) {
     return (
@@ -55,8 +51,6 @@ export function ReportsPage() {
         onFilterChange={handleUpdateFilter}
         onReset={handleResetFilters}
       />
-
-      <ReportsCharts entries={timeEntries} summary={summary} isLoading={isFilterLoading} />
 
       <ReportsDailyChart
         data={groupByDays(timeEntries)}

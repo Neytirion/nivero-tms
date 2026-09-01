@@ -12,7 +12,12 @@ REVOKE EXECUTE ON FUNCTION public.sync_after_time_entry_change() FROM anon;
 REVOKE EXECUTE ON FUNCTION public.recalc_project_health(UUID) FROM anon;
 
 REVOKE EXECUTE ON FUNCTION public.create_project_from_ai_draft(TEXT, TEXT, DATE, DATE, NUMERIC, NUMERIC, JSONB, JSONB) FROM anon;
-REVOKE EXECUTE ON FUNCTION public.can_access_project_document_object(TEXT, UUID) FROM anon;
+DO $$
+BEGIN
+	IF to_regprocedure('public.can_access_project_document_object(text,uuid)') IS NOT NULL THEN
+		REVOKE EXECUTE ON FUNCTION public.can_access_project_document_object(TEXT, UUID) FROM anon;
+	END IF;
+END $$;
 REVOKE EXECUTE ON FUNCTION public.enforce_task_assignment_permissions() FROM anon;
 REVOKE EXECUTE ON FUNCTION public.ensure_project_owner_admin_membership() FROM anon;
 REVOKE EXECUTE ON FUNCTION public.get_project_members_with_profile(UUID) FROM anon;

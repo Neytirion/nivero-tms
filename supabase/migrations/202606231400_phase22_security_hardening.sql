@@ -146,8 +146,13 @@ GRANT EXECUTE ON FUNCTION public.recalc_project_health(UUID) TO authenticated;
 REVOKE EXECUTE ON FUNCTION public.create_project_from_ai_draft(TEXT, TEXT, DATE, DATE, NUMERIC, NUMERIC, JSONB, JSONB) FROM public;
 REVOKE EXECUTE ON FUNCTION public.create_project_from_ai_draft(TEXT, TEXT, DATE, DATE, NUMERIC, NUMERIC, JSONB, JSONB) FROM anon;
 
-REVOKE EXECUTE ON FUNCTION public.can_access_project_document_object(TEXT, UUID) FROM public;
-REVOKE EXECUTE ON FUNCTION public.can_access_project_document_object(TEXT, UUID) FROM anon;
+DO $$
+BEGIN
+  IF to_regprocedure('public.can_access_project_document_object(text,uuid)') IS NOT NULL THEN
+    REVOKE EXECUTE ON FUNCTION public.can_access_project_document_object(TEXT, UUID) FROM public;
+    REVOKE EXECUTE ON FUNCTION public.can_access_project_document_object(TEXT, UUID) FROM anon;
+  END IF;
+END $$;
 
 REVOKE EXECUTE ON FUNCTION public.enforce_task_assignment_permissions() FROM public;
 REVOKE EXECUTE ON FUNCTION public.enforce_task_assignment_permissions() FROM anon;

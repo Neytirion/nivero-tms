@@ -1,20 +1,74 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { UserProfileDialog, type UserProfilePreview } from '../../../shared/components'
-import { getUserProfileByEmail } from '../../../lib/pm/members'
+import { getProjectMembers, getUserProfileByEmail, type ProjectPreview } from '../../../lib/pm'
 import type { TeamInvitation } from './types'
 
 interface TeamStepProps {
   currentUserEmail: string | null
+  workspaceProjects: ProjectPreview[]
   teamInvitations: TeamInvitation[]
   onTeamInvitationsChange: (invitations: TeamInvitation[]) => void
 }
 
-export function TeamStep({ currentUserEmail, teamInvitations, onTeamInvitationsChange }: TeamStepProps) {
+export function TeamStep({ currentUserEmail, workspaceProjects, teamInvitations, onTeamInvitationsChange }: TeamStepProps) {
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<'member' | 'manager' | 'admin'>('member')
   const [emailError, setEmailError] = useState('')
   const [isCheckingEmail, setIsCheckingEmail] = useState(false)
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
+  const [quickAddCandidates, setQuickAddCandidates] = useState<TeamInvitation[]>([])
+  const [isQuickAddLoading, setIsQuickAddLoading] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadQuickAddCandidates = async () => {
+      if (workspaceProjects.length === 0) {
+        setQuickAddCandidates([])
+        return
+      }
+
+      setIsQuickAddLoading(true)
+      const memberResults = await Promise.allSettled(workspaceProjects.map((project) => getProjectMembers(project.id)))
+      if (!isMounted) return
+
+      const candidatesByEmail = new Map<string, TeamInvitation>()
+      const ownEmail = currentUserEmail?.trim().toLowerCase()
+
+      for (const result of memberResults) {
+        if (result.status !== 'fulfilled') continue
+        for (const member of result.value) {
+          const candidateEmail = member.email?.trim().toLowerCase()
+          if (!candidateEmail || candidateEmail === ownEmail || candidatesByEmail.has(candidateEmail)) continue
+          candidatesByEmail.set(candidateEmail, {
+            email: candidateEmail,
+            role: 'member',
+            profile: {
+              userId: member.user_id ?? '',
+              fullName: member.full_name,
+              email: candidateEmail,
+              avatarUrl: member.avatar_url ?? null,
+              joinedAt: member.joined_at,
+              aboutMe: null,
+            },
+          })
+        }
+      }
+
+      setQuickAddCandidates(Array.from(candidatesByEmail.values()).sort((a, b) =>
+        (a.profile?.fullName ?? a.email).localeCompare(b.profile?.fullName ?? b.email),
+      ))
+      setIsQuickAddLoading(false)
+    }
+
+    void loadQuickAddCandidates()
+    return () => { isMounted = false }
+  }, [currentUserEmail, workspaceProjects])
+
+  const visibleQuickAddCandidates = useMemo(
+    () => quickAddCandidates.filter((candidate) => !teamInvitations.some((invitation) => invitation.email === candidate.email)),
+    [quickAddCandidates, teamInvitations],
+  )
 
   const isValidEmail = (emailString: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -88,6 +142,10 @@ export function TeamStep({ currentUserEmail, teamInvitations, onTeamInvitationsC
     onTeamInvitationsChange(teamInvitations.filter((inv) => inv.email !== emailToRemove))
   }
 
+  const handleQuickAdd = (candidate: TeamInvitation) => {
+    onTeamInvitationsChange([...teamInvitations, candidate])
+  }
+
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault()
@@ -143,6 +201,46 @@ export function TeamStep({ currentUserEmail, teamInvitations, onTeamInvitationsC
             )}
           </div>
         </div>
+
+        {workspaceProjects.length > 0 ? (
+          <div className="rounded-lg border border-slate-200 bg-white p-4">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-medium text-slate-900">Quick add from other projects</p>
+              {isQuickAddLoading ? <span className="text-xs text-slate-500">Loading...</span> : null}
+            </div>
+            {!isQuickAddLoading && visibleQuickAddCandidates.length === 0 ? (
+              <p className="mt-3 text-sm text-slate-500">No available members from other projects.</p>
+            ) : null}
+            <div className="mt-3 max-h-60 space-y-2 overflow-y-auto">
+              {visibleQuickAddCandidates.map((candidate) => (
+                <div key={candidate.email} className="flex items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                  <div className="min-w-0 flex items-center gap-2.5">
+                    {candidate.profile?.avatarUrl ? (
+                      <img src={candidate.profile.avatarUrl} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+                    ) : (
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-semibold text-slate-700">
+                        {(candidate.profile?.fullName ?? candidate.email).slice(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-slate-900">{candidate.profile?.fullName ?? candidate.email}</p>
+                      {candidate.profile?.fullName ? <p className="truncate text-xs text-slate-500">{candidate.email}</p> : null}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleQuickAdd(candidate)}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-slate-300 bg-white text-lg font-semibold text-slate-700 transition hover:bg-slate-100"
+                    aria-label={`Add ${candidate.profile?.fullName ?? candidate.email} as member`}
+                    title="Add as member"
+                  >
+                    +
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         {/* Invited Members List */}
         {teamInvitations.length > 0 ? (

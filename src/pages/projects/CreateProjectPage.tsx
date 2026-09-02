@@ -192,6 +192,7 @@ export function CreateProjectPage() {
         <ProjectCreationWizard
           customerSuggestions={customerSuggestions}
           currentUserEmail={currentUserProfile?.email ?? null}
+          workspaceProjects={projects}
           isLoading={isLoading}
           onCreateProject={handleCreateProject}
           onSelectAI={handleSelectAI}

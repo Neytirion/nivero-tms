@@ -9,6 +9,7 @@ import { DetailsStep } from './DetailsStep'
 import { EstimatesStep } from './EstimatesStep'
 import { TeamStep } from './TeamStep'
 import { ReviewStep } from './ReviewStep'
+import type { ProjectPreview } from '../../../lib/pm'
 
 const STEP_NAMES = ['Name & Company', 'Timeline', 'Details', 'Estimates', 'Team', 'Review']
 const FLOW_STEPS: ProjectWizardStep[] = ['basic', 'dates', 'details', 'estimates', 'team', 'review']
@@ -16,6 +17,7 @@ const FLOW_STEPS: ProjectWizardStep[] = ['basic', 'dates', 'details', 'estimates
 interface ProjectCreationWizardProps {
   customerSuggestions: string[]
   currentUserEmail: string | null
+  workspaceProjects: ProjectPreview[]
   isLoading: boolean
   onCreateProject: (data: ProjectWizardData) => Promise<void>
   onSelectAI: () => void
@@ -24,6 +26,7 @@ interface ProjectCreationWizardProps {
 export function ProjectCreationWizard({
   customerSuggestions,
   currentUserEmail,
+  workspaceProjects,
   isLoading,
   onCreateProject,
   onSelectAI,
@@ -173,6 +176,7 @@ export function ProjectCreationWizard({
       {currentStep === 'team' && (
         <TeamStep
           currentUserEmail={currentUserEmail}
+          workspaceProjects={workspaceProjects}
           teamInvitations={wizardData.teamInvitations}
           onTeamInvitationsChange={(invitations) => handleDataChange('teamInvitations', invitations)}
         />

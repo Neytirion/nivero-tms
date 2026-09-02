@@ -12,7 +12,12 @@ vi.mock('./supabase', () => ({
   },
 }))
 
-import { notifySlackPilot } from './slack-notifications'
+import {
+  formatProjectMentionNotification,
+  formatTaskAssignmentNotification,
+  formatTaskMentionNotification,
+  notifySlackPilot,
+} from './slack-notifications'
 
 describe('notifySlackPilot', () => {
   beforeEach(() => {
@@ -48,5 +53,27 @@ describe('notifySlackPilot', () => {
     })
 
     expect(mocks.invoke).not.toHaveBeenCalled()
+  })
+
+  it('formats assignments and mentions with compact Slack links', () => {
+    expect(formatTaskAssignmentNotification({
+      taskTitle: 'Prepare estimate',
+      projectName: 'Website redesign',
+      taskId: 'task-1',
+    })).toContain('Project: Website redesign')
+
+    expect(formatTaskMentionNotification({
+      actorName: 'Alex Smith',
+      taskTitle: 'Prepare estimate',
+      message: 'Please review this.',
+      taskId: 'task-1',
+    })).toContain('Alex Smith mentioned you on *Prepare estimate*')
+
+    expect(formatProjectMentionNotification({
+      actorName: 'Alex Smith',
+      projectName: 'Website redesign',
+      message: 'Please review this.',
+      projectId: 'project-1',
+    })).toContain('<http://localhost:3000/app/projects/project-1?tab=collaboration|Open discussion>')
   })
 })

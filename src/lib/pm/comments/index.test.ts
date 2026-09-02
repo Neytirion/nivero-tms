@@ -76,6 +76,10 @@ describe('pm.comments', () => {
         return { insert: insertMentions }
       }
 
+      if (table === 'tasks') {
+        return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { title: 'Task One' }, error: null }) }) }) }
+      }
+
       throw new Error(`Unexpected table: ${table}`)
     })
 
@@ -207,6 +211,10 @@ describe('pm.comments', () => {
 
       if (table === 'comment_mentions') {
         return { insert: insertMentions }
+      }
+
+      if (table === 'tasks') {
+        return { select: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ maybeSingle: vi.fn().mockResolvedValue({ data: { title: 'Task One' }, error: null }) }) }) }
       }
 
       throw new Error(`Unexpected table: ${table}`)

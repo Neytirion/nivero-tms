@@ -3,7 +3,14 @@ import type { CommentMentionPreview, CommentPreview, UserMentionPreview } from '
 import { assertProjectEditable } from '../helpers'
 import { getProjectMembers } from '../members'
 import { recordProjectActivityEvent } from '../collaboration'
-import { notifySlackPilot, taskUrl } from '../../slack-notifications'
+import {
+  formatProjectMentionNotification,
+  formatTaskMentionNotification,
+  getActorName,
+  getProjectName,
+  getTaskTitle,
+  notifySlackPilot,
+} from '../../slack-notifications'
 
 const MENTION_TOKEN_RE = /(^|\s)@([a-zA-Z0-9._-]{2,64})/g
 
@@ -233,10 +240,17 @@ export async function createTaskComment(input: { projectId: string; taskId: stri
       matchedMembers
         .filter((member) => dedupedMentionRows.some((mention) => mention.mentioned_user_id === member.user_id))
         .forEach((member) => {
-          notifySlackPilot({
-            recipientEmail: member.email,
-            actorEmail: userData.user.email,
-            text: `You were mentioned in a comment on: ${input.taskId}\n${message.slice(0, 300)}\n${taskUrl(input.taskId)}`,
+          void getTaskTitle(input.taskId).then((taskTitle) => {
+            notifySlackPilot({
+              recipientEmail: member.email,
+              actorEmail: userData.user.email,
+              text: formatTaskMentionNotification({
+                actorName: getActorName(userData.user),
+                taskTitle,
+                message,
+                taskId: input.taskId,
+              }),
+            })
           })
         })
     }
@@ -341,10 +355,17 @@ export async function createProjectComment(input: { projectId: string; message: 
       projectMembers
         .filter((member) => dedupedMentionRows.some((mention) => mention.mentioned_user_id === member.user_id))
         .forEach((member) => {
-          notifySlackPilot({
-            recipientEmail: member.email,
-            actorEmail: userData.user.email,
-            text: `You were mentioned in a project comment.\n${message.slice(0, 300)}\n${window.location.origin}/app/projects/${input.projectId}?tab=collaboration`,
+          void getProjectName(input.projectId).then((projectName) => {
+            notifySlackPilot({
+              recipientEmail: member.email,
+              actorEmail: userData.user.email,
+              text: formatProjectMentionNotification({
+                actorName: getActorName(userData.user),
+                projectName,
+                message,
+                projectId: input.projectId,
+              }),
+            })
           })
         })
     }

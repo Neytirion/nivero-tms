@@ -10,7 +10,13 @@ import {
   getTaskProjectId,
 } from '../helpers'
 import { isExecutionTaskStatus, isTaskClosedStatus } from '../../../shared/utils/task-status.ts'
-import { getProjectMemberEmail, notifySlackPilot, taskUrl } from '../../slack-notifications'
+import {
+  formatTaskAssignmentNotification,
+  formatTaskUpdateNotification,
+  getProjectMemberEmail,
+  getProjectName,
+  notifySlackPilot,
+} from '../../slack-notifications'
 
 export async function createTask(input: CreateTaskInput) {
   await assertProjectEditable(input.projectId, 'create task')
@@ -75,11 +81,14 @@ export async function createTask(input: CreateTaskInput) {
 
   const createdTask = data satisfies TaskPreview
   if (createdTask.assigned_to && createdTask.assigned_to !== userData.user.id) {
-    const recipientEmail = await getProjectMemberEmail(input.projectId, createdTask.assigned_to)
+    const [recipientEmail, projectName] = await Promise.all([
+      getProjectMemberEmail(input.projectId, createdTask.assigned_to),
+      getProjectName(input.projectId),
+    ])
     notifySlackPilot({
       recipientEmail,
       actorEmail: userData.user.email,
-      text: `You were assigned the task: ${createdTask.title}\n${taskUrl(createdTask.id)}`,
+      text: formatTaskAssignmentNotification({ taskTitle: createdTask.title, projectName, taskId: createdTask.id }),
     })
   }
 
@@ -200,7 +209,7 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
     notifySlackPilot({
       recipientEmail,
       actorEmail: userData.user.email,
-      text: `${updatedTask.title}\n${notificationLines.join('\n')}\n${taskUrl(updatedTask.id)}`,
+      text: formatTaskUpdateNotification({ taskTitle: updatedTask.title, lines: notificationLines, taskId: updatedTask.id }),
     })
   }
 

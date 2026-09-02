@@ -7,7 +7,7 @@ import {
   updateProjectMemberRole,
   type ProjectMemberListItem,
 } from '../../../lib/pm'
-import { notifySlackPilot } from '../../../lib/slack-notifications'
+import { formatProjectInviteNotification, notifySlackPilot } from '../../../lib/slack-notifications'
 import { supabase } from '../../../lib/supabase'
 
 type SetStatus = (value: string | ((prev: string) => string)) => void
@@ -68,7 +68,7 @@ export function useMemberActions(deps: MemberActionsDeps) {
         notifySlackPilot({
           recipientEmail: email,
           actorEmail: authData.user?.email,
-          text: `You were added to a project in Nivero.\n${window.location.origin}/app/projects/${selectedProjectId}`,
+          text: formatProjectInviteNotification(selectedProjectId),
         })
         setStatus('Member invited to project by email')
       } catch (error) {

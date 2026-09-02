@@ -251,7 +251,7 @@ export function TaskDetailsPage() {
           eyebrow="Tasks"
           title="Task Details"
           backButton={{
-            label: backTo.startsWith('/app/projects/') ? 'в†ђ Project Details' : 'в†ђ Tasks',
+            label: backTo.startsWith('/app/projects/') ? '← Project Details' : '← Tasks',
             onClick: () => navigate(backTo),
           }}
           gradientClassName="bg-[linear-gradient(120deg,rgba(14,116,144,0.08),rgba(16,185,129,0.06))]"

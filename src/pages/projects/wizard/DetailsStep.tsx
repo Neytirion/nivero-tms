@@ -14,7 +14,7 @@ export function DetailsStep({
       <div className="space-y-4">
         <label className="block">
           <span className="mb-2 block text-sm font-semibold text-slate-700">
-            Description <span className="text-slate-500 font-normal">(optional)</span>
+            Description
           </span>
           <textarea
             value={projectDescription}
@@ -23,7 +23,6 @@ export function DetailsStep({
             rows={5}
             className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors resize-none"
           />
-          <p className="mt-1 text-xs text-slate-500">Add any additional context about the project</p>
         </label>
       </div>
     </div>

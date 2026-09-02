@@ -8,6 +8,7 @@ declare const Deno: {
 const SLACK_API_URL = 'https://slack.com/api'
 const REQUEST_TIMEOUT_MS = 15_000
 const MAX_MESSAGE_LENGTH = 3_000
+const PILOT_RECIPIENT_EMAIL = 'danylo@nivero.no'
 
 type SlackApiResponse = {
   ok: boolean
@@ -96,6 +97,10 @@ Deno.serve(async (request: Request) => {
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return json(request, { success: false, error: 'A valid recipient email is required' }, 400)
+  }
+
+  if (email !== PILOT_RECIPIENT_EMAIL) {
+    return json(request, { success: false, error: 'Slack notifications are limited to the pilot recipient' }, 403)
   }
 
   if (!text || text.length > MAX_MESSAGE_LENGTH) {

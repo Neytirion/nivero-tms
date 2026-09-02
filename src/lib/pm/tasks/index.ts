@@ -10,6 +10,7 @@ import {
   getTaskProjectId,
 } from '../helpers'
 import { isExecutionTaskStatus, isTaskClosedStatus } from '../../../shared/utils/task-status.ts'
+import { getProjectMemberEmail, notifySlackPilot, taskUrl } from '../../slack-notifications'
 
 export async function createTask(input: CreateTaskInput) {
   await assertProjectEditable(input.projectId, 'create task')
@@ -72,7 +73,17 @@ export async function createTask(input: CreateTaskInput) {
     throw new Error(error.message)
   }
 
-  return data satisfies TaskPreview
+  const createdTask = data satisfies TaskPreview
+  if (createdTask.assigned_to && createdTask.assigned_to !== userData.user.id) {
+    const recipientEmail = await getProjectMemberEmail(input.projectId, createdTask.assigned_to)
+    notifySlackPilot({
+      recipientEmail,
+      actorEmail: userData.user.email,
+      text: `You were assigned the task: ${createdTask.title}\n${taskUrl(createdTask.id)}`,
+    })
+  }
+
+  return createdTask
 }
 
 export async function updateTask(taskId: string, patch: UpdateTaskInput) {
@@ -92,7 +103,7 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
 
   const { data: currentTask, error: currentTaskError } = await supabase
     .from('tasks')
-    .select('status,blocked_by_task_id,assigned_to')
+    .select('status,blocked_by_task_id,assigned_to,due_date')
     .eq('id', taskId)
     .maybeSingle()
 
@@ -169,7 +180,31 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
     throw new Error('Permission denied: you cannot update this task')
   }
 
-  return data satisfies TaskPreview
+  const updatedTask = data satisfies TaskPreview
+  const notificationLines: string[] = []
+  const nextStatus = updatedTask.status?.toLowerCase() ?? ''
+  const previousStatus = currentTask.status?.toLowerCase() ?? ''
+
+  if (patch.status !== undefined && nextStatus === 'blocked' && previousStatus !== 'blocked') {
+    notificationLines.push('This task is blocked.')
+  }
+  if (patch.status !== undefined && isTaskClosedStatus(previousStatus) && !isTaskClosedStatus(nextStatus)) {
+    notificationLines.push('This task was reopened.')
+  }
+  if (patch.due_date !== undefined && patch.due_date !== currentTask.due_date) {
+    notificationLines.push(`Due date changed to ${patch.due_date || 'not set'}.`)
+  }
+
+  if (notificationLines.length > 0 && updatedTask.project_id && updatedTask.assigned_to && updatedTask.assigned_to !== userData.user.id) {
+    const recipientEmail = await getProjectMemberEmail(updatedTask.project_id, updatedTask.assigned_to)
+    notifySlackPilot({
+      recipientEmail,
+      actorEmail: userData.user.email,
+      text: `${updatedTask.title}\n${notificationLines.join('\n')}\n${taskUrl(updatedTask.id)}`,
+    })
+  }
+
+  return updatedTask
 }
 
 export async function deleteTask(taskId: string) {

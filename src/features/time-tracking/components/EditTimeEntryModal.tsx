@@ -16,30 +16,22 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
     entry_date: string
     started_at: string | null
     ended_at: string | null
-    manualHours: string
-    manualMinutes: string
   }>({
     minutes_spent: entry?.minutes_spent ?? 0,
     entry_date: entry?.entry_date ?? new Date().toISOString().split('T')[0],
     started_at: entry?.started_at ? entry.started_at.split('T')[1].substring(0, 5) : null,
     ended_at: entry?.ended_at ? entry.ended_at.split('T')[1].substring(0, 5) : null,
-    manualHours: '',
-    manualMinutes: '',
   })
 
   const [error, setError] = useState<string | null>(null)
 
   // Update form when entry changes
   if (entry && (formData.minutes_spent !== entry.minutes_spent || formData.entry_date !== entry.entry_date)) {
-    const hours = Math.floor(entry.minutes_spent / 60)
-    const minutes = entry.minutes_spent % 60
     setFormData({
       minutes_spent: entry.minutes_spent,
       entry_date: entry.entry_date,
       started_at: entry.started_at ? entry.started_at.split('T')[1].substring(0, 5) : null,
       ended_at: entry.ended_at ? entry.ended_at.split('T')[1].substring(0, 5) : null,
-      manualHours: String(hours),
-      manualMinutes: String(minutes),
     })
   }
 
@@ -72,37 +64,20 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
     setError(null)
   }
 
-  const handleManualTimeChange = (newHours: string, newMinutes: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      manualHours: newHours,
-      manualMinutes: newMinutes,
-    }))
-    setError(null)
-  }
-
   const handleSave = async () => {
     setError(null)
 
-    // Determine which duration to use
-    let finalMinutes: number
-    
-    if (formData.started_at && formData.ended_at) {
-      // Use calculated duration from time range
-      if (!calculatedDuration) {
-        setError('End time must be after start time')
-        return
-      }
-      finalMinutes = calculatedDuration.minutes
-    } else if (formData.manualHours || formData.manualMinutes) {
-      // Use manually entered duration
-      const h = parseInt(formData.manualHours, 10) || 0
-      const m = parseInt(formData.manualMinutes, 10) || 0
-      finalMinutes = h * 60 + m
-    } else {
-      setError('Please set time range or enter hours/minutes manually')
+    if (!formData.started_at || !formData.ended_at) {
+      setError('Start and end times are required')
       return
     }
+
+    if (!calculatedDuration) {
+      setError('End time must be after start time')
+      return
+    }
+
+    const finalMinutes = calculatedDuration.minutes
 
     if (finalMinutes <= 0) {
       setError('Duration must be greater than 0')
@@ -201,7 +176,7 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
                 />
               </div>
             </div>
-            <p className="mt-1 text-xs text-slate-500">Optional. Duration will be calculated automatically.</p>
+            <p className="mt-1 text-xs text-slate-500">Duration is calculated automatically.</p>
           </div>
 
           {/* Calculated Duration Display */}
@@ -214,40 +189,6 @@ export function EditTimeEntryModal({ entry, isOpen, isSaving, onClose, onSave }:
             </div>
           )}
 
-          {/* Manual Entry Section (show only if no time range) */}
-          {!calculatedDuration && (
-            <div className="border-t border-slate-200 pt-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-slate-600 mb-3">Manual Duration</p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="manual-hours" className="block text-sm font-medium text-slate-700 mb-1">Hours</label>
-                  <input
-                    id="manual-hours"
-                    type="number"
-                    min="0"
-                    max="24"
-                    value={formData.manualHours}
-                    onChange={(e) => handleManualTimeChange(e.target.value, formData.manualMinutes)}
-                    disabled={isSaving}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="manual-minutes" className="block text-sm font-medium text-slate-700 mb-1">Minutes</label>
-                  <input
-                    id="manual-minutes"
-                    type="number"
-                    min="0"
-                    max="59"
-                    value={formData.manualMinutes}
-                    onChange={(e) => handleManualTimeChange(formData.manualHours, e.target.value)}
-                    disabled={isSaving}
-                    className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Buttons */}

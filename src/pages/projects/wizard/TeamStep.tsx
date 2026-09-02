@@ -207,12 +207,6 @@ export function TeamStep({ currentUserEmail, teamInvitations, onTeamInvitationsC
           </div>
         ) : null}
 
-        {/* Info Box */}
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
-          <p className="text-sm text-amber-900">
-            ℹ️ Team invitations are optional. You can skip this step or add members after creating the project.
-          </p>
-        </div>
       </div>
 
       <UserProfileDialog

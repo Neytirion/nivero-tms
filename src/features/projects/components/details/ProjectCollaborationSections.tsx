@@ -68,6 +68,8 @@ function MentionHints({ members }: { members: ProjectMemberListItem[] }) {
 interface MentionCandidate {
   handle: string
   label: string
+  avatarUrl: string | null
+  aliases: string[]
 }
 
 function normalizeMentionValue(value: string) {
@@ -144,31 +146,31 @@ export function ProjectCollaborationCommentsSection({
 
   const mentionCandidates = useMemo(() => {
     const candidates = members.flatMap<MentionCandidate>((member) => {
-      const uniqueHandles = new Set<string>()
+      const aliases = new Set<string>()
+      const emailHandle = normalizeMentionValue(member.email?.split('@')[0] ?? '')
 
-      if (member.email) {
-        const localPart = normalizeMentionValue(member.email.split('@')[0] ?? '')
-        if (localPart) {
-          uniqueHandles.add(localPart)
-        }
+      if (emailHandle) {
+        aliases.add(emailHandle)
       }
 
       if (member.full_name) {
         const normalizedName = normalizeMentionValue(member.full_name)
         if (normalizedName) {
-          uniqueHandles.add(normalizedName)
-          uniqueHandles.add(normalizedName.replace(/\./g, ''))
+          aliases.add(normalizedName)
+          aliases.add(normalizedName.replace(/\./g, ''))
         }
       }
 
       const label = member.full_name ?? member.email ?? member.user_id ?? 'User'
-      return Array.from(uniqueHandles).map((handle) => ({ handle, label }))
+      const handle = emailHandle || Array.from(aliases)[0]
+      return handle ? [{ handle, label, avatarUrl: member.avatar_url ?? null, aliases: Array.from(aliases) }] : []
     })
 
     return Array.from(
       candidates.reduce((acc, candidate) => {
-        if (!acc.has(candidate.handle)) {
-          acc.set(candidate.handle, candidate)
+        const key = candidate.label.toLowerCase()
+        if (!acc.has(key)) {
+          acc.set(key, candidate)
         }
         return acc
       }, new Map<string, MentionCandidate>()).values(),
@@ -183,12 +185,8 @@ export function ProjectCollaborationCommentsSection({
     const normalizedQuery = normalizeMentionValue(mentionQueryState.query)
     const maxItems = 5
 
-    if (!normalizedQuery) {
-      return [] as MentionCandidate[]
-    }
-
     return mentionCandidates
-      .filter((candidate) => candidate.handle.startsWith(normalizedQuery))
+      .filter((candidate) => !normalizedQuery || candidate.aliases.some((alias) => alias.startsWith(normalizedQuery)) || normalizeMentionValue(candidate.label).includes(normalizedQuery))
       .slice(0, maxItems)
   }, [mentionCandidates, mentionQueryState])
 
@@ -386,8 +384,17 @@ export function ProjectCollaborationCommentsSection({
                     isActive ? 'bg-cyan-50 text-cyan-900' : 'text-slate-700 hover:bg-slate-50'
                   }`}
                 >
-                  <span className="font-semibold">@{candidate.handle}</span>
-                  <span className="ml-2 truncate text-xs text-slate-500">{candidate.label}</span>
+                  <span className="flex min-w-0 items-center gap-2">
+                    {candidate.avatarUrl ? (
+                      <img src={candidate.avatarUrl} alt="" className="h-6 w-6 shrink-0 rounded-full object-cover" />
+                    ) : (
+                      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[10px] font-bold text-slate-600">
+                        {candidate.label.slice(0, 2).toUpperCase()}
+                      </span>
+                    )}
+                    <span className="truncate font-semibold">{candidate.label}</span>
+                  </span>
+                  <span className="ml-2 truncate text-xs text-slate-500">@{candidate.handle}</span>
                 </button>
               )
             })}

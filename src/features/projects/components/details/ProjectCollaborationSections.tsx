@@ -145,7 +145,9 @@ export function ProjectCollaborationCommentsSection({
   const commentInputRef = useRef<HTMLTextAreaElement>(null)
 
   const mentionCandidates = useMemo(() => {
-    const candidates = members.flatMap<MentionCandidate>((member) => {
+    const candidates = members
+      .filter((member) => member.user_id !== currentUserId)
+      .flatMap<MentionCandidate>((member) => {
       const aliases = new Set<string>()
       const emailHandle = normalizeMentionValue(member.email?.split('@')[0] ?? '')
 
@@ -164,7 +166,7 @@ export function ProjectCollaborationCommentsSection({
       const label = member.full_name ?? member.email ?? member.user_id ?? 'User'
       const handle = emailHandle || Array.from(aliases)[0]
       return handle ? [{ handle, label, avatarUrl: member.avatar_url ?? null, aliases: Array.from(aliases) }] : []
-    })
+      })
 
     return Array.from(
       candidates.reduce((acc, candidate) => {
@@ -175,7 +177,7 @@ export function ProjectCollaborationCommentsSection({
         return acc
       }, new Map<string, MentionCandidate>()).values(),
     )
-  }, [members])
+  }, [currentUserId, members])
 
   const filteredMentionCandidates = useMemo(() => {
     if (!mentionQueryState) {

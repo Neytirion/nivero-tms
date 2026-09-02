@@ -151,7 +151,9 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
         }, {})
         setAuthorLabelByUserId(labels)
 
-        const hints = members
+        const mentionableMembers = members.filter((member) => member.user_id !== currentUserId)
+
+        const hints = mentionableMembers
           .map((member) => {
             if (member.email) {
               return `@${member.email.split('@')[0]}`
@@ -168,7 +170,7 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
 
         setMentionHints(hints)
 
-        const candidates = members.flatMap<MentionCandidate>((member) => {
+        const candidates = mentionableMembers.flatMap<MentionCandidate>((member) => {
           const aliases = new Set<string>()
           const emailHandle = normalizeMentionValue(member.email?.split('@')[0] ?? '')
 
@@ -207,7 +209,7 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
     }
 
     void loadMentionHints()
-  }, [projectId])
+  }, [currentUserId, projectId])
 
   const addComment = async () => {
     const nextMessage = message.trim()

@@ -25,12 +25,6 @@ export function DetailsStep({
           />
           <p className="mt-1 text-xs text-slate-500">Add any additional context about the project</p>
         </label>
-
-        <div className="mt-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-          <p className="text-sm text-amber-900">
-            ℹ️ Description is optional and can be filled in later in the project details.
-          </p>
-        </div>
       </div>
     </div>
   )

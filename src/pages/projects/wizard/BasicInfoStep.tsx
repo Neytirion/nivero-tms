@@ -29,7 +29,6 @@ export function BasicInfoStep({
             placeholder="e.g., Website Redesign, Mobile App, Dashboard Development"
             className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors"
           />
-          <p className="mt-1 text-xs text-slate-500">Give your project a clear, descriptive name</p>
         </label>
 
         <label className="block">
@@ -49,7 +48,6 @@ export function BasicInfoStep({
               <option key={name} value={name} />
             ))}
           </datalist>
-          <p className="mt-1 text-xs text-slate-500">Optional - The client or company this project is for</p>
         </label>
       </div>
     </div>

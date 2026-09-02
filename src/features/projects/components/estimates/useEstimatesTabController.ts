@@ -86,10 +86,11 @@ interface UseEstimatesTabControllerInput {
   projectId: string
   canEdit: boolean
   onEstimateCreated?: (estimateId: string) => void
+  onEstimatesChanged?: () => Promise<void>
 }
 
 export function useEstimatesTabController(input: UseEstimatesTabControllerInput) {
-  const { projectId, canEdit, onEstimateCreated } = input
+  const { projectId, canEdit, onEstimateCreated, onEstimatesChanged } = input
   const { loadDashboardPreview } = useWorkspace()
 
   const [isLoading, setIsLoading] = useState(false)
@@ -207,6 +208,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
     try {
       const created = await createEstimateVersion(projectId)
       await loadEstimates(created.id)
+      await onEstimatesChanged?.()
       onEstimateCreated?.(created.id)
       setStatus(`Estimate v${created.version_number} created.`)
     } catch (error) {
@@ -244,6 +246,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
       })
 
       await loadEstimates(activeEstimateId)
+      await onEstimatesChanged?.()
       setStatus('Estimate draft saved.')
       return true
     } catch (error) {
@@ -268,6 +271,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
     try {
       await approveEstimate(activeEstimateId)
       await loadEstimates(activeEstimateId)
+      await onEstimatesChanged?.()
       await loadDashboardPreview()
       setStatus('Estimate approved. Team can use this baseline.')
     } catch (error) {
@@ -309,6 +313,7 @@ export function useEstimatesTabController(input: UseEstimatesTabControllerInput)
       })
 
       await loadEstimates(created.id)
+      await onEstimatesChanged?.()
       onEstimateCreated?.(created.id)
       setStatus(`Estimate v${created.version_number} created with standard work packages.`)
     } catch (error) {

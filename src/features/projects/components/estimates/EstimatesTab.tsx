@@ -5,9 +5,10 @@ import { useEstimatesTabController } from './useEstimatesTabController'
 interface EstimatesTabProps {
   projectId: string
   canEdit: boolean
+  onEstimatesChanged?: () => Promise<void>
 }
 
-export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
+export function EstimatesTab({ projectId, canEdit, onEstimatesChanged }: EstimatesTabProps) {
   const [isApproveConfirmOpen, setIsApproveConfirmOpen] = useState(false)
   const [editingEstimateId, setEditingEstimateId] = useState<string | null>(null)
 
@@ -36,6 +37,7 @@ export function EstimatesTab({ projectId, canEdit }: EstimatesTabProps) {
   } = useEstimatesTabController({ 
     projectId, 
     canEdit,
+    onEstimatesChanged,
     onEstimateCreated: (estimateId) => {
       // Automatically open edit mode when a new estimate is created
       setEditingEstimateId(estimateId)

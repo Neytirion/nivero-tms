@@ -129,6 +129,15 @@ export function ProjectDetailsSectionBody({
       isMounted = false
     }
   }, [selectedProjectId])
+
+  const refreshOverviewEstimates = async () => {
+    try {
+      setEstimates(await getProjectEstimates(selectedProject.id))
+    } catch (error) {
+      console.error('Failed to refresh estimates for overview:', error)
+    }
+  }
+
   return (
     <>
       {activeTab === 'overview' ? (
@@ -198,6 +207,7 @@ export function ProjectDetailsSectionBody({
         <EstimatesTab
           projectId={selectedProject.id}
           canEdit={canEditSelectedProject}
+          onEstimatesChanged={refreshOverviewEstimates}
         />
       ) : null}
 

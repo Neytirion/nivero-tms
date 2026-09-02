@@ -158,7 +158,7 @@ export function EstimatesStep({
             {/* Price per Hour */}
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-slate-700">
-                Price per Hour (kr) <span className="text-slate-500 font-normal">(optional)</span>
+                Price per Hour (kr)
               </span>
               <input
                 type="number"
@@ -169,7 +169,6 @@ export function EstimatesStep({
                 min="0"
                 className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors"
               />
-              <p className="mt-1 text-xs text-slate-500">Hourly rate for budget calculation</p>
             </label>
 
             {/* Budget Preview */}

@@ -47,7 +47,6 @@ export function DateRangeStep({
             max={projectEndDate || undefined}
             className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors"
           />
-          <p className="mt-1 text-xs text-slate-500">When does the project start?</p>
         </label>
 
         <label className="block">
@@ -61,7 +60,6 @@ export function DateRangeStep({
             min={projectStartDate || undefined}
             className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200 transition-colors"
           />
-          <p className="mt-1 text-xs text-slate-500">When should the project be completed?</p>
         </label>
 
         {durationDays !== null && (

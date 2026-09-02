@@ -314,10 +314,8 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
                 </button>
               ) : null}
             </div>
-            {mentionStateByCommentId[item.id] ? (
-              <p className={`mb-1 inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${
-                mentionStateByCommentId[item.id].readAt ? 'bg-sky-100 text-sky-700' : 'bg-amber-100 text-amber-800'
-              }`}>
+            {mentionStateByCommentId[item.id] && !mentionStateByCommentId[item.id].readAt ? (
+              <p className="absolute right-1 top-1 inline-flex rounded-full bg-amber-200 px-1.5 py-0.5 text-[9px] font-semibold text-amber-800 shadow-sm">
                 Mentioned you
               </p>
             ) : null}

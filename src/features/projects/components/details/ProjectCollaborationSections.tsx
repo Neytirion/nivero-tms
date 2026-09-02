@@ -243,11 +243,10 @@ export function ProjectCollaborationCommentsSection({
             const avatarUrl = getActorAvatarUrl(comment.user_id, members)
             const isUnread = lastReadAt ? comment.created_at > lastReadAt && !isOwn : false
             const mentionState = mentionStateByCommentId[comment.id]
-            const isMentioned = Boolean(mentionState)
             const isUnreadMention = Boolean(mentionState && !mentionState.readAt)
 
             return (
-              <div key={comment.id} className={`group flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}>
+              <div key={comment.id} className={`group relative flex gap-2 ${isOwn ? 'flex-row-reverse' : ''}`}>
                 {!isOwn && (
                   <button
                     type="button"
@@ -274,10 +273,8 @@ export function ProjectCollaborationCommentsSection({
                       </button>
                       <span className="text-xs text-slate-400">{timeAgo(comment.created_at)}</span>
                       {isUnread && <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />}
-                      {isMentioned && (
-                        <span className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
-                          isUnreadMention ? 'bg-amber-200 text-amber-900' : 'bg-sky-200 text-sky-900'
-                        }`}>
+                      {isUnreadMention && (
+                        <span className="absolute right-0 top-0 rounded-full bg-amber-200 px-2 py-0.5 text-[9px] font-bold text-amber-900 shadow-sm">
                           Mentioned you
                         </span>
                       )}

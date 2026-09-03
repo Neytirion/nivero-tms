@@ -6,7 +6,7 @@ import { LogTimeModal } from '../../features/time-tracking/components/LogTimeMod
 import { useTimeEntriesViewer } from '../../features/time-tracking/hooks/useTimeEntriesViewer'
 import type { TimeEntryPreview } from '../../lib/pm'
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { BarChart3, List, Plus } from 'lucide-react'
 
 export function TimeTrackingPage() {
   const {
@@ -31,6 +31,7 @@ export function TimeTrackingPage() {
 
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [isLogTimeOpen, setIsLogTimeOpen] = useState(false)
+  const [activeView, setActiveView] = useState<'distribution' | 'logs'>('logs')
 
   const deletingEntry = deletingEntryId ? entries.find((e) => e.id === deletingEntryId) : null
 
@@ -111,28 +112,64 @@ export function TimeTrackingPage() {
         </section>
       )}
 
-      {/* Daily Time Distribution Chart */}
-      {entriesByDate.length > 0 && (
-        <TimeEntriesChart
-          entriesByDate={entriesByDate}
-          dateFrom={filters.dateFrom}
-          dateTo={filters.dateTo}
-        />
-      )}
+      <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50/70 px-4 py-3 sm:px-5">
+          <div>
+            <h3 className="text-base font-bold text-slate-900">Time overview</h3>
+            <p className="mt-1 text-xs text-slate-500">Switch between your daily distribution and detailed logs.</p>
+          </div>
+          <div className="flex rounded-lg border border-slate-200 bg-white p-1" role="tablist" aria-label="Time overview">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'distribution'}
+              onClick={() => setActiveView('distribution')}
+              className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold ${activeView === 'distribution' ? 'bg-cyan-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+            >
+              <BarChart3 size={15} />
+              Daily Distribution
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeView === 'logs'}
+              onClick={() => setActiveView('logs')}
+              className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-xs font-semibold ${activeView === 'logs' ? 'bg-cyan-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}
+            >
+              <List size={15} />
+              My Time Logs
+            </button>
+          </div>
+        </div>
 
-      <TimeEntriesGroupedByDay
-        entriesByDate={entriesByDate}
-        allEntries={entries}
-        editingEntryId={editingEntryId}
-        isLoading={isLoading}
-        projects={projects}
-        taskLabelById={taskLabelById}
-        isSaving={isSavingEdit}
-        onEdit={handleEditEntry}
-        onSave={handleSaveEdit}
-        onDelete={handleDeleteEntry}
-        onCancel={() => setEditingEntryId(null)}
-      />
+        <div className="p-3 sm:p-4">
+          {activeView === 'distribution' && entriesByDate.length > 0 ? (
+            <TimeEntriesChart
+              entriesByDate={entriesByDate}
+              dateFrom={filters.dateFrom}
+              dateTo={filters.dateTo}
+            />
+          ) : activeView === 'logs' ? (
+            <TimeEntriesGroupedByDay
+              entriesByDate={entriesByDate}
+              allEntries={entries}
+              editingEntryId={editingEntryId}
+              isLoading={isLoading}
+              projects={projects}
+              taskLabelById={taskLabelById}
+              isSaving={isSavingEdit}
+              onEdit={handleEditEntry}
+              onSave={handleSaveEdit}
+              onDelete={handleDeleteEntry}
+              onCancel={() => setEditingEntryId(null)}
+            />
+          ) : (
+            <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+              <p className="text-sm text-slate-600">No time distribution for the selected filters.</p>
+            </div>
+          )}
+        </div>
+      </section>
 
       <ConfirmDialog
         isOpen={deletingEntryId !== null}

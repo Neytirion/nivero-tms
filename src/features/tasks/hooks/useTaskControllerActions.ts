@@ -1,5 +1,6 @@
 import { createTimeEntry, type TaskPreview } from '../../../lib/pm'
 import type { TaskStatus } from '../../../features/tasks/constants.ts'
+import { localDateTimeToISOString } from '../../time-tracking/utils/time-tracking.utils'
 
 interface UseTaskControllerActionsInput {
   selectedProjectId: string | null
@@ -155,8 +156,8 @@ export function useTaskControllerActions(input: UseTaskControllerActionsInput) {
     const hoursSpent = durationMin / 60
 
     const entryDate = new Date().toISOString().slice(0, 10)
-    const startedAt = `${entryDate}T${startTime}:00`
-    const endedAt = `${entryDate}T${endTime}:00`
+    const startedAt = localDateTimeToISOString(entryDate, startTime)
+    const endedAt = localDateTimeToISOString(entryDate, endTime)
 
     await createTimeEntry({
       projectId: input.selectedProjectId,

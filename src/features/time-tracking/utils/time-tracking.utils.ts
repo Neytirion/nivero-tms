@@ -4,6 +4,12 @@ export function toDateInputValue(date: Date) {
   return date.toISOString().slice(0, 10)
 }
 
+export function localDateTimeToISOString(date: string, time: string) {
+  const [year, month, day] = date.split('-').map(Number)
+  const [hours, minutes] = time.split(':').map(Number)
+  return new Date(year, month - 1, day, hours, minutes, 0, 0).toISOString()
+}
+
 export function startOfWeek(date: Date) {
   const value = new Date(date)
   const day = value.getDay()

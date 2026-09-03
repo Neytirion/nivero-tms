@@ -4,7 +4,7 @@ import { useTaskDetailsEditState } from '../../features/tasks/hooks/useTaskDetai
 import { useEffect, useMemo, useState } from 'react'
 import { useGlobalTaskTimer } from '../../features/time-tracking/global/GlobalTaskTimerContext'
 import { getTimeEntries, createTimeEntry } from '../../lib/pm'
-import { formatDurationFromSeconds, getEntryDurationSeconds } from '../../features/time-tracking/utils/time-tracking.utils'
+import { formatDurationFromSeconds, getEntryDurationSeconds, localDateTimeToISOString } from '../../features/time-tracking/utils/time-tracking.utils'
 import type { TimeEntryPreview } from '../../lib/pm'
 import {
   TaskDetailsHeader,
@@ -242,8 +242,8 @@ export function TaskDetailsPage() {
         entryDate: today,
         hoursSpent: durationMin / 60,
         isBillable: task.is_billable,
-        startedAt: `${today}T${startTime}:00`,
-        endedAt: `${today}T${endTime}:00`,
+        startedAt: localDateTimeToISOString(today, startTime),
+        endedAt: localDateTimeToISOString(today, endTime),
       })
 
       setIsLogTimeModalOpen(false)

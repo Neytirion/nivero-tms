@@ -14,7 +14,7 @@ interface TimeEntriesGroupedByDayProps {
   isLoading: boolean
   projects: ProjectPreview[]
   taskLabelById: Record<string, string>
-  isSaving: boolean
+  savingEntryId: string | null
   onSave: (updatedEntry: Partial<TimeEntryPreview>) => Promise<void>
   onDelete: (entry: TimeEntryPreview) => void
 }
@@ -25,7 +25,7 @@ export function TimeEntriesGroupedByDay({
   isLoading,
   projects,
   taskLabelById,
-  isSaving,
+  savingEntryId,
   onDelete,
   onSave,
 }: TimeEntriesGroupedByDayProps) {
@@ -46,26 +46,17 @@ export function TimeEntriesGroupedByDay({
   }
 
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-5">
-      <div className="mb-4 flex items-end justify-between gap-4">
-        <div>
-          <h3 className="text-base font-bold text-slate-900">My Time Logs</h3>
-          <p className="mt-1 text-xs text-slate-500">Review your entries by day and edit them directly in the list.</p>
-        </div>
-        <span className="hidden text-xs text-slate-500 sm:block">{entriesByDate.reduce((count, group) => count + group.entries.length, 0)} entries</span>
-      </div>
-
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
-        <div className="hidden min-w-[840px] grid-cols-[minmax(220px,1.5fr)_145px_105px_105px_90px_72px] border-b border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 sm:grid">
-          <span>Task / Project</span>
-          <span>Date</span>
-          <span>Start</span>
-          <span>End</span>
-          <span>Duration</span>
+    <div className="overflow-x-auto rounded-lg border border-slate-200">
+        <div className="hidden min-w-[760px] grid-cols-6 border-b border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 sm:grid">
+          <span className="border-r border-slate-200 pr-3">Task / Project</span>
+          <span className="border-r border-slate-200 pr-2">Date</span>
+          <span className="border-r border-slate-200 pr-2">Start</span>
+          <span className="border-r border-slate-200 pr-2">End</span>
+          <span className="border-r border-slate-200 pr-2">Duration</span>
           <span className="text-right">Actions</span>
         </div>
-        <div className="min-w-[840px] divide-y divide-slate-100">
-        {entriesByDate.map((dayGroup) => {
+        <div className="min-w-[760px] divide-y divide-slate-100">
+          {entriesByDate.map((dayGroup) => {
           const dayTotal = dayGroup.entries.reduce((sum, entry) => sum + getEntryDurationSeconds(entry), 0)
 
           const date = new Date(`${dayGroup.date}T00:00:00`)
@@ -74,7 +65,7 @@ export function TimeEntriesGroupedByDay({
 
           return (
             <div key={dayGroup.date}>
-              <div className="flex items-center justify-between gap-3 bg-slate-50 px-4 py-2">
+              <div className="flex items-center justify-between gap-3 border-y-2 border-slate-300 bg-slate-100 px-3 py-2">
                 <div className="flex items-center gap-2">
                   <p className="text-xs font-bold text-slate-800">{dayName}</p>
                   {isToday && <span className="text-[10px] font-semibold text-cyan-700">Today</span>}
@@ -82,7 +73,9 @@ export function TimeEntriesGroupedByDay({
                 </div>
                 <span className="text-xs font-semibold text-slate-600">{formatDurationFromSeconds(dayTotal)} · {dayGroup.entries.length} entries</span>
               </div>
-              <FreeTimeSlots entries={allEntries} date={dayGroup.date} compact />
+              <div className="border-b border-slate-200 bg-emerald-50/30 px-3 py-1">
+                <FreeTimeSlots entries={allEntries} date={dayGroup.date} compact />
+              </div>
               <div className="divide-y divide-slate-100">
                 {dayGroup.entries.map((entry) => {
                   const project = projects.find((p) => p.id === entry.project_id)
@@ -94,7 +87,7 @@ export function TimeEntriesGroupedByDay({
                       entry={entry}
                       project={project}
                       taskLabel={taskLabel}
-                      isSaving={isSaving}
+                      isSaving={savingEntryId === entry.id}
                       onSave={onSave}
                       onDelete={onDelete}
                     />
@@ -103,9 +96,8 @@ export function TimeEntriesGroupedByDay({
               </div>
             </div>
           )
-        })}
+          })}
         </div>
-      </div>
-    </section>
+    </div>
   )
 }

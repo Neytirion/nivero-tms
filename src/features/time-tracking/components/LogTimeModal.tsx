@@ -3,6 +3,7 @@ import { X, Clock, Calendar, Briefcase, Tag, DollarSign } from 'lucide-react'
 import { getProjectTasks, createTimeEntry } from '../../../lib/pm'
 import type { ProjectPreview, TaskPreview } from '../../../lib/pm'
 import { TwentyFourHourInput } from './TwentyFourHourInput'
+import { localDateTimeToISOString } from '../utils/time-tracking.utils'
 
 interface LogTimeModalProps {
   isOpen: boolean
@@ -131,8 +132,8 @@ export function LogTimeModal({ isOpen, projects, onClose, onSaved }: LogTimeModa
         entryDate: date,
         hoursSpent: calculatedDuration.total / 60,
         isBillable,
-        startedAt: `${date}T${startTime}:00`,
-        endedAt: `${date}T${endTime}:00`,
+        startedAt: localDateTimeToISOString(date, startTime),
+        endedAt: localDateTimeToISOString(date, endTime),
       })
       onSaved()
       onClose()

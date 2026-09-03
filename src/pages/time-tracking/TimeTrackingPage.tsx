@@ -27,18 +27,19 @@ export function TimeTrackingPage() {
     refreshEntries,
   } = useTimeEntriesViewer()
 
-  const [isSavingEdit, setIsSavingEdit] = useState(false)
+  const [savingEntryId, setSavingEntryId] = useState<string | null>(null)
   const [isLogTimeOpen, setIsLogTimeOpen] = useState(false)
   const [activeView, setActiveView] = useState<'distribution' | 'logs'>('logs')
 
   const deletingEntry = deletingEntryId ? entries.find((e) => e.id === deletingEntryId) : null
 
   const handleSaveEdit = async (updatedEntry: Partial<TimeEntryPreview>) => {
-    setIsSavingEdit(true)
+    if (!updatedEntry.id) return
+    setSavingEntryId(updatedEntry.id)
     try {
       await handleUpdate(updatedEntry)
     } finally {
-      setIsSavingEdit(false)
+      setSavingEntryId(null)
     }
   }
 
@@ -142,7 +143,7 @@ export function TimeTrackingPage() {
               isLoading={isLoading}
               projects={projects}
               taskLabelById={taskLabelById}
-              isSaving={isSavingEdit}
+              savingEntryId={savingEntryId}
               onSave={handleSaveEdit}
               onDelete={handleDeleteEntry}
             />

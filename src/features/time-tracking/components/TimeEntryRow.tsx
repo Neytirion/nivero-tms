@@ -1,7 +1,7 @@
 import { Check, Clock3, Trash2 } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import type { ProjectPreview, TimeEntryPreview } from '../../../lib/pm'
-import { formatDurationFromSeconds, getEntryDurationSeconds } from '../utils/time-tracking.utils'
+import { formatDurationFromSeconds, getEntryDurationSeconds, localDateTimeToISOString } from '../utils/time-tracking.utils'
 import { TwentyFourHourInput } from './TwentyFourHourInput'
 
 interface TimeEntryRowProps {
@@ -65,8 +65,8 @@ export function TimeEntryRow({
       id: entry.id,
       entry_date: entryDate,
       minutes_spent: calculatedMinutes,
-      started_at: `${entryDate}T${startedAt}:00`,
-      ended_at: `${entryDate}T${endedAt}:00`,
+      started_at: localDateTimeToISOString(entryDate, startedAt),
+      ended_at: localDateTimeToISOString(entryDate, endedAt),
     })
   }
 
@@ -82,13 +82,13 @@ export function TimeEntryRow({
   }
 
   return (
-    <div className="relative grid gap-2 border-b border-slate-100 bg-cyan-50/30 px-3 py-2.5 pr-10 lg:grid-cols-[minmax(220px,1.5fr)_145px_105px_105px_90px_72px] lg:items-center">
+    <div className="relative grid gap-0 border-b border-slate-100 bg-white px-3 py-2.5 lg:grid-cols-6 lg:items-center">
       <div className="min-w-0 border-r border-slate-200 pr-3">
         <div className="flex items-center gap-2">
           <Clock3 size={14} className="shrink-0 text-cyan-700" />
-          <p className="truncate text-sm font-semibold text-slate-900">{project?.name ?? 'Project unavailable'}</p>
+            <p className="truncate text-sm font-semibold text-slate-900">{taskLabel}</p>
         </div>
-        <p className="mt-1 truncate text-xs text-slate-600">{taskLabel}</p>
+        <p className="mt-1 truncate text-xs text-slate-500">{project?.name ?? 'Project unavailable'}</p>
       </div>
       <label className="text-xs font-semibold text-slate-600 lg:border-r lg:border-slate-200 lg:pr-2">
         Date
@@ -142,16 +142,14 @@ export function TimeEntryRow({
           disabled={isSaving}
           aria-label="Delete time entry"
           title="Delete entry"
-          className="rounded-md border border-rose-200 bg-rose-50 p-1.5 text-rose-700 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-md border border-slate-200 bg-white p-1.5 text-slate-500 shadow-sm hover:border-rose-200 hover:bg-rose-50 hover:text-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <Trash2 size={16} />
         </button>
       </div>
-      <div className="mt-1 lg:col-span-full lg:col-start-1">
-        <p className={`text-xs ${error ? 'text-rose-700' : 'text-slate-500'}`} role={error ? 'alert' : undefined}>
-          {error ?? (calculatedMinutes ? `Duration: ${formatDurationFromSeconds(calculatedMinutes * 60)}` : 'Set a valid time range.')}
-        </p>
-      </div>
+      {error ? (
+        <p className="text-xs text-rose-700 lg:col-span-full lg:col-start-1" role="alert">{error}</p>
+      ) : null}
     </div>
   )
 }

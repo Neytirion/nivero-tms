@@ -6,6 +6,7 @@ import {
   formatDurationFromSeconds,
   formatHours,
   getEntryDurationSeconds,
+  localDateTimeToISOString,
   parseTimeInputToHours,
   startOfWeek,
   toDateInputValue,
@@ -29,6 +30,13 @@ function createTimeEntry(overrides: Partial<TimeEntryPreview> = {}): TimeEntryPr
 }
 
 describe('time-tracking.utils', () => {
+  it('converts local date and time to an ISO timestamp without shifting the local time', () => {
+    const result = localDateTimeToISOString('2026-09-03', '09:00')
+    const expected = new Date(2026, 8, 3, 9, 0, 0, 0).toISOString()
+
+    expect(result).toBe(expected)
+  })
+
   it('formats date for input controls', () => {
     const date = new Date('2026-06-17T12:34:56.000Z')
     expect(toDateInputValue(date)).toBe('2026-06-17')

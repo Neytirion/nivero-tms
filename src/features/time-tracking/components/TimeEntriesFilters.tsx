@@ -18,26 +18,25 @@ export function TimeEntriesFilters({
   onReset,
 }: TimeEntriesFiltersProps) {
   return (
-    <section className="rounded-xl border border-slate-200 bg-[linear-gradient(135deg,rgba(6,182,212,0.04),rgba(16,185,129,0.04))] p-5">
-      <div className="mb-5 flex items-center justify-between">
+    <section className="rounded-xl border border-slate-200 bg-[linear-gradient(135deg,rgba(6,182,212,0.04),rgba(16,185,129,0.04))] p-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[linear-gradient(135deg,#06b6d4,#10b981)] shadow-md">
-            <Filter size={20} className="text-white" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[linear-gradient(135deg,#06b6d4,#10b981)] shadow-sm">
+            <Filter size={16} className="text-white" />
           </div>
-          <h3 className="text-base font-bold text-slate-900">Filters</h3>
+          <h3 className="text-sm font-bold text-slate-900">Filters</h3>
         </div>
         <button
           onClick={onReset}
-          className="group flex items-center gap-1 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900"
+          className="group flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-900"
         >
           <RotateCcw size={14} className="transition-transform group-hover:rotate-180" />
           Reset all
         </button>
       </div>
 
-      {/* Date Range + Type */}
-      <div className="grid gap-4 md:grid-cols-2 items-end mb-5 pb-5 border-b border-slate-200">
-        <div>
+      <div className="flex flex-wrap items-end gap-x-6 gap-y-4 border-b border-slate-200 pb-4">
+        <div className="w-full max-w-[560px]">
           <div className="mb-2 flex items-center gap-2">
             <Calendar size={16} className="text-cyan-600" />
             <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Date Range</span>
@@ -52,12 +51,30 @@ export function TimeEntriesFilters({
           />
         </div>
 
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <div className="h-1.5 w-1.5 rounded-full bg-amber-500"></div>
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Entry Type</span>
+        {projects.length > 0 && (
+          <div className="w-full max-w-[560px]">
+            <div className="mb-2.5 flex items-center gap-2">
+              <Briefcase size={15} className="text-violet-600" />
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Projects</span>
+            </div>
+            <SearchableMultiSelect
+              label="Projects"
+              items={projects}
+              selectedIds={filters.selectedProjectIds}
+              onSelectionChange={(selected) => onFilterChange('selectedProjectIds', selected)}
+              placeholder="Select projects..."
+              showLabel={false}
+            />
           </div>
-          <div className="flex gap-2">
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <div className="h-1.5 w-1.5 rounded-full bg-amber-500"></div>
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Entry Type</span>
+        </div>
+        <div className="flex flex-wrap gap-2">
             {(['all', 'billable', 'non-billable'] as const).map((option) => (
               <button
                 key={option}
@@ -73,24 +90,6 @@ export function TimeEntriesFilters({
             ))}
           </div>
         </div>
-      </div>
-
-      {/* Projects */}
-      {projects.length > 0 && (
-        <div className="rounded-lg border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 p-3 transition-all hover:border-slate-300 hover:shadow-sm">
-          <div className="mb-2.5 flex items-center gap-2">
-            <Briefcase size={16} className="text-violet-600" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Projects</span>
-          </div>
-          <SearchableMultiSelect
-            label="Projects"
-            items={projects}
-            selectedIds={filters.selectedProjectIds}
-            onSelectionChange={(selected) => onFilterChange('selectedProjectIds', selected)}
-            placeholder="Search projects..."
-          />
-        </div>
-      )}
     </section>
   )
 }

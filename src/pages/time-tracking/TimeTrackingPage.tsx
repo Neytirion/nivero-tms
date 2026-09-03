@@ -114,10 +114,6 @@ export function TimeTrackingPage() {
 
       <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50/70 px-4 py-3 sm:px-5">
-          <div>
-            <h3 className="text-base font-bold text-slate-900">Time overview</h3>
-            <p className="mt-1 text-xs text-slate-500">Switch between your daily distribution and detailed logs.</p>
-          </div>
           <div className="flex rounded-lg border border-slate-200 bg-white p-1" role="tablist" aria-label="Time overview">
             <button
               type="button"

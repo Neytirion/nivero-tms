@@ -8,6 +8,7 @@ interface SearchableMultiSelectProps {
   onSelectionChange: (selectedIds: string[]) => void
   disabled?: boolean
   placeholder?: string
+  showLabel?: boolean
 }
 
 export function SearchableMultiSelect({
@@ -17,6 +18,7 @@ export function SearchableMultiSelect({
   onSelectionChange,
   disabled = false,
   placeholder = 'Search...',
+  showLabel = true,
 }: SearchableMultiSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -62,9 +64,11 @@ export function SearchableMultiSelect({
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-        {label}
-      </label>
+      {showLabel ? (
+        <label className="mb-2 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          {label}
+        </label>
+      ) : null}
 
       {/* Main button */}
       <button

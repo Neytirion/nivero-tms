@@ -1,3 +1,6 @@
+import type { TimeEntryPreview } from '../../../../lib/pm'
+import { FreeTimeSlots } from '../../../time-tracking/components/FreeTimeSlots'
+
 interface TaskTimeTrackingSectionProps {
   canLogTime: boolean
   canEditEstimateHours: boolean
@@ -15,6 +18,8 @@ interface TaskTimeTrackingSectionProps {
   progressPct: number
   onStartTimer: () => void
   onOpenLogTimeModal: () => void
+  freeTimeEntries: TimeEntryPreview[]
+  freeTimeDate: string
 }
 
 export function TaskTimeTrackingSection({
@@ -34,6 +39,8 @@ export function TaskTimeTrackingSection({
   progressPct,
   onStartTimer,
   onOpenLogTimeModal,
+  freeTimeEntries,
+  freeTimeDate,
 }: TaskTimeTrackingSectionProps) {
   const timerLabel = isCurrentTaskInTimer && isGlobalTimerRunning
     ? 'Timer running'
@@ -123,6 +130,8 @@ export function TaskTimeTrackingSection({
           </div>
         </div>
       ) : null}
+
+      <FreeTimeSlots entries={freeTimeEntries} date={freeTimeDate} />
     </section>
   )
 }

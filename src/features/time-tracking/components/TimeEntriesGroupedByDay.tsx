@@ -3,6 +3,7 @@ import { useState } from 'react'
 import type { ProjectPreview, TimeEntryPreview } from '../../../lib/pm'
 import { formatDurationFromSeconds, getEntryDurationSeconds } from '../utils/time-tracking.utils'
 import { TimeEntryRow } from './TimeEntryRow'
+import { FreeTimeSlots } from './FreeTimeSlots'
 
 interface DayGrouping {
   date: string
@@ -11,6 +12,7 @@ interface DayGrouping {
 
 interface TimeEntriesGroupedByDayProps {
   entriesByDate: DayGrouping[]
+  allEntries: TimeEntryPreview[]
   editingEntryId: string | null
   isLoading: boolean
   projects: ProjectPreview[]
@@ -24,6 +26,7 @@ interface TimeEntriesGroupedByDayProps {
 
 export function TimeEntriesGroupedByDay({
   entriesByDate,
+  allEntries,
   editingEntryId,
   isLoading,
   projects,
@@ -112,6 +115,12 @@ export function TimeEntriesGroupedByDay({
                   )}
                 </div>
               </button>
+
+              {isExpanded && (
+                <div className="border-b border-slate-100 px-4 py-2">
+                  <FreeTimeSlots entries={allEntries} date={dayGroup.date} compact />
+                </div>
+              )}
 
               {/* Day Entries */}
               {isExpanded && (

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useGlobalTaskTimer } from '../../features/time-tracking/global/GlobalTaskTimerContext'
 import { getTimeEntries, createTimeEntry } from '../../lib/pm'
 import { formatDurationFromSeconds, getEntryDurationSeconds } from '../../features/time-tracking/utils/time-tracking.utils'
+import type { TimeEntryPreview } from '../../lib/pm'
 import {
   TaskDetailsHeader,
   TaskClientIntakeSection,
@@ -31,6 +32,7 @@ export function TaskDetailsPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [previewAttachment, setPreviewAttachment] = useState<ParsedAttachment | null>(null)
   const [preciseLoggedByTaskId, setPreciseLoggedByTaskId] = useState<{ taskId: string; seconds: number } | null>(null)
+  const [todayTimeEntries, setTodayTimeEntries] = useState<TimeEntryPreview[]>([])
 
   const backTo =
     typeof location.state === 'object' &&
@@ -130,18 +132,28 @@ export function TaskDetailsPage() {
 
     const loadTaskTimeEntries = async () => {
       try {
-        const entries = await getTimeEntries({ projectId, taskId: currentTaskId })
+        const today = new Date().toISOString().split('T')[0]
+        const [entries, allTodayEntries] = await Promise.all([
+          getTimeEntries({ projectId, taskId: currentTaskId }),
+          currentUserProfile?.userId
+            ? getTimeEntries({ userId: currentUserProfile.userId, fromDate: today, toDate: today })
+            : Promise.resolve([]),
+        ])
         if (cancelled) return
         const totalSeconds = entries.reduce((sum, entry) => sum + getEntryDurationSeconds(entry), 0)
         setPreciseLoggedByTaskId({ taskId: currentTaskId, seconds: totalSeconds })
+        setTodayTimeEntries(allTodayEntries)
       } catch {
-        if (!cancelled) setPreciseLoggedByTaskId(null)
+        if (!cancelled) {
+          setPreciseLoggedByTaskId(null)
+          setTodayTimeEntries([])
+        }
       }
     }
 
     void loadTaskTimeEntries()
     return () => { cancelled = true }
-  }, [task?.id, task?.project_id, lastSavedAt])
+  }, [task?.id, task?.project_id, currentUserProfile?.userId, lastSavedAt])
 
   if (!task) {
     return (
@@ -343,6 +355,8 @@ export function TaskDetailsPage() {
               progressPct={progressPct}
               onStartTimer={() => startTimerForTask(task)}
               onOpenLogTimeModal={() => setIsLogTimeModalOpen(true)}
+              freeTimeEntries={todayTimeEntries}
+              freeTimeDate={new Date().toISOString().split('T')[0]}
             />
 
             {/* Comments */}

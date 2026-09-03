@@ -128,6 +128,7 @@ export function TimeTrackingPage() {
 
       <TimeEntriesGroupedByDay
         entriesByDate={entriesByDate}
+        allEntries={entries}
         editingEntryId={editingEntryId}
         isLoading={isLoading}
         projects={projects}

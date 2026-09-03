@@ -237,6 +237,7 @@ export function DateRangePicker({ dateFrom, dateTo, onDateChange }: DateRangePic
   return (
     <div className="relative">
       <button
+        aria-label="Date Range"
         onClick={() => {
           if (!isOpen) {
             // Reset temp values when opening

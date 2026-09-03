@@ -15,7 +15,10 @@ interface TimeEntriesGroupedByDayProps {
   isLoading: boolean
   projects: ProjectPreview[]
   taskLabelById: Record<string, string>
+  isSaving: boolean
   onEdit: (entry: TimeEntryPreview) => void
+  onCancel: () => void
+  onSave: (updatedEntry: Partial<TimeEntryPreview>) => Promise<void>
   onDelete: (entry: TimeEntryPreview) => void
 }
 
@@ -25,8 +28,11 @@ export function TimeEntriesGroupedByDay({
   isLoading,
   projects,
   taskLabelById,
+  isSaving,
   onEdit,
   onDelete,
+  onCancel,
+  onSave,
 }: TimeEntriesGroupedByDayProps) {
   const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set(entriesByDate.map((g) => g.date)))
 
@@ -60,9 +66,12 @@ export function TimeEntriesGroupedByDay({
 
   return (
     <section className="rounded-xl border border-slate-200 bg-white p-5">
-      <div className="mb-4">
-        <h3 className="text-sm font-semibold text-slate-900">My Time Logs</h3>
-        <p className="mt-1 text-xs text-slate-600">View and manage your logged time by date. Click edit to modify hours, dates, or details.</p>
+      <div className="mb-4 flex items-end justify-between gap-4">
+        <div>
+          <h3 className="text-base font-bold text-slate-900">My Time Logs</h3>
+          <p className="mt-1 text-xs text-slate-500">Review your entries by day and edit them directly in the list.</p>
+        </div>
+        <span className="hidden text-xs text-slate-500 sm:block">{entriesByDate.reduce((count, group) => count + group.entries.length, 0)} entries</span>
       </div>
 
       <div className="space-y-3">
@@ -106,19 +115,22 @@ export function TimeEntriesGroupedByDay({
 
               {/* Day Entries */}
               {isExpanded && (
-                <div className="px-4 py-3 bg-white space-y-2">
+                <div className="space-y-2 bg-white px-3 py-3 sm:px-4">
                   {dayGroup.entries.map((entry) => {
                     const project = projects.find((p) => p.id === entry.project_id)
                     const taskLabel = entry.task_id ? taskLabelById[entry.task_id] ?? 'Task unavailable' : 'Unlinked'
 
                     return (
                       <TimeEntryRow
-                        key={entry.id}
+                        key={`${entry.id}-${editingEntryId === entry.id ? 'editing' : 'view'}`}
                         entry={entry}
                         project={project}
                         taskLabel={taskLabel}
                         isEditing={editingEntryId === entry.id}
+                        isSaving={isSaving}
                         onEdit={onEdit}
+                        onCancel={onCancel}
+                        onSave={onSave}
                         onDelete={onDelete}
                       />
                     )

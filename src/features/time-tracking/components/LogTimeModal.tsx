@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { X, Clock, Calendar, Briefcase, Tag, DollarSign } from 'lucide-react'
 import { getProjectTasks, createTimeEntry } from '../../../lib/pm'
 import type { ProjectPreview, TaskPreview } from '../../../lib/pm'
+import { TwentyFourHourInput } from './TwentyFourHourInput'
 
 interface LogTimeModalProps {
   isOpen: boolean
@@ -238,20 +239,18 @@ export function LogTimeModal({ isOpen, projects, onClose, onSaved }: LogTimeModa
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <span className="mb-1 block text-xs text-slate-500">Start</span>
-                <input
-                  type="time"
+                <TwentyFourHourInput
                   value={startTime}
-                  onChange={(e) => { setStartTime(e.target.value); setError(null) }}
+                  onChange={(value) => { setStartTime(value); setError(null) }}
                   disabled={isSaving}
                   className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
                 />
               </div>
               <div>
                 <span className="mb-1 block text-xs text-slate-500">End</span>
-                <input
-                  type="time"
+                <TwentyFourHourInput
                   value={endTime}
-                  onChange={(e) => { setEndTime(e.target.value); setError(null) }}
+                  onChange={(value) => { setEndTime(value); setError(null) }}
                   disabled={isSaving}
                   className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 focus:border-cyan-500 focus:outline-none disabled:bg-slate-100"
                 />

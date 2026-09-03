@@ -2,7 +2,6 @@ import { ConfirmDialog } from '../../shared/components'
 import { TimeEntriesFilters } from '../../features/time-tracking/components/TimeEntriesFilters'
 import { TimeEntriesGroupedByDay } from '../../features/time-tracking/components/TimeEntriesGroupedByDay'
 import { TimeEntriesChart } from '../../features/time-tracking/components/TimeEntriesChart'
-import { EditTimeEntryModal } from '../../features/time-tracking/components/EditTimeEntryModal'
 import { LogTimeModal } from '../../features/time-tracking/components/LogTimeModal'
 import { useTimeEntriesViewer } from '../../features/time-tracking/hooks/useTimeEntriesViewer'
 import type { TimeEntryPreview } from '../../lib/pm'
@@ -33,7 +32,6 @@ export function TimeTrackingPage() {
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [isLogTimeOpen, setIsLogTimeOpen] = useState(false)
 
-  const editingEntry = editingEntryId ? entries.find((e) => e.id === editingEntryId) : null
   const deletingEntry = deletingEntryId ? entries.find((e) => e.id === deletingEntryId) : null
 
   const handleSaveEdit = async (updatedEntry: Partial<TimeEntryPreview>) => {
@@ -134,16 +132,11 @@ export function TimeTrackingPage() {
         isLoading={isLoading}
         projects={projects}
         taskLabelById={taskLabelById}
-        onEdit={handleEditEntry}
-        onDelete={handleDeleteEntry}
-      />
-
-      <EditTimeEntryModal
-        entry={editingEntry ?? null}
-        isOpen={editingEntryId !== null}
         isSaving={isSavingEdit}
-        onClose={() => setEditingEntryId(null)}
+        onEdit={handleEditEntry}
+        onCancel={() => setEditingEntryId(null)}
         onSave={handleSaveEdit}
+        onDelete={handleDeleteEntry}
       />
 
       <ConfirmDialog

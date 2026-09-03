@@ -102,6 +102,8 @@ export function useTimeEntriesViewer(): UseTimeEntriesViewerResult {
           ? updatedEntry.minutes_spent / 60
           : currentEntry.minutes_spent / 60,
         isBillable: updatedEntry.is_billable ?? currentEntry.is_billable,
+        startedAt: updatedEntry.started_at ?? undefined,
+        endedAt: updatedEntry.ended_at ?? undefined,
       })
 
       // Update local state

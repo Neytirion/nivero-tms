@@ -1,4 +1,5 @@
 import type { TaskPreview } from '../../../lib/pm'
+import { TwentyFourHourInput } from './TwentyFourHourInput'
 
 type ManualEntryPanelProps = {
   activeProjectId: string
@@ -98,10 +99,9 @@ export function ManualEntryPanel({
 
         <label className="block">
           <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">Start Time (HH:MM)</span>
-          <input
-            type="time"
+          <TwentyFourHourInput
             value={manualStartTime}
-            onChange={(event) => onManualStartTimeChange(event.target.value)}
+            onChange={onManualStartTimeChange}
             aria-label="Start time"
             className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
           />
@@ -110,10 +110,9 @@ export function ManualEntryPanel({
 
         <label className="block">
           <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-slate-500">End Time (HH:MM)</span>
-          <input
-            type="time"
+          <TwentyFourHourInput
             value={manualEndTime}
-            onChange={(event) => onManualEndTimeChange(event.target.value)}
+            onChange={onManualEndTimeChange}
             aria-label="End time"
             className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none focus:border-slate-500"
           />

@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { TwentyFourHourInput } from '../../../time-tracking/components/TwentyFourHourInput'
 
 interface TaskLogTimeModalProps {
   isOpen: boolean
@@ -122,12 +123,11 @@ export function TaskLogTimeModal({
                 <label htmlFor="start-time" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">
                   Start Time
                 </label>
-                <input
+                <TwentyFourHourInput
                   id="start-time"
-                  type="time"
                   value={startTime}
-                  onChange={(event) => {
-                    setStartTime(event.target.value)
+                  onChange={(value) => {
+                    setStartTime(value)
                     setError('')
                   }}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
@@ -138,12 +138,11 @@ export function TaskLogTimeModal({
                 <label htmlFor="end-time" className="mb-2 block text-xs font-semibold uppercase tracking-wide text-slate-600">
                   End Time
                 </label>
-                <input
+                <TwentyFourHourInput
                   id="end-time"
-                  type="time"
                   value={endTime}
-                  onChange={(event) => {
-                    setEndTime(event.target.value)
+                  onChange={(value) => {
+                    setEndTime(value)
                     setError('')
                   }}
                   className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm font-medium text-slate-900 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"

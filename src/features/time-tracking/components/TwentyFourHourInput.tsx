@@ -1,3 +1,5 @@
+import { forwardRef } from 'react'
+
 interface TwentyFourHourInputProps {
   value: string
   onChange: (value: string) => void
@@ -5,6 +7,8 @@ interface TwentyFourHourInputProps {
   className?: string
   id?: string
   'aria-label'?: string
+  onBlur?: () => void
+  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void
 }
 
 function formatTimeInput(value: string) {
@@ -13,16 +17,19 @@ function formatTimeInput(value: string) {
   return `${digits.slice(0, 2)}:${digits.slice(2)}`
 }
 
-export function TwentyFourHourInput({
+export const TwentyFourHourInput = forwardRef<HTMLInputElement, TwentyFourHourInputProps>(function TwentyFourHourInput({
   value,
   onChange,
   disabled,
   className,
   id,
   'aria-label': ariaLabel,
-}: TwentyFourHourInputProps) {
+  onBlur,
+  onKeyDown,
+}, ref) {
   return (
     <input
+      ref={ref}
       id={id}
       type="text"
       inputMode="numeric"
@@ -31,9 +38,11 @@ export function TwentyFourHourInput({
       placeholder="HH:MM"
       value={value}
       onChange={(event) => onChange(formatTimeInput(event.target.value))}
+      onBlur={onBlur}
+      onKeyDown={onKeyDown}
       disabled={disabled}
       aria-label={ariaLabel}
       className={className}
     />
   )
-}
+})

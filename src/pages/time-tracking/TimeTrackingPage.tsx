@@ -134,7 +134,6 @@ export function TimeTrackingPage() {
         taskLabelById={taskLabelById}
         isSaving={isSavingEdit}
         onEdit={handleEditEntry}
-        onCancel={() => setEditingEntryId(null)}
         onSave={handleSaveEdit}
         onDelete={handleDeleteEntry}
       />

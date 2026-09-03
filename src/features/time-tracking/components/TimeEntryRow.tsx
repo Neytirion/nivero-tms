@@ -1,5 +1,5 @@
-import { Check, Clock3, Edit2, Trash2, X } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { Check, Clock3, Edit2, Trash2 } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
 import type { ProjectPreview, TimeEntryPreview } from '../../../lib/pm'
 import { formatDurationFromSeconds, getEntryDurationSeconds } from '../utils/time-tracking.utils'
 import { TwentyFourHourInput } from './TwentyFourHourInput'
@@ -11,7 +11,6 @@ interface TimeEntryRowProps {
   isEditing: boolean
   isSaving: boolean
   onEdit: (entry: TimeEntryPreview) => void
-  onCancel: () => void
   onSave: (updatedEntry: Partial<TimeEntryPreview>) => Promise<void>
   onDelete: (entry: TimeEntryPreview) => void
 }
@@ -27,7 +26,6 @@ export function TimeEntryRow({
   isEditing,
   isSaving,
   onEdit,
-  onCancel,
   onSave,
   onDelete,
 }: TimeEntryRowProps) {
@@ -35,6 +33,9 @@ export function TimeEntryRow({
   const [startedAt, setStartedAt] = useState(getTimePart(entry.started_at))
   const [endedAt, setEndedAt] = useState(getTimePart(entry.ended_at))
   const [error, setError] = useState<string | null>(null)
+  const dateInputRef = useRef<HTMLInputElement>(null)
+  const startInputRef = useRef<HTMLInputElement>(null)
+  const endInputRef = useRef<HTMLInputElement>(null)
   const durationSeconds = getEntryDurationSeconds(entry)
   const durationFormatted = formatDurationFromSeconds(durationSeconds)
   const calculatedMinutes = useMemo(() => {
@@ -69,6 +70,17 @@ export function TimeEntryRow({
     })
   }
 
+  const handleFieldBlur = () => {
+    void handleSave()
+  }
+
+  const focusNextField = (current: 'date' | 'start' | 'end', event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter') return
+    event.preventDefault()
+    if (current === 'start') endInputRef.current?.focus()
+    if (current === 'end') void handleSave()
+  }
+
   if (isEditing) {
     return (
       <div className="rounded-lg border border-cyan-300 bg-cyan-50/60 p-4 shadow-sm">
@@ -85,7 +97,10 @@ export function TimeEntryRow({
             <input
               type="date"
               value={entryDate}
+              ref={dateInputRef}
               onChange={(event) => setEntryDate(event.target.value)}
+              onBlur={handleFieldBlur}
+              onKeyDown={(event) => focusNextField('date', event)}
               disabled={isSaving}
               className="mt-1 block w-full rounded-md border px-2.5 py-2 text-sm text-slate-900 focus:outline-none"
             />
@@ -95,6 +110,9 @@ export function TimeEntryRow({
             <TwentyFourHourInput
               value={startedAt}
               onChange={setStartedAt}
+              ref={startInputRef}
+              onBlur={handleFieldBlur}
+              onKeyDown={(event) => focusNextField('start', event)}
               disabled={isSaving}
               className="mt-1 block w-full rounded-md border px-2.5 py-2 text-sm text-slate-900 focus:outline-none"
             />
@@ -104,36 +122,24 @@ export function TimeEntryRow({
             <TwentyFourHourInput
               value={endedAt}
               onChange={setEndedAt}
+              ref={endInputRef}
+              onBlur={handleFieldBlur}
+              onKeyDown={(event) => focusNextField('end', event)}
               disabled={isSaving}
               className="mt-1 block w-full rounded-md border px-2.5 py-2 text-sm text-slate-900 focus:outline-none"
             />
           </label>
-          <div className="flex items-center gap-2 lg:justify-end">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={isSaving}
-              className="inline-flex items-center gap-1.5 rounded-md bg-cyan-700 px-3 py-2 text-xs font-semibold text-white hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-50"
-            >
+          <div className="flex items-center lg:justify-end">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-800" aria-live="polite">
               <Check size={14} />
-              {isSaving ? 'Saving' : 'Save'}
-            </button>
-            <button
-              type="button"
-              onClick={onCancel}
-              disabled={isSaving}
-              className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <X size={14} />
-              Cancel
-            </button>
+              {isSaving ? 'Saving...' : 'Auto-saves on leaving a field'}
+            </span>
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <div className="mt-3">
           <p className={`text-xs ${error ? 'text-rose-700' : 'text-slate-500'}`} role={error ? 'alert' : undefined}>
             {error ?? (calculatedMinutes ? `Duration: ${formatDurationFromSeconds(calculatedMinutes * 60)}` : 'Set a valid time range.')}
           </p>
-          <span className="text-xs font-medium text-cyan-800">Editing this entry</span>
         </div>
       </div>
     )

@@ -130,10 +130,12 @@ export function TimeEntryRow({
             />
           </label>
           <div className="flex items-center lg:justify-end">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-800" aria-live="polite">
-              <Check size={14} />
-              {isSaving ? 'Saving...' : 'Auto-saves on leaving a field'}
-            </span>
+            {isSaving ? (
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-800" aria-live="polite">
+                <Check size={14} />
+                Saving...
+              </span>
+            ) : null}
           </div>
         </div>
         <div className="mt-3">

@@ -101,6 +101,16 @@ export function TimeTrackingPage() {
         onReset={handleResetFilters}
       />
 
+      {/* Total Hours Summary */}
+      {entriesByDate.length > 0 && (
+        <section className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 p-5">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p className="text-sm font-semibold text-slate-900">Total Logged Time</p>
+            <p className="text-3xl font-bold text-slate-900">{totalHours.toFixed(1)} <span className="text-sm font-medium text-slate-600">hours</span></p>
+          </div>
+        </section>
+      )}
+
       {/* Daily Time Distribution Chart */}
       {entriesByDate.length > 0 && (
         <TimeEntriesChart
@@ -108,22 +118,6 @@ export function TimeTrackingPage() {
           dateFrom={filters.dateFrom}
           dateTo={filters.dateTo}
         />
-      )}
-
-      {/* Total Hours Summary */}
-      {entriesByDate.length > 0 && (
-        <section className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 p-5">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-slate-900">Total Logged Time</p>
-              <p className="mt-1 text-xs text-slate-600">For selected period</p>
-            </div>
-            <div className="text-right">
-              <p className="text-3xl font-bold text-slate-900">{totalHours.toFixed(1)}</p>
-              <p className="text-xs text-slate-600">hours</p>
-            </div>
-          </div>
-        </section>
       )}
 
       <TimeEntriesGroupedByDay

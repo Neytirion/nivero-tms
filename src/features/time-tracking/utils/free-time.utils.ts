@@ -6,7 +6,7 @@ export interface FreeTimeSlot {
   minutes: number
 }
 
-const WORKDAY_START_MINUTES = 9 * 60
+const WORKDAY_START_MINUTES = 8 * 60
 const WORKDAY_END_MINUTES = 18 * 60
 
 function formatMinutes(totalMinutes: number) {

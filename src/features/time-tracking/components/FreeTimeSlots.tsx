@@ -16,7 +16,7 @@ export function FreeTimeSlots({ entries, date, compact = false }: FreeTimeSlotsP
     <div className={compact ? 'mt-2' : 'rounded-lg border border-emerald-200 bg-emerald-50/70 p-3'}>
       <div className="flex items-center gap-2">
         <Clock3 size={14} className="text-emerald-700" />
-        <p className="text-xs font-semibold text-emerald-900">Free time · 09:00–18:00</p>
+        <p className="text-xs font-semibold text-emerald-900">Free time · 08:00–18:00</p>
       </div>
       {slots.length > 0 ? (
         <div className="mt-2 flex flex-wrap gap-1.5">

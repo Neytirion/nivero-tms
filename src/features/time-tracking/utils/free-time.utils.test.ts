@@ -25,7 +25,7 @@ describe('getFreeTimeSlots', () => {
     ]
 
     expect(getFreeTimeSlots(entries, '2026-09-03')).toEqual([
-      { start: '09:00', end: '11:25', minutes: 145 },
+      { start: '08:00', end: '11:25', minutes: 205 },
       { start: '13:00', end: '18:00', minutes: 300 },
     ])
   })
@@ -37,7 +37,7 @@ describe('getFreeTimeSlots', () => {
     ]
 
     expect(getFreeTimeSlots(entries, '2026-09-03')).toEqual([
-      { start: '09:00', end: '11:00', minutes: 120 },
+      { start: '08:00', end: '11:00', minutes: 180 },
       { start: '13:00', end: '18:00', minutes: 300 },
     ])
   })
@@ -47,7 +47,7 @@ describe('getFreeTimeSlots', () => {
     const untimedEntry = { ...entry, id: 'untimed', started_at: null, ended_at: null }
 
     expect(getFreeTimeSlots([untimedEntry], '2026-09-03')).toEqual([
-      { start: '09:00', end: '18:00', minutes: 540 },
+      { start: '08:00', end: '18:00', minutes: 600 },
     ])
   })
 })

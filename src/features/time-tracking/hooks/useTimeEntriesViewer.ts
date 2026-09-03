@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useAuthSession } from '../../auth/useAuthSession'
-import { getTimeEntries, getMyProjects, updateTimeEntry, deleteTimeEntry } from '../../../lib/pm'
-import type { ProjectPreview, TimeEntryPreview } from '../../../lib/pm'
+import { getTimeEntries, getMyProjects, getProjectTasks, updateTimeEntry, deleteTimeEntry } from '../../../lib/pm'
+import type { ProjectPreview, TaskPreview, TimeEntryPreview } from '../../../lib/pm'
 import { useToast } from '../../../shared/components'
 import { useTimeEntriesManagement, type TimeEntriesFilterState } from './useTimeEntriesManagement'
 import { getEntryDurationSeconds } from '../utils/time-tracking.utils'
@@ -32,6 +32,7 @@ export function useTimeEntriesViewer(): UseTimeEntriesViewerResult {
 
   const [entries, setEntries] = useState<TimeEntryPreview[]>([])
   const [projects, setProjects] = useState<ProjectPreview[]>([])
+  const [tasks, setTasks] = useState<TaskPreview[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -45,8 +46,12 @@ export function useTimeEntriesViewer(): UseTimeEntriesViewerResult {
         getMyProjects(),
       ])
 
+      const projectIds = [...new Set(entriesData.map((entry) => entry.project_id))]
+      const taskGroups = await Promise.all(projectIds.map((projectId) => getProjectTasks(projectId)))
+
       setEntries(entriesData)
       setProjects(projectsData)
+      setTasks(taskGroups.flat())
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load time entries'
       setError(message)
@@ -73,11 +78,12 @@ export function useTimeEntriesViewer(): UseTimeEntriesViewerResult {
     const labels: Record<string, string> = {}
     entries.forEach((entry) => {
       if (entry.task_id) {
-        labels[entry.task_id] = `Task ${entry.task_id.slice(0, 8)}`
+        const task = tasks.find((candidate) => candidate.id === entry.task_id)
+        labels[entry.task_id] = task?.title ?? 'Task unavailable'
       }
     })
     return labels
-  }, [entries])
+  }, [entries, tasks])
 
   // Use management hook
   const management = useTimeEntriesManagement({

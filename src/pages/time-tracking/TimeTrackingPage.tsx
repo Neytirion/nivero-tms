@@ -6,7 +6,7 @@ import { LogTimeModal } from '../../features/time-tracking/components/LogTimeMod
 import { useTimeEntriesViewer } from '../../features/time-tracking/hooks/useTimeEntriesViewer'
 import type { TimeEntryPreview } from '../../lib/pm'
 import { useState } from 'react'
-import { BarChart3, List, Plus } from 'lucide-react'
+import { BarChart3, Clock3, List, Plus } from 'lucide-react'
 
 export function TimeTrackingPage() {
   const {
@@ -102,16 +102,6 @@ export function TimeTrackingPage() {
         onReset={handleResetFilters}
       />
 
-      {/* Total Hours Summary */}
-      {entriesByDate.length > 0 && (
-        <section className="rounded-xl border border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 p-5">
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <p className="text-sm font-semibold text-slate-900">Total Logged Time</p>
-            <p className="text-3xl font-bold text-slate-900">{totalHours.toFixed(1)} <span className="text-sm font-medium text-slate-600">hours</span></p>
-          </div>
-        </section>
-      )}
-
       <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50/70 px-4 py-3 sm:px-5">
           <div className="flex rounded-lg border border-slate-200 bg-white p-1" role="tablist" aria-label="Time overview">
@@ -136,6 +126,13 @@ export function TimeTrackingPage() {
               My Time Logs
             </button>
           </div>
+          {entriesByDate.length > 0 && (
+            <div className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2">
+              <Clock3 size={15} className="text-cyan-600" />
+              <span className="text-xs font-medium text-slate-600">Total Logged Time</span>
+              <span className="text-sm font-bold text-slate-900">{totalHours.toFixed(1)}h</span>
+            </div>
+          )}
         </div>
 
         <div className="p-3 sm:p-4">

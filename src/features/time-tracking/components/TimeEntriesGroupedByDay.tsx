@@ -70,9 +70,8 @@ export function TimeEntriesGroupedByDay({
           const isExpanded = expandedDates.has(dayGroup.date)
           const dayTotal = dayGroup.entries.reduce((sum, entry) => sum + getEntryDurationSeconds(entry), 0)
 
-          // Format date nicely
-          const date = new Date(dayGroup.date)
-          const dayName = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+          const date = new Date(`${dayGroup.date}T00:00:00`)
+          const dayName = `${date.getFullYear()}, ${new Intl.DateTimeFormat('en-US', { month: 'long' }).format(date)} ${date.getDate()}, ${new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(date)}.`
           const isToday = dayGroup.date === new Date().toISOString().split('T')[0]
 
           return (

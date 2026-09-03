@@ -8,6 +8,14 @@ import type {
 
 const timeEntrySelect = 'id,user_id,project_id,task_id,entry_date,minutes_spent,is_billable,started_at,ended_at,created_at'
 
+function throwTimeEntryMutationError(error: { code?: string; message: string }): never {
+  if (error.code === '23P01' || error.message.includes('time_entries_no_overlapping_intervals')) {
+    throw new Error('This time overlaps with an existing time entry for the same user.')
+  }
+
+  throw new Error(error.message)
+}
+
 export async function getTimeEntries(input: GetTimeEntriesInput = {}) {
   let query = supabase
     .from('time_entries')
@@ -88,7 +96,7 @@ export async function createTimeEntry(input: CreateTimeEntryInput) {
     .single()
 
   if (error) {
-    throw new Error(error.message)
+    throwTimeEntryMutationError(error)
   }
 
   return data satisfies TimeEntryPreview
@@ -125,7 +133,7 @@ export async function updateTimeEntry(timeEntryId: string, input: UpdateTimeEntr
     .maybeSingle()
 
   if (error) {
-    throw new Error(error.message)
+    throwTimeEntryMutationError(error)
   }
 
   if (!data) {

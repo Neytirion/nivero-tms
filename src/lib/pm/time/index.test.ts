@@ -128,6 +128,27 @@ describe('pm.time', () => {
     )
   })
 
+  it('explains when creation overlaps an existing time entry', async () => {
+    const single = vi.fn().mockResolvedValue({
+      data: null,
+      error: { code: '23P01', message: 'time_entries_no_overlapping_intervals' },
+    })
+    const select = vi.fn().mockReturnValue({ single })
+    const insert = vi.fn().mockReturnValue({ select })
+    mockSupabase.from.mockReturnValue({ insert } as never)
+
+    await expect(
+      createTimeEntry({
+        projectId: 'p1',
+        entryDate: '2026-06-05',
+        hoursSpent: 1,
+        isBillable: true,
+        startedAt: '2026-06-05T10:00:00.000Z',
+        endedAt: '2026-06-05T11:00:00.000Z',
+      }),
+    ).rejects.toThrow('This time overlaps with an existing time entry for the same user.')
+  })
+
   it('rejects creation for unauthenticated user', async () => {
     mocks.getUser.mockResolvedValue({ data: { user: null }, error: null } as never)
 
@@ -179,6 +200,27 @@ describe('pm.time', () => {
         isBillable: false,
       }),
     ).rejects.toThrow('Permission denied: you cannot update this time entry')
+  })
+
+  it('explains when an update overlaps an existing time entry', async () => {
+    const maybeSingle = vi.fn().mockResolvedValue({
+      data: null,
+      error: { code: '23P01', message: 'time_entries_no_overlapping_intervals' },
+    })
+    const select = vi.fn().mockReturnValue({ maybeSingle })
+    const update = vi.fn().mockReturnValue({ select, eq: vi.fn().mockReturnValue({ select, maybeSingle }) })
+    mockSupabase.from.mockReturnValue({ update, select } as never)
+
+    await expect(
+      updateTimeEntry('te-1', {
+        projectId: 'p1',
+        entryDate: '2026-06-06',
+        hoursSpent: 3,
+        isBillable: false,
+        startedAt: '2026-06-06T10:00:00.000Z',
+        endedAt: '2026-06-06T11:00:00.000Z',
+      }),
+    ).rejects.toThrow('This time overlaps with an existing time entry for the same user.')
   })
 
   it('deletes an owned time entry', async () => {

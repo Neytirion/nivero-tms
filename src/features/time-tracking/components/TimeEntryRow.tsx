@@ -1,4 +1,4 @@
-import { Check, Clock3, Edit2, Trash2 } from 'lucide-react'
+import { Check, Clock3, Edit2, Trash2, X } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import type { ProjectPreview, TimeEntryPreview } from '../../../lib/pm'
 import { formatDurationFromSeconds, getEntryDurationSeconds } from '../utils/time-tracking.utils'
@@ -11,6 +11,7 @@ interface TimeEntryRowProps {
   isEditing: boolean
   isSaving: boolean
   onEdit: (entry: TimeEntryPreview) => void
+  onCancel: () => void
   onSave: (updatedEntry: Partial<TimeEntryPreview>) => Promise<void>
   onDelete: (entry: TimeEntryPreview) => void
 }
@@ -27,6 +28,7 @@ export function TimeEntryRow({
   isSaving,
   onEdit,
   onSave,
+  onCancel,
   onDelete,
 }: TimeEntryRowProps) {
   const [entryDate, setEntryDate] = useState(entry.entry_date)
@@ -83,7 +85,17 @@ export function TimeEntryRow({
 
   if (isEditing) {
     return (
-      <div className="rounded-lg border border-cyan-300 bg-cyan-50/60 p-4 shadow-sm">
+      <div className="relative rounded-lg border border-cyan-300 bg-cyan-50/60 p-4 pr-12 shadow-sm">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isSaving}
+          aria-label="Close time entry editor"
+          title="Close editor"
+          className="absolute right-3 top-3 rounded-md p-1.5 text-slate-500 hover:bg-white hover:text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <X size={16} />
+        </button>
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_150px_130px_130px_auto] lg:items-end">
           <div className="min-w-0">
             <div className="flex items-center gap-2">

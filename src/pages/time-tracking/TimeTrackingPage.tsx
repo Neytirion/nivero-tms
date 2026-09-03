@@ -136,6 +136,7 @@ export function TimeTrackingPage() {
         onEdit={handleEditEntry}
         onSave={handleSaveEdit}
         onDelete={handleDeleteEntry}
+        onCancel={() => setEditingEntryId(null)}
       />
 
       <ConfirmDialog

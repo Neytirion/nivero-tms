@@ -17,6 +17,7 @@ interface TimeEntriesGroupedByDayProps {
   taskLabelById: Record<string, string>
   isSaving: boolean
   onEdit: (entry: TimeEntryPreview) => void
+  onCancel: () => void
   onSave: (updatedEntry: Partial<TimeEntryPreview>) => Promise<void>
   onDelete: (entry: TimeEntryPreview) => void
 }
@@ -29,6 +30,7 @@ export function TimeEntriesGroupedByDay({
   taskLabelById,
   isSaving,
   onEdit,
+  onCancel,
   onDelete,
   onSave,
 }: TimeEntriesGroupedByDayProps) {
@@ -127,6 +129,7 @@ export function TimeEntriesGroupedByDay({
                         isEditing={editingEntryId === entry.id}
                         isSaving={isSaving}
                         onEdit={onEdit}
+                        onCancel={onCancel}
                         onSave={onSave}
                         onDelete={onDelete}
                       />

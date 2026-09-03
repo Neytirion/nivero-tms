@@ -8,6 +8,25 @@ interface DateRangePickerProps {
   onDateChange: (from: string, to: string) => void
 }
 
+// Formats using local Y/M/D components. toISOString() must not be used here since it
+// converts to UTC and can shift the calendar day for non-midnight local times.
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function getMondayOfWeek(reference: Date): Date {
+  const dayOfWeek = reference.getDay()
+  const diff = reference.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)
+  return new Date(reference.getFullYear(), reference.getMonth(), diff)
+}
+
+function addDays(date: Date, days: number): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate() + days)
+}
+
 function getDateRangeForPreset(preset: DateRangePreset): { from: string; to: string } {
   const today = new Date()
   const year = today.getFullYear()
@@ -15,47 +34,38 @@ function getDateRangeForPreset(preset: DateRangePreset): { from: string; to: str
 
   switch (preset) {
     case 'today': {
-      const dateStr = today.toISOString().split('T')[0]
+      const dateStr = formatLocalDate(today)
       return { from: dateStr, to: dateStr }
     }
 
     case 'this-week': {
-      const dayOfWeek = today.getDay()
-      const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1) // Adjust to Monday
-      const monday = new Date(today.setDate(diff))
-      const from = monday.toISOString().split('T')[0]
-      const currentTo = new Date().toISOString().split('T')[0]
-      return { from, to: currentTo }
+      const monday = getMondayOfWeek(today)
+      const sunday = addDays(monday, 6)
+      return { from: formatLocalDate(monday), to: formatLocalDate(sunday) }
     }
 
     case 'this-month': {
-      const from = new Date(year, month, 1).toISOString().split('T')[0]
-      const to = today.toISOString().split('T')[0]
-      return { from, to }
+      const from = new Date(year, month, 1)
+      const to = new Date(year, month + 1, 0)
+      return { from: formatLocalDate(from), to: formatLocalDate(to) }
     }
 
     case 'this-year': {
-      const from = new Date(year, 0, 1).toISOString().split('T')[0]
-      const to = today.toISOString().split('T')[0]
-      return { from, to }
+      const from = new Date(year, 0, 1)
+      const to = new Date(year, 11, 31)
+      return { from: formatLocalDate(from), to: formatLocalDate(to) }
     }
 
     case 'last-week': {
-      const currentDay = today.getDay()
-      const diff = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1)
-      const thisMonday = new Date(today.getFullYear(), today.getMonth(), diff)
-      const lastMonday = new Date(thisMonday.getTime() - 7 * 24 * 60 * 60 * 1000)
-      const lastSunday = new Date(lastMonday.getTime() + 6 * 24 * 60 * 60 * 1000)
-      const from = lastMonday.toISOString().split('T')[0]
-      const to = lastSunday.toISOString().split('T')[0]
-      return { from, to }
+      const lastMonday = addDays(getMondayOfWeek(today), -7)
+      const lastSunday = addDays(lastMonday, 6)
+      return { from: formatLocalDate(lastMonday), to: formatLocalDate(lastSunday) }
     }
 
     case 'last-month': {
-      const lastMonthDate = new Date(year, month - 1, 1)
-      const from = lastMonthDate.toISOString().split('T')[0]
-      const to = new Date(year, month, 0).toISOString().split('T')[0]
-      return { from, to }
+      const from = new Date(year, month - 1, 1)
+      const to = new Date(year, month, 0)
+      return { from: formatLocalDate(from), to: formatLocalDate(to) }
     }
 
     default:

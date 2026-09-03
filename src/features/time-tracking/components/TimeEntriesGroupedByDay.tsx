@@ -47,7 +47,7 @@ export function TimeEntriesGroupedByDay({
 
   return (
     <div className="overflow-x-auto rounded-lg border border-slate-200">
-        <div className="hidden min-w-[760px] grid-cols-6 border-b border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 sm:grid">
+        <div className="hidden min-w-[760px] grid-cols-[minmax(220px,2fr)_minmax(120px,1fr)_minmax(90px,0.8fr)_minmax(90px,0.8fr)_minmax(90px,0.8fr)_56px] border-b border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 sm:grid">
           <span className="border-r border-slate-200 pr-3">Task / Project</span>
           <span className="border-r border-slate-200 pr-2">Date</span>
           <span className="border-r border-slate-200 pr-2">Start</span>

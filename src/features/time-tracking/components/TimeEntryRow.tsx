@@ -82,7 +82,7 @@ export function TimeEntryRow({
   }
 
   return (
-    <div className="relative grid gap-0 border-b border-slate-100 bg-white px-3 py-2.5 lg:grid-cols-6 lg:items-center">
+    <div className="relative grid gap-0 border-b border-slate-100 bg-white px-3 py-2 sm:grid-cols-[minmax(220px,2fr)_minmax(120px,1fr)_minmax(90px,0.8fr)_minmax(90px,0.8fr)_minmax(90px,0.8fr)_56px] sm:items-center">
       <div className="min-w-0 border-r border-slate-200 pr-3">
         <div className="flex items-center gap-2">
           <Clock3 size={14} className="shrink-0 text-cyan-700" />
@@ -90,8 +90,8 @@ export function TimeEntryRow({
         </div>
         <p className="mt-1 truncate text-xs text-slate-500">{project?.name ?? 'Project unavailable'}</p>
       </div>
-      <label className="text-xs font-semibold text-slate-600 lg:border-r lg:border-slate-200 lg:pr-2">
-        Date
+      <label className="text-xs font-semibold text-slate-600 sm:border-r sm:border-slate-200 sm:pr-2">
+        <span className="sr-only">Date</span>
         <input
           type="date"
           value={entryDate}
@@ -99,11 +99,11 @@ export function TimeEntryRow({
           onBlur={handleFieldBlur}
           onKeyDown={(event) => focusNextField('date', event)}
           disabled={isSaving}
-          className="mt-1 block h-8 w-full rounded-md border px-2 py-1 text-xs text-slate-900 focus:outline-none"
+          className="block h-8 w-full rounded-md border px-2 py-1 text-xs text-slate-900 focus:outline-none"
         />
       </label>
-      <label className="text-xs font-semibold text-slate-600 lg:border-r lg:border-slate-200 lg:pr-2">
-        Start
+      <label className="text-xs font-semibold text-slate-600 sm:border-r sm:border-slate-200 sm:pr-2">
+        <span className="sr-only">Start</span>
         <TwentyFourHourInput
           value={startedAt}
           onChange={setStartedAt}
@@ -111,11 +111,11 @@ export function TimeEntryRow({
           onBlur={handleFieldBlur}
           onKeyDown={(event) => focusNextField('start', event)}
           disabled={isSaving}
-          className="mt-1 block h-8 w-full rounded-md border px-2 py-1 text-xs text-slate-900 focus:outline-none"
+          className="block h-8 w-full rounded-md border px-2 py-1 text-xs text-slate-900 focus:outline-none"
         />
       </label>
-      <label className="text-xs font-semibold text-slate-600 lg:border-r lg:border-slate-200 lg:pr-2">
-        End
+      <label className="text-xs font-semibold text-slate-600 sm:border-r sm:border-slate-200 sm:pr-2">
+        <span className="sr-only">End</span>
         <TwentyFourHourInput
           value={endedAt}
           onChange={setEndedAt}
@@ -123,13 +123,13 @@ export function TimeEntryRow({
           onBlur={handleFieldBlur}
           onKeyDown={(event) => focusNextField('end', event)}
           disabled={isSaving}
-          className="mt-1 block h-8 w-full rounded-md border px-2 py-1 text-xs text-slate-900 focus:outline-none"
+          className="block h-8 w-full rounded-md border px-2 py-1 text-xs text-slate-900 focus:outline-none"
         />
       </label>
-      <p className="text-xs font-semibold text-slate-700 lg:border-r lg:border-slate-200 lg:pr-2">
+      <p className="text-xs font-semibold text-slate-700 sm:border-r sm:border-slate-200 sm:pr-2">
         {calculatedMinutes ? formatDurationFromSeconds(calculatedMinutes * 60) : durationFormatted}
       </p>
-      <div className="flex items-center gap-2 lg:justify-end">
+      <div className="flex min-h-8 items-center gap-2 sm:justify-end">
         {isSaving ? (
           <span className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-800" aria-live="polite">
             <Check size={14} />

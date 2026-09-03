@@ -1,5 +1,3 @@
-import { ChevronDown, ChevronUp } from 'lucide-react'
-import { useState } from 'react'
 import type { ProjectPreview, TimeEntryPreview } from '../../../lib/pm'
 import { formatDurationFromSeconds, getEntryDurationSeconds } from '../utils/time-tracking.utils'
 import { TimeEntryRow } from './TimeEntryRow'
@@ -13,13 +11,10 @@ interface DayGrouping {
 interface TimeEntriesGroupedByDayProps {
   entriesByDate: DayGrouping[]
   allEntries: TimeEntryPreview[]
-  editingEntryId: string | null
   isLoading: boolean
   projects: ProjectPreview[]
   taskLabelById: Record<string, string>
   isSaving: boolean
-  onEdit: (entry: TimeEntryPreview) => void
-  onCancel: () => void
   onSave: (updatedEntry: Partial<TimeEntryPreview>) => Promise<void>
   onDelete: (entry: TimeEntryPreview) => void
 }
@@ -27,30 +22,13 @@ interface TimeEntriesGroupedByDayProps {
 export function TimeEntriesGroupedByDay({
   entriesByDate,
   allEntries,
-  editingEntryId,
   isLoading,
   projects,
   taskLabelById,
   isSaving,
-  onEdit,
-  onCancel,
   onDelete,
   onSave,
 }: TimeEntriesGroupedByDayProps) {
-  const [expandedDates, setExpandedDates] = useState<Set<string>>(new Set(entriesByDate.map((g) => g.date)))
-
-  const toggleDate = (date: string) => {
-    setExpandedDates((prev) => {
-      const next = new Set(prev)
-      if (next.has(date)) {
-        next.delete(date)
-      } else {
-        next.add(date)
-      }
-      return next
-    })
-  }
-
   if (isLoading) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-8 text-center">
@@ -77,9 +55,17 @@ export function TimeEntriesGroupedByDay({
         <span className="hidden text-xs text-slate-500 sm:block">{entriesByDate.reduce((count, group) => count + group.entries.length, 0)} entries</span>
       </div>
 
-      <div className="space-y-3">
+      <div className="overflow-x-auto rounded-lg border border-slate-200">
+        <div className="hidden min-w-[840px] grid-cols-[minmax(220px,1.5fr)_145px_105px_105px_90px_72px] border-b border-slate-200 bg-slate-50 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 sm:grid">
+          <span>Task / Project</span>
+          <span>Date</span>
+          <span>Start</span>
+          <span>End</span>
+          <span>Duration</span>
+          <span className="text-right">Actions</span>
+        </div>
+        <div className="min-w-[840px] divide-y divide-slate-100">
         {entriesByDate.map((dayGroup) => {
-          const isExpanded = expandedDates.has(dayGroup.date)
           const dayTotal = dayGroup.entries.reduce((sum, entry) => sum + getEntryDurationSeconds(entry), 0)
 
           const date = new Date(`${dayGroup.date}T00:00:00`)
@@ -87,68 +73,38 @@ export function TimeEntriesGroupedByDay({
           const isToday = dayGroup.date === new Date().toISOString().split('T')[0]
 
           return (
-            <div key={dayGroup.date} className="rounded-lg border border-slate-200 overflow-hidden">
-              {/* Day Header */}
-              <button
-                onClick={() => toggleDate(dayGroup.date)}
-                className="w-full px-4 py-3 flex items-center justify-between bg-slate-50 hover:bg-slate-100 transition-colors"
-              >
-                <div className="flex items-center gap-3 text-left">
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">
-                      {dayName}
-                      {isToday && <span className="ml-2 text-xs font-medium text-cyan-600">(Today)</span>}
-                    </p>
-                    <p className="text-xs text-slate-500">{dayGroup.date}</p>
-                  </div>
+            <div key={dayGroup.date}>
+              <div className="flex items-center justify-between gap-3 bg-slate-50 px-4 py-2">
+                <div className="flex items-center gap-2">
+                  <p className="text-xs font-bold text-slate-800">{dayName}</p>
+                  {isToday && <span className="text-[10px] font-semibold text-cyan-700">Today</span>}
+                  <span className="text-[10px] text-slate-400">{dayGroup.date}</span>
                 </div>
+                <span className="text-xs font-semibold text-slate-600">{formatDurationFromSeconds(dayTotal)} · {dayGroup.entries.length} entries</span>
+              </div>
+              <FreeTimeSlots entries={allEntries} date={dayGroup.date} compact />
+              <div className="divide-y divide-slate-100">
+                {dayGroup.entries.map((entry) => {
+                  const project = projects.find((p) => p.id === entry.project_id)
+                  const taskLabel = entry.task_id ? taskLabelById[entry.task_id] ?? 'Task unavailable' : 'Unlinked'
 
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <p className="text-sm font-semibold text-slate-900">{formatDurationFromSeconds(dayTotal)}</p>
-                    <p className="text-xs text-slate-500">{dayGroup.entries.length} entries</p>
-                  </div>
-                  {isExpanded ? (
-                    <ChevronUp size={20} className="text-slate-400" />
-                  ) : (
-                    <ChevronDown size={20} className="text-slate-400" />
-                  )}
-                </div>
-              </button>
-
-              {isExpanded && (
-                <div className="border-b border-slate-100 px-4 py-2">
-                  <FreeTimeSlots entries={allEntries} date={dayGroup.date} compact />
-                </div>
-              )}
-
-              {/* Day Entries */}
-              {isExpanded && (
-                <div className="space-y-2 bg-white px-3 py-3 sm:px-4">
-                  {dayGroup.entries.map((entry) => {
-                    const project = projects.find((p) => p.id === entry.project_id)
-                    const taskLabel = entry.task_id ? taskLabelById[entry.task_id] ?? 'Task unavailable' : 'Unlinked'
-
-                    return (
-                      <TimeEntryRow
-                        key={`${entry.id}-${editingEntryId === entry.id ? 'editing' : 'view'}`}
-                        entry={entry}
-                        project={project}
-                        taskLabel={taskLabel}
-                        isEditing={editingEntryId === entry.id}
-                        isSaving={isSaving}
-                        onEdit={onEdit}
-                        onCancel={onCancel}
-                        onSave={onSave}
-                        onDelete={onDelete}
-                      />
-                    )
-                  })}
-                </div>
-              )}
+                  return (
+                    <TimeEntryRow
+                      key={entry.id}
+                      entry={entry}
+                      project={project}
+                      taskLabel={taskLabel}
+                      isSaving={isSaving}
+                      onSave={onSave}
+                      onDelete={onDelete}
+                    />
+                  )
+                })}
+              </div>
             </div>
           )
         })}
+        </div>
       </div>
     </section>
   )

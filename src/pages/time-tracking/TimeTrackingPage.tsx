@@ -17,12 +17,10 @@ export function TimeTrackingPage() {
     filters,
     entriesByDate,
     totalHours,
-    editingEntryId,
     deletingEntryId,
     error,
     handleUpdateFilter,
     handleResetFilters,
-    setEditingEntryId,
     setDeletingEntryId,
     handleUpdate,
     handleDelete,
@@ -47,11 +45,6 @@ export function TimeTrackingPage() {
   const handleConfirmDelete = async () => {
     if (!deletingEntry) return
     await handleDelete(deletingEntry)
-  }
-
-  // Wrapper functions to convert entry to ID
-  const handleEditEntry = (entry: TimeEntryPreview) => {
-    setEditingEntryId(entry.id)
   }
 
   const handleDeleteEntry = (entry: TimeEntryPreview) => {
@@ -146,15 +139,12 @@ export function TimeTrackingPage() {
             <TimeEntriesGroupedByDay
               entriesByDate={entriesByDate}
               allEntries={entries}
-              editingEntryId={editingEntryId}
               isLoading={isLoading}
               projects={projects}
               taskLabelById={taskLabelById}
               isSaving={isSavingEdit}
-              onEdit={handleEditEntry}
               onSave={handleSaveEdit}
               onDelete={handleDeleteEntry}
-              onCancel={() => setEditingEntryId(null)}
             />
           ) : (
             <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-8 text-center">

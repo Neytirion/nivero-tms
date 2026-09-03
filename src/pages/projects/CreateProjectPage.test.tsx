@@ -4,8 +4,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { CreateProjectPage } from './CreateProjectPage'
 import { useWorkspace } from '../../features/workspace/workspace-context'
 import { createProjectPreview, createWorkspaceState } from '../test-helpers'
-import { inviteProjectMemberByEmail } from '../../lib/pm/members'
-import { getUserProfileByEmail } from '../../lib/pm/members'
+import { getProjectMembers, getUserProfileByEmail, inviteProjectMemberByEmail } from '../../lib/pm/members'
 
 vi.mock('../../features/workspace/workspace-context', () => ({
   useWorkspace: vi.fn(),
@@ -20,6 +19,7 @@ vi.mock('../../features/projects/ai', () => ({
 }))
 
 vi.mock('../../lib/pm/members', () => ({
+  getProjectMembers: vi.fn(async () => []),
   inviteProjectMemberByEmail: vi.fn(async () => undefined),
   getUserProfileByEmail: vi.fn(async (email: string) => ({
     user_id: 'u-invitee',
@@ -32,6 +32,7 @@ vi.mock('../../lib/pm/members', () => ({
 }))
 
 const mockUseWorkspace = vi.mocked(useWorkspace)
+const mockGetProjectMembers = vi.mocked(getProjectMembers)
 const mockInviteProjectMemberByEmail = vi.mocked(inviteProjectMemberByEmail)
 const mockGetUserProfileByEmail = vi.mocked(getUserProfileByEmail)
 
@@ -84,6 +85,8 @@ function completeWizardUntilReview() {
 describe('CreateProjectPage', () => {
   beforeEach(() => {
     mockUseWorkspace.mockReset()
+    mockGetProjectMembers.mockReset()
+    mockGetProjectMembers.mockResolvedValue([])
     mockInviteProjectMemberByEmail.mockReset()
     mockGetUserProfileByEmail.mockReset()
     mockGetUserProfileByEmail.mockResolvedValue({

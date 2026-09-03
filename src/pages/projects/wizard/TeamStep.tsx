@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { UserProfileDialog, type UserProfilePreview } from '../../../shared/components'
-import { getProjectMembers, getUserProfileByEmail, type ProjectPreview } from '../../../lib/pm'
+import type { ProjectPreview } from '../../../lib/pm'
+import { getProjectMembers, getUserProfileByEmail } from '../../../lib/pm/members'
 import type { TeamInvitation } from './types'
 
 interface TeamStepProps {

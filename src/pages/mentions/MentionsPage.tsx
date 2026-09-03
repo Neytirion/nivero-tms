@@ -159,6 +159,13 @@ export function MentionsPage() {
           <>
             <button
               type="button"
+              onClick={() => navigate('/app/mentions/settings')}
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Notification settings
+            </button>
+            <button
+              type="button"
               onClick={() => setShowOnlyUnread((prev) => !prev)}
               className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
             >
@@ -194,7 +201,16 @@ export function MentionsPage() {
             ))}
           </div>
         ) : visibleMentions.length === 0 ? (
-          <div className="p-6 text-sm text-slate-500">No mentions found.</div>
+          <div className="space-y-3 p-6 text-sm text-slate-500">
+            <p>No mentions found.</p>
+            <button
+              type="button"
+              onClick={() => navigate('/app/mentions/settings')}
+              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              Notification settings
+            </button>
+          </div>
         ) : (
           <div className="divide-y divide-slate-100">
             {visibleMentions.map((item) => {

@@ -14,6 +14,7 @@ import { TaskCardSettingsPage } from './pages/tasks/TaskCardSettingsPage.tsx'
 import { TimeTrackingPage } from './pages/time-tracking/TimeTrackingPage.tsx'
 import { ResourcePlanningPage } from './pages/resource-planning/ResourcePlanningPage.tsx'
 import { MentionsPage } from './pages/mentions/MentionsPage.tsx'
+import { NotificationSettingsPage } from './pages/mentions/NotificationSettingsPage.tsx'
 import { ReportsPage } from './pages/reports/ReportsPage.tsx'
 import { useAuthSession } from './features/auth/useAuthSession.ts'
 import { ClientIntakePage } from './pages/client/ClientIntakePage.tsx'
@@ -54,6 +55,7 @@ function App() {
           <Route path="tasks/create" element={<CreateTaskPage />} />
           <Route path="tasks/:taskId" element={<TaskDetailsPage />} />
           <Route path="mentions" element={<MentionsPage />} />
+          <Route path="mentions/settings" element={<NotificationSettingsPage />} />
           <Route path="time-tracking" element={<TimeTrackingPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="resources" element={<ResourcePlanningPage />} />

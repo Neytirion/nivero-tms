@@ -47,6 +47,7 @@ function renderMentionsPage(initialPath = '/app/mentions') {
             </>
           }
         />
+        <Route path="/app/mentions/settings" element={<LocationProbe />} />
         <Route path="/app/tasks/:taskId" element={<LocationProbe />} />
         <Route path="/app/projects/:projectId" element={<LocationProbe />} />
       </Routes>
@@ -122,6 +123,16 @@ describe('MentionsPage', () => {
     await waitFor(() => {
       expect(mockMarkMentionAsRead).toHaveBeenCalledWith({ mentionId: 'm1', userId: 'u1' })
       expect(screen.queryByRole('button', { name: 'Mark read' })).toBeNull()
+    })
+  })
+
+  it('opens notification settings from mentions page', async () => {
+    renderMentionsPage()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Notification settings' }))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location')).toHaveTextContent('/app/mentions/settings')
     })
   })
 

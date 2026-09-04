@@ -11,7 +11,7 @@ interface TaskDescriptionSectionProps {
   onPreviewAttachment: (attachment: ParsedAttachment) => void
 }
 
-const TASK_DESCRIPTION_MAX_LENGTH = 250
+const TASK_DESCRIPTION_MAX_LENGTH = 1000
 
 export function TaskDescriptionSection({
   isTaskEditing,

@@ -91,108 +91,127 @@ export function ProjectSettingsTab({
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-      <h4 className="text-sm font-semibold text-slate-900">Project Settings</h4>
-      <div className="mt-3 space-y-2">
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Project Name</span>
+    <div className="mt-4 space-y-5">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.72fr)]">
+        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+          <div className="mb-5">
+            <h3 className="text-base font-semibold text-slate-900">Project information</h3>
+            <p className="mt-1 text-sm text-slate-500">Update the name, description, and customer details.</p>
+          </div>
+
+          <div className="space-y-4">
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">Name</span>
           <input
             type="text"
             value={settingsName}
             onChange={(event) => onSettingsNameChange(event.target.value)}
             placeholder="Project name"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+            className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
             disabled={!canEditSelectedProject}
           />
-        </label>
+            </label>
 
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Project Description</span>
-          <input
-            type="text"
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">Description</span>
+              <textarea
             value={settingsDescription}
             onChange={(event) => onSettingsDescriptionChange(event.target.value)}
             placeholder="Project description"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                rows={6}
+                className="w-full resize-y rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm leading-6 text-slate-900 outline-none placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
             disabled={!canEditSelectedProject}
-          />
-        </label>
+              />
+            </label>
 
-        <label className="block">
-          <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Customer</span>
-          <input
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-slate-700">Customer</span>
+              <input
             type="text"
             value={settingsCustomerName}
             onChange={(event) => onSettingsCustomerNameChange(event.target.value)}
             placeholder="Customer name"
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
             disabled={!canEditSelectedProject}
-          />
-        </label>
+              />
+            </label>
+          </div>
+        </section>
 
-        <div className="grid gap-2 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Start Date</span>
+        <div className="space-y-5">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <div className="mb-4">
+              <h3 className="text-base font-semibold text-slate-900">Schedule</h3>
+              <p className="mt-1 text-sm text-slate-500">Set the planned project window.</p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">Start date</span>
             <input
               type="date"
               value={settingsStartDate}
               onChange={(event) => onSettingsStartDateChange(event.target.value)}
               max={settingsDeadline || undefined}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
               disabled={!canEditSelectedProject}
             />
-          </label>
+              </label>
 
-          <label className="block">
-            <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-600">Planned End Date</span>
+              <label className="block">
+                <span className="mb-1.5 block text-sm font-medium text-slate-700">End date</span>
             <input
               type="date"
               value={settingsDeadline}
               onChange={(event) => onSettingsDeadlineChange(event.target.value)}
               min={settingsStartDate || undefined}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none focus:border-slate-500 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
               disabled={!canEditSelectedProject}
             />
-          </label>
-        </div>
+              </label>
+            </div>
 
-        <p className="text-xs text-slate-500">
+            <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-600">
           Duration:{' '}
           {durationDays !== null
             ? `${durationDays} day${durationDays === 1 ? '' : 's'}`
             : 'Set valid start and end dates to calculate'}
-        </p>
+            </p>
+          </section>
 
-        <div className="rounded-lg border border-slate-200 bg-white px-3 py-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Client Request Link</p>
-          <p className="mt-1 text-xs text-slate-500">
-            Share this link with your client so they can submit requests, bug reports, and comments directly to this project.
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
+          <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+            <h3 className="text-base font-semibold text-slate-900">Client intake</h3>
+            <p className="mt-1 text-sm text-slate-500">Share this link so clients can submit requests directly to the project.</p>
+            <div className="mt-4 flex flex-wrap items-center gap-2">
             <input
               type="text"
               value={clientIntakeUrl ?? 'Generating link...'}
               readOnly
-              className="min-w-0 flex-1 rounded-md border border-slate-300 bg-slate-50 px-2 py-1.5 text-xs text-slate-700"
+                className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-700"
             />
             <button
               type="button"
               onClick={() => void handleCopyClientIntakeUrl()}
               disabled={!clientIntakeUrl}
-              className="rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               Copy
             </button>
-          </div>
+            </div>
+          </section>
         </div>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900">Project actions</h3>
+          <p className="mt-1 text-xs text-slate-500">Save changes or manage the project lifecycle.</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={onOpenSaveSettingsConfirm}
           disabled={!canEditSelectedProject || isLoading}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Save settings
         </button>
@@ -201,7 +220,7 @@ export function ProjectSettingsTab({
             type="button"
             onClick={onOpenCompleteConfirm}
             disabled={isLoading || !canCompleteSelectedProject || (incompleteTaskCount ?? 0) > 0 || isProjectCompleted}
-            className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Complete project
           </button>
@@ -211,12 +230,13 @@ export function ProjectSettingsTab({
             type="button"
             onClick={onOpenDeleteConfirm}
             disabled={!canDeleteSelectedProject || isLoading}
-            className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-rose-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Delete project
           </button>
         ) : null}
-      </div>
+        </div>
+      </section>
     </div>
   )
 }

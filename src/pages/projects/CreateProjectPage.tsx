@@ -6,6 +6,7 @@ import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import type { AiProjectDraft } from '../../lib/ai'
 import { createInitialEstimateVersion } from '../../lib/pm/estimates'
 import { inviteProjectMemberByEmail } from '../../lib/pm/members'
+import { formatProjectInviteNotification, notifySlackPilot } from '../../lib/slack-notifications'
 import { ProjectCreationWizard } from './wizard/ProjectCreationWizard'
 import type { ProjectWizardData } from './wizard/types'
 
@@ -83,6 +84,17 @@ export function CreateProjectPage() {
             }),
           ),
         )
+
+        const actorEmail = currentUserProfile?.email
+        invitationResults.forEach((result, idx) => {
+          if (result.status === 'fulfilled') {
+            notifySlackPilot({
+              recipientEmail: sanitizedInvitations[idx].email,
+              actorEmail,
+              text: formatProjectInviteNotification(projectId),
+            })
+          }
+        })
 
         const failedInvitations = invitationResults
           .map((result, idx) => (result.status === 'rejected' ? sanitizedInvitations[idx].email : null))

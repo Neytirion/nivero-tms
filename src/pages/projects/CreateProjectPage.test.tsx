@@ -6,6 +6,11 @@ import { useWorkspace } from '../../features/workspace/workspace-context'
 import { createProjectPreview, createWorkspaceState } from '../test-helpers'
 import { getProjectMembers, getUserProfileByEmail, inviteProjectMemberByEmail } from '../../lib/pm/members'
 
+const { mockNotifySlackPilot, mockFormatProjectInviteNotification } = vi.hoisted(() => ({
+  mockNotifySlackPilot: vi.fn(),
+  mockFormatProjectInviteNotification: vi.fn(() => 'project invite notification'),
+}))
+
 vi.mock('../../features/workspace/workspace-context', () => ({
   useWorkspace: vi.fn(),
 }))
@@ -29,6 +34,11 @@ vi.mock('../../lib/pm/members', () => ({
     joined_at: '2026-08-01T00:00:00.000Z',
     about_me: null,
   })),
+}))
+
+vi.mock('../../lib/slack-notifications', () => ({
+  notifySlackPilot: mockNotifySlackPilot,
+  formatProjectInviteNotification: mockFormatProjectInviteNotification,
 }))
 
 const mockUseWorkspace = vi.mocked(useWorkspace)
@@ -88,6 +98,8 @@ describe('CreateProjectPage', () => {
     mockGetProjectMembers.mockReset()
     mockGetProjectMembers.mockResolvedValue([])
     mockInviteProjectMemberByEmail.mockReset()
+    mockNotifySlackPilot.mockReset()
+    mockFormatProjectInviteNotification.mockClear()
     mockGetUserProfileByEmail.mockReset()
     mockGetUserProfileByEmail.mockResolvedValue({
       user_id: 'u-invitee',
@@ -242,6 +254,12 @@ describe('CreateProjectPage', () => {
         projectId: 'project-42',
         email: 'john@example.com',
         role: 'member',
+      })
+      expect(mockFormatProjectInviteNotification).toHaveBeenCalledWith('project-42')
+      expect(mockNotifySlackPilot).toHaveBeenCalledWith({
+        recipientEmail: 'john@example.com',
+        actorEmail: 'me@example.com',
+        text: 'project invite notification',
       })
       expect(workspace.selectProject).toHaveBeenCalledWith('project-42')
       expect(workspace.reloadProjectData).toHaveBeenCalledWith('project-42')

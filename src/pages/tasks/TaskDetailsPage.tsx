@@ -8,6 +8,7 @@ import { formatDurationFromSeconds, getEntryDurationSeconds, localDateTimeToISOS
 import type { TimeEntryPreview } from '../../lib/pm'
 import {
   TaskDetailsHeader,
+  TaskDescriptionSection,
   TaskClientIntakeSection,
   TaskInfoSection,
   TaskTimeTrackingSection,
@@ -33,6 +34,12 @@ export function TaskDetailsPage() {
   const [previewAttachment, setPreviewAttachment] = useState<ParsedAttachment | null>(null)
   const [preciseLoggedByTaskId, setPreciseLoggedByTaskId] = useState<{ taskId: string; seconds: number } | null>(null)
   const [todayTimeEntries, setTodayTimeEntries] = useState<TimeEntryPreview[]>([])
+  const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now())
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setCurrentTimeMs(Date.now()), 1000)
+    return () => window.clearInterval(intervalId)
+  }, [])
 
   const backTo =
     typeof location.state === 'object' &&
@@ -181,6 +188,13 @@ export function TaskDetailsPage() {
   // Time logging is reserved for the assignee after task ownership is explicit.
   const canLogTime = isAssignee && !isLocked
   const isCurrentTaskInTimer = timerTaskId === task.id
+  const isCurrentTimeLogged = todayTimeEntries.some((entry) => {
+    if (!entry.started_at || !entry.ended_at) return false
+    const startedAt = new Date(entry.started_at).getTime()
+    const endedAt = new Date(entry.ended_at).getTime()
+    return Number.isFinite(startedAt) && Number.isFinite(endedAt) && startedAt <= currentTimeMs && currentTimeMs < endedAt
+  })
+  const isTimerBlockedByExistingLog = isCurrentTimeLogged && !isGlobalTimerRunning
 
   const estimateHours = task.estimate_hours ?? 0
   const actualHours = task.actual_hours ?? 0
@@ -280,18 +294,24 @@ export function TaskDetailsPage() {
           isLoading={isLoading}
           titleDraft={editState.titleDraft}
           setTitleDraft={editState.setTitleDraft}
-          descriptionDraft={editState.descriptionDraft}
-          setDescriptionDraft={editState.setDescriptionDraft}
-          descriptionText={descriptionText}
-          canEditDescription={canEditDescription}
-          attachments={attachments}
-          clientIntakePayload={clientIntakePayload}
           onStartEditing={editState.startEditing}
           onSaveEdits={() => editState.saveEdits(task.id)}
           onCancelEditing={editState.cancelEditing}
           onTakeTask={takeTaskHandler}
-          onPreviewAttachment={setPreviewAttachment}
         />
+
+        <div className="mt-5">
+          <TaskDescriptionSection
+            isTaskEditing={editState.isTaskEditing}
+            isTaskSaving={editState.isTaskSaving}
+            canEditDescription={canEditDescription}
+            descriptionDraft={editState.descriptionDraft}
+            setDescriptionDraft={editState.setDescriptionDraft}
+            descriptionText={descriptionText}
+            attachments={clientIntakePayload ? [] : attachments}
+            onPreviewAttachment={setPreviewAttachment}
+          />
+        </div>
 
         {clientIntakePayload ? (
           <TaskClientIntakeSection
@@ -310,8 +330,8 @@ export function TaskDetailsPage() {
           />
         ) : null}
 
-        <div className="grid gap-6">
-          <div className="space-y-6">
+        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="space-y-5 lg:col-start-2 lg:row-start-1">
             <TaskInfoSection
               isBillable={task.is_billable ?? false}
               status={task.status}
@@ -337,9 +357,12 @@ export function TaskDetailsPage() {
               setTaskDueDateDraft={editState.setTaskDueDateDraft}
               onOpenUserProfile={openUserProfile}
             />
+          </div>
 
+          <div className="space-y-5 lg:col-start-1 lg:row-start-1">
             <TaskTimeTrackingSection
               canLogTime={canLogTime}
+              isTimerBlockedByExistingLog={isTimerBlockedByExistingLog}
               canEditEstimateHours={canEditEstimateHours}
               isTaskEditing={editState.isTaskEditing}
               isCurrentTaskInTimer={isCurrentTaskInTimer}
@@ -353,7 +376,10 @@ export function TaskDetailsPage() {
               estimateHours={estimateHours}
               isOverBudget={isOverBudget}
               progressPct={progressPct}
-              onStartTimer={() => startTimerForTask(task)}
+              onStartTimer={() => {
+                if (isTimerBlockedByExistingLog) return
+                startTimerForTask(task)
+              }}
               onOpenLogTimeModal={() => setIsLogTimeModalOpen(true)}
               freeTimeEntries={todayTimeEntries}
               freeTimeDate={new Date().toISOString().split('T')[0]}

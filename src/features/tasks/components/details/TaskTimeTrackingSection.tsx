@@ -3,6 +3,7 @@ import { FreeTimeSlots } from '../../../time-tracking/components/FreeTimeSlots'
 
 interface TaskTimeTrackingSectionProps {
   canLogTime: boolean
+  isTimerBlockedByExistingLog: boolean
   canEditEstimateHours: boolean
   isTaskEditing: boolean
   isCurrentTaskInTimer: boolean
@@ -24,6 +25,7 @@ interface TaskTimeTrackingSectionProps {
 
 export function TaskTimeTrackingSection({
   canLogTime,
+  isTimerBlockedByExistingLog,
   canEditEstimateHours,
   isTaskEditing,
   isCurrentTaskInTimer,
@@ -57,7 +59,9 @@ export function TaskTimeTrackingSection({
             <button
               type="button"
               onClick={onStartTimer}
-              className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2"
+              disabled={isTimerBlockedByExistingLog}
+              title={isTimerBlockedByExistingLog ? 'The current time is already covered by another time log' : undefined}
+              className="inline-flex items-center gap-2 rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:bg-slate-300"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -77,6 +81,11 @@ export function TaskTimeTrackingSection({
           </div>
         ) : null}
       </div>
+      {isTimerBlockedByExistingLog ? (
+        <p className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800" role="status">
+          Timer unavailable: the current time is already covered by another time log.
+        </p>
+      ) : null}
 
       <div className="grid gap-3 sm:grid-cols-3 mb-4">
         <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">

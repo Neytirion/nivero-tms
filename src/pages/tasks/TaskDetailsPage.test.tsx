@@ -215,6 +215,54 @@ describe('TaskDetailsPage', () => {
     expect(screen.getByText('Estimate')).toBeInTheDocument()
   })
 
+  it('disables starting a timer when the current time is already covered by a log', async () => {
+    const now = Date.now()
+    mockGetTimeEntries.mockResolvedValue([
+      {
+        id: 'entry-1',
+        project_id: 'p1',
+        task_id: 't1',
+        entry_date: new Date(now).toISOString().slice(0, 10),
+        started_at: new Date(now - 60_000).toISOString(),
+        ended_at: new Date(now + 60_000).toISOString(),
+        minutes_spent: 2,
+        hours_spent: 2 / 60,
+        is_billable: true,
+      },
+    ] as never)
+
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Task A',
+          project_id: 'p1',
+          assigned_to: 'u1',
+        }),
+      ],
+      myRoleInSelectedProject: 'member',
+      canTakeUnassignedTasks: false,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      projectMembers: [],
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /start timer/i })).toBeDisabled()
+    })
+    expect(screen.getByText(/current time is already covered/i)).toBeInTheDocument()
+  })
+
   it('shows take-task button for unassigned task when user can claim and updates assignee to current user', async () => {
     mockUseTasksPageController.mockReturnValue({
       tasks: [

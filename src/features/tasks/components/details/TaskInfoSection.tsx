@@ -68,9 +68,13 @@ export function TaskInfoSection({
       : null
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      {/* Quick Settings - Status, Priority, Billing */}
-      <div className="mb-6 grid gap-4">
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="mb-5">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Overview</p>
+        <h2 className="mt-1 text-base font-semibold text-slate-900">Task details</h2>
+      </div>
+
+      <div className="mb-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
         <div>
           <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Status</label>
           {isTaskEditing ? (
@@ -128,11 +132,11 @@ export function TaskInfoSection({
         </div>
       </div>
 
-      <div className="mb-6 border-t border-dashed border-slate-200" />
+      <div className="mb-5 border-t border-slate-100" />
 
       {/* Details grid */}
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+        <div className="border-b border-slate-100 pb-4">
           <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Due date</label>
           {isTaskEditing ? (
             <div className="flex flex-col gap-2">
@@ -151,7 +155,7 @@ export function TaskInfoSection({
               ) : null}
             </div>
           ) : (
-            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+            <div className="rounded-lg bg-slate-50 px-3 py-2.5">
               <p className="text-sm text-slate-700 font-medium">{dueDate}</p>
               {daysUntilDue !== null && dueLabel ? (
                 <p className={`text-xs mt-2 ${isOverdue ? 'text-rose-600 font-medium' : isDueSoon ? 'text-amber-600' : 'text-slate-500'}`}>
@@ -162,9 +166,9 @@ export function TaskInfoSection({
           )}
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3">
+        <div className="border-b border-slate-100 pb-4">
           <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Assignee</label>
-          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <div className="rounded-lg bg-slate-50 px-3 py-2.5">
             {assigneeUserId ? (
               <button
                 type="button"
@@ -180,9 +184,9 @@ export function TaskInfoSection({
         </div>
 
         {hasWorkPackageLink ? (
-          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3">
+          <div className="border-b border-slate-100 pb-4">
             <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Work package</label>
-            <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+            <div className="rounded-lg bg-slate-50 px-3 py-2.5">
               <p className="text-sm text-slate-700 font-medium">
                 {workPackageLabel ?? (isWorkPackagesLoading ? 'Loading work package...' : 'Not linked')}
               </p>
@@ -190,9 +194,9 @@ export function TaskInfoSection({
           </div>
         ) : null}
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3">
+        <div className="pb-1">
           <label className="block text-xs font-semibold uppercase tracking-wide text-slate-600 mb-2">Blocked by</label>
-          <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
+          <div className="rounded-lg bg-slate-50 px-3 py-2.5">
             <p className="text-sm text-slate-700 font-medium">{blockedByLabel ?? 'None'}</p>
           </div>
         </div>

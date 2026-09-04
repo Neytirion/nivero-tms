@@ -27,6 +27,7 @@ export function GlobalTaskTimerBar() {
     isSaving,
     pauseTimer,
     resumeTimer,
+    discardTimer,
     stopAndSaveTimer,
     saveManualTime,
   } = useGlobalTaskTimer()
@@ -143,6 +144,15 @@ export function GlobalTaskTimerBar() {
             Stop and save
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={discardTimer}
+          disabled={isSaving}
+          className="mt-2 w-full rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          Discard timer without saving
+        </button>
 
         {isExpanded ? (
           <>

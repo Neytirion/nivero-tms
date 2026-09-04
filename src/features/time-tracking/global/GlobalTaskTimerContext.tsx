@@ -48,6 +48,7 @@ interface GlobalTaskTimerContextValue {
   startTimerForTask: (task: TaskPreview) => void
   pauseTimer: () => void
   resumeTimer: () => void
+  discardTimer: () => void
   stopAndSaveTimer: () => Promise<void>
   saveManualTime: (hours: number) => Promise<void>
 }
@@ -67,6 +68,7 @@ const defaultGlobalTaskTimerContext: GlobalTaskTimerContextValue = {
   startTimerForTask: () => undefined,
   pauseTimer: () => undefined,
   resumeTimer: () => undefined,
+  discardTimer: () => undefined,
   stopAndSaveTimer: async () => undefined,
   saveManualTime: async () => undefined,
 }
@@ -343,6 +345,15 @@ export function GlobalTaskTimerProvider({
     setStatus('Timer resumed')
   }
 
+  const discardTimer = () => {
+    if (!activeTask || isSaving) {
+      return
+    }
+
+    clearTimerState()
+    setStatus('Timer discarded without saving')
+  }
+
   const refreshAfterSave = async () => {
     try {
       await Promise.all([reloadCurrentTasks(), loadDashboardPreview()])
@@ -465,6 +476,7 @@ export function GlobalTaskTimerProvider({
     startTimerForTask,
     pauseTimer,
     resumeTimer,
+    discardTimer,
     stopAndSaveTimer,
     saveManualTime,
   }

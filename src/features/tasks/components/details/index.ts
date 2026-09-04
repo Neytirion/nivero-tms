@@ -1,4 +1,5 @@
 export { TaskDetailsHeader } from './TaskDetailsHeader'
+export { TaskDescriptionSection } from './TaskDescriptionSection'
 export { TaskClientIntakeSection } from './TaskClientIntakeSection'
 export { TaskInfoSection } from './TaskInfoSection'
 export { TaskTimeTrackingSection } from './TaskTimeTrackingSection'

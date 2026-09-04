@@ -5,15 +5,16 @@ import type {
   TimeEntryPreview,
   UpdateTimeEntryInput,
 } from '../types'
+import { authRequired, conflictError, databaseError, permissionDenied, validationError } from '../../errors'
 
 const timeEntrySelect = 'id,user_id,project_id,task_id,entry_date,minutes_spent,is_billable,started_at,ended_at,created_at'
 
 function throwTimeEntryMutationError(error: { code?: string; message: string }): never {
   if (error.code === '23P01' || error.message.includes('time_entries_no_overlapping_intervals')) {
-    throw new Error('This time overlaps with an existing time entry for the same user.')
+    throw conflictError('This time overlaps with an existing time entry for the same user.', error)
   }
 
-  throw new Error(error.message)
+  throw databaseError(error.message, error)
 }
 
 export async function getTimeEntries(input: GetTimeEntriesInput = {}) {
@@ -60,7 +61,7 @@ export async function createTimeEntry(input: CreateTimeEntryInput) {
   }
 
   if (!userData.user) {
-    throw new Error('User is not authenticated')
+    throw authRequired()
   }
 
   const hasExplicitSeconds = Number.isFinite(input.durationSeconds)
@@ -69,7 +70,7 @@ export async function createTimeEntry(input: CreateTimeEntryInput) {
     : null
 
   if (hasExplicitSeconds && durationSeconds === 0) {
-    throw new Error('Duration must be greater than 0 seconds')
+    throw validationError('Duration must be greater than 0 seconds')
   }
 
   const minutesSpent = durationSeconds !== null
@@ -77,7 +78,7 @@ export async function createTimeEntry(input: CreateTimeEntryInput) {
     : Math.round(input.hoursSpent * 60)
 
   if (!hasExplicitSeconds && minutesSpent <= 0) {
-    throw new Error('Hours spent must be greater than 0')
+    throw validationError('Hours spent must be greater than 0')
   }
 
   const { data, error } = await supabase
@@ -137,7 +138,7 @@ export async function updateTimeEntry(timeEntryId: string, input: UpdateTimeEntr
   }
 
   if (!data) {
-    throw new Error('Permission denied: you cannot update this time entry')
+    throw permissionDenied('Permission denied: you cannot update this time entry')
   }
 
   return data satisfies TimeEntryPreview
@@ -165,7 +166,7 @@ export async function deleteTimeEntry(timeEntryId: string) {
 
     if (result.error) {
       // Single() throws error if no rows matched
-      throw new Error('Permission denied: you cannot delete this time entry')
+      throw permissionDenied('Permission denied: you cannot delete this time entry')
     }
   } catch (err) {
     // .single() throws if no rows matched

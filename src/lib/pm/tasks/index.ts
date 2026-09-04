@@ -10,6 +10,7 @@ import {
   getTaskProjectId,
 } from '../helpers'
 import { isExecutionTaskStatus, isTaskClosedStatus } from '../../../shared/utils/task-status.ts'
+import { authRequired, databaseError, notFound, permissionDenied, validationError } from '../../errors'
 import {
   formatTaskAssignmentNotification,
   formatTaskUpdateNotification,
@@ -23,7 +24,7 @@ export async function createTask(input: CreateTaskInput) {
 
   if (input.estimateHours !== undefined && input.estimateHours !== null) {
     if (!Number.isFinite(input.estimateHours) || input.estimateHours < 0) {
-      throw new Error('Estimated hours must be a number greater than or equal to 0')
+      throw validationError('Estimated hours must be a number greater than or equal to 0')
     }
   }
 
@@ -35,24 +36,24 @@ export async function createTask(input: CreateTaskInput) {
   const { data: userData, error: userError } = await supabase.auth.getUser()
 
   if (userError) {
-    throw new Error(userError.message)
+    throw databaseError(userError.message, userError)
   }
 
   if (!userData.user) {
-    throw new Error('User is not authenticated')
+    throw authRequired()
   }
 
   if (input.assignedTo && input.assignedTo !== userData.user.id) {
     const canAssign = await canUserAssignTasksInProject(input.projectId, userData.user.id)
     if (!canAssign) {
-      throw new Error('Permission denied: only project members can assign tasks')
+      throw permissionDenied('Permission denied: only project members can assign tasks')
     }
   }
 
   const blockerTask = await assertTaskDependencyValid(input.projectId, null, input.blockedByTaskId ?? null)
 
   if (isExecutionTaskStatus(input.status) && blockerTask && !isTaskClosedStatus(blockerTask.status)) {
-    throw new Error('Cannot move task forward: dependency task is not completed yet')
+    throw validationError('Cannot move task forward: dependency task is not completed yet')
   }
 
   const { data, error } = await supabase
@@ -76,7 +77,7 @@ export async function createTask(input: CreateTaskInput) {
     .single()
 
   if (error) {
-    throw new Error(error.message)
+    throw databaseError(error.message, error)
   }
 
   const createdTask = data satisfies TaskPreview
@@ -101,11 +102,11 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
   const { data: userData, error: userError } = await supabase.auth.getUser()
 
   if (userError) {
-    throw new Error(userError.message)
+    throw databaseError(userError.message, userError)
   }
 
   if (!userData.user) {
-    throw new Error('User is not authenticated')
+    throw authRequired()
   }
 
   await assertUserCanModifyTask(taskId, userData.user.id, 'update')
@@ -117,11 +118,11 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
     .maybeSingle()
 
   if (currentTaskError) {
-    throw new Error(currentTaskError.message)
+    throw databaseError(currentTaskError.message, currentTaskError)
   }
 
   if (!currentTask) {
-    throw new Error('Task not found')
+    throw notFound('Task not found')
   }
 
   if (projectId) {
@@ -134,7 +135,7 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
     if (patch.blocked_by_task_id !== undefined) {
       const nextBlockedByTaskId = patch.blocked_by_task_id
       if (nextBlockedByTaskId !== currentTask.blocked_by_task_id) {
-        throw new Error('Permission denied: dependency cannot be changed after task creation')
+        throw permissionDenied('Permission denied: dependency cannot be changed after task creation')
       }
     }
 
@@ -154,11 +155,11 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
     ].some((value) => value !== undefined)
 
     if (currentAssignee === null && hasNonAssigneeUpdates) {
-      throw new Error('Unassigned task must be taken before editing')
+      throw permissionDenied('Unassigned task must be taken before editing')
     }
 
     if (patch.assigned_to !== undefined && nextAssignee !== currentAssignee && !isClaimingUnassignedTask) {
-      throw new Error('Only unassigned tasks can be taken by yourself')
+      throw permissionDenied('Only unassigned tasks can be taken by yourself')
     }
 
     const nextBlockedByTaskId =
@@ -167,7 +168,7 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
     const nextStatus = patch.status ?? currentTask.status
 
     if (isExecutionTaskStatus(nextStatus) && blockerTask && !isTaskClosedStatus(blockerTask.status)) {
-      throw new Error('Cannot move task forward: dependency task is not completed yet')
+      throw validationError('Cannot move task forward: dependency task is not completed yet')
     }
   }
 
@@ -182,11 +183,11 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
     .maybeSingle()
 
   if (error) {
-    throw new Error(error.message)
+    throw databaseError(error.message, error)
   }
 
   if (!data) {
-    throw new Error('Permission denied: you cannot update this task')
+    throw permissionDenied('Permission denied: you cannot update this task')
   }
 
   const updatedTask = data satisfies TaskPreview
@@ -220,11 +221,11 @@ export async function deleteTask(taskId: string) {
   const { data: userData, error: userError } = await supabase.auth.getUser()
 
   if (userError) {
-    throw new Error(userError.message)
+    throw databaseError(userError.message, userError)
   }
 
   if (!userData.user) {
-    throw new Error('User is not authenticated')
+    throw authRequired()
   }
 
   await assertUserCanModifyTask(taskId, userData.user.id, 'delete')
@@ -243,10 +244,10 @@ export async function deleteTask(taskId: string) {
     .maybeSingle()
 
   if (error) {
-    throw new Error(error.message)
+    throw databaseError(error.message, error)
   }
 
   if (!data) {
-    throw new Error('Permission denied: you cannot delete this task')
+    throw permissionDenied('Permission denied: you cannot delete this task')
   }
 }

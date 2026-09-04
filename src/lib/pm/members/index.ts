@@ -13,6 +13,7 @@ import type {
   UpdateProjectMemberRoleInput,
 } from '../types'
 import { assertProjectEditable } from '../helpers'
+import { databaseError, validationError } from '../../errors'
 
 export async function getProjectMembers(projectId: string) {
   const { data, error } = await supabase.rpc('get_project_members_with_profile', {
@@ -27,7 +28,7 @@ export async function getProjectMembers(projectId: string) {
       }
       return []
     }
-    throw new Error(error.message)
+    throw databaseError(error.message, error)
   }
 
   return data satisfies ProjectMemberListItem[]
@@ -181,7 +182,7 @@ export async function createProjectDisplayRole(input: CreateProjectDisplayRoleIn
 
   const normalizedName = input.name.trim()
   if (!normalizedName) {
-    throw new Error('Display role name is required')
+    throw validationError('Display role name is required')
   }
 
   const { data, error } = await supabase
@@ -229,7 +230,7 @@ export async function setProjectMemberDisplayRole(input: SetProjectMemberDisplay
 
   const normalizedRole = input.displayRole.trim()
   if (!normalizedRole) {
-    throw new Error('Display role is required')
+    throw validationError('Display role is required')
   }
 
   const { error } = await supabase

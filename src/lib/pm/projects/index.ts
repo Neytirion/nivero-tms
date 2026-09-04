@@ -2,6 +2,7 @@ import { supabase } from '../../supabase'
 import type { CreateProjectInput, ProjectMemberPreview, ProjectPreview, TaskPreview, UpdateProjectInput } from '../types'
 import { assertProjectEditable } from '../helpers'
 import { isTaskClosedStatus } from '../../../shared/utils/task-status.ts'
+import { authRequired, databaseError, notFound, permissionDenied, validationError } from '../../errors'
 
 const PROJECT_FIELDS =
   'id,name,description,client_intake_token,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at,updated_at'
@@ -19,7 +20,7 @@ export async function getMyProjects() {
     .limit(200)
 
   if (error) {
-    throw new Error(error.message)
+    throw databaseError(error.message, error)
   }
 
   return data satisfies ProjectPreview[]
@@ -29,11 +30,11 @@ export async function getMyProjectMemberships() {
   const { data: userData, error: userError } = await supabase.auth.getUser()
 
   if (userError) {
-    throw new Error(userError.message)
+    throw databaseError(userError.message, userError)
   }
 
   if (!userData.user) {
-    throw new Error('User is not authenticated')
+    throw authRequired()
   }
 
   const { data, error } = await supabase
@@ -86,11 +87,11 @@ export async function getProjectTasksPage(
 
 export async function createProject(input: CreateProjectInput) {
   if (!input.startDate || !input.endDate) {
-    throw new Error('Start date and end date are required')
+    throw validationError('Start date and end date are required')
   }
 
   if (input.endDate < input.startDate) {
-    throw new Error('End date cannot be earlier than start date')
+    throw validationError('End date cannot be earlier than start date')
   }
 
   const { data: userData, error: userError } = await supabase.auth.getUser()
@@ -141,7 +142,7 @@ export async function deleteProject(projectId: string) {
   }
 
   if (!data) {
-    throw new Error('Permission denied: only owner or admin can delete this project')
+    throw permissionDenied('Permission denied: only owner or admin can delete this project')
   }
 }
 
@@ -176,7 +177,7 @@ export async function updateProject(projectId: string, patch: UpdateProjectInput
   }
 
   if (!data) {
-    throw new Error('Permission denied: only owner, admin, or manager can edit this project')
+    throw permissionDenied('Permission denied: only owner, admin, or manager can edit this project')
   }
 
   return data satisfies ProjectPreview
@@ -191,12 +192,12 @@ export async function completeProject(projectId: string) {
     .eq('project_id', projectId)
 
   if (tasksError) {
-    throw new Error(tasksError.message)
+    throw databaseError(tasksError.message, tasksError)
   }
 
   const unfinishedTasks = (projectTasks ?? []).filter((task) => !isTaskClosedStatus(task.status)).length
   if (unfinishedTasks > 0) {
-    throw new Error(`Cannot complete project: ${unfinishedTasks} unfinished task(s) remain`)
+    throw validationError(`Cannot complete project: ${unfinishedTasks} unfinished task(s) remain`)
   }
 
   const { data, error } = await supabase
@@ -214,7 +215,7 @@ export async function completeProject(projectId: string) {
   }
 
   if (!data) {
-    throw new Error('Permission denied: only owner, admin, or manager can complete this project')
+    throw permissionDenied('Permission denied: only owner, admin, or manager can complete this project')
   }
 
   return data satisfies ProjectPreview
@@ -232,7 +233,7 @@ export async function getProjectUseEstimates(projectId: string): Promise<boolean
   }
 
   if (!data) {
-    throw new Error('Project not found')
+    throw notFound('Project not found')
   }
 
   return data.use_estimates ?? false

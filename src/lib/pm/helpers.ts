@@ -1,5 +1,6 @@
 import { supabase } from '../supabase'
 import { hasProjectPermission, resolveProjectRole } from '../../shared/utils/permissions'
+import { databaseError, notFound, permissionDenied, validationError } from '../errors'
 
 export async function getProjectStatusById(projectId: string) {
   const { data, error } = await supabase
@@ -9,7 +10,7 @@ export async function getProjectStatusById(projectId: string) {
     .maybeSingle()
 
   if (error) {
-    throw new Error(error.message)
+    throw databaseError(error.message, error)
   }
 
   return (data?.status ?? '').toLowerCase()
@@ -23,7 +24,7 @@ export async function getProjectDateBounds(projectId: string) {
     .maybeSingle()
 
   if (error) {
-    throw new Error(error.message)
+    throw databaseError(error.message, error)
   }
 
   return {
@@ -41,11 +42,11 @@ export async function assertTaskDueDateWithinProjectRange(projectId: string, due
   const { startDate, endDate } = await getProjectDateBounds(projectId)
 
   if (startDate && normalizedDueDate < startDate) {
-    throw new Error('Due date must be within project dates')
+    throw validationError('Due date must be within project dates')
   }
 
   if (endDate && normalizedDueDate > endDate) {
-    throw new Error('Due date must be within project dates')
+    throw validationError('Due date must be within project dates')
   }
 }
 
@@ -53,7 +54,7 @@ export async function assertProjectEditable(projectId: string, action: string) {
   const projectStatus = await getProjectStatusById(projectId)
 
   if (projectStatus === 'completed') {
-    throw new Error(`Cannot ${action}: project is completed and read-only`)
+    throw permissionDenied(`Cannot ${action}: project is completed and read-only`)
   }
 }
 
@@ -65,7 +66,7 @@ export async function getUserProjectRole(projectId: string, userId: string) {
     .maybeSingle()
 
   if (projectError) {
-    throw new Error(projectError.message)
+    throw databaseError(projectError.message, projectError)
   }
 
   if (!project) {
@@ -80,7 +81,7 @@ export async function getUserProjectRole(projectId: string, userId: string) {
     .maybeSingle()
 
   if (membershipError) {
-    throw new Error(membershipError.message)
+    throw databaseError(membershipError.message, membershipError)
   }
 
   return resolveProjectRole({
@@ -98,7 +99,7 @@ export async function canUserAssignTasksInProject(projectId: string, userId: str
     .maybeSingle()
 
   if (projectError) {
-    throw new Error(projectError.message)
+    throw databaseError(projectError.message, projectError)
   }
 
   if (!project) {
@@ -113,7 +114,7 @@ export async function canUserAssignTasksInProject(projectId: string, userId: str
     .maybeSingle()
 
   if (membershipError) {
-    throw new Error(membershipError.message)
+    throw databaseError(membershipError.message, membershipError)
   }
 
   const role = resolveProjectRole({
@@ -127,7 +128,7 @@ export async function canUserAssignTasksInProject(projectId: string, userId: str
 
 export async function assertTaskWorkPackageValid(projectId: string, workPackageId: string | null | undefined) {
   if (!workPackageId || workPackageId.trim().length === 0) {
-    throw new Error('Work package is required')
+    throw validationError('Work package is required')
   }
 
   const { data: workPackage, error: workPackageError } = await supabase
@@ -137,15 +138,15 @@ export async function assertTaskWorkPackageValid(projectId: string, workPackageI
     .maybeSingle()
 
   if (workPackageError) {
-    throw new Error(workPackageError.message)
+    throw databaseError(workPackageError.message, workPackageError)
   }
 
   if (!workPackage) {
-    throw new Error('Selected work package was not found')
+    throw notFound('Selected work package was not found')
   }
 
   if (!workPackage.is_active) {
-    throw new Error('Selected work package is archived and cannot be used for new tasks')
+    throw validationError('Selected work package is archived and cannot be used for new tasks')
   }
 
   const { data: estimate, error: estimateError } = await supabase
@@ -155,11 +156,11 @@ export async function assertTaskWorkPackageValid(projectId: string, workPackageI
     .maybeSingle()
 
   if (estimateError) {
-    throw new Error(estimateError.message)
+    throw databaseError(estimateError.message, estimateError)
   }
 
   if (!estimate || estimate.project_id !== projectId) {
-    throw new Error('Selected work package does not belong to this project')
+    throw permissionDenied('Selected work package does not belong to this project')
   }
 }
 
@@ -171,11 +172,11 @@ export async function assertUserCanModifyTask(taskId: string, userId: string, mo
     .maybeSingle()
 
   if (taskError) {
-    throw new Error(taskError.message)
+    throw databaseError(taskError.message, taskError)
   }
 
   if (!task) {
-    throw new Error('Task not found')
+    throw notFound('Task not found')
   }
 
   const role = task.project_id ? await getUserProjectRole(task.project_id, userId) : null
@@ -190,7 +191,7 @@ export async function assertUserCanModifyTask(taskId: string, userId: string, mo
     hasProjectPermission(role, 'task.assign')
 
   if (!canManageAny && !canManageOwn && !canTakeUnassignedTask) {
-    throw new Error(
+    throw permissionDenied(
       mode === 'delete'
         ? 'Permission denied: you cannot delete this task'
         : 'Permission denied: you cannot update this task',
@@ -206,7 +207,7 @@ export async function getTaskProjectId(taskId: string) {
     .maybeSingle()
 
   if (error) {
-    throw new Error(error.message)
+    throw databaseError(error.message, error)
   }
 
   return data?.project_id ?? null
@@ -218,7 +219,7 @@ export async function assertTaskDependencyValid(projectId: string, taskId: strin
   }
 
   if (taskId && blockedByTaskId === taskId) {
-    throw new Error('Task cannot be blocked by itself')
+    throw validationError('Task cannot be blocked by itself')
   }
 
   const { data: blockerTask, error: blockerTaskError } = await supabase
@@ -228,15 +229,15 @@ export async function assertTaskDependencyValid(projectId: string, taskId: strin
     .maybeSingle()
 
   if (blockerTaskError) {
-    throw new Error(blockerTaskError.message)
+    throw databaseError(blockerTaskError.message, blockerTaskError)
   }
 
   if (!blockerTask) {
-    throw new Error('Blocked-by task was not found')
+    throw notFound('Blocked-by task was not found')
   }
 
   if (blockerTask.project_id !== projectId) {
-    throw new Error('Blocked-by task must belong to the same project')
+    throw permissionDenied('Blocked-by task must belong to the same project')
   }
 
   return blockerTask

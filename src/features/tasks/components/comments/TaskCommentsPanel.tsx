@@ -287,15 +287,15 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
   }
 
   return (
-    <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-2">
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">Comments</p>
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Comments</p>
 
       <div className="mt-2 space-y-1.5">
-        {comments.length === 0 ? <p className="text-xs text-slate-500">No comments yet</p> : null}
+        {comments.length === 0 ? <p className="text-sm text-slate-500">No comments yet</p> : null}
         {comments.slice(-3).map((item) => (
-          <div key={item.id} className="group relative rounded-md border border-slate-200 bg-white px-2 py-1.5">
+          <div key={item.id} className="group relative rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5">
             <div className="mb-1 flex items-center justify-between gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                 {currentUserId && item.user_id === currentUserId
                   ? 'You'
                   : authorLabelByUserId[item.user_id] ?? item.user_id}
@@ -319,8 +319,8 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
                 Mentioned you
               </p>
             ) : null}
-            <p className="text-sm text-slate-700">{item.message}</p>
-            <p className="mt-1 text-[10px] text-slate-500">{formatDate(item.created_at)}</p>
+            <p className="text-[15px] leading-6 text-slate-700">{item.message}</p>
+            <p className="mt-1 text-xs text-slate-500">{formatDate(item.created_at)}</p>
           </div>
         ))}
       </div>
@@ -387,13 +387,13 @@ export function TaskCommentsPanel({ projectId, taskId, readOnly = false, onComme
               }, 100)
             }}
             placeholder={mentionHints.length > 0 ? `Add comment - Enter to send (mentions: ${mentionHints.join(', ')})` : 'Add comment - Enter to send'}
-            className="w-full rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500"
+            className="w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-sky-500 focus:bg-white"
           />
           <button
             type="button"
             onClick={() => void addComment()}
             disabled={isLoading}
-            className="rounded-md bg-slate-900 px-2 py-1 text-xs font-semibold text-white transition hover:bg-slate-700 disabled:opacity-60"
+            className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-60"
           >
             Send
           </button>

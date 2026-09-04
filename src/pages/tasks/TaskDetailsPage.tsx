@@ -26,7 +26,6 @@ export function TaskDetailsPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { taskId } = useParams<{ taskId: string }>()
-  const [isCommentsOpen, setIsCommentsOpen] = useState(true)
   const [isLogTimeModalOpen, setIsLogTimeModalOpen] = useState(false)
   const [isManualLogging, setIsManualLogging] = useState(false)
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
@@ -353,22 +352,9 @@ export function TaskDetailsPage() {
               freeTimeDate={new Date().toISOString().split('T')[0]}
             />
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-              <div className="mb-4 flex items-center justify-between gap-4">
-                <h2 className="text-base font-semibold text-slate-900">Discussion</h2>
-                <button
-                  type="button"
-                  onClick={() => setIsCommentsOpen((prev) => !prev)}
-                  aria-expanded={isCommentsOpen}
-                  className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
-                >
-                  {isCommentsOpen ? 'Collapse' : 'Expand'}
-                </button>
-              </div>
-              {isCommentsOpen && task.project_id ? (
-                <TaskCommentsPanel projectId={task.project_id} taskId={task.id} readOnly={isLocked} />
-              ) : null}
-            </section>
+            {task.project_id ? (
+              <TaskCommentsPanel projectId={task.project_id} taskId={task.id} readOnly={isLocked} />
+            ) : null}
 
             {canDelete ? (
               <div className="pt-1">

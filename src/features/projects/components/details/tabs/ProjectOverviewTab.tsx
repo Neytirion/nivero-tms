@@ -166,6 +166,13 @@ export function ProjectOverviewTab({
         </div>
       </div>
 
+      <section className="rounded-xl border border-slate-200 bg-white p-4">
+        <h3 className="text-sm font-semibold text-slate-900">Description</h3>
+        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-600 [overflow-wrap:anywhere]">
+          {selectedProject.description?.trim() || 'No project description yet.'}
+        </p>
+      </section>
+
       {/* Project info + team */}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-xl border border-slate-200 bg-white p-4">

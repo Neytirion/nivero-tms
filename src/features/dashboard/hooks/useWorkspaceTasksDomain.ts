@@ -5,6 +5,7 @@ import {
   type ProjectMemberListItem,
   type TaskPreview,
 } from '../../../lib/pm'
+import { supabase } from '../../../lib/supabase'
 import { useTaskActions } from '../../tasks/hooks/useTaskActions'
 import { useMemberActions } from '../../members/hooks/useMemberActions'
 
@@ -112,6 +113,36 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
 
     return () => {
       cancelled = true
+    }
+  }, [deps.selectedProjectId])
+
+  useEffect(() => {
+    const projectId = deps.selectedProjectId
+    if (!projectId) {
+      return
+    }
+
+    let cancelled = false
+    const channel = supabase
+      .channel(`project-tasks:${projectId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'tasks',
+          filter: `project_id=eq.${projectId}`,
+        },
+        () => {
+          if (cancelled) return
+          void reloadTasksAndMembers(projectId)
+        },
+      )
+      .subscribe()
+
+    return () => {
+      cancelled = true
+      void supabase.removeChannel(channel)
     }
   }, [deps.selectedProjectId])
 

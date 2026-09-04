@@ -14,7 +14,7 @@ import {
   TaskTimeTrackingSection,
 } from '../../features/tasks/components/details'
 import { TaskCommentsPanel, TaskLogTimeModal } from '../../features/tasks/components'
-import { ConfirmDialog, UserProfileDialog, WorkspacePageHeader, type UserProfilePreview } from '../../shared/components'
+import { ConfirmDialog, UserProfileDialog, type UserProfilePreview } from '../../shared/components'
 import {
   parseClientIntakePayload,
   extractClientAttachments,
@@ -272,94 +272,62 @@ export function TaskDetailsPage() {
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#e0f2fe_0%,#f8fafc_28%,#f8fafc_100%)]">
-      <div className="mx-auto max-w-6xl px-4 pt-6 sm:px-6 space-y-5">
-        <WorkspacePageHeader
-          eyebrow="Tasks"
-          title="Task Details"
-          backButton={{
-            label: backTo.startsWith('/app/projects/') ? '← Project Details' : '← Tasks',
-            onClick: () => navigate(backTo),
-          }}
-          gradientClassName="bg-[linear-gradient(120deg,rgba(14,116,144,0.08),rgba(16,185,129,0.06))]"
-        />
-      </div>
+      <div className="mx-auto max-w-6xl px-4 py-5 sm:px-6 sm:py-7">
+        <button
+          type="button"
+          onClick={() => navigate(backTo)}
+          className="mb-4 inline-flex items-center gap-2 text-sm font-medium text-slate-500 transition hover:text-slate-900"
+        >
+          <span aria-hidden="true">←</span>
+          {backTo.startsWith('/app/projects/') ? 'Project details' : 'All tasks'}
+        </button>
 
-      <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
-        <TaskDetailsHeader
-          taskTitle={task.title}
-          isTaskEditing={editState.isTaskEditing}
-          isTaskSaving={editState.isTaskSaving}
-          canEditTask={canEditTask}
-          canTakeCurrentTask={canTakeCurrentTask}
-          isLoading={isLoading}
-          titleDraft={editState.titleDraft}
-          setTitleDraft={editState.setTitleDraft}
-          onStartEditing={editState.startEditing}
-          onSaveEdits={() => editState.saveEdits(task.id)}
-          onCancelEditing={editState.cancelEditing}
-          onTakeTask={takeTaskHandler}
-        />
-
-        <div className="mt-5">
-          <TaskDescriptionSection
-            isTaskEditing={editState.isTaskEditing}
-            isTaskSaving={editState.isTaskSaving}
-            canEditDescription={canEditDescription}
-            descriptionDraft={editState.descriptionDraft}
-            setDescriptionDraft={editState.setDescriptionDraft}
-            descriptionText={descriptionText}
-            attachments={clientIntakePayload ? [] : attachments}
-            onPreviewAttachment={setPreviewAttachment}
-          />
-        </div>
-
-        {clientIntakePayload ? (
-          <TaskClientIntakeSection
-            clientIntakePayload={clientIntakePayload}
-            isTaskEditing={editState.isTaskEditing}
-            canEditClientRequest={canEditClientRequest}
-            clientNameDraft={editState.clientNameDraft}
-            setClientNameDraft={editState.setClientNameDraft}
-            clientEmailDraft={editState.clientEmailDraft}
-            setClientEmailDraft={editState.setClientEmailDraft}
-            clientRequestDetailsDraft={editState.clientRequestDetailsDraft}
-            setClientRequestDetailsDraft={editState.setClientRequestDetailsDraft}
-            clientRequestAttachments={clientRequestAttachments}
-            onPreviewAttachment={setPreviewAttachment}
-            onRemoveAttachment={editState.removeClientAttachment}
-          />
-        ) : null}
-
-        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <div className="space-y-5 lg:col-start-2 lg:row-start-1">
-            <TaskInfoSection
-              isBillable={task.is_billable ?? false}
-              status={task.status}
-              priority={task.priority}
-              dueDate={dueDateFormatted}
-              daysUntilDue={daysUntilDue}
-              isDueSoon={isDueSoon}
-              isOverdue={isOverdue}
-              assigneeUserId={assigneeUserId}
-              assigneeLabel={assigneeLabel}
-              hasWorkPackageLink={hasWorkPackageLink}
-              workPackageLabel={workPackageLabel}
-              isWorkPackagesLoading={isWorkPackagesLoading}
-              blockedByLabel={blockedByLabel}
-              projectStartDate={projectStartDate}
-              projectEndDate={projectEndDate}
+        <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
+          <div className="min-w-0 space-y-5">
+            <TaskDetailsHeader
+              taskTitle={task.title}
               isTaskEditing={editState.isTaskEditing}
-              taskStatusDraft={editState.taskStatusDraft}
-              setTaskStatusDraft={editState.setTaskStatusDraft}
-              taskPriorityDraft={editState.taskPriorityDraft}
-              setTaskPriorityDraft={editState.setTaskPriorityDraft}
-              taskDueDateDraft={editState.taskDueDateDraft}
-              setTaskDueDateDraft={editState.setTaskDueDateDraft}
-              onOpenUserProfile={openUserProfile}
-            />
-          </div>
+              isTaskSaving={editState.isTaskSaving}
+              canEditTask={canEditTask}
+              canTakeCurrentTask={canTakeCurrentTask}
+              isLoading={isLoading}
+              titleDraft={editState.titleDraft}
+              setTitleDraft={editState.setTitleDraft}
+              onStartEditing={editState.startEditing}
+              onSaveEdits={() => editState.saveEdits(task.id)}
+              onCancelEditing={editState.cancelEditing}
+              onTakeTask={takeTaskHandler}
+            >
+              <TaskDescriptionSection
+                embedded
+                isTaskEditing={editState.isTaskEditing}
+                isTaskSaving={editState.isTaskSaving}
+                canEditDescription={canEditDescription}
+                descriptionDraft={editState.descriptionDraft}
+                setDescriptionDraft={editState.setDescriptionDraft}
+                descriptionText={descriptionText}
+                attachments={clientIntakePayload ? [] : attachments}
+                onPreviewAttachment={setPreviewAttachment}
+              />
+            </TaskDetailsHeader>
 
-          <div className="space-y-5 lg:col-start-1 lg:row-start-1">
+            {clientIntakePayload ? (
+              <TaskClientIntakeSection
+                clientIntakePayload={clientIntakePayload}
+                isTaskEditing={editState.isTaskEditing}
+                canEditClientRequest={canEditClientRequest}
+                clientNameDraft={editState.clientNameDraft}
+                setClientNameDraft={editState.setClientNameDraft}
+                clientEmailDraft={editState.clientEmailDraft}
+                setClientEmailDraft={editState.setClientEmailDraft}
+                clientRequestDetailsDraft={editState.clientRequestDetailsDraft}
+                setClientRequestDetailsDraft={editState.setClientRequestDetailsDraft}
+                clientRequestAttachments={clientRequestAttachments}
+                onPreviewAttachment={setPreviewAttachment}
+                onRemoveAttachment={editState.removeClientAttachment}
+              />
+            ) : null}
+
             <TaskTimeTrackingSection
               canLogTime={canLogTime}
               isTimerBlockedByExistingLog={isTimerBlockedByExistingLog}
@@ -385,16 +353,16 @@ export function TaskDetailsPage() {
               freeTimeDate={new Date().toISOString().split('T')[0]}
             />
 
-            {/* Comments */}
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between gap-4 mb-4">
-                <h2 className="text-sm font-semibold text-slate-900">Collaboration</h2>
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <div className="mb-4 flex items-center justify-between gap-4">
+                <h2 className="text-base font-semibold text-slate-900">Discussion</h2>
                 <button
                   type="button"
                   onClick={() => setIsCommentsOpen((prev) => !prev)}
-                  className="text-xs font-semibold text-slate-600 hover:text-slate-900 px-2 py-1"
+                  aria-expanded={isCommentsOpen}
+                  className="rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
                 >
-                  {isCommentsOpen ? 'Hide' : 'Show'}
+                  {isCommentsOpen ? 'Collapse' : 'Expand'}
                 </button>
               </div>
               {isCommentsOpen && task.project_id ? (
@@ -414,6 +382,34 @@ export function TaskDetailsPage() {
               </div>
             ) : null}
           </div>
+
+          <aside>
+            <TaskInfoSection
+              isBillable={task.is_billable ?? false}
+              status={task.status}
+              priority={task.priority}
+              dueDate={dueDateFormatted}
+              daysUntilDue={daysUntilDue}
+              isDueSoon={isDueSoon}
+              isOverdue={isOverdue}
+              assigneeUserId={assigneeUserId}
+              assigneeLabel={assigneeLabel}
+              hasWorkPackageLink={hasWorkPackageLink}
+              workPackageLabel={workPackageLabel}
+              isWorkPackagesLoading={isWorkPackagesLoading}
+              blockedByLabel={blockedByLabel}
+              projectStartDate={projectStartDate}
+              projectEndDate={projectEndDate}
+              isTaskEditing={editState.isTaskEditing}
+              taskStatusDraft={editState.taskStatusDraft}
+              setTaskStatusDraft={editState.setTaskStatusDraft}
+              taskPriorityDraft={editState.taskPriorityDraft}
+              setTaskPriorityDraft={editState.setTaskPriorityDraft}
+              taskDueDateDraft={editState.taskDueDateDraft}
+              setTaskDueDateDraft={editState.setTaskDueDateDraft}
+              onOpenUserProfile={openUserProfile}
+            />
+          </aside>
         </div>
       </div>
 

@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 const TASK_TITLE_MAX_LENGTH = 120
 
 interface TaskDetailsHeaderProps {
@@ -13,6 +15,7 @@ interface TaskDetailsHeaderProps {
   onSaveEdits: () => Promise<void>
   onCancelEditing: () => void
   onTakeTask: () => Promise<void>
+  children?: ReactNode
 }
 
 export function TaskDetailsHeader({
@@ -28,12 +31,13 @@ export function TaskDetailsHeader({
   onSaveEdits,
   onCancelEditing,
   onTakeTask,
+  children,
 }: TaskDetailsHeaderProps) {
   return (
-    <header className="rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-sm sm:p-6">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
+    <header className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
+      <div className="flex flex-wrap items-start justify-between gap-5">
         <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Task details</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Task</p>
           {isTaskEditing ? (
             <div className="mt-2 max-w-2xl">
               <input
@@ -49,7 +53,7 @@ export function TaskDetailsHeader({
             </div>
           ) : (
             <div className="mt-1 flex items-start justify-between gap-3">
-              <h1 className="text-3xl font-bold text-slate-900 break-words">{taskTitle}</h1>
+              <h1 className="max-w-4xl break-words text-3xl font-bold leading-tight text-slate-950 sm:text-4xl">{taskTitle}</h1>
               {canEditTask ? (
                 <button
                   type="button"
@@ -76,7 +80,7 @@ export function TaskDetailsHeader({
       </div>
 
       {isTaskEditing ? (
-        <div className="mb-4 flex items-center gap-2">
+        <div className="mt-5 flex items-center gap-2 border-t border-slate-100 pt-4">
           <button
             type="button"
             onClick={() => void onSaveEdits()}
@@ -95,6 +99,8 @@ export function TaskDetailsHeader({
           </button>
         </div>
       ) : null}
+
+      {children ? <div className="mt-5 border-t border-slate-100 pt-5">{children}</div> : null}
 
     </header>
   )

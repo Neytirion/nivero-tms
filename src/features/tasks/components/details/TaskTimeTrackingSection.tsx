@@ -51,9 +51,9 @@ export function TaskTimeTrackingSection({
       : 'Start timer'
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
-        <h2 className="text-sm font-semibold text-slate-900">Time Tracking</h2>
+    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-base font-semibold text-slate-900">Time tracking</h2>
         {canLogTime ? (
           <div className="flex gap-2">
             <button
@@ -87,9 +87,9 @@ export function TaskTimeTrackingSection({
         </p>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-3 mb-4">
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Estimate</p>
+      <div className="mb-5 grid divide-y divide-slate-100 border-y border-slate-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+        <div className="py-3 sm:pr-4">
+          <p className="text-xs font-medium text-slate-500">Estimate</p>
           {canEditEstimateHours && isTaskEditing ? (
             <div className="mt-2 flex items-center gap-2">
               <label htmlFor="task-estimate-hours" className="sr-only">Estimate hours</label>
@@ -106,20 +106,20 @@ export function TaskTimeTrackingSection({
               <span className="text-sm text-slate-500">h</span>
             </div>
           ) : (
-            <p className="mt-2 text-2xl font-bold text-slate-900">{estimateDurationLabel}</p>
+            <p className="mt-1 text-xl font-bold text-slate-900">{estimateDurationLabel}</p>
           )}
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Logged</p>
-          <p className="mt-2 text-2xl font-bold text-slate-900">{actualDurationLabel}</p>
+        <div className="py-3 sm:px-4">
+          <p className="text-xs font-medium text-slate-500">Logged</p>
+          <p className="mt-1 text-xl font-bold text-slate-900">{actualDurationLabel}</p>
         </div>
 
-        <div className={`rounded-xl border p-4 ${isOverBudget ? 'border-rose-200 bg-rose-50' : 'border-slate-200 bg-slate-50'}`}>
-          <p className={`text-xs font-semibold uppercase tracking-wide ${isOverBudget ? 'text-rose-700' : 'text-slate-600'}`}>
+        <div className={`py-3 sm:pl-4 ${isOverBudget ? 'text-rose-700' : ''}`}>
+          <p className={`text-xs font-medium ${isOverBudget ? 'text-rose-700' : 'text-slate-500'}`}>
             {isOverBudget ? 'Over budget' : 'Remaining'}
           </p>
-          <p className={`mt-2 text-2xl font-bold ${isOverBudget ? 'text-rose-700' : 'text-slate-900'}`}>
+          <p className={`mt-1 text-xl font-bold ${isOverBudget ? 'text-rose-700' : 'text-slate-900'}`}>
             {isOverBudget ? `+${overBudgetDurationLabel}` : remainingDurationLabel}
           </p>
         </div>
@@ -140,7 +140,9 @@ export function TaskTimeTrackingSection({
         </div>
       ) : null}
 
-      <FreeTimeSlots entries={freeTimeEntries} date={freeTimeDate} />
+      <div className="border-t border-slate-100 pt-4">
+        <FreeTimeSlots entries={freeTimeEntries} date={freeTimeDate} />
+      </div>
     </section>
   )
 }

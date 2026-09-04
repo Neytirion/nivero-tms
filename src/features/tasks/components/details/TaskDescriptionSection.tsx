@@ -9,6 +9,7 @@ interface TaskDescriptionSectionProps {
   descriptionText: string
   attachments: ParsedAttachment[]
   onPreviewAttachment: (attachment: ParsedAttachment) => void
+  embedded?: boolean
 }
 
 const TASK_DESCRIPTION_MAX_LENGTH = 1000
@@ -22,16 +23,16 @@ export function TaskDescriptionSection({
   descriptionText,
   attachments,
   onPreviewAttachment,
+  embedded = false,
 }: TaskDescriptionSectionProps) {
   const imageAttachments = attachments.filter((attachment) => attachment.isImage)
   const fileAttachments = attachments.filter((attachment) => !attachment.isImage)
 
-  return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+  const content = (
+    <>
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Context</p>
-          <h2 className="mt-1 text-base font-semibold text-slate-900">Description</h2>
+          <h2 className="text-base font-semibold text-slate-900">Description</h2>
         </div>
         {isTaskEditing && isTaskSaving ? <span className="text-xs text-slate-500">Saving...</span> : null}
       </div>
@@ -97,6 +98,10 @@ export function TaskDescriptionSection({
           </div>
         </div>
       ) : null}
-    </section>
+    </>
   )
+
+  if (embedded) return content
+
+  return <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">{content}</section>
 }

@@ -130,26 +130,26 @@ export function TaskCard({
   return (
     <article
       onClick={() => onTaskClick?.(task.id)}
-      className={`group relative rounded-2xl p-3.5 transition ${onTaskClick ? 'cursor-pointer' : ''} ${cardToneClass}`}
+      className={`group relative rounded-2xl p-3.5 transition [@media(max-height:900px)]:p-2.5 ${onTaskClick ? 'cursor-pointer' : ''} ${cardToneClass}`}
       style={cardStyle}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className={`line-clamp-2 w-full text-left text-sm font-semibold leading-5 ${isLocked ? 'text-slate-700' : 'text-slate-900'}`}>
+        <p className={`line-clamp-2 w-full text-left text-sm font-semibold leading-5 [@media(max-height:900px)]:leading-4 ${isLocked ? 'text-slate-700' : 'text-slate-900'}`}>
           {task.title}
         </p>
         <span className={`text-xs transition ${isLocked ? 'text-slate-400 group-hover:text-slate-600' : 'text-slate-300 group-hover:text-sky-600'}`}>↗</span>
       </div>
 
       {fieldPreferences.showDescription ? (
-        <div className="mt-1.5">
+        <div className="mt-1.5 [@media(max-height:900px)]:mt-1">
           {descriptionPreview ? (
-            <p className={`line-clamp-2 text-xs leading-5 ${isLocked ? 'text-slate-500' : 'text-slate-500'}`}>{descriptionPreview}</p>
+            <p className={`line-clamp-2 text-xs leading-5 [@media(max-height:900px)]:line-clamp-1 [@media(max-height:900px)]:leading-4 ${isLocked ? 'text-slate-500' : 'text-slate-500'}`}>{descriptionPreview}</p>
           ) : null}
         </div>
       ) : null}
 
       {fieldPreferences.showPriority || fieldPreferences.showDueState || fieldPreferences.showDueDate ? (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        <div className="mt-3 flex flex-wrap items-center gap-1.5 [@media(max-height:900px)]:mt-2 [@media(max-height:900px)]:gap-1">
           {fieldPreferences.showPriority ? (
             <span
               data-priority={task.priority ?? 'medium'}
@@ -174,17 +174,17 @@ export function TaskCard({
       ) : null}
 
       {fieldPreferences.showAssignee || fieldPreferences.showWorkPackage ? (
-        <div className={`mt-3 flex items-center justify-between border-t pt-2.5 ${isLocked ? 'border-slate-300' : 'border-slate-200/70'}`}>
+        <div className={`mt-3 flex items-center justify-between border-t pt-2.5 [@media(max-height:900px)]:mt-2 [@media(max-height:900px)]:pt-2 ${isLocked ? 'border-slate-300' : 'border-slate-200/70'}`}>
           {fieldPreferences.showAssignee ? (
             <div className="min-w-0 flex items-center gap-2">
               {assigneeAvatarUrl ? (
                 <img
                   src={assigneeAvatarUrl}
                   alt={assigneeLabel}
-                  className="h-6 w-6 shrink-0 rounded-full border border-slate-200 object-cover"
+                  className="h-6 w-6 shrink-0 rounded-full border border-slate-200 object-cover [@media(max-height:900px)]:h-5 [@media(max-height:900px)]:w-5"
                 />
               ) : (
-                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold [@media(max-height:900px)]:h-5 [@media(max-height:900px)]:w-5 ${
                   isLocked ? 'bg-slate-300 text-slate-700' : 'bg-sky-100 text-sky-800'
                 }`}>
                   {titleInitials}

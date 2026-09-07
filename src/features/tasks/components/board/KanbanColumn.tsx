@@ -47,7 +47,7 @@ export function KanbanColumn({
         {label} ({tasks.length})
       </h3>
 
-      <div className="mt-3 space-y-2">
+      <div className="mt-3 space-y-2 [@media(max-height:900px)]:mt-2 [@media(max-height:900px)]:space-y-1.5">
         {tasks.length === 0 ? <p className="text-xs text-slate-500">No tasks</p> : null}
 
         {tasks.map((task) => (

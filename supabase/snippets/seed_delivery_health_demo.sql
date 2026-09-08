@@ -15,6 +15,7 @@ declare
   v_package_id uuid;
   v_blocker_task_id uuid;
   v_blocked_task_id uuid;
+  v_time_base_date date;
   v_scenario record;
   v_package record;
   v_task record;
@@ -35,61 +36,113 @@ begin
   perform set_config('request.jwt.claim.sub', v_owner_id::text, true);
   perform set_config('request.jwt.claim.role', 'authenticated', true);
 
+  delete from public.time_entries te
+  using public.projects p
+  where te.project_id = p.id
+    and p.owner_id = v_owner_id
+    and p.name like '[DEMO] %';
+
   delete from public.projects
   where owner_id = v_owner_id
     and name like '[DEMO] %';
+
+  select current_date + offsets.day_offset
+  into v_time_base_date
+  from generate_series(-365, 365) as offsets(day_offset)
+  where not exists (
+    select 1
+    from public.time_entries existing_entry
+    where existing_entry.user_id = v_owner_id
+      and existing_entry.started_at is not null
+      and existing_entry.ended_at is not null
+      and exists (
+        select 1
+        from generate_series(1, 6) as scenario_orders(scenario_order)
+        cross join generate_series(1, 5) as task_orders(task_order)
+        cross join generate_series(0, 1) as segments(segment_order)
+        where scenario_orders.scenario_order <> 5
+          and tstzrange(existing_entry.started_at, existing_entry.ended_at, '[)')
+            && tstzrange(
+              (
+                (current_date + offsets.day_offset)
+                - ((scenario_orders.scenario_order - 1) * 5 + task_orders.task_order - 1)
+              )::timestamp
+                + case when segments.segment_order = 0 then time '08:00' else time '13:30' end,
+              (
+                (current_date + offsets.day_offset)
+                - ((scenario_orders.scenario_order - 1) * 5 + task_orders.task_order - 1)
+              )::timestamp
+                + case when segments.segment_order = 0 then time '12:30' else time '18:00' end,
+              '[)'
+            )
+      )
+  )
+  order by abs(offsets.day_offset), offsets.day_offset
+  limit 1;
+
+  if v_time_base_date is null then
+    raise exception 'Unable to find a free date window for demo time entries.';
+  end if;
 
   for v_scenario in
     select *
     from (values
       (
+        1,
         '[DEMO] 01 Healthy delivery',
         'Green: 40% delivered, 38% of baseline hours used.',
-        true, 'active', 38::numeric, 6,
+        true, 'active', 38::numeric, 1.00::numeric, 6,
         current_date - 2, current_date + 28,
         false
       ),
       (
+        2,
         '[DEMO] 02 Forecast warning',
         'Yellow: 70% delivered, 77% of hours used, forecast at completion is 110%.',
-        true, 'active', 77::numeric, 11,
+        true, 'active', 92.4::numeric, 1.20::numeric, 11,
         current_date - 2, current_date + 28,
         false
       ),
       (
+        3,
         '[DEMO] 03 Budget overrun',
         'Red: 70% delivered while 90% of baseline hours are already used.',
-        true, 'active', 90::numeric, 11,
+        true, 'active', 72::numeric, 0.80::numeric, 11,
         current_date - 2, current_date + 28,
         false
       ),
       (
+        4,
         '[DEMO] 04 Schedule and blocker risk',
         'Red: delivery is behind schedule and an overdue task has an unresolved blocker.',
-        true, 'active', 35::numeric, 6,
+        true, 'active', 49::numeric, 1.40::numeric, 6,
         current_date - 40, current_date + 5,
         true
       ),
       (
+        5,
         '[DEMO] 05 No baseline',
         'Unknown: task-count progress is available, but no approved estimate or planned hours exist.',
-        false, 'active', 0::numeric, 9,
+        false, 'active', 0::numeric, 0.90::numeric, 9,
         null::date, null::date,
         false
       ),
       (
+        6,
         '[DEMO] 06 Completed within baseline',
         'Green: completed scope used 95% of approved baseline hours.',
-        true, 'completed', 95::numeric, 18,
+        true, 'completed', 152::numeric, 1.60::numeric, 18,
         current_date - 60, current_date - 1,
         false
       )
     ) as scenarios(
+      scenario_order,
       name,
       description,
       use_estimates,
       status,
       actual_hours,
+      estimate_multiplier,
       completed_task_count,
       start_date,
       end_date,
@@ -123,7 +176,7 @@ begin
       v_scenario.start_date,
       v_scenario.end_date,
       v_scenario.end_date,
-      case when v_scenario.use_estimates then 100 else null end,
+      case when v_scenario.use_estimates then 100 * v_scenario.estimate_multiplier else null end,
       case when v_scenario.use_estimates then 100000 else null end,
       v_scenario.status,
       case when v_scenario.status = 'completed' then now() else null end,
@@ -167,7 +220,7 @@ begin
       ) values (
         v_estimate_id,
         v_package.name,
-        v_package.estimated_hours,
+        v_package.estimated_hours * v_scenario.estimate_multiplier,
         v_package.sort_order,
         true,
         v_package.color
@@ -215,7 +268,7 @@ begin
           v_project_id,
           (v_package_ids ->> v_task.package_name)::uuid,
           v_task.title,
-          format('Demo task in %s (%s baseline hours).', v_task.package_name, v_task.estimated_hours),
+          format('Demo task in %s (%s baseline hours).', v_task.package_name, v_task.estimated_hours * v_scenario.estimate_multiplier),
           case
             when v_task.task_order <= v_scenario.completed_task_count then 'done'
             when v_task.task_order = v_scenario.completed_task_count + 1 then 'in_progress'
@@ -225,7 +278,7 @@ begin
           v_task.priority,
           v_owner_id,
           v_owner_id,
-          v_task.estimated_hours,
+          v_task.estimated_hours * v_scenario.estimate_multiplier,
           case
             when v_scenario.has_blocked_overdue_task
               and v_task.title = 'Regression and release verification'
@@ -258,22 +311,29 @@ begin
         task_id,
         entry_date,
         minutes_spent,
-        is_billable
+        is_billable,
+        started_at,
+        ended_at
       )
       select
         v_owner_id,
         v_project_id,
         task_rows.id,
-        current_date - (task_rows.task_order - 1),
-        round(v_scenario.actual_hours * 60 / 5)::integer,
-        true
+        v_time_base_date - ((v_scenario.scenario_order - 1) * 5 + task_rows.task_order - 1),
+        round(v_scenario.actual_hours * 60 / 10)::integer,
+        true,
+        (v_time_base_date - ((v_scenario.scenario_order - 1) * 5 + task_rows.task_order - 1))::timestamp
+          + case when segments.segment_order = 0 then time '08:00' else time '13:30' end,
+        (v_time_base_date - ((v_scenario.scenario_order - 1) * 5 + task_rows.task_order - 1))::timestamp
+          + case when segments.segment_order = 0 then time '12:30' else time '18:00' end
       from (
         select t.id, row_number() over (order by t.created_at, t.id)::integer as task_order
         from public.tasks t
         where t.project_id = v_project_id
         order by t.created_at, t.id
         limit 5
-      ) task_rows;
+      ) task_rows
+      cross join lateral generate_series(0, 1) as segments(segment_order);
     end if;
 
     perform public.recalc_project_health(v_project_id);

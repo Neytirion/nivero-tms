@@ -45,8 +45,16 @@ export function exportToCSV(entries: TimeEntryReport[]) {
 export function exportToXLSX(entries: TimeEntryReport[]) {
   const data = prepareExportData(entries)
   const headers = ['Date', 'Member', 'Project', 'Client', 'Duration', 'Type']
-  
-  const ws = utils.json_to_sheet(data, { header: headers })
+
+  const rows = data.map((row) => [
+    row.date,
+    row.member,
+    row.project,
+    row.client,
+    row.duration,
+    row.type,
+  ])
+  const ws = utils.aoa_to_sheet([headers, ...rows])
   
   // Set column widths
   ws['!cols'] = [

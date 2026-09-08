@@ -23,6 +23,10 @@ describe('UserProfileDialog', () => {
     expect(screen.queryByText('Display name')).not.toBeInTheDocument()
     expect(screen.getByText('Product builder and tea fan')).toBeInTheDocument()
     expect(screen.queryByText('User ID')).not.toBeInTheDocument()
+    expect(screen.queryByText('Role')).not.toBeInTheDocument()
+    expect(screen.queryByText('Joined')).not.toBeInTheDocument()
+    expect(screen.queryByText('Member profile')).not.toBeInTheDocument()
+    expect(screen.getByText('john@example.com')).toBeInTheDocument()
   })
 
   it('hides about me when it is empty', () => {

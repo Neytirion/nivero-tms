@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom'
+import { Mail, X } from 'lucide-react'
 
 export interface UserProfilePreview {
   userId?: string | null
@@ -15,20 +16,6 @@ interface UserProfileDialogProps {
   isOpen: boolean
   profile: UserProfilePreview | null
   onClose: () => void
-}
-
-function formatDateTime(value: string | null | undefined) {
-  if (!value) {
-    return 'Unknown'
-  }
-
-  const date = new Date(value)
-
-  if (Number.isNaN(date.getTime())) {
-    return 'Unknown'
-  }
-
-  return date.toLocaleString()
 }
 
 export function UserProfileDialog({ isOpen, profile, onClose }: UserProfileDialogProps) {
@@ -60,57 +47,45 @@ export function UserProfileDialog({ isOpen, profile, onClose }: UserProfileDialo
       <section
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-5 shadow-2xl"
+        aria-labelledby="user-profile-name"
+        className="relative z-10 w-full max-w-sm rounded-xl border border-slate-200 bg-white p-6 shadow-2xl"
       >
-        <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close profile"
+          className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+        >
+          <X aria-hidden="true" className="h-4 w-4" />
+        </button>
+
+        <div className="flex flex-col items-center px-4 text-center">
           {profile.avatarUrl ? (
             <img
               src={profile.avatarUrl}
               alt="Profile avatar"
-              className="h-11 w-11 shrink-0 rounded-full border border-slate-200 object-cover"
+              className="h-24 w-24 shrink-0 rounded-lg border border-slate-200 object-cover shadow-sm"
             />
           ) : (
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-cyan-100 text-sm font-bold text-cyan-800">
+            <span className="flex h-24 w-24 shrink-0 items-center justify-center rounded-lg border border-cyan-100 bg-cyan-50 text-2xl font-bold text-cyan-800 shadow-sm">
               {initials || '?'}
             </span>
           )}
-          <div className="min-w-0">
-            <h3 className="truncate text-base font-semibold text-slate-900">{profileName}</h3>
-            <p className="mt-0.5 text-xs uppercase tracking-[0.12em] text-slate-500">Member profile</p>
-          </div>
+          <h3 id="user-profile-name" className="mt-4 max-w-full break-words text-lg font-semibold text-slate-950">
+            {profileName}
+          </h3>
+          <p className="mt-1 flex max-w-full items-center justify-center gap-1.5 text-sm text-slate-500">
+            <Mail aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+            <span className="break-all">{profile.email || 'No email address'}</span>
+          </p>
         </div>
-
-        <dl className="mt-4 space-y-2 text-sm">
-          <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
-            <dt className="text-slate-500">Email</dt>
-            <dd className="truncate font-medium text-slate-800">{profile.email || 'No email'}</dd>
-          </div>
-          <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
-            <dt className="text-slate-500">Role</dt>
-            <dd className="font-medium capitalize text-slate-800">{profile.role || 'Unknown'}</dd>
-          </div>
-          <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
-            <dt className="text-slate-500">Joined</dt>
-            <dd className="font-medium text-slate-800">{formatDateTime(profile.joinedAt)}</dd>
-          </div>
-        </dl>
 
         {profile.aboutMe?.trim() ? (
-          <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">About me</p>
-            <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{profile.aboutMe.trim()}</p>
+          <div className="mt-5 border-t border-slate-200 pt-4">
+            <h4 className="text-sm font-semibold text-slate-900">About me</h4>
+            <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-slate-600">{profile.aboutMe.trim()}</p>
           </div>
         ) : null}
-
-        <div className="mt-5 flex justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-          >
-            Close
-          </button>
-        </div>
       </section>
     </div>,
     document.body,

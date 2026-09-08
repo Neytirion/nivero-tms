@@ -278,17 +278,17 @@ export function ProfilePage({ user }: ProfilePageProps) {
         <p className="mt-1 text-sm text-slate-600">Your personal details and account settings.</p>
       </header>
 
-      <div className="grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+      <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
         <section className="page-section bg-white">
           <div className="flex flex-col items-center px-2 py-3 text-center">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
                 alt="User avatar"
-                className="h-28 w-28 rounded-full border border-slate-200 object-cover shadow-sm"
+                className="h-28 w-28 rounded-lg border border-slate-200 object-cover shadow-sm"
               />
             ) : (
-              <div className="flex h-28 w-28 items-center justify-center rounded-full border border-slate-200 bg-cyan-50 text-3xl font-semibold text-cyan-800 shadow-sm">
+              <div className="flex h-28 w-28 items-center justify-center rounded-lg border border-slate-200 bg-cyan-50 text-3xl font-semibold text-cyan-800 shadow-sm">
                 {avatarInitial}
               </div>
             )}

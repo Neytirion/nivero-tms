@@ -3,6 +3,7 @@ import { AuthPage } from './pages/auth/AuthPage.tsx'
 import { AppShell } from './pages/AppShell.tsx'
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage.tsx'
 import { ProfilePage } from './pages/profile/ProfilePage.tsx'
+import { ChangePasswordPage } from './pages/profile/ChangePasswordPage.tsx'
 import { ProjectsPage } from './pages/projects/ProjectsPage.tsx'
 import { ProjectDetailsPage } from './pages/projects/ProjectDetailsPage.tsx'
 import { CreateProjectPage } from './pages/projects/CreateProjectPage.tsx'
@@ -47,6 +48,7 @@ function App() {
           element={user ? <AppShell user={user} /> : <Navigate to="/auth" replace />}
         >
           <Route path="profile" element={<ProfilePage user={user!} />} />
+          <Route path="profile/password" element={<ChangePasswordPage user={user!} />} />
           <Route path="projects" element={<ProjectsPage />} />
           <Route path="projects/create" element={<CreateProjectPage />} />
           <Route path="projects/:projectId" element={<ProjectDetailsPage />} />

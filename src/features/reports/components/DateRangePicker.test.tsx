@@ -219,4 +219,22 @@ describe('DateRangePicker', () => {
 
     expect(screen.queryByText('Quick Select')).not.toBeInTheDocument()
   })
+
+  it('keeps manually selected dates on the same calendar day', () => {
+    render(
+      <DateRangePicker
+        dateFrom="2026-08-01"
+        dateTo="2026-08-31"
+        onDateChange={mockOnDateChange}
+      />,
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Date Range/i }))
+    fireEvent.click(screen.getAllByRole('button', { name: '2' })[0])
+    fireEvent.click(screen.getAllByRole('button', { name: '28' })[0])
+    fireEvent.click(screen.getByRole('button', { name: 'Done' }))
+
+    expect(mockOnDateChange).toHaveBeenLastCalledWith('2026-08-02', '2026-08-28')
+    expect(screen.getByText(/Aug 2, 2026.*Aug 28, 2026/)).toBeInTheDocument()
+  })
 })

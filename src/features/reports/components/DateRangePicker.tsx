@@ -17,6 +17,11 @@ function formatLocalDate(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+function parseDateInputValue(value: string): Date {
+  const [year, month, day] = value.split('-').map(Number)
+  return new Date(year, month - 1, day)
+}
+
 function getMondayOfWeek(reference: Date): Date {
   const dayOfWeek = reference.getDay()
   const diff = reference.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1)
@@ -82,16 +87,16 @@ function getFirstDayOfMonth(year: number, month: number): number {
 }
 
 function isDateInRange(date: Date, from: string, to: string): boolean {
-  const dateStr = date.toISOString().split('T')[0]
+  const dateStr = formatLocalDate(date)
   return dateStr >= from && dateStr <= to
 }
 
 function isDateStart(_date: Date, from: string): boolean {
-  return _date.toISOString().split('T')[0] === from
+  return formatLocalDate(_date) === from
 }
 
 function isDateEnd(_date: Date, to: string): boolean {
-  return _date.toISOString().split('T')[0] === to
+  return formatLocalDate(_date) === to
 }
 
 function CalendarMonth({ year, month, dateFrom, dateTo, onDateClick }: { year: number; month: number; dateFrom: string; dateTo: string; onDateClick: (dateStr: string) => void }) {
@@ -146,7 +151,7 @@ function CalendarMonth({ year, month, dateFrom, dateTo, onDateClick }: { year: n
             }
 
             const date = new Date(year, month, day)
-            const dateStr = date.toISOString().split('T')[0]
+            const dateStr = formatLocalDate(date)
             const inRange = isDateInRange(date, dateFrom, dateTo)
             const isStart = isDateStart(date, dateFrom)
             const isEnd = isDateEnd(date, dateTo)
@@ -182,7 +187,7 @@ function CalendarMonth({ year, month, dateFrom, dateTo, onDateClick }: { year: n
 
 export function DateRangePicker({ dateFrom, dateTo, onDateChange }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const startDate = new Date(dateFrom)
+  const startDate = dateFrom ? parseDateInputValue(dateFrom) : new Date()
   const [displayMonth, setDisplayMonth] = useState(startDate.getMonth())
   const [displayYear, setDisplayYear] = useState(startDate.getFullYear())
   const [tempFrom, setTempFrom] = useState(dateFrom)
@@ -244,6 +249,8 @@ export function DateRangePicker({ dateFrom, dateTo, onDateChange }: DateRangePic
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
   }
 
+  const formatDateInput = (value: string) => (value ? formatDate(parseDateInputValue(value)) : '')
+
   return (
     <div className="relative">
       <button
@@ -259,7 +266,7 @@ export function DateRangePicker({ dateFrom, dateTo, onDateChange }: DateRangePic
         className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-left text-sm text-slate-900 hover:border-slate-400 focus:border-slate-500 focus:outline-none"
       >
         <p className="font-medium">
-          {tempFrom ? formatDate(new Date(tempFrom)) : 'Select start'} — {tempTo ? formatDate(new Date(tempTo)) : 'Select end'}
+          {tempFrom ? formatDateInput(tempFrom) : 'Select start'} — {tempTo ? formatDateInput(tempTo) : 'Select end'}
         </p>
       </button>
 
@@ -336,7 +343,7 @@ export function DateRangePicker({ dateFrom, dateTo, onDateChange }: DateRangePic
               {tempFrom && !tempTo ? (
                 <>Click another date to complete the range</>
               ) : tempFrom && tempTo ? (
-                <>Range selected: <strong>{formatDate(new Date(tempFrom))} — {formatDate(new Date(tempTo))}</strong></>
+                <>Range selected: <strong>{formatDateInput(tempFrom)} — {formatDateInput(tempTo)}</strong></>
               ) : (
                 <>Click a date to start selecting</>
               )}

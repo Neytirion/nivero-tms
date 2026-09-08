@@ -68,3 +68,27 @@ Projects without baseline hours have `unknown` risk. `risk_reason` contains the 
 `estimates.price_per_hour` is a commercial customer rate, not an employee cost rate. It can calculate the approved commercial budget, but it cannot represent actual internal spend.
 
 Until internal cost rates and external expenses are modeled, the risk calculation uses hours as the resource budget. The UI labels this metric `Hours used` and keeps `Commercial budget` separate. This avoids presenting invoiced value as company cost.
+
+## Demo projects
+
+Use [seed_delivery_health_demo.sql](../supabase/snippets/seed_delivery_health_demo.sql) to create a reproducible demonstration set.
+
+1. Apply `202609081300_project_health_metrics.sql` to the target Supabase project.
+2. Open the seed file and replace `YOUR_EMAIL@example.com` with an existing Auth user email.
+3. Run the complete seed file in Supabase SQL Editor.
+4. Reload the application and open the projects prefixed with `[DEMO]`.
+
+The script is idempotent for that user: each run deletes and recreates only projects whose names begin with `[DEMO]`.
+
+Every project contains 6 work packages and 18 tasks covering UX/UI, backend and integrations, frontend, QA, iterations, and project management. Open work also demonstrates `in_progress`, `review`, and `todo` states. The no-baseline project keeps its estimate in draft status, so its work packages remain visible without affecting project health.
+
+| Project | Expected result |
+| --- | --- |
+| Healthy delivery | Green; 40% progress and 38% hours used |
+| Forecast warning | Yellow; 70% progress and forecast near 110% |
+| Budget overrun | Red; 70% progress and 90% hours used |
+| Schedule and blocker risk | Red; behind schedule with an overdue unresolved blocker |
+| No baseline | Unknown risk; 50% task-count progress |
+| Completed within baseline | Green; 100% progress and 95% hours used |
+
+The final query in the seed displays all calculated columns and risk reasons immediately after creation.

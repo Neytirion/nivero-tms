@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Info, X } from 'lucide-react'
 import { getProjectMemberDisplayRoles, type ProjectMemberListItem, type ProjectPreview, type TaskPreview, type EstimateWithPackages } from '../../../../../lib/pm'
 import { UserProfileDialog, type UserProfilePreview } from '../../../../../shared/components'
 import { downloadClientBrief, type ClientBriefExportFormat } from '../../../utils/client-brief'
@@ -63,6 +64,41 @@ interface ProjectOverviewTabProps {
   estimates?: EstimateWithPackages[]
 }
 
+interface HealthMetricExplanation {
+  title: string
+  description: string
+  formula: string
+  interpretation: string
+}
+
+function HealthMetricButton({
+  label,
+  value,
+  valueClassName = 'text-slate-900',
+  onClick,
+}: {
+  label: string
+  value: string
+  valueClassName?: string
+  onClick: () => void
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`Explain ${label}`}
+      aria-haspopup="dialog"
+      className="group min-w-0 rounded-md px-2 py-1.5 text-left transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600"
+    >
+      <span className="flex items-center gap-1 text-xs text-slate-500">
+        {label}
+        <Info aria-hidden="true" className="h-3.5 w-3.5 text-slate-400 group-hover:text-cyan-700" />
+      </span>
+      <span className={`mt-1 block text-lg font-semibold ${valueClassName}`}>{value}</span>
+    </button>
+  )
+}
+
 export function ProjectOverviewTab({
   selectedProject,
   tasks,
@@ -75,6 +111,7 @@ export function ProjectOverviewTab({
   const [exportFormat, setExportFormat] = useState<ClientBriefExportFormat>('pdf')
   const [isExporting, setIsExporting] = useState(false)
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
+  const [selectedHealthMetric, setSelectedHealthMetric] = useState<HealthMetricExplanation | null>(null)
   const [memberDisplayRoleByUserId, setMemberDisplayRoleByUserId] = useState<Record<string, string>>({})
   const durationDays = getDurationDays(selectedProject.start_date, selectedProject.end_date)
   const health = deriveProjectHealth(selectedProject)
@@ -86,6 +123,61 @@ export function ProjectOverviewTab({
         : health.risk === 'Unknown'
           ? 'text-slate-500'
           : 'text-emerald-600'
+
+  const healthMetricExplanations = {
+    baseline: {
+      title: 'Baseline',
+      description: 'The total planned effort in the approved estimate. Draft estimate changes do not affect this value.',
+      formula: 'Sum of estimated hours in active work packages',
+      interpretation: health.baselineHours == null
+        ? 'This project does not have an approved baseline yet.'
+        : `The approved scope contains ${health.baselineHours.toFixed(1)} planned hours.`,
+    },
+    hoursUsed: {
+      title: 'Hours used',
+      description: 'The share of baseline hours already recorded through project time entries.',
+      formula: 'Actual hours / Baseline hours × 100',
+      interpretation: health.hoursConsumedPercent == null
+        ? 'This value requires baseline hours.'
+        : `${health.hoursConsumedPercent.toFixed(1)}% of the approved hours have been used.`,
+    },
+    variance: {
+      title: 'Hours variance',
+      description: 'Shows whether hours are being consumed faster or slower than project scope is being completed.',
+      formula: 'Hours used − Progress',
+      interpretation: health.hoursVariancePercent == null
+        ? 'This value requires baseline hours.'
+        : health.hoursVariancePercent > 0
+          ? `Hours consumption is ${health.hoursVariancePercent.toFixed(1)} percentage points ahead of delivery.`
+          : health.hoursVariancePercent < 0
+            ? `Delivery is ${Math.abs(health.hoursVariancePercent).toFixed(1)} percentage points ahead of hours consumption.`
+            : 'Delivery progress and hours consumption are aligned.',
+    },
+    expectedProgress: {
+      title: 'Expected progress',
+      description: 'The progress expected today if work is distributed evenly across project working days.',
+      formula: 'Elapsed working days / Total working days × 100',
+      interpretation: health.expectedProgressPercent == null
+        ? 'Set project start and end dates to calculate expected progress.'
+        : `Based on the schedule, the project should be ${health.expectedProgressPercent.toFixed(1)}% complete today.`,
+    },
+    forecast: {
+      title: 'Forecast at completion',
+      description: 'Predicts total baseline-hour consumption if the current delivery efficiency continues.',
+      formula: 'Hours used / Progress × 100',
+      interpretation: health.forecastAtCompletionPercent == null
+        ? 'The forecast appears after the project reaches 10% progress.'
+        : health.forecastAtCompletionPercent > 100
+          ? `The project is forecast to use ${health.forecastAtCompletionPercent.toFixed(1)}% of baseline hours.`
+          : `The project is forecast to finish within ${health.forecastAtCompletionPercent.toFixed(1)}% of baseline hours.`,
+    },
+    risk: {
+      title: 'Risk status',
+      description: 'The worst current signal across hours variance, schedule variance, forecast, overdue work, and unresolved blockers.',
+      formula: 'Worst applicable signal: Unknown, Green, Amber, or Red',
+      interpretation: health.riskReason ?? 'No risk explanation is available.',
+    },
+  } satisfies Record<string, HealthMetricExplanation>
 
   useEffect(() => {
     let isMounted = true
@@ -117,6 +209,21 @@ export function ProjectOverviewTab({
       isMounted = false
     }
   }, [selectedProject.id])
+
+  useEffect(() => {
+    if (!selectedHealthMetric) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setSelectedHealthMetric(null)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [selectedHealthMetric])
 
   const exportClientBrief = async () => {
     setIsExporting(true)
@@ -176,37 +283,50 @@ export function ProjectOverviewTab({
             <h3 className="text-sm font-semibold text-slate-900">Delivery health</h3>
             <p className="mt-1 text-xs text-slate-500">Measured against the approved estimate baseline</p>
           </div>
-          <span className={`text-sm font-semibold ${riskClassName}`}>{health.risk}</span>
+          <button
+            type="button"
+            onClick={() => setSelectedHealthMetric(healthMetricExplanations.risk)}
+            aria-label="Explain Risk status"
+            aria-haspopup="dialog"
+            className={`flex items-center gap-1 rounded-md px-2 py-1 text-sm font-semibold transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-600 ${riskClassName}`}
+          >
+            {health.risk}
+            <Info aria-hidden="true" className="h-3.5 w-3.5" />
+          </button>
         </div>
 
         {health.baselineHours == null ? (
           <p className="mt-4 text-sm text-slate-500">Approve an estimate or set planned hours to establish a baseline.</p>
         ) : (
           <>
-            <dl className="mt-4 grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-5">
-              <div>
-                <dt className="text-xs text-slate-500">Baseline</dt>
-                <dd className="mt-1 text-lg font-semibold text-slate-900">{health.baselineHours.toFixed(1)}h</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-slate-500">Hours used</dt>
-                <dd className="mt-1 text-lg font-semibold text-slate-900">{health.hoursConsumedPercent?.toFixed(1) ?? '—'}%</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-slate-500">Hours variance</dt>
-                <dd className={`mt-1 text-lg font-semibold ${(health.hoursVariancePercent ?? 0) > 10 ? riskClassName : 'text-slate-900'}`}>
-                  {health.hoursVariancePercent == null ? '—' : `${health.hoursVariancePercent > 0 ? '+' : ''}${health.hoursVariancePercent.toFixed(1)} pp`}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-xs text-slate-500">Expected progress</dt>
-                <dd className="mt-1 text-lg font-semibold text-slate-900">{health.expectedProgressPercent?.toFixed(1) ?? '—'}%</dd>
-              </div>
-              <div>
-                <dt className="text-xs text-slate-500">Forecast at completion</dt>
-                <dd className="mt-1 text-lg font-semibold text-slate-900">{health.forecastAtCompletionPercent?.toFixed(1) ?? '—'}%</dd>
-              </div>
-            </dl>
+            <div className="mt-4 grid grid-cols-2 gap-x-1 gap-y-2 sm:grid-cols-5">
+              <HealthMetricButton
+                label="Baseline"
+                value={`${health.baselineHours.toFixed(1)}h`}
+                onClick={() => setSelectedHealthMetric(healthMetricExplanations.baseline)}
+              />
+              <HealthMetricButton
+                label="Hours used"
+                value={health.hoursConsumedPercent == null ? '—' : `${health.hoursConsumedPercent.toFixed(1)}%`}
+                onClick={() => setSelectedHealthMetric(healthMetricExplanations.hoursUsed)}
+              />
+              <HealthMetricButton
+                label="Hours variance"
+                value={health.hoursVariancePercent == null ? '—' : `${health.hoursVariancePercent > 0 ? '+' : ''}${health.hoursVariancePercent.toFixed(1)} pp`}
+                valueClassName={(health.hoursVariancePercent ?? 0) > 10 ? riskClassName : 'text-slate-900'}
+                onClick={() => setSelectedHealthMetric(healthMetricExplanations.variance)}
+              />
+              <HealthMetricButton
+                label="Expected progress"
+                value={health.expectedProgressPercent == null ? '—' : `${health.expectedProgressPercent.toFixed(1)}%`}
+                onClick={() => setSelectedHealthMetric(healthMetricExplanations.expectedProgress)}
+              />
+              <HealthMetricButton
+                label="Forecast at completion"
+                value={health.forecastAtCompletionPercent == null ? '—' : `${health.forecastAtCompletionPercent.toFixed(1)}%`}
+                onClick={() => setSelectedHealthMetric(healthMetricExplanations.forecast)}
+              />
+            </div>
             <p className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
               {health.riskReason ?? 'No risk explanation is available.'}
             </p>
@@ -342,6 +462,41 @@ export function ProjectOverviewTab({
         profile={selectedProfile}
         onClose={() => setSelectedProfile(null)}
       />
+
+      {selectedHealthMetric ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="Close metric explanation backdrop"
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px]"
+            onClick={() => setSelectedHealthMetric(null)}
+          />
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="health-metric-title"
+            className="relative z-10 w-full max-w-md rounded-lg border border-slate-200 bg-white p-5 shadow-2xl"
+          >
+            <button
+              type="button"
+              onClick={() => setSelectedHealthMetric(null)}
+              aria-label="Close metric explanation"
+              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+            >
+              <X aria-hidden="true" className="h-4 w-4" />
+            </button>
+            <h3 id="health-metric-title" className="pr-10 text-base font-semibold text-slate-950">
+              {selectedHealthMetric.title}
+            </h3>
+            <p className="mt-2 text-sm leading-6 text-slate-600">{selectedHealthMetric.description}</p>
+            <div className="mt-4 border-l-2 border-cyan-600 pl-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Formula</p>
+              <p className="mt-1 text-sm font-medium text-slate-800">{selectedHealthMetric.formula}</p>
+            </div>
+            <p className="mt-4 text-sm leading-6 text-slate-700">{selectedHealthMetric.interpretation}</p>
+          </section>
+        </div>
+      ) : null}
     </div>
   )
 }

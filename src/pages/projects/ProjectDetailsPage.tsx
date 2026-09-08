@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ProjectDetailsSection } from '../../features/projects/components'
 import type { DetailsTab } from '../../features/projects/components'
 import { ConfirmDialog, WorkspacePageHeader } from '../../shared/components'
@@ -23,8 +23,14 @@ function parseTab(value: string | null): DetailsTab | null {
 
 export function ProjectDetailsPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { projectId } = useParams<{ projectId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
+  const requestedBackTo = (location.state as { backTo?: unknown } | null)?.backTo
+  const projectsBackTo =
+    typeof requestedBackTo === 'string' && requestedBackTo.startsWith('/app/projects')
+      ? requestedBackTo
+      : '/app/projects'
 
   const {
     isLoading,
@@ -97,7 +103,7 @@ export function ProjectDetailsPage() {
   const handleDeleteProjectConfirm = async () => {
     const wasDeleted = await deleteSelectedProjectHandler()
     if (wasDeleted) {
-      navigate('/app/projects')
+      navigate(projectsBackTo)
     }
   }
 
@@ -108,7 +114,7 @@ export function ProjectDetailsPage() {
     }
     const tab = key as DetailsTab
     setActiveTab(tab)
-    setSearchParams(tab === 'overview' ? {} : { tab })
+    setSearchParams(tab === 'overview' ? {} : { tab }, { state: location.state })
   }
 
   return (
@@ -116,7 +122,7 @@ export function ProjectDetailsPage() {
       <WorkspacePageHeader
         eyebrow="Projects"
         title={selectedProject ? selectedProject.name : 'Project Details'}
-        backButton={{ label: '← Projects', onClick: () => navigate('/app/projects') }}
+        backButton={{ label: '← Projects', onClick: () => navigate(projectsBackTo) }}
       />
 
       {/* Content + sidebar nav */}
@@ -132,7 +138,7 @@ export function ProjectDetailsPage() {
             activeTab={activeTab}
             onTabChange={(tab) => {
               setActiveTab(tab)
-              setSearchParams(tab === 'overview' ? {} : { tab })
+              setSearchParams(tab === 'overview' ? {} : { tab }, { state: location.state })
             }}
             settingsName={currentSettingsDraft.name}
             onSettingsNameChange={(value) => updateSettingsDraft({ name: value })}

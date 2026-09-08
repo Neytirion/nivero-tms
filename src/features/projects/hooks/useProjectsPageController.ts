@@ -23,7 +23,12 @@ import { useProjectsDerivedState } from './useProjectsDerivedState'
  * - Clearer data flow and concerns separation
  * - Main controller now coordinates composition
  */
-export function useProjectsPageController() {
+interface ProjectsPageControllerOptions {
+  initialSearchValue?: string
+  initialSelectedCustomer?: string | null
+}
+
+export function useProjectsPageController(options: ProjectsPageControllerOptions = {}) {
   const {
     projectName,
     setProjectName,
@@ -73,7 +78,10 @@ export function useProjectsPageController() {
     setActiveTab,
     resetFilters,
     filteredProjects,
-  } = useProjectsPageFilters(projects)
+  } = useProjectsPageFilters(projects, {
+    searchValue: options.initialSearchValue,
+    selectedCustomer: options.initialSelectedCustomer,
+  })
 
   // Derived state from workspace - needed early for settings form
   const selectedProject = projects.find((project) => project.id === selectedProjectId) ?? null

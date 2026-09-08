@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ProjectsSummaryCards, ProjectsTable } from '../../features/projects/components'
 import { deriveRisk } from '../../features/projects/utils/project-metrics'
@@ -6,10 +6,14 @@ import { useProjectsPageController } from '../../features/projects/hooks/useProj
 
 type ProjectSummaryFilter = 'all' | 'active' | 'completed' | 'risks'
 
+function parseSummaryFilter(value: string | null): ProjectSummaryFilter {
+  return value === 'active' || value === 'completed' || value === 'risks' ? value : 'all'
+}
+
 export function ProjectsPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
-  const [summaryFilter, setSummaryFilter] = useState<ProjectSummaryFilter>('all')
+  const summaryFilter = parseSummaryFilter(searchParams.get('filter'))
 
   const {
     isLoading,
@@ -26,7 +30,10 @@ export function ProjectsPage() {
     applySearch,
     resetFilters,
     filteredProjects,
-  } = useProjectsPageController()
+  } = useProjectsPageController({
+    initialSearchValue: searchParams.get('q') ?? '',
+    initialSelectedCustomer: searchParams.get('customer'),
+  })
 
   const visibleProjects = useMemo(() => {
     if (summaryFilter === 'all') {
@@ -45,20 +52,43 @@ export function ProjectsPage() {
   }, [filteredProjects, summaryFilter])
 
   const handleSummaryFilterChange = (filter: ProjectSummaryFilter) => {
-    setSummaryFilter((current) => (current === filter ? 'all' : filter))
+    const nextFilter = summaryFilter === filter ? 'all' : filter
+    const nextParams = new URLSearchParams(searchParams)
+    if (nextFilter === 'all') {
+      nextParams.delete('filter')
+    } else {
+      nextParams.set('filter', nextFilter)
+    }
+    setSearchParams(nextParams, { replace: true })
+  }
+
+  const handleSearchSubmit = () => {
+    applySearch()
+    const nextParams = new URLSearchParams(searchParams)
+    if (searchValue.trim()) {
+      nextParams.set('q', searchValue.trim())
+    } else {
+      nextParams.delete('q')
+    }
+    setSearchParams(nextParams, { replace: true })
+  }
+
+  const handleCustomerChange = (customer: string | null) => {
+    setSelectedCustomer(customer)
+    const nextParams = new URLSearchParams(searchParams)
+    if (customer) {
+      nextParams.set('customer', customer)
+    } else {
+      nextParams.delete('customer')
+    }
+    setSearchParams(nextParams, { replace: true })
   }
 
   // Reset filters when refresh signal is detected
   useEffect(() => {
     if (searchParams.has('refresh')) {
       resetFilters()
-      // Reset filter on URL refresh signal — dep is searchParams only, no infinite loop risk
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSummaryFilter('all')
-      // Remove the refresh parameter from URL
-      const newParams = new URLSearchParams(searchParams)
-      newParams.delete('refresh')
-      setSearchParams(newParams, { replace: true })
+      setSearchParams({}, { replace: true })
     }
   }, [searchParams, resetFilters, setSearchParams])
 
@@ -87,14 +117,19 @@ export function ProjectsPage() {
         searchValue={searchValue}
         selectedCustomer={selectedCustomer}
         onSearchChange={setSearchValue}
-        onSelectCustomer={setSelectedCustomer}
-        onSearchSubmit={applySearch}
+        onSelectCustomer={handleCustomerChange}
+        onSearchSubmit={handleSearchSubmit}
         isLoading={isLoading}
         onOpenCreateProject={() => navigate('/app/projects/create')}
         allProjects={projects}
         projects={visibleProjects}
         selectedProjectId={selectedProjectId}
-        onSelectProject={(projectId) => navigate(`/app/projects/${projectId}`)}
+        onSelectProject={(projectId) => {
+          const query = searchParams.toString()
+          navigate(`/app/projects/${projectId}`, {
+            state: { backTo: `/app/projects${query ? `?${query}` : ''}` },
+          })
+        }}
       />
     </div>
   )

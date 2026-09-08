@@ -54,7 +54,13 @@ const mockUseProjectForm = vi.mocked(useProjectForm)
 
 function LocationProbe() {
   const location = useLocation()
-  return <div data-testid="location">{`${location.pathname}${location.search}`}</div>
+  const backTo = (location.state as { backTo?: string } | null)?.backTo ?? ''
+  return (
+    <>
+      <div data-testid="location">{`${location.pathname}${location.search}`}</div>
+      <div data-testid="back-to">{backTo}</div>
+    </>
+  )
 }
 
 function renderProjectsPage(initialPath = '/app/projects') {
@@ -146,6 +152,22 @@ describe('ProjectsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('location').textContent).toBe('/app/projects/p1')
+    })
+  })
+
+  it('passes the filtered projects URL to project details', async () => {
+    const workspace = createWorkspaceState({
+      projects: [createProjectPreview({ id: 'p1', name: 'Apollo', status: 'active' })],
+    })
+    mockUseWorkspace.mockReturnValue(workspace)
+
+    renderProjectsPage('/app/projects?filter=active&q=Apollo&customer=Acme')
+
+    expect(screen.getByTestId('active-filter')).toHaveTextContent('active')
+    fireEvent.click(screen.getByText('Open project'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('back-to')).toHaveTextContent('/app/projects?filter=active&q=Apollo&customer=Acme')
     })
   })
 })

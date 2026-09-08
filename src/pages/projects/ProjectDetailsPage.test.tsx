@@ -5,6 +5,7 @@ import { useProjectsPageController } from '../../features/projects/hooks/useProj
 
 let mockProjectId: string | undefined = 'p1'
 let mockSearchParams = new URLSearchParams()
+let mockLocationState: { backTo?: string } | null = null
 const mockSetSearchParams = vi.fn()
 const mockNavigate = vi.fn()
 
@@ -14,6 +15,7 @@ vi.mock('react-router-dom', async () => {
     ...actual,
     useNavigate: () => mockNavigate,
     useParams: () => ({ projectId: mockProjectId }),
+    useLocation: () => ({ state: mockLocationState }),
     useSearchParams: () => [mockSearchParams, mockSetSearchParams] as const,
   }
 })
@@ -141,6 +143,7 @@ describe('ProjectDetailsPage', () => {
   beforeEach(() => {
     mockProjectId = 'p1'
     mockSearchParams = new URLSearchParams()
+    mockLocationState = null
     mockNavigate.mockReset()
     mockSetSearchParams.mockReset()
   })
@@ -173,10 +176,10 @@ describe('ProjectDetailsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Team/ }))
     expect(controller.setActiveTab).toHaveBeenCalledWith('team')
-    expect(mockSetSearchParams).toHaveBeenCalledWith({ tab: 'team' })
+    expect(mockSetSearchParams).toHaveBeenCalledWith({ tab: 'team' }, { state: null })
 
     fireEvent.click(screen.getByRole('button', { name: /Overview/ }))
-    expect(mockSetSearchParams).toHaveBeenCalledWith({})
+    expect(mockSetSearchParams).toHaveBeenCalledWith({}, { state: null })
 
     fireEvent.click(screen.getByRole('button', { name: '← Projects' }))
     expect(mockNavigate).toHaveBeenCalledWith('/app/projects')
@@ -194,6 +197,16 @@ describe('ProjectDetailsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'section-open-delete' }))
     expect(controller.setIsDeleteConfirmOpen).toHaveBeenCalledWith(true)
+  })
+
+  it('returns to the preserved projects filters', () => {
+    mockLocationState = { backTo: '/app/projects?filter=risks&q=demo' }
+    mockUseProjectsPageController.mockReturnValue(buildController() as never)
+
+    render(<ProjectDetailsPage />)
+    fireEvent.click(screen.getByRole('button', { name: '← Projects' }))
+
+    expect(mockNavigate).toHaveBeenCalledWith('/app/projects?filter=risks&q=demo')
   })
 
   it('redirects to projects list when route has no project id', async () => {

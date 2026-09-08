@@ -14,13 +14,21 @@ export interface UseProjectsPageFiltersReturn {
   filteredProjects: ProjectPreview[]
 }
 
+interface ProjectsPageFilterDefaults {
+  searchValue?: string
+  selectedCustomer?: string | null
+}
+
 /**
  * Manage project list filters: search query and active tab
  */
-export function useProjectsPageFilters(projects: ProjectPreview[]): UseProjectsPageFiltersReturn {
-  const [searchValue, setSearchValue] = useState('')
-  const [appliedSearchValue, setAppliedSearchValue] = useState('')
-  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(null)
+export function useProjectsPageFilters(
+  projects: ProjectPreview[],
+  defaults: ProjectsPageFilterDefaults = {},
+): UseProjectsPageFiltersReturn {
+  const [searchValue, setSearchValue] = useState(defaults.searchValue ?? '')
+  const [appliedSearchValue, setAppliedSearchValue] = useState(defaults.searchValue ?? '')
+  const [selectedCustomer, setSelectedCustomer] = useState<string | null>(defaults.selectedCustomer ?? null)
   const [activeTab, setActiveTab] = useState<DetailsTab>('overview')
 
   const filteredProjects = useMemo(() => {

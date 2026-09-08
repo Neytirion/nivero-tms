@@ -300,4 +300,134 @@ describeRls('Supabase RLS integration', () => {
       .eq('project_id', visibleProjectId)
       .eq('user_id', projectAdminId)
   })
+
+  it('recalculates baseline progress, consumption, variance, and forecast', async () => {
+    const suffix = Date.now()
+    const { data: project, error: projectError } = await adminClient
+      .from('projects')
+      .insert({
+        name: `RLS Health Baseline ${suffix}`,
+        owner_id: ownerId,
+        status: 'active',
+        use_estimates: true,
+      })
+      .select('id')
+      .single()
+
+    expect(projectError).toBeNull()
+    expect(project).not.toBeNull()
+    const projectId = project!.id
+
+    try {
+      const { data: estimate, error: estimateError } = await adminClient
+        .from('estimates')
+        .insert({
+          project_id: projectId,
+          version_number: 1,
+          status: 'approved',
+          created_by: ownerId,
+          approved_at: new Date().toISOString(),
+        })
+        .select('id')
+        .single()
+      expect(estimateError).toBeNull()
+
+      const { error: packageError } = await adminClient.from('work_packages').insert({
+        estimate_id: estimate!.id,
+        name: 'Delivery',
+        estimated_hours: 100,
+        sort_order: 0,
+        is_active: true,
+      })
+      expect(packageError).toBeNull()
+
+      const { data: tasks, error: tasksError } = await adminClient
+        .from('tasks')
+        .insert([
+          { project_id: projectId, title: 'Done scope', created_by: ownerId, assigned_to: ownerId, status: 'done', priority: 'medium', estimate_hours: 40 },
+          { project_id: projectId, title: 'Remaining scope', created_by: ownerId, assigned_to: ownerId, status: 'todo', priority: 'medium', estimate_hours: 60 },
+        ])
+        .select('id,status')
+      expect(tasksError).toBeNull()
+
+      const doneTaskId = tasks!.find((task) => task.status === 'done')!.id
+      const { error: timeError } = await ownerClient.from('time_entries').insert({
+        user_id: ownerId,
+        project_id: projectId,
+        task_id: doneTaskId,
+        entry_date: new Date().toISOString().slice(0, 10),
+        minutes_spent: 2640,
+        is_billable: true,
+      })
+      expect(timeError).toBeNull()
+
+      const { error: recalcError } = await adminClient.rpc('recalc_project_health', { p_project_id: projectId })
+      expect(recalcError).toBeNull()
+
+      const { data: health, error: healthError } = await adminClient
+        .from('projects')
+        .select('baseline_hours,actual_hours,progress_percent,hours_consumed_percent,hours_variance_percent,forecast_at_completion_percent,risk_status')
+        .eq('id', projectId)
+        .single()
+
+      expect(healthError).toBeNull()
+      expect(health).toMatchObject({
+        baseline_hours: 100,
+        actual_hours: 44,
+        progress_percent: 40,
+        hours_consumed_percent: 44,
+        hours_variance_percent: 4,
+        forecast_at_completion_percent: 110,
+        risk_status: 'yellow',
+      })
+    } finally {
+      await adminClient.from('projects').delete().eq('id', projectId)
+    }
+  })
+
+  it('keeps risk unknown but calculates task-count progress without a baseline', async () => {
+    const suffix = Date.now()
+    const { data: project, error: projectError } = await adminClient
+      .from('projects')
+      .insert({
+        name: `RLS Health Unknown ${suffix}`,
+        owner_id: ownerId,
+        status: 'active',
+        use_estimates: false,
+      })
+      .select('id')
+      .single()
+
+    expect(projectError).toBeNull()
+    const projectId = project!.id
+
+    try {
+      const { error: tasksError } = await adminClient.from('tasks').insert([
+        { project_id: projectId, title: 'Done task', created_by: ownerId, status: 'done', priority: 'medium' },
+        { project_id: projectId, title: 'Open task', created_by: ownerId, status: 'todo', priority: 'medium' },
+      ])
+      expect(tasksError).toBeNull()
+
+      const { error: recalcError } = await adminClient.rpc('recalc_project_health', { p_project_id: projectId })
+      expect(recalcError).toBeNull()
+
+      const { data: health, error: healthError } = await adminClient
+        .from('projects')
+        .select('baseline_hours,progress_percent,hours_consumed_percent,forecast_at_completion_percent,risk_status,risk_reason')
+        .eq('id', projectId)
+        .single()
+
+      expect(healthError).toBeNull()
+      expect(health).toMatchObject({
+        baseline_hours: null,
+        progress_percent: 50,
+        hours_consumed_percent: null,
+        forecast_at_completion_percent: null,
+        risk_status: 'unknown',
+        risk_reason: 'No approved baseline or planned hours',
+      })
+    } finally {
+      await adminClient.from('projects').delete().eq('id', projectId)
+    }
+  })
 })

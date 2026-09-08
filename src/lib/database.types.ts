@@ -893,6 +893,12 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      recalc_project_health: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: void
+      }
       refresh_my_project_health: {
         Args: Record<PropertyKey, never>
         Returns: void

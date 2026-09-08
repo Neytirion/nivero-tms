@@ -261,9 +261,15 @@ export function TaskDetailsPage() {
 
       setIsLogTimeModalOpen(false)
 
-      const entries = await getTimeEntries({ projectId: task.project_id, taskId: task.id })
+      const [entries, allTodayEntries] = await Promise.all([
+        getTimeEntries({ projectId: task.project_id, taskId: task.id }),
+        currentUserId
+          ? getTimeEntries({ userId: currentUserId, fromDate: today, toDate: today })
+          : Promise.resolve([]),
+      ])
       const totalSeconds = entries.reduce((sum, entry) => sum + getEntryDurationSeconds(entry), 0)
       setPreciseLoggedByTaskId({ taskId: task.id, seconds: totalSeconds })
+      setTodayTimeEntries(allTodayEntries)
     } finally {
       setIsManualLogging(false)
     }

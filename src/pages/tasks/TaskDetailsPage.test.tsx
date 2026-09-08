@@ -4,7 +4,8 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { TaskDetailsPage } from './TaskDetailsPage'
 import { useTasksPageController } from '../../features/tasks/hooks/useTasksPageController'
 import { createTaskPreview } from '../test-helpers'
-import { getTimeEntries } from '../../lib/pm'
+import { createTimeEntry, getTimeEntries } from '../../lib/pm'
+import { localDateTimeToISOString } from '../../features/time-tracking/utils/time-tracking.utils'
 
 vi.mock('../../features/tasks/hooks/useTasksPageController', () => ({
   useTasksPageController: vi.fn(),
@@ -15,10 +16,12 @@ vi.mock('../../features/tasks/components/comments', () => ({
 }))
 
 vi.mock('../../lib/pm', () => ({
+  createTimeEntry: vi.fn(),
   getTimeEntries: vi.fn(),
 }))
 
 const mockUseTasksPageController = vi.mocked(useTasksPageController)
+const mockCreateTimeEntry = vi.mocked(createTimeEntry)
 const mockGetTimeEntries = vi.mocked(getTimeEntries)
 
 function LocationProbe() {
@@ -51,6 +54,7 @@ describe('TaskDetailsPage', () => {
 
   beforeEach(() => {
     editTaskMock.mockClear()
+    mockCreateTimeEntry.mockResolvedValue({} as never)
     mockGetTimeEntries.mockResolvedValue([] as never)
 
     mockUseTasksPageController.mockReturnValue({
@@ -261,6 +265,60 @@ describe('TaskDetailsPage', () => {
       expect(screen.getByRole('button', { name: /start timer/i })).toBeDisabled()
     })
     expect(screen.getByText(/current time is already covered/i)).toBeInTheDocument()
+  })
+
+  it('refreshes free time after logging time', async () => {
+    const today = new Date().toISOString().slice(0, 10)
+    const loggedEntry = {
+      id: 'entry-1',
+      user_id: 'u1',
+      project_id: 'p1',
+      task_id: 't1',
+      entry_date: today,
+      started_at: localDateTimeToISOString(today, '09:00'),
+      ended_at: localDateTimeToISOString(today, '10:00'),
+      minutes_spent: 60,
+      is_billable: true,
+    }
+    mockGetTimeEntries
+      .mockResolvedValueOnce([] as never)
+      .mockResolvedValueOnce([] as never)
+      .mockResolvedValueOnce([loggedEntry] as never)
+      .mockResolvedValueOnce([loggedEntry] as never)
+
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [createTaskPreview({
+        id: 't1',
+        title: 'Task A',
+        project_id: 'p1',
+        assigned_to: 'u1',
+      })],
+      myRoleInSelectedProject: 'member',
+      canTakeUnassignedTasks: false,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      projectMembers: [],
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+    fireEvent.click(screen.getByRole('button', { name: /log time/i }))
+    fireEvent.change(screen.getByLabelText(/start time/i), { target: { value: '09:00' } })
+    fireEvent.change(screen.getByLabelText(/end time/i), { target: { value: '10:00' } })
+    fireEvent.click(screen.getAllByRole('button', { name: /^log time$/i }).at(-1)!)
+
+    await waitFor(() => {
+      expect(mockGetTimeEntries).toHaveBeenCalledWith({ userId: 'u1', fromDate: today, toDate: today })
+      expect(screen.getByText('08:00–09:00')).toBeInTheDocument()
+      expect(screen.getByText('10:00–18:00')).toBeInTheDocument()
+    })
   })
 
   it('shows take-task button for unassigned task when user can claim and updates assignee to current user', async () => {

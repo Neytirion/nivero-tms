@@ -3,7 +3,7 @@ import { Info, X } from 'lucide-react'
 import { getProjectMemberDisplayRoles, type ProjectMemberListItem, type ProjectPreview, type TaskPreview, type EstimateWithPackages } from '../../../../../lib/pm'
 import { UserProfileDialog, type UserProfilePreview } from '../../../../../shared/components'
 import { downloadClientBrief, type ClientBriefExportFormat } from '../../../utils/client-brief'
-import { deriveProjectHealth, formatDate } from '../../../utils/project-metrics'
+import { deriveProjectHealth, formatCreatedDate, formatDate } from '../../../utils/project-metrics'
 
 function parseIsoDateToUtcTime(value: string): number | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
@@ -380,7 +380,7 @@ export function ProjectOverviewTab({
                 { label: 'Customer', value: selectedProject.customer_name ?? 'Not set' },
                 { label: 'Manager', value: projectManagerName ?? (selectedProject.project_manager_id ? 'Assigned' : 'Not set') },
                 { label: 'Commercial budget', value: budgetValue },
-                { label: 'Created', value: formatDate(selectedProject.created_at) },
+                { label: 'Created', value: formatCreatedDate(selectedProject.created_at) },
               ]
             })().map(({ label, value }) => (
               <div key={label} className="flex items-baseline justify-between gap-2 border-b border-slate-100 pb-2 last:border-0 last:pb-0">

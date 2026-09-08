@@ -7,6 +7,7 @@ import {
   deriveRisk,
   deriveRiskFromProgressAndHours,
   formatDate,
+  formatCreatedDate,
   countWorkingDays,
 } from './project-metrics'
 
@@ -193,6 +194,14 @@ describe('project-metrics', () => {
   describe('formatDate', () => {
     it('returns fallback text for empty values', () => {
       expect(formatDate(null)).toBe('Not set')
+    })
+
+    it('keeps the default local date format', () => {
+      expect(formatDate('2026-09-08T12:00:00.000Z')).toBe('9/8/2026')
+    })
+
+    it('formats created dates as day month year', () => {
+      expect(formatCreatedDate('2026-09-08T12:00:00.000Z')).toBe('8 September 2026')
     })
   })
 

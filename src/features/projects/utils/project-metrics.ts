@@ -214,6 +214,18 @@ export function formatDate(value: string | null | undefined) {
   return new Date(value).toLocaleDateString()
 }
 
+export function formatCreatedDate(value: string | null | undefined) {
+  if (!value) {
+    return 'Not set'
+  }
+
+  return new Date(value).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
 export function deriveForecastCompletionDate(
   project: Pick<
     ProjectPreview,

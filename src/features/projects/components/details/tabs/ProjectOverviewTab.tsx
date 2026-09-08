@@ -285,28 +285,42 @@ export function ProjectOverviewTab({
           </button>
         </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-x-1 gap-y-2 sm:grid-cols-4 xl:grid-cols-8">
-          <HealthMetricButton
-            label="Progress"
-            value={`${health.progressPercent.toFixed(1)}%`}
-            onClick={() => setSelectedHealthMetric(healthMetricExplanations.progress)}
-          />
-          <HealthMetricButton
-            label="Duration"
-            value={durationDays == null ? '—' : `${durationDays}d`}
-            detail={`${formatDate(selectedProject.start_date)} → ${formatDate(selectedProject.end_date)}`}
-            onClick={() => setSelectedHealthMetric(healthMetricExplanations.duration)}
-          />
-          <HealthMetricButton
-            label="Estimated"
-            value={health.baselineHours == null ? '—' : `${health.baselineHours.toFixed(1)}h`}
-            onClick={() => setSelectedHealthMetric(healthMetricExplanations.estimated)}
-          />
-          <HealthMetricButton
-            label="Actual"
-            value={`${(selectedProject.actual_hours ?? 0).toFixed(1)}h`}
-            onClick={() => setSelectedHealthMetric(healthMetricExplanations.actual)}
-          />
+        <div className="mt-4 grid gap-4 border-t border-slate-100 pt-4 lg:grid-cols-[1fr_1.3fr_0.8fr] lg:gap-0">
+          <div className="min-w-0 lg:pr-4">
+            <h4 className="px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Schedule</h4>
+            <div className="mt-1 grid grid-cols-2 gap-1 sm:grid-cols-3 lg:grid-cols-2">
+              <HealthMetricButton
+                label="Progress"
+                value={`${health.progressPercent.toFixed(1)}%`}
+                onClick={() => setSelectedHealthMetric(healthMetricExplanations.progress)}
+              />
+              <HealthMetricButton
+                label="Duration"
+                value={durationDays == null ? '—' : `${durationDays}d`}
+                detail={`${formatDate(selectedProject.start_date)} → ${formatDate(selectedProject.end_date)}`}
+                onClick={() => setSelectedHealthMetric(healthMetricExplanations.duration)}
+              />
+              <HealthMetricButton
+                label="Expected progress"
+                value={health.expectedProgressPercent == null ? '—' : `${health.expectedProgressPercent.toFixed(1)}%`}
+                onClick={() => setSelectedHealthMetric(healthMetricExplanations.expectedProgress)}
+              />
+            </div>
+          </div>
+
+          <div className="min-w-0 border-t border-slate-100 pt-4 lg:border-l lg:border-t-0 lg:px-4 lg:pt-0">
+            <h4 className="px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Effort</h4>
+            <div className="mt-1 grid grid-cols-2 gap-1">
+              <HealthMetricButton
+                label="Estimated"
+                value={health.baselineHours == null ? '—' : `${health.baselineHours.toFixed(1)}h`}
+                onClick={() => setSelectedHealthMetric(healthMetricExplanations.estimated)}
+              />
+              <HealthMetricButton
+                label="Actual"
+                value={`${(selectedProject.actual_hours ?? 0).toFixed(1)}h`}
+                onClick={() => setSelectedHealthMetric(healthMetricExplanations.actual)}
+              />
               <HealthMetricButton
                 label="Hours used"
                 value={health.hoursConsumedPercent == null ? '—' : `${health.hoursConsumedPercent.toFixed(1)}%`}
@@ -318,20 +332,23 @@ export function ProjectOverviewTab({
                 valueClassName={(health.hoursVariancePercent ?? 0) > 10 ? riskClassName : 'text-slate-900'}
                 onClick={() => setSelectedHealthMetric(healthMetricExplanations.variance)}
               />
-              <HealthMetricButton
-                label="Expected progress"
-                value={health.expectedProgressPercent == null ? '—' : `${health.expectedProgressPercent.toFixed(1)}%`}
-                onClick={() => setSelectedHealthMetric(healthMetricExplanations.expectedProgress)}
-              />
+            </div>
+          </div>
+
+          <div className="min-w-0 border-t border-slate-100 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0">
+            <h4 className="px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Outlook</h4>
+            <div className="mt-1">
               <HealthMetricButton
                 label="Forecast at completion"
                 value={health.forecastAtCompletionPercent == null ? '—' : `${health.forecastAtCompletionPercent.toFixed(1)}%`}
                 onClick={() => setSelectedHealthMetric(healthMetricExplanations.forecast)}
               />
+            </div>
+            <p className="mt-2 border-t border-slate-100 px-2 pt-3 text-xs leading-5 text-slate-600">
+              {health.riskReason ?? 'No risk explanation is available.'}
+            </p>
+          </div>
         </div>
-        <p className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
-          {health.riskReason ?? 'No risk explanation is available.'}
-        </p>
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4">

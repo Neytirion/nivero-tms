@@ -20,7 +20,7 @@ describe('AppShell', () => {
     },
   } as never
 
-  it('hides Resources navigation for member-only access', () => {
+  it('shows the current project without Resources navigation', () => {
     mockUseWorkspace.mockReturnValue({
       projects: [{ id: 'p1', name: 'Project One' }],
       selectedProjectId: 'p1',
@@ -35,13 +35,11 @@ describe('AppShell', () => {
       </MemoryRouter>,
     )
 
-    // ✅ Check BEHAVIOR: Resources menu is hidden for members
     expect(screen.queryByText(/Resources/)).toBeNull()
-    // ✅ Current project name is displayed read-only
     expect(screen.getByText('Project One')).toBeTruthy()
   })
 
-  it('shows Resources navigation for manager role', () => {
+  it('shows primary navigation actions for manager role', () => {
     mockUseWorkspace.mockReturnValue({
       projects: [{ id: 'p1', name: 'Project One' }],
       selectedProjectId: 'p1',
@@ -56,7 +54,7 @@ describe('AppShell', () => {
       </MemoryRouter>,
     )
 
-    expect(screen.getByText('Resources (demo)')).toBeTruthy()
+    expect(screen.queryByText(/Resources/)).toBeNull()
     expect(screen.getByText('Nivero PM Tool')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Open mentions' })).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Open profile' })).toBeTruthy()
@@ -141,39 +139,6 @@ describe('AppShell', () => {
       expect(screen.queryByText('Gamma Project')).toBeNull()
     })
 
-    it('hides Resources menu when not manager', () => {
-      const roles = ['member', 'guest'] as const
-
-      roles.forEach((role) => {
-        const { unmount } = render(
-          <MemoryRouter>
-            <AppShell
-              user={user}
-            />
-          </MemoryRouter>,
-        )
-
-        mockUseWorkspace.mockReturnValue({
-          projects: [{ id: 'p1', name: 'Project One' }],
-          selectedProjectId: 'p1',
-          selectProject: vi.fn(),
-          isLoading: false,
-          getProjectRole: () => role,
-        })
-
-        unmount()
-
-        // Re-render with different role
-        render(
-          <MemoryRouter>
-            <AppShell user={user} />
-          </MemoryRouter>,
-        )
-
-        // ✅ Check BEHAVIOR: Resources hidden for non-managers
-        expect(screen.queryByText(/Resources/)).toBeNull()
-      })
-    })
   })
 })
 

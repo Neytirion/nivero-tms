@@ -13,7 +13,6 @@ import { TaskDetailsPage } from './pages/tasks/TaskDetailsPage.tsx'
 import { CreateTaskPage } from './pages/tasks/CreateTaskPage.tsx'
 import { TaskCardSettingsPage } from './pages/tasks/TaskCardSettingsPage.tsx'
 import { TimeTrackingPage } from './pages/time-tracking/TimeTrackingPage.tsx'
-import { ResourcePlanningPage } from './pages/resource-planning/ResourcePlanningPage.tsx'
 import { MentionsPage } from './pages/mentions/MentionsPage.tsx'
 import { NotificationSettingsPage } from './pages/mentions/NotificationSettingsPage.tsx'
 import { ReportsPage } from './pages/reports/ReportsPage.tsx'
@@ -60,7 +59,6 @@ function App() {
           <Route path="mentions/settings" element={<NotificationSettingsPage />} />
           <Route path="time-tracking" element={<TimeTrackingPage />} />
           <Route path="reports" element={<ReportsPage />} />
-          <Route path="resources" element={<ResourcePlanningPage />} />
           <Route index element={<Navigate to="/app/projects" replace />} />
         </Route>
         <Route

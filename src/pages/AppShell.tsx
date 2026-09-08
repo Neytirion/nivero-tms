@@ -33,7 +33,6 @@ function AppShellLayout({ user }: AppShellProps) {
   const {
     projects,
     selectedProjectId,
-    getProjectRole,
     currentUserId,
     setStatus,
     reloadCurrentTasks,
@@ -48,17 +47,6 @@ function AppShellLayout({ user }: AppShellProps) {
   const displayName = (user.user_metadata.display_name as string | undefined) ?? ''
   const profileDisplayName = displayName.trim() || fullName.trim() || user.email || 'User'
   const avatarFallback = profileDisplayName.charAt(0).toUpperCase()
-  const canViewResourcePlanning = projects.some((project) => {
-    const role = getProjectRole(project.id)
-    return role === 'owner' || role === 'admin' || role === 'manager'
-  })
-  const activeNavItems = canViewResourcePlanning
-    ? [
-        ...baseNavItems,
-        { to: '/app/resources', label: 'Resources' },
-      ]
-    : baseNavItems
-
   useEffect(() => {
     const refreshMentionsCount = async () => {
       if (!userId) {
@@ -138,9 +126,8 @@ function AppShellLayout({ user }: AppShellProps) {
                         Active Modules
                       </p>
                       <nav className="space-y-2">
-                        {activeNavItems.map((item) => {
+                        {baseNavItems.map((item) => {
                           const isActive = location.pathname === item.to
-                          const isDemoModule = item.to === '/app/resources'
                           return (
                             <button
                               key={item.to}
@@ -153,10 +140,7 @@ function AppShellLayout({ user }: AppShellProps) {
                               }`}
                             >
                               <p className="flex items-center justify-between gap-2 text-sm font-semibold">
-                                <span>
-                                  {item.label}
-                                  {isDemoModule ? ' (demo)' : ''}
-                                </span>
+                                <span>{item.label}</span>
                               </p>
                             </button>
                           )

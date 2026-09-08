@@ -1,20 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '../../../lib/supabase'
-import type { ReportsFilterState, TimeEntryReport } from '../types/reports'
-import { filterTimeEntries, getDateRangeDefaults } from '../utils/reports.utils'
-
-interface Project {
-  id: string
-  name: string
-  customer_name: string | null
-}
+import type { ReportProject, ReportsFilterState, TimeEntryReport } from '../types/reports'
+import { calculateCompanySpend, filterTimeEntries, getDateRangeDefaults } from '../utils/reports.utils'
 
 export function useReportsController() {
   const isMountedRef = useRef(true)
   const [isLoading, setIsLoading] = useState(true)
   const [isFilterLoading, setIsFilterLoading] = useState(false)
   const [timeEntries, setTimeEntries] = useState<TimeEntryReport[]>([])
-  const [projects, setProjects] = useState<Project[]>([])
+  const [projects, setProjects] = useState<ReportProject[]>([])
   const [error, setError] = useState<string | null>(null)
 
   const [filters, setFilters] = useState<ReportsFilterState>(() => {
@@ -38,7 +32,35 @@ export function useReportsController() {
         .order('name')
 
       if (err) throw err
-      if (isMountedRef.current) setProjects(data || [])
+
+      const projectRows = data || []
+      if (projectRows.length === 0) {
+        if (isMountedRef.current) setProjects([])
+        return
+      }
+
+      const { data: estimates, error: estimatesError } = await supabase
+        .from('estimates')
+        .select('project_id, price_per_hour, version_number, status')
+        .in('project_id', projectRows.map((project) => project.id))
+        .eq('status', 'approved')
+        .order('version_number', { ascending: false })
+
+      if (estimatesError) throw estimatesError
+
+      const rates = new Map<string, number | null>()
+      for (const estimate of estimates || []) {
+        if (!rates.has(estimate.project_id)) {
+          rates.set(estimate.project_id, estimate.price_per_hour)
+        }
+      }
+
+      if (isMountedRef.current) {
+        setProjects(projectRows.map((project) => ({
+          ...project,
+          hourlyRate: rates.get(project.id) ?? null,
+        })))
+      }
     } catch (err) {
       if (isMountedRef.current) setError(err instanceof Error ? err.message : 'Failed to load projects')
     }
@@ -131,6 +153,11 @@ export function useReportsController() {
     return filterTimeEntries(timeEntries, filters)
   }, [timeEntries, filters])
 
+  const companySpend = useMemo(
+    () => calculateCompanySpend(filteredEntries, projects),
+    [filteredEntries, projects],
+  )
+
   const uniqueMembers = useMemo(() => {
     return Array.from(new Map(timeEntries.map((e) => [e.userId, { id: e.userId, name: e.memberName }])).values()).sort(
       (a, b) => a.name.localeCompare(b.name),
@@ -176,6 +203,7 @@ export function useReportsController() {
     error,
     uniqueMembers,
     uniqueClients,
+    companySpend,
     handleUpdateFilter,
     handleResetFilters,
   }

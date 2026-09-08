@@ -1,4 +1,4 @@
-import { ReportsFilters, ReportsTable, ReportsDailyChart } from '../../features/reports/components'
+import { CompanySpendSummary, ReportsFilters, ReportsTable, ReportsDailyChart } from '../../features/reports/components'
 import { useReportsController } from '../../features/reports/hooks/useReportsController'
 import { groupByDays } from '../../features/reports/utils/chart-data.utils'
 
@@ -12,6 +12,7 @@ export function ReportsPage() {
     error,
     uniqueMembers,
     uniqueClients,
+    companySpend,
     handleUpdateFilter,
     handleResetFilters,
   } = useReportsController()
@@ -57,6 +58,8 @@ export function ReportsPage() {
         dateFrom={filters.dateFrom}
         dateTo={filters.dateTo}
       />
+
+      <CompanySpendSummary summaries={companySpend} />
 
       <ReportsTable entries={timeEntries} isLoading={isFilterLoading} />
     </div>

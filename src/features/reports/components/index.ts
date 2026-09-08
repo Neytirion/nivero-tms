@@ -1,5 +1,6 @@
 export { ReportsFilters } from './ReportsFilters'
 export { ReportsTable } from './ReportsTable'
+export { CompanySpendSummary } from './CompanySpendSummary'
 export { DateRangePicker } from './DateRangePicker'
 export { ReportsCharts } from './ReportsCharts'
 export { ReportsDailyChart } from './ReportsDailyChart'

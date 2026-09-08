@@ -25,6 +25,20 @@ export interface TimeEntryReport {
   createdAt: string
 }
 
+export interface ReportProject {
+  id: string
+  name: string
+  customer_name: string | null
+  hourlyRate: number | null
+}
+
+export interface CompanySpendSummary {
+  companyName: string
+  totalMinutes: number
+  spend: number | null
+  projectCount: number
+}
+
 export interface ReportsSummary {
   totalHours: number
   billableHours: number

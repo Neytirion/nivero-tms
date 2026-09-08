@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   calculateSummary,
+  calculateCompanySpend,
   filterTimeEntries,
   getDateRangeDefaults,
   hoursToDisplay,
@@ -28,6 +29,34 @@ function createTimeEntry(overrides: Partial<TimeEntryReport> = {}): TimeEntryRep
 }
 
 describe('reports.utils', () => {
+  describe('calculateCompanySpend', () => {
+    it('calculates company spend from logged hours and project rates', () => {
+      const entries = [
+        createTimeEntry({ projectId: 'project-1', clientName: 'Acme Corp', minutesSpent: 120 }),
+        createTimeEntry({ projectId: 'project-2', clientName: 'Acme Corp', minutesSpent: 60 }),
+      ]
+
+      expect(calculateCompanySpend(entries, [
+        { id: 'project-1', name: 'Alpha', customer_name: 'Acme Corp', hourlyRate: 100 },
+        { id: 'project-2', name: 'Beta', customer_name: 'Acme Corp', hourlyRate: 150 },
+      ])).toEqual([{
+        companyName: 'Acme Corp',
+        totalMinutes: 180,
+        spend: 350,
+        projectCount: 2,
+      }])
+    })
+
+    it('does not invent a total when one project has no approved rate', () => {
+      const summaries = calculateCompanySpend(
+        [createTimeEntry({ projectId: 'project-1', minutesSpent: 60 })],
+        [{ id: 'project-1', name: 'Alpha', customer_name: 'Acme Corp', hourlyRate: null }],
+      )
+
+      expect(summaries[0]).toMatchObject({ companyName: 'Acme Corp', spend: null })
+    })
+  })
+
   describe('minutesToHours', () => {
     it('converts minutes to hours', () => {
       expect(minutesToHours(60)).toBe(1)

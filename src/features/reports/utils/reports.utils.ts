@@ -1,4 +1,4 @@
-import type { ReportsFilterState, TimeEntryReport, ReportsSummary } from '../types/reports'
+import type { CompanySpendSummary, ReportProject, ReportsFilterState, TimeEntryReport, ReportsSummary } from '../types/reports'
 
 export function minutesToHours(minutes: number): number {
   return Math.round((minutes / 60) * 100) / 100
@@ -75,6 +75,51 @@ export function calculateSummary(entries: TimeEntryReport[]): ReportsSummary {
     nonBillableHours: minutesToHours(nonBillableMinutes),
     entriesCount: entries.length,
   }
+}
+
+export function calculateCompanySpend(
+  entries: TimeEntryReport[],
+  projects: ReportProject[],
+): CompanySpendSummary[] {
+  const projectById = new Map(projects.map((project) => [project.id, project]))
+  const grouped = new Map<string, CompanySpendSummary & { totalSpend: number; hasMissingRate: boolean }>()
+
+  for (const entry of entries) {
+    const project = projectById.get(entry.projectId)
+    const companyName = project?.customer_name ?? entry.clientName ?? 'No company'
+    const current = grouped.get(companyName) ?? {
+      companyName,
+      totalMinutes: 0,
+      spend: 0,
+      projectCount: 0,
+      totalSpend: 0,
+      hasMissingRate: false,
+    }
+
+    current.totalMinutes += entry.minutesSpent
+    if (project?.hourlyRate == null) {
+      current.hasMissingRate = true
+    } else {
+      current.totalSpend += (entry.minutesSpent / 60) * project.hourlyRate
+    }
+    grouped.set(companyName, current)
+  }
+
+  const projectCounts = new Map<string, Set<string>>()
+  for (const entry of entries) {
+    const companyName = projectById.get(entry.projectId)?.customer_name ?? entry.clientName ?? 'No company'
+    const projectIds = projectCounts.get(companyName) ?? new Set<string>()
+    projectIds.add(entry.projectId)
+    projectCounts.set(companyName, projectIds)
+  }
+
+  return Array.from(grouped.values())
+    .map(({ totalSpend, hasMissingRate, ...summary }) => ({
+      ...summary,
+      spend: hasMissingRate ? null : Math.round(totalSpend * 100) / 100,
+      projectCount: projectCounts.get(summary.companyName)?.size ?? 0,
+    }))
+    .sort((a, b) => (b.spend ?? -1) - (a.spend ?? -1))
 }
 
 export function getDateRangeDefaults(): { dateFrom: string; dateTo: string } {

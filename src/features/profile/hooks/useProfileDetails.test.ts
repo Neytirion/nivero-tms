@@ -14,8 +14,11 @@ vi.mock('../../../lib/supabase', () => ({
   },
 }))
 
-import { useProfileDetails } from './useProfileDetails'
-import { ABOUT_ME_MAX_LENGTH } from './useProfileDetails'
+import {
+  ABOUT_ME_MAX_LENGTH,
+  PROFILE_NAME_MAX_LENGTH,
+  useProfileDetails,
+} from './useProfileDetails'
 
 function createUser(overrides: Partial<User> = {}): User {
   return {
@@ -139,6 +142,70 @@ describe('useProfileDetails', () => {
       }),
     })
     expect(result.current.bio).toBe('a'.repeat(ABOUT_ME_MAX_LENGTH))
+  })
+
+  it('requires full name', async () => {
+    const setStatus = vi.fn()
+    const { result } = renderHook(() => useProfileDetails({ user: createUser(), setStatus }))
+
+    act(() => {
+      result.current.startEditingProfile()
+      result.current.setFullName('   ')
+      result.current.setDisplayName('')
+    })
+
+    await act(async () => {
+      await result.current.saveProfile()
+    })
+
+    expect(mocks.updateUser).not.toHaveBeenCalled()
+    expect(setStatus).toHaveBeenCalledWith('Full name is required')
+    expect(result.current.isEditingProfile).toBe(true)
+  })
+
+  it('allows an empty display name', async () => {
+    const setStatus = vi.fn()
+    const { result } = renderHook(() => useProfileDetails({ user: createUser(), setStatus }))
+
+    act(() => {
+      result.current.startEditingProfile()
+      result.current.setFullName('John Doe')
+      result.current.setDisplayName('   ')
+    })
+
+    await act(async () => {
+      await result.current.saveProfile()
+    })
+
+    expect(mocks.updateUser).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        full_name: 'John Doe',
+        display_name: null,
+      }),
+    })
+    expect(result.current.isEditingProfile).toBe(false)
+  })
+
+  it('clamps full and display names to the configured max length', async () => {
+    const setStatus = vi.fn()
+    const { result } = renderHook(() => useProfileDetails({ user: createUser(), setStatus }))
+
+    act(() => {
+      result.current.startEditingProfile()
+      result.current.setFullName('f'.repeat(PROFILE_NAME_MAX_LENGTH + 5))
+      result.current.setDisplayName('d'.repeat(PROFILE_NAME_MAX_LENGTH + 5))
+    })
+
+    await act(async () => {
+      await result.current.saveProfile()
+    })
+
+    expect(mocks.updateUser).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        full_name: 'f'.repeat(PROFILE_NAME_MAX_LENGTH),
+        display_name: 'd'.repeat(PROFILE_NAME_MAX_LENGTH),
+      }),
+    })
   })
 
   it('reports save errors and keeps editing mode active', async () => {

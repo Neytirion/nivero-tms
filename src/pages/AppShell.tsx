@@ -45,8 +45,9 @@ function AppShellLayout({ user }: AppShellProps) {
 
   const avatarUrl = (user.user_metadata.avatar_url as string | undefined) ?? ''
   const fullName = (user.user_metadata.full_name as string | undefined) ?? ''
-  const profileDisplayName = fullName.trim() || user.email || 'User'
-  const avatarFallback = (fullName || user.email || '?').charAt(0).toUpperCase()
+  const displayName = (user.user_metadata.display_name as string | undefined) ?? ''
+  const profileDisplayName = displayName.trim() || fullName.trim() || user.email || 'User'
+  const avatarFallback = profileDisplayName.charAt(0).toUpperCase()
   const canViewResourcePlanning = projects.some((project) => {
     const role = getProjectRole(project.id)
     return role === 'owner' || role === 'admin' || role === 'manager'

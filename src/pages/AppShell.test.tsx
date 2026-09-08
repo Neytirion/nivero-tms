@@ -64,6 +64,33 @@ describe('AppShell', () => {
     expect(screen.getByText('Project One')).toBeTruthy()
   })
 
+  it('shows display name instead of full name when configured', () => {
+    mockUseWorkspace.mockReturnValue({
+      projects: [],
+      selectedProjectId: '',
+      isLoading: false,
+      getProjectRole: () => null,
+    })
+
+    render(
+      <MemoryRouter>
+        <AppShell
+          user={{
+            email: 'user@nivero.dev',
+            user_metadata: {
+              full_name: 'Nivero User',
+              display_name: 'Johnny',
+              avatar_url: '',
+            },
+          } as never}
+        />
+      </MemoryRouter>,
+    )
+
+    expect(screen.getByText('Johnny')).toBeTruthy()
+    expect(screen.queryByText('Nivero User')).toBeNull()
+  })
+
   describe('navigation behavior', () => {
     it('shows current project name in sidebar', async () => {
       const selectProject = vi.fn()

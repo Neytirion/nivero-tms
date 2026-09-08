@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { supabase } from '../../lib/supabase'
+import { PROFILE_NAME_MAX_LENGTH } from '../../shared/utils/user-profile'
 
 export type AuthMode = 'sign-in' | 'sign-up'
 
@@ -37,6 +38,12 @@ export function useAuthForm() {
       return
     }
 
+    const normalizedFullName = fullName.trim().slice(0, PROFILE_NAME_MAX_LENGTH)
+    if (mode === 'sign-up' && !normalizedFullName) {
+      setStatus('Please provide your full name')
+      return
+    }
+
     isSubmittingRef.current = true
     setIsSubmitting(true)
 
@@ -50,7 +57,7 @@ export function useAuthForm() {
           options: {
             emailRedirectTo: `${window.location.origin}/auth`,
             data: {
-              full_name: fullName,
+              full_name: normalizedFullName,
             },
           },
         })

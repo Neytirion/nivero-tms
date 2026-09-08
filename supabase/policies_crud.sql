@@ -83,6 +83,7 @@ begin
     pm.role::text as role,
     pm.created_at::timestamptz as joined_at,
     coalesce(
+      nullif(trim(u.raw_user_meta_data ->> 'display_name'), ''),
       nullif(trim(u.raw_user_meta_data ->> 'full_name'), ''),
       split_part(coalesce(u.email::text, ''), '@', 1),
       'Unknown user'

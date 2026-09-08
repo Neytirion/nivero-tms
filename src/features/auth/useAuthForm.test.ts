@@ -42,6 +42,7 @@ describe('useAuthForm', () => {
 
     act(() => {
       result.current.setMode('sign-up')
+      result.current.setFullName('New User')
       result.current.setEmail('new@nivero.dev')
       result.current.setPassword('password123')
     })
@@ -64,6 +65,7 @@ describe('useAuthForm', () => {
 
     act(() => {
       result.current.setMode('sign-up')
+      result.current.setFullName('New User')
       result.current.setEmail('new@nivero.dev')
       result.current.setPassword('password123')
     })
@@ -73,6 +75,23 @@ describe('useAuthForm', () => {
     })
 
     expect(result.current.status).toContain('Redirecting...')
+  })
+
+  it('requires full name when creating an account', async () => {
+    const { result } = renderHook(() => useAuthForm())
+
+    act(() => {
+      result.current.setMode('sign-up')
+      result.current.setEmail('new@nivero.dev')
+      result.current.setPassword('password123')
+    })
+
+    await act(async () => {
+      await result.current.submit(createSubmitEvent())
+    })
+
+    expect(mocks.signUp).not.toHaveBeenCalled()
+    expect(result.current.status).toBe('Please provide your full name')
   })
 
   it('prevents duplicate sign-in requests while a submit is in-flight', async () => {

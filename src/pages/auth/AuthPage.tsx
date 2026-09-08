@@ -1,5 +1,6 @@
 import { useAuthForm } from '../../features/auth/useAuthForm.ts'
 import { Link } from 'react-router-dom'
+import { PROFILE_NAME_MAX_LENGTH } from '../../shared/utils/user-profile'
 
 export function AuthPage() {
   const {
@@ -56,7 +57,10 @@ export function AuthPage() {
               type="text"
               value={fullName}
               onChange={(event) => setFullName(event.target.value)}
-              placeholder="Name (optional)"
+              placeholder="Full name"
+              maxLength={PROFILE_NAME_MAX_LENGTH}
+              required
+              autoComplete="name"
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
             />
           ) : null}

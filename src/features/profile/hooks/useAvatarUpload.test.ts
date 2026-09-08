@@ -20,6 +20,7 @@ vi.mock('../../../lib/supabase', () => ({
 }))
 
 import { useAvatarUpload } from './useAvatarUpload'
+import { PROFILE_NAME_MAX_LENGTH } from '../../../shared/utils/user-profile'
 
 describe('useAvatarUpload', () => {
   beforeEach(() => {
@@ -83,6 +84,33 @@ describe('useAvatarUpload', () => {
     })
 
     expect(setStatus).toHaveBeenCalledWith('Only image files are allowed')
+    expect(mocks.storageFrom).not.toHaveBeenCalled()
+  })
+
+  it('rejects upload when full name is empty', async () => {
+    const setStatus = vi.fn()
+    const setAvatarUrl = vi.fn()
+
+    const { result } = renderHook(() =>
+      useAvatarUpload({
+        userId: 'u1',
+        fullName: '   ',
+        displayName: '',
+        bio: 'bio',
+        setAvatarUrl,
+        setStatus,
+      }),
+    )
+
+    act(() => {
+      result.current.setAvatarFile(new File(['img'], 'avatar.png', { type: 'image/png' }))
+    })
+
+    await act(async () => {
+      await result.current.uploadAvatar()
+    })
+
+    expect(setStatus).toHaveBeenCalledWith('Full name is required')
     expect(mocks.storageFrom).not.toHaveBeenCalled()
   })
 
@@ -192,5 +220,36 @@ describe('useAvatarUpload', () => {
     })
 
     expect(setStatus).toHaveBeenCalledWith('Select an image file first')
+  })
+
+  it('clamps names and keeps display name optional in avatar metadata', async () => {
+    const setStatus = vi.fn()
+    const setAvatarUrl = vi.fn()
+
+    const { result } = renderHook(() =>
+      useAvatarUpload({
+        userId: 'u1',
+        fullName: 'f'.repeat(PROFILE_NAME_MAX_LENGTH + 5),
+        displayName: '   ',
+        bio: 'bio',
+        setAvatarUrl,
+        setStatus,
+      }),
+    )
+
+    act(() => {
+      result.current.setAvatarFile(new File(['img'], 'avatar.png', { type: 'image/png' }))
+    })
+
+    await act(async () => {
+      await result.current.uploadAvatar()
+    })
+
+    expect(mocks.updateUser).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        full_name: 'f'.repeat(PROFILE_NAME_MAX_LENGTH),
+        display_name: null,
+      }),
+    })
   })
 })

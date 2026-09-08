@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { supabase } from '../../../lib/supabase'
+import { PROFILE_NAME_MAX_LENGTH } from '../../../shared/utils/user-profile'
 
 interface UseAvatarUploadInput {
   userId: string
@@ -22,6 +23,13 @@ export function useAvatarUpload(input: UseAvatarUploadInput) {
 
     if (!avatarFile.type.startsWith('image/')) {
       input.setStatus('Only image files are allowed')
+      return
+    }
+
+    const normalizedFullName = input.fullName.trim().slice(0, PROFILE_NAME_MAX_LENGTH)
+    const normalizedDisplayName = input.displayName.trim().slice(0, PROFILE_NAME_MAX_LENGTH)
+    if (!normalizedFullName) {
+      input.setStatus('Full name is required')
       return
     }
 
@@ -64,8 +72,8 @@ export function useAvatarUpload(input: UseAvatarUploadInput) {
     const { error: updateError } = await supabase.auth.updateUser({
       data: {
         avatar_url: nextAvatarUrl,
-        full_name: input.fullName.trim() || null,
-        display_name: input.displayName.trim() || null,
+        full_name: normalizedFullName,
+        display_name: normalizedDisplayName || null,
         bio: input.bio.trim() || null,
       },
     })

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '../../../lib/supabase'
+import { PROFILE_NAME_MAX_LENGTH } from '../../../shared/utils/user-profile'
 
 export const ABOUT_ME_MAX_LENGTH = 160
+export { PROFILE_NAME_MAX_LENGTH } from '../../../shared/utils/user-profile'
 
 interface UseProfileDetailsInput {
   user: User
@@ -63,9 +65,15 @@ export function useProfileDetails(input: UseProfileDetailsInput) {
 
     setIsSavingProfile(true)
 
-    const nextFullName = fullName.trim()
-    const nextDisplayName = displayName.trim()
+    const nextFullName = fullName.trim().slice(0, PROFILE_NAME_MAX_LENGTH)
+    const nextDisplayName = displayName.trim().slice(0, PROFILE_NAME_MAX_LENGTH)
     const nextBio = bio.trim().slice(0, ABOUT_ME_MAX_LENGTH)
+
+    if (!nextFullName) {
+      input.setStatus('Full name is required')
+      setIsSavingProfile(false)
+      return
+    }
 
     const updatePayload: {
       data: {

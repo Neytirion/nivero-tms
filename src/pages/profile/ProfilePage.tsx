@@ -5,7 +5,11 @@ import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import { supabase } from '../../lib/supabase'
 import { ConfirmDialog } from '../../shared/components'
 import { useAvatarUpload } from '../../features/profile/hooks/useAvatarUpload'
-import { ABOUT_ME_MAX_LENGTH, useProfileDetails } from '../../features/profile/hooks/useProfileDetails'
+import {
+  ABOUT_ME_MAX_LENGTH,
+  PROFILE_NAME_MAX_LENGTH,
+  useProfileDetails,
+} from '../../features/profile/hooks/useProfileDetails'
 import { usePasswordChange } from '../../features/profile/hooks/usePasswordChange'
 
 interface ProfilePageProps {
@@ -354,21 +358,29 @@ export function ProfilePage({ user }: ProfilePageProps) {
                   value={fullName}
                   onChange={(event) => setFullName(event.target.value)}
                   placeholder="Your full name"
+                  maxLength={PROFILE_NAME_MAX_LENGTH}
+                  required
                   disabled={isSavingProfile}
                   className="w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
                 />
+                <p className="text-right text-xs text-slate-500">{fullName.length}/{PROFILE_NAME_MAX_LENGTH}</p>
               </label>
 
               <label className="space-y-1.5">
-                <span className="text-sm font-medium text-slate-700">Display name</span>
+                <span className="flex items-center justify-between gap-2 text-sm font-medium text-slate-700">
+                  Display name
+                  <span className="text-xs font-normal text-slate-500">Optional</span>
+                </span>
                 <input
                   type="text"
                   value={displayName}
                   onChange={(event) => setDisplayName(event.target.value)}
                   placeholder="Name shown to your team"
+                  maxLength={PROFILE_NAME_MAX_LENGTH}
                   disabled={isSavingProfile}
                   className="w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
                 />
+                <p className="text-right text-xs text-slate-500">{displayName.length}/{PROFILE_NAME_MAX_LENGTH}</p>
               </label>
 
               <label className="space-y-1.5 sm:col-span-2">

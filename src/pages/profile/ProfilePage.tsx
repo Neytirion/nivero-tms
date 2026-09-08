@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
+import { Camera, Check, LockKeyhole, LogOut, Mail, Pencil, X } from 'lucide-react'
 import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
 import { supabase } from '../../lib/supabase'
 import { ConfirmDialog } from '../../shared/components'
@@ -271,43 +272,36 @@ export function ProfilePage({ user }: ProfilePageProps) {
   }
 
   return (
-    <div className="space-y-5">
-      <section className="page-section relative overflow-hidden border border-cyan-100 bg-[linear-gradient(125deg,rgba(14,116,144,0.1),rgba(236,254,255,0.92)_45%,rgba(236,253,245,0.95))]">
-        <div className="pointer-events-none absolute right-[-3rem] top-[-3rem] h-36 w-36 rounded-full bg-cyan-200/30 blur-2xl" />
-        <div className="relative flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cyan-700/80">Profile Center</p>
-            <h2 className="mt-1 text-2xl font-bold text-slate-900">{profileName}</h2>
-            <p className="mt-2 text-sm text-slate-700">Manage your public profile details and identity settings.</p>
-          </div>
-          <span className="rounded-full border border-cyan-200 bg-white/80 px-3 py-1 text-xs font-semibold text-cyan-700">
-            {isEditingProfile ? 'Editing mode' : 'View mode'}
-          </span>
-        </div>
-      </section>
+    <div className="mx-auto w-full max-w-5xl space-y-5">
+      <header>
+        <h2 className="text-2xl font-bold text-slate-950">Profile</h2>
+        <p className="mt-1 text-sm text-slate-600">Your personal details and account settings.</p>
+      </header>
 
-      <section className="grid gap-5 lg:grid-cols-[320px_1fr]">
-        <div className="page-section border border-slate-200 bg-white/90">
-          <div className="flex flex-col items-center text-center">
+      <div className="grid items-start gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+        <section className="page-section bg-white">
+          <div className="flex flex-col items-center px-2 py-3 text-center">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
                 alt="User avatar"
-                className="h-24 w-24 rounded-full border-2 border-cyan-100 object-cover shadow-sm"
+                className="h-28 w-28 rounded-full border border-slate-200 object-cover shadow-sm"
               />
             ) : (
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-2 border-slate-200 bg-slate-100 text-2xl font-semibold text-slate-600 shadow-sm">
+              <div className="flex h-28 w-28 items-center justify-center rounded-full border border-slate-200 bg-cyan-50 text-3xl font-semibold text-cyan-800 shadow-sm">
                 {avatarInitial}
               </div>
             )}
 
             <p className="mt-4 text-lg font-semibold text-slate-900">{profileName}</p>
-            <p className="mt-1 text-xs text-slate-500">{email || 'no email'}</p>
+            <p className="mt-1 flex max-w-full items-center gap-1.5 text-sm text-slate-500">
+              <Mail aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{email || 'No email address'}</span>
+            </p>
           </div>
 
-          <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50/70 p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.1em] text-slate-600">Avatar</p>
-            <div className="mt-3 flex flex-col gap-2">
+          {isEditingProfile ? (
+            <div className="mt-4 border-t border-slate-200 pt-4">
               <input
                 ref={avatarFileInputRef}
                 type="file"
@@ -319,150 +313,163 @@ export function ProfilePage({ user }: ProfilePageProps) {
                 type="button"
                 onClick={() => avatarFileInputRef.current?.click()}
                 disabled={isUploadingAvatar || Boolean(avatarEditorState)}
-                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                Choose image
+                <Camera aria-hidden="true" className="h-4 w-4" />
+                Choose photo
               </button>
               <button
                 type="button"
                 onClick={uploadAvatar}
                 disabled={isUploadingAvatar || Boolean(avatarEditorState)}
-                className="rounded-lg bg-sky-600 px-3 py-2 text-xs font-medium text-white transition hover:bg-sky-500 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-2 w-full rounded-lg bg-cyan-700 px-3 py-2 text-sm font-medium text-white hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isUploadingAvatar ? 'Uploading...' : 'Upload avatar'}
+                {isUploadingAvatar ? 'Uploading...' : 'Save new photo'}
               </button>
             </div>
-          </div>
+          ) : null}
+        </section>
 
-        </div>
-
-        <div className="page-section border border-slate-200 bg-white/90">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="section-title">Profile Details</h3>
+        <section className="page-section bg-white">
+          <div className="flex min-h-10 flex-wrap items-center justify-between gap-3">
+            <h3 className="section-title">Personal information</h3>
             {!isEditingProfile ? (
               <button
                 type="button"
                 onClick={startEditingProfile}
-                className="rounded-lg bg-slate-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-600"
+                className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
               >
+                <Pencil aria-hidden="true" className="h-4 w-4" />
                 Edit profile
               </button>
             ) : null}
           </div>
 
-          <p className="section-subtitle mt-1">
-            {isEditingProfile
-              ? 'You can update your profile fields and save your changes.'
-              : 'Click Edit profile to make changes.'}
-          </p>
+          {isEditingProfile ? (
+            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium text-slate-700">Full name</span>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(event) => setFullName(event.target.value)}
+                  placeholder="Your full name"
+                  disabled={isSavingProfile}
+                  className="w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
+                />
+              </label>
 
-          <div className="mt-4 grid gap-4">
-            <label className="space-y-1">
-              <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-600">Full name</span>
-              <input
-                type="text"
-                value={fullName}
-                onChange={(event) => setFullName(event.target.value)}
-                placeholder="Full name"
-                disabled={!isEditingProfile || isSavingProfile}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-              />
-            </label>
+              <label className="space-y-1.5">
+                <span className="text-sm font-medium text-slate-700">Display name</span>
+                <input
+                  type="text"
+                  value={displayName}
+                  onChange={(event) => setDisplayName(event.target.value)}
+                  placeholder="Name shown to your team"
+                  disabled={isSavingProfile}
+                  className="w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
+                />
+              </label>
 
-            <label className="space-y-1">
-              <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-600">Display name</span>
-              <input
-                type="text"
-                value={displayName}
-                onChange={(event) => setDisplayName(event.target.value)}
-                placeholder="How your name should be shown"
-                disabled={!isEditingProfile || isSavingProfile}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-              />
-            </label>
+              <label className="space-y-1.5 sm:col-span-2">
+                <span className="text-sm font-medium text-slate-700">About</span>
+                <textarea
+                  value={bio}
+                  onChange={(event) => setBio(event.target.value)}
+                  placeholder="A short introduction"
+                  rows={4}
+                  maxLength={ABOUT_ME_MAX_LENGTH}
+                  disabled={isSavingProfile}
+                  className="w-full resize-none rounded-lg border px-3 py-2.5 text-sm leading-6 text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
+                />
+                <p className="text-right text-xs text-slate-500">{aboutMeLength}/{ABOUT_ME_MAX_LENGTH}</p>
+              </label>
 
-            <label className="space-y-1">
-              <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-600">About me</span>
-              <textarea
-                value={bio}
-                onChange={(event) => setBio(event.target.value)}
-                placeholder="A short introduction"
-                rows={3}
-                maxLength={ABOUT_ME_MAX_LENGTH}
-                disabled={!isEditingProfile || isSavingProfile}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-              />
-              <div className="flex items-center justify-between text-xs text-slate-500">
-                <span>Up to {ABOUT_ME_MAX_LENGTH} characters.</span>
-                <span>{aboutMeLength}/{ABOUT_ME_MAX_LENGTH}</span>
-              </div>
-            </label>
-
-            <label className="space-y-1">
-              <span className="text-xs font-medium uppercase tracking-[0.08em] text-slate-600">Email</span>
-              <input
-                type="email"
-                value={email}
-                readOnly
-                disabled
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-              />
-            </label>
-
-            <div className="flex flex-wrap items-center gap-2 pt-2">
-              {isEditingProfile ? (
-                <>
+              <div className="flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-4 sm:col-span-2">
                   <button
                     type="button"
                     onClick={cancelEditingProfile}
                     disabled={isSavingProfile}
-                    className="rounded-lg bg-slate-200 px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                   >
+                    <X aria-hidden="true" className="h-4 w-4" />
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={saveProfile}
                     disabled={isSavingProfile}
-                    className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="flex items-center gap-2 rounded-lg bg-cyan-700 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-800 disabled:cursor-not-allowed disabled:opacity-60"
                   >
+                    <Check aria-hidden="true" className="h-4 w-4" />
                     {isSavingProfile ? 'Saving...' : 'Save profile'}
                   </button>
-                </>
-              ) : (
-                <span className="text-xs text-slate-500">Fields are locked in view mode.</span>
-              )}
+              </div>
             </div>
+          ) : (
+            <dl className="mt-5 divide-y divide-slate-200">
+              <div className="grid gap-1 py-4 sm:grid-cols-[150px_1fr] sm:gap-4">
+                <dt className="text-sm text-slate-500">Full name</dt>
+                <dd className="text-sm font-medium text-slate-900">{fullName || 'Not provided'}</dd>
+              </div>
+              <div className="grid gap-1 py-4 sm:grid-cols-[150px_1fr] sm:gap-4">
+                <dt className="text-sm text-slate-500">Display name</dt>
+                <dd className="text-sm font-medium text-slate-900">{displayName || 'Not provided'}</dd>
+              </div>
+              <div className="grid gap-1 py-4 sm:grid-cols-[150px_1fr] sm:gap-4">
+                <dt className="text-sm text-slate-500">Email</dt>
+                <dd className="break-all text-sm font-medium text-slate-900">{email || 'Not provided'}</dd>
+              </div>
+              <div className="grid gap-1 py-4 sm:grid-cols-[150px_1fr] sm:gap-4">
+                <dt className="text-sm text-slate-500">About</dt>
+                <dd className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{bio || 'Not provided'}</dd>
+              </div>
+            </dl>
+          )}
+        </section>
+      </div>
+
+      <section className="page-section bg-white">
+        <div className="flex items-center gap-3 border-b border-slate-200 pb-4">
+          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-700">
+            <LockKeyhole aria-hidden="true" className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="section-title">Password</h3>
+            <p className="section-subtitle">Use at least 6 characters.</p>
           </div>
+        </div>
 
-          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-            <h4 className="text-sm font-semibold text-slate-900">Change password</h4>
-            <p className="mt-1 text-xs text-slate-600">Set a new password for this account.</p>
-
-            <div className="mt-3 grid gap-3">
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-slate-700">New password</span>
               <input
                 type="password"
                 value={newPassword}
                 onChange={(event) => setNewPassword(event.target.value)}
-                placeholder="New password"
+                placeholder="Enter new password"
                 autoComplete="new-password"
                 minLength={6}
                 disabled={isChangingPassword}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                className="w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
               />
+          </label>
 
+          <label className="space-y-1.5">
+            <span className="text-sm font-medium text-slate-700">Confirm password</span>
               <input
                 type="password"
                 value={confirmNewPassword}
                 onChange={(event) => setConfirmNewPassword(event.target.value)}
-                placeholder="Confirm new password"
+                placeholder="Repeat new password"
                 autoComplete="new-password"
                 minLength={6}
                 disabled={isChangingPassword}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+                className="w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
               />
+          </label>
 
-              <div>
+          <div className="sm:col-span-2">
                 <button
                   type="button"
                   onClick={changePassword}
@@ -471,19 +478,24 @@ export function ProfilePage({ user }: ProfilePageProps) {
                 >
                   {isChangingPassword ? 'Updating...' : 'Update password'}
                 </button>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      <button
-        type="button"
-        onClick={() => setIsSignOutConfirmOpen(true)}
-        className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-800 transition hover:bg-slate-100"
-      >
-        Sign out
-      </button>
+      <section className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-200 py-2">
+        <div>
+          <h3 className="text-sm font-semibold text-slate-900">Sign out of this account</h3>
+          <p className="mt-1 text-xs text-slate-500">You will return to the sign-in screen.</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setIsSignOutConfirmOpen(true)}
+          className="flex items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-50"
+        >
+          <LogOut aria-hidden="true" className="h-4 w-4" />
+          Sign out
+        </button>
+      </section>
 
       {avatarEditorState ? (
         <AvatarEditorModal

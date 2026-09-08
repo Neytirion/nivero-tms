@@ -97,15 +97,7 @@ export function NotificationSettingsPage() {
       <WorkspacePageHeader
         eyebrow="Preferences"
         title="Notification settings"
-        actions={(
-          <button
-            type="button"
-            onClick={() => navigate('/app/mentions')}
-            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-          >
-            Back to mentions
-          </button>
-        )}
+        backButton={{ label: 'Back to mentions', onClick: () => navigate('/app/mentions') }}
       />
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm sm:p-6">

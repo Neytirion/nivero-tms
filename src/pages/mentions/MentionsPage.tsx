@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { ArrowUpRight, AtSign, Check, CheckCheck, Inbox, MessageSquare, Settings2 } from 'lucide-react'
 import { getUserMentions, markMentionAsRead, type UserMentionPreview } from '../../lib/pm'
-import { WorkspacePageHeader } from '../../shared/components'
 import { supabase } from '../../lib/supabase'
 
 function formatTime(value: string) {
-  return new Date(value).toLocaleString()
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(new Date(value))
 }
 
 export function MentionsPage() {
@@ -152,67 +157,98 @@ export function MentionsPage() {
 
   return (
     <div className="space-y-4">
-      <WorkspacePageHeader
-        eyebrow="Inbox"
-        title="Mentions"
-        actions={(
-          <>
-            <button
-              type="button"
-              onClick={() => navigate('/app/mentions/settings')}
-              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              Notification settings
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowOnlyUnread((prev) => !prev)}
-              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-            >
-              {showOnlyUnread ? 'Show all' : 'Show unread only'}
-            </button>
-            <button
-              type="button"
-              onClick={() => void markAllVisibleAsRead()}
-              disabled={isMarkingAllRead || unreadMentions.length === 0}
-              className="rounded-md bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
-            >
-              {isMarkingAllRead ? 'Marking…' : 'Mark visible as read'}
-            </button>
-          </>
-        )}
-        badges={[
-          { label: `${unreadMentions.length} unread`, tone: 'neutral' },
-          { label: showOnlyUnread ? 'Unread filter' : 'All mentions', tone: 'cyan' },
-        ]}
-      />
-
       {statusMessage ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-medium text-amber-800">
           {statusMessage}
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-slate-200 bg-white">
-        {isLoading ? (
-          <div className="space-y-2 p-4">
-            {[1, 2, 3].map((item) => (
-              <div key={item} className="h-14 animate-pulse rounded-lg bg-slate-100" />
-            ))}
+      <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <div className="flex flex-col gap-3 border-b border-slate-200 bg-slate-50/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-600">
+              <Inbox className="h-4 w-4" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-sm font-semibold text-slate-900">Mention inbox</h2>
+              <p className="text-xs text-slate-500">
+                {unreadMentions.length === 0 ? 'You are all caught up' : `${unreadMentions.length} conversation${unreadMentions.length === 1 ? '' : 's'} need your attention`}
+              </p>
+            </div>
           </div>
-        ) : visibleMentions.length === 0 ? (
-          <div className="space-y-3 p-6 text-sm text-slate-500">
-            <p>No mentions found.</p>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex h-8 items-center rounded-md border border-slate-300 bg-white p-0.5" aria-label="Mention filter">
+              <button
+                type="button"
+                onClick={() => setShowOnlyUnread(true)}
+                aria-pressed={showOnlyUnread}
+                className={`h-7 rounded px-2.5 text-xs font-semibold transition-colors ${showOnlyUnread ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}
+              >
+                {showOnlyUnread ? 'Unread only' : 'Show unread only'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowOnlyUnread(false)}
+                aria-pressed={!showOnlyUnread}
+                className={`h-7 rounded px-2.5 text-xs font-semibold transition-colors ${!showOnlyUnread ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:bg-slate-100'}`}
+              >
+                Show all
+              </button>
+            </div>
             <button
               type="button"
               onClick={() => navigate('/app/mentions/settings')}
-              className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50"
             >
+              <Settings2 className="h-3.5 w-3.5" aria-hidden="true" />
               Notification settings
             </button>
+            <button
+              type="button"
+              onClick={() => void markAllVisibleAsRead()}
+              disabled={isMarkingAllRead || unreadMentions.length === 0}
+              className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 transition-colors hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              <CheckCheck className="h-3.5 w-3.5" aria-hidden="true" />
+              {isMarkingAllRead ? 'Marking...' : 'Mark visible as read'}
+            </button>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="space-y-3 p-4" aria-label="Loading mentions">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="flex gap-3">
+                <div className="h-9 w-9 shrink-0 animate-pulse rounded-md bg-slate-100" />
+                <div className="flex-1 space-y-2 py-0.5">
+                  <div className="h-3 w-1/3 animate-pulse rounded bg-slate-100" />
+                  <div className="h-4 w-3/4 animate-pulse rounded bg-slate-100" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : visibleMentions.length === 0 ? (
+          <div className="flex min-h-64 flex-col items-center justify-center px-6 py-10 text-center">
+            <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
+              <Check className="h-5 w-5" aria-hidden="true" />
+            </span>
+            <p className="text-sm font-semibold text-slate-900">{showOnlyUnread ? 'You are all caught up' : 'No mentions yet'}</p>
+            <p className="mt-1 max-w-sm text-sm text-slate-500">
+              {showOnlyUnread ? 'New mentions will appear here when a teammate needs your attention.' : 'Mentions from project and task conversations will appear here.'}
+            </p>
+            {showOnlyUnread && mentions.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setShowOnlyUnread(false)}
+                className="mt-4 text-xs font-semibold text-cyan-700 hover:text-cyan-900"
+              >
+                Show read mentions
+              </button>
+            ) : null}
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div className="divide-y divide-slate-200">
             {visibleMentions.map((item) => {
               const isUnread = !item.mention.read_at
               const isTaskMention = Boolean(item.mention.task_id)
@@ -232,32 +268,35 @@ export function MentionsPage() {
                     }
                   }}
                   aria-disabled={isOpening}
-                  className={`w-full flex flex-wrap items-start justify-between gap-3 p-4 text-left transition hover:bg-slate-50 ${
-                    isOpening ? 'opacity-50' : ''
+                  className={`group relative flex w-full flex-wrap items-start justify-between gap-3 px-4 py-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-600 ${
+                    isUnread ? 'bg-cyan-50/35 hover:bg-cyan-50/70' : 'hover:bg-slate-50'
+                  } ${isOpening ? 'pointer-events-none opacity-50' : ''
                   }`}
                 >
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                      <span className="font-semibold text-slate-700">{item.project?.name ?? 'Project'}</span>
-                      <span>•</span>
-                      <span>{isTaskMention ? 'Task comment' : 'Project chat'}</span>
-                      <span>•</span>
-                      <span>{formatTime(item.mention.created_at)}</span>
-                      {isUnread ? (
-                        <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700">Unread</span>
-                      ) : null}
-                    </div>
+                  {isUnread ? <span className="absolute inset-y-0 left-0 w-0.5 bg-cyan-600" aria-hidden="true" /> : null}
 
-                    {isTaskMention ? (
-                      <p className="mb-1 text-xs font-medium text-slate-600">
-                        Task: {item.taskTitle ?? 'Task was removed'}
+                  <div className="flex min-w-0 flex-1 gap-3">
+                    <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-md border ${isUnread ? 'border-cyan-200 bg-white text-cyan-700' : 'border-slate-200 bg-slate-50 text-slate-500'}`}>
+                      {isTaskMention ? <AtSign className="h-4 w-4" aria-hidden="true" /> : <MessageSquare className="h-4 w-4" aria-hidden="true" />}
+                    </span>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                        <span className={`font-semibold ${isUnread ? 'text-slate-900' : 'text-slate-700'}`}>{item.project?.name ?? 'Project'}</span>
+                        <span className="h-1 w-1 rounded-full bg-slate-300" aria-hidden="true" />
+                        <span>{isTaskMention ? item.taskTitle ?? 'Removed task' : 'Project conversation'}</span>
+                        <span className="h-1 w-1 rounded-full bg-slate-300" aria-hidden="true" />
+                        <time dateTime={item.mention.created_at}>{formatTime(item.mention.created_at)}</time>
+                        {isUnread ? <span className="sr-only">Unread</span> : null}
+                      </div>
+
+                      <p className={`line-clamp-3 text-sm leading-5 ${isUnread ? 'font-medium text-slate-900' : 'text-slate-700'}`}>
+                        {item.comment.message}
                       </p>
-                    ) : null}
-
-                    <p className="line-clamp-2 text-sm text-slate-800">{item.comment.message}</p>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="ml-12 flex items-center gap-1 sm:ml-0">
                     {isUnread ? (
                       <button
                         type="button"
@@ -265,18 +304,20 @@ export function MentionsPage() {
                           event.stopPropagation()
                           void markSingleMentionAsRead(item.mention.id)
                         }}
-                        className="rounded border border-slate-300 bg-white px-2.5 py-1 text-xs font-medium text-slate-700 hover:bg-slate-50"
+                        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 text-xs font-semibold text-slate-700 shadow-sm transition-colors hover:border-slate-400 hover:bg-slate-50"
                       >
+                        <Check className="h-3.5 w-3.5" aria-hidden="true" />
                         Mark read
                       </button>
                     ) : null}
+                    <ArrowUpRight className="h-4 w-4 text-slate-400 transition-colors group-hover:text-slate-700" aria-hidden="true" />
                   </div>
                 </div>
               )
             })}
           </div>
         )}
-      </div>
+      </section>
     </div>
   )
 }

@@ -46,6 +46,30 @@ describe('ChangePasswordPage', () => {
     expect(screen.getByLabelText('Confirm new password')).toBeTruthy()
   })
 
+  it('shows and hides each password independently', () => {
+    render(
+      <MemoryRouter>
+        <ChangePasswordPage user={user} />
+      </MemoryRouter>,
+    )
+
+    const currentPassword = screen.getByLabelText('Current password')
+    const newPassword = screen.getByLabelText('New password')
+    const confirmPassword = screen.getByLabelText('Confirm new password')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show current password' }))
+    expect(currentPassword).toHaveAttribute('type', 'text')
+    expect(newPassword).toHaveAttribute('type', 'password')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Show new password' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Show password confirmation' }))
+    expect(newPassword).toHaveAttribute('type', 'text')
+    expect(confirmPassword).toHaveAttribute('type', 'text')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hide current password' }))
+    expect(currentPassword).toHaveAttribute('type', 'password')
+  })
+
   it('verifies the current password, updates it, and returns to profile', async () => {
     render(
       <MemoryRouter initialEntries={['/app/profile/password']}>

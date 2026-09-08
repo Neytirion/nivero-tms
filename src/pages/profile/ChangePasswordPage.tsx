@@ -1,6 +1,6 @@
-import type { FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import type { User } from '@supabase/supabase-js'
-import { ArrowLeft, KeyRound } from 'lucide-react'
+import { ArrowLeft, Eye, EyeOff, KeyRound } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import { usePasswordChange } from '../../features/profile/hooks/usePasswordChange'
 import { useWorkspace } from '../../features/workspace/workspace-context'
@@ -12,6 +12,9 @@ interface ChangePasswordPageProps {
 export function ChangePasswordPage({ user }: ChangePasswordPageProps) {
   const navigate = useNavigate()
   const { setStatus } = useWorkspace()
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const {
     currentPassword,
     setCurrentPassword,
@@ -58,43 +61,73 @@ export function ChangePasswordPage({ user }: ChangePasswordPageProps) {
         <form className="mt-5 space-y-4" onSubmit={submitPasswordChange}>
           <label className="block space-y-1.5">
             <span className="text-sm font-medium text-slate-700">Current password</span>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)}
-              autoComplete="current-password"
-              required
-              disabled={isChangingPassword}
-              className="w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
-            />
+            <span className="relative block">
+              <input
+                type={showCurrentPassword ? 'text' : 'password'}
+                value={currentPassword}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+                autoComplete="current-password"
+                required
+                disabled={isChangingPassword}
+                className="w-full rounded-lg border py-2.5 pl-3 pr-11 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
+              />
+              <button
+                type="button"
+                aria-label={showCurrentPassword ? 'Hide current password' : 'Show current password'}
+                onClick={() => setShowCurrentPassword((isVisible) => !isVisible)}
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500 hover:text-slate-800"
+              >
+                {showCurrentPassword ? <EyeOff aria-hidden="true" className="h-4 w-4" /> : <Eye aria-hidden="true" className="h-4 w-4" />}
+              </button>
+            </span>
           </label>
 
           <label className="block space-y-1.5">
             <span className="text-sm font-medium text-slate-700">New password</span>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-              autoComplete="new-password"
-              minLength={6}
-              required
-              disabled={isChangingPassword}
-              className="w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
-            />
+            <span className="relative block">
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                autoComplete="new-password"
+                minLength={6}
+                required
+                disabled={isChangingPassword}
+                className="w-full rounded-lg border py-2.5 pl-3 pr-11 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
+              />
+              <button
+                type="button"
+                aria-label={showNewPassword ? 'Hide new password' : 'Show new password'}
+                onClick={() => setShowNewPassword((isVisible) => !isVisible)}
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500 hover:text-slate-800"
+              >
+                {showNewPassword ? <EyeOff aria-hidden="true" className="h-4 w-4" /> : <Eye aria-hidden="true" className="h-4 w-4" />}
+              </button>
+            </span>
           </label>
 
           <label className="block space-y-1.5">
             <span className="text-sm font-medium text-slate-700">Confirm new password</span>
-            <input
-              type="password"
-              value={confirmNewPassword}
-              onChange={(event) => setConfirmNewPassword(event.target.value)}
-              autoComplete="new-password"
-              minLength={6}
-              required
-              disabled={isChangingPassword}
-              className="w-full rounded-lg border px-3 py-2.5 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
-            />
+            <span className="relative block">
+              <input
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={confirmNewPassword}
+                onChange={(event) => setConfirmNewPassword(event.target.value)}
+                autoComplete="new-password"
+                minLength={6}
+                required
+                disabled={isChangingPassword}
+                className="w-full rounded-lg border py-2.5 pl-3 pr-11 text-sm text-slate-900 outline-none focus:ring-2 focus:ring-cyan-100 disabled:cursor-not-allowed"
+              />
+              <button
+                type="button"
+                aria-label={showConfirmPassword ? 'Hide password confirmation' : 'Show password confirmation'}
+                onClick={() => setShowConfirmPassword((isVisible) => !isVisible)}
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500 hover:text-slate-800"
+              >
+                {showConfirmPassword ? <EyeOff aria-hidden="true" className="h-4 w-4" /> : <Eye aria-hidden="true" className="h-4 w-4" />}
+              </button>
+            </span>
           </label>
 
           <div className="flex flex-wrap justify-end gap-2 border-t border-slate-200 pt-4">

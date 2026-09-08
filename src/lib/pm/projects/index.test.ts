@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mocks = vi.hoisted(() => ({
   from: vi.fn(),
+  rpc: vi.fn(),
   getUser: vi.fn(),
   assertProjectEditable: vi.fn(),
 }))
@@ -12,6 +13,7 @@ vi.mock('../../supabase', () => ({
       getUser: mocks.getUser,
     },
     from: mocks.from,
+    rpc: mocks.rpc,
   },
 }))
 
@@ -30,10 +32,12 @@ import {
 describe('pm.projects', () => {
   beforeEach(() => {
     mocks.from.mockReset()
+    mocks.rpc.mockReset()
     mocks.getUser.mockReset()
     mocks.assertProjectEditable.mockReset()
 
     mocks.getUser.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
+    mocks.rpc.mockResolvedValue({ error: null })
     mocks.assertProjectEditable.mockResolvedValue(undefined)
   })
 
@@ -44,6 +48,7 @@ describe('pm.projects', () => {
     mocks.from.mockReturnValue({ select })
 
     await expect(getMyProjects()).resolves.toEqual([{ id: 'p1', name: 'Apollo' }])
+    expect(mocks.rpc).toHaveBeenCalledWith('refresh_my_project_health')
   })
 
   it('rejects project creation when dates are invalid', async () => {

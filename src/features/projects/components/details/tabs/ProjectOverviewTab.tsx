@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { getProjectMemberDisplayRoles, type ProjectMemberListItem, type ProjectPreview, type TaskPreview, type EstimateWithPackages } from '../../../../../lib/pm'
 import { UserProfileDialog, type UserProfilePreview } from '../../../../../shared/components'
 import { downloadClientBrief, type ClientBriefExportFormat } from '../../../utils/client-brief'
-import { deriveProgress, deriveRisk, formatDate } from '../../../utils/project-metrics'
+import { deriveProjectHealth, formatDate } from '../../../utils/project-metrics'
 
 function parseIsoDateToUtcTime(value: string): number | null {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
@@ -35,22 +35,20 @@ function getDurationDays(startDate: string | null, endDate: string | null): numb
 }
 
 function getEstimateBudget(estimates: EstimateWithPackages[]): { budget: number; pricePerHour: number | null; estimatedHours: number } | null {
-  if (estimates.length === 0) {
-    return null
-  }
-
-  // Get the latest estimate (first in sorted array - by version_number desc)
-  const latestEstimate = estimates[0]
+  const approvedEstimate = estimates.find((estimate) => estimate.status === 'approved')
   
-  if (!latestEstimate || !latestEstimate.price_per_hour) {
+  if (!approvedEstimate?.price_per_hour) {
     return null
   }
 
-  const totalHours = latestEstimate.work_packages.reduce((sum, pkg) => sum + (pkg.estimated_hours ?? 0), 0)
+  const totalHours = approvedEstimate.work_packages.reduce(
+    (sum, pkg) => sum + (pkg.is_active ? (pkg.estimated_hours ?? 0) : 0),
+    0,
+  )
   
   return {
-    budget: latestEstimate.price_per_hour * totalHours,
-    pricePerHour: latestEstimate.price_per_hour,
+    budget: approvedEstimate.price_per_hour * totalHours,
+    pricePerHour: approvedEstimate.price_per_hour,
     estimatedHours: totalHours,
   }
 }
@@ -79,6 +77,15 @@ export function ProjectOverviewTab({
   const [selectedProfile, setSelectedProfile] = useState<UserProfilePreview | null>(null)
   const [memberDisplayRoleByUserId, setMemberDisplayRoleByUserId] = useState<Record<string, string>>({})
   const durationDays = getDurationDays(selectedProject.start_date, selectedProject.end_date)
+  const health = deriveProjectHealth(selectedProject)
+  const riskClassName =
+    health.risk === 'Red'
+      ? 'text-rose-600'
+      : health.risk === 'Amber'
+        ? 'text-amber-500'
+        : health.risk === 'Unknown'
+          ? 'text-slate-500'
+          : 'text-emerald-600'
 
   useEffect(() => {
     let isMounted = true
@@ -132,11 +139,11 @@ export function ProjectOverviewTab({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Progress</p>
-          <p className="mt-1 text-3xl font-bold text-slate-900">{deriveProgress(selectedProject)}<span className="text-lg text-slate-400">%</span></p>
+          <p className="mt-1 text-3xl font-bold text-slate-900">{health.progressPercent}<span className="text-lg text-slate-400">%</span></p>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
             <div
               className="h-full rounded-full bg-emerald-500 transition-all"
-              style={{ width: `${deriveProgress(selectedProject)}%` }}
+              style={{ width: `${health.progressPercent}%` }}
             />
           </div>
         </div>
@@ -158,13 +165,54 @@ export function ProjectOverviewTab({
         </div>
         <div className="rounded-xl border border-slate-200 bg-white p-4">
           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Risk</p>
-          <p className={`mt-1 text-2xl font-bold capitalize ${
-            deriveRisk(selectedProject) === 'Red' ? 'text-rose-600' :
-            deriveRisk(selectedProject) === 'Amber' ? 'text-amber-500' : 'text-emerald-600'
-          }`}>{deriveRisk(selectedProject)}</p>
+          <p className={`mt-1 text-2xl font-bold capitalize ${riskClassName}`}>{health.risk}</p>
           <p className="mt-2 text-xs text-slate-500">{selectedProject.status ?? 'active'}</p>
         </div>
       </div>
+
+      <section className="rounded-xl border border-slate-200 bg-white p-4">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900">Delivery health</h3>
+            <p className="mt-1 text-xs text-slate-500">Measured against the approved estimate baseline</p>
+          </div>
+          <span className={`text-sm font-semibold ${riskClassName}`}>{health.risk}</span>
+        </div>
+
+        {health.baselineHours == null ? (
+          <p className="mt-4 text-sm text-slate-500">Approve an estimate or set planned hours to establish a baseline.</p>
+        ) : (
+          <>
+            <dl className="mt-4 grid grid-cols-2 gap-x-5 gap-y-4 sm:grid-cols-5">
+              <div>
+                <dt className="text-xs text-slate-500">Baseline</dt>
+                <dd className="mt-1 text-lg font-semibold text-slate-900">{health.baselineHours.toFixed(1)}h</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">Hours used</dt>
+                <dd className="mt-1 text-lg font-semibold text-slate-900">{health.hoursConsumedPercent?.toFixed(1) ?? '—'}%</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">Hours variance</dt>
+                <dd className={`mt-1 text-lg font-semibold ${(health.hoursVariancePercent ?? 0) > 10 ? riskClassName : 'text-slate-900'}`}>
+                  {health.hoursVariancePercent == null ? '—' : `${health.hoursVariancePercent > 0 ? '+' : ''}${health.hoursVariancePercent.toFixed(1)} pp`}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">Expected progress</dt>
+                <dd className="mt-1 text-lg font-semibold text-slate-900">{health.expectedProgressPercent?.toFixed(1) ?? '—'}%</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-slate-500">Forecast at completion</dt>
+                <dd className="mt-1 text-lg font-semibold text-slate-900">{health.forecastAtCompletionPercent?.toFixed(1) ?? '—'}%</dd>
+              </div>
+            </dl>
+            <p className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
+              {health.riskReason ?? 'No risk explanation is available.'}
+            </p>
+          </>
+        )}
+      </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4">
         <h3 className="text-sm font-semibold text-slate-900">Description</h3>
@@ -189,7 +237,7 @@ export function ProjectOverviewTab({
               return [
                 { label: 'Customer', value: selectedProject.customer_name ?? 'Not set' },
                 { label: 'Manager', value: projectManagerName ?? (selectedProject.project_manager_id ? 'Assigned' : 'Not set') },
-                { label: 'Budget', value: budgetValue },
+                { label: 'Commercial budget', value: budgetValue },
                 { label: 'Created', value: formatDate(selectedProject.created_at) },
               ]
             })().map(({ label, value }) => (

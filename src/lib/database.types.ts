@@ -22,9 +22,15 @@ export interface Database {
           end_date: string | null
           estimated_hours: number | null
           actual_hours: number | null
+          baseline_hours: number | null
+          hours_consumed_percent: number | null
+          expected_progress_percent: number | null
+          hours_variance_percent: number | null
+          forecast_at_completion_percent: number | null
           progress_percent: number | null
           budget_amount: number | null
           risk_status: string | null
+          risk_reason: string | null
           status: string | null
           completed_at: string | null
           deadline_at: string | null
@@ -44,9 +50,15 @@ export interface Database {
           end_date?: string | null
           estimated_hours?: number | null
           actual_hours?: number | null
+          baseline_hours?: number | null
+          hours_consumed_percent?: number | null
+          expected_progress_percent?: number | null
+          hours_variance_percent?: number | null
+          forecast_at_completion_percent?: number | null
           progress_percent?: number | null
           budget_amount?: number | null
           risk_status?: string | null
+          risk_reason?: string | null
           status?: string | null
           completed_at?: string | null
           deadline_at?: string | null
@@ -66,9 +78,15 @@ export interface Database {
           end_date?: string | null
           estimated_hours?: number | null
           actual_hours?: number | null
+          baseline_hours?: number | null
+          hours_consumed_percent?: number | null
+          expected_progress_percent?: number | null
+          hours_variance_percent?: number | null
+          forecast_at_completion_percent?: number | null
           progress_percent?: number | null
           budget_amount?: number | null
           risk_status?: string | null
+          risk_reason?: string | null
           status?: string | null
           completed_at?: string | null
           deadline_at?: string | null
@@ -875,6 +893,10 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      refresh_my_project_health: {
+        Args: Record<PropertyKey, never>
+        Returns: void
+      }
       get_user_profile_by_email: {
         Args: {
           p_email: string

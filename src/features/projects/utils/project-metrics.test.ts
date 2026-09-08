@@ -2,6 +2,7 @@ import { describe, expect, it, beforeEach, vi } from 'vitest'
 import {
   deriveBudgetConsumption,
   deriveForecastCompletionDate,
+  deriveProjectHealth,
   deriveProgress,
   deriveRisk,
   deriveRiskFromProgressAndHours,
@@ -57,6 +58,19 @@ describe('project-metrics', () => {
   })
 
   describe('deriveRisk', () => {
+    it('preserves unknown risk when no baseline is available', () => {
+      expect(
+        deriveRisk({
+          risk_status: 'unknown',
+          progress_percent: 0,
+          estimated_hours: 0,
+          actual_hours: 0,
+          start_date: null,
+          end_date: null,
+        }),
+      ).toBe('Unknown')
+    })
+
     it('normalizes explicit red risk', () => {
       expect(
         deriveRisk({
@@ -120,6 +134,47 @@ describe('project-metrics', () => {
           end_date: null,
         }),
       ).toBe('Green')
+    })
+  })
+
+  describe('deriveProjectHealth', () => {
+    it('exposes persisted baseline, variance, forecast, and reason', () => {
+      const health = deriveProjectHealth({
+        id: 'project-1',
+        name: 'Project',
+        description: null,
+        client_intake_token: 'token',
+        owner_id: 'owner-1',
+        customer_name: null,
+        project_manager_id: null,
+        start_date: '2026-06-01',
+        end_date: '2026-06-30',
+        estimated_hours: 100,
+        actual_hours: 90,
+        baseline_hours: 100,
+        hours_consumed_percent: 90,
+        expected_progress_percent: 75,
+        hours_variance_percent: 20,
+        forecast_at_completion_percent: 128.6,
+        budget_amount: null,
+        progress_percent: 70,
+        risk_status: 'yellow',
+        risk_reason: 'Hours consumed are 20 percentage points ahead of delivery progress',
+        status: 'active',
+        completed_at: null,
+        deadline_at: null,
+        use_estimates: true,
+        created_at: '2026-06-01T00:00:00Z',
+        updated_at: '2026-06-01T00:00:00Z',
+      })
+
+      expect(health).toMatchObject({
+        progressPercent: 70,
+        hoursConsumedPercent: 90,
+        hoursVariancePercent: 20,
+        forecastAtCompletionPercent: 128.6,
+        risk: 'Amber',
+      })
     })
   })
 

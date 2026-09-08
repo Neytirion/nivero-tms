@@ -5,7 +5,7 @@ import { isTaskClosedStatus } from '../../../shared/utils/task-status.ts'
 import { authRequired, databaseError, notFound, permissionDenied, validationError } from '../../errors'
 
 const PROJECT_FIELDS =
-  'id,name,description,client_intake_token,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,budget_amount,progress_percent,risk_status,status,completed_at,deadline_at,use_estimates,created_at,updated_at'
+  'id,name,description,client_intake_token,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,baseline_hours,hours_consumed_percent,expected_progress_percent,hours_variance_percent,forecast_at_completion_percent,budget_amount,progress_percent,risk_status,risk_reason,status,completed_at,deadline_at,use_estimates,created_at,updated_at'
 
 const TASK_FIELDS =
   'id,work_package_id,title,description,status,priority,assigned_to,created_by,estimate_hours,actual_hours,blocked_by_task_id,due_date,project_id,created_at,work_package:work_packages(name,color)'
@@ -13,6 +13,12 @@ const TASK_FIELDS =
 export const TASKS_PAGE_SIZE = 100
 
 export async function getMyProjects() {
+  const { error: refreshError } = await supabase.rpc('refresh_my_project_health')
+
+  if (refreshError) {
+    throw databaseError(refreshError.message, refreshError)
+  }
+
   const { data, error } = await supabase
     .from('projects')
     .select(PROJECT_FIELDS)

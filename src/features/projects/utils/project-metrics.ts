@@ -169,6 +169,9 @@ export function deriveRiskFromProgressAndHours(input: {
 export function deriveRisk(project: Pick<ProjectPreview, 'risk_status' | 'progress_percent' | 'estimated_hours' | 'actual_hours' | 'start_date' | 'end_date'>) {
   if (project.risk_status) {
     const normalized = project.risk_status.toLowerCase()
+    if (normalized.includes('unknown')) {
+      return 'Unknown'
+    }
     if (normalized.includes('red')) {
       return 'Red'
     }
@@ -185,6 +188,22 @@ export function deriveRisk(project: Pick<ProjectPreview, 'risk_status' | 'progre
     startDate: project.start_date,
     endDate: project.end_date,
   })
+}
+
+export function deriveProjectHealth(project: ProjectPreview) {
+  const progressPercent = deriveProgress(project)
+
+  return {
+    progressPercent,
+    baselineHours: project.baseline_hours,
+    actualHours: project.actual_hours ?? 0,
+    hoursConsumedPercent: project.hours_consumed_percent,
+    expectedProgressPercent: project.expected_progress_percent,
+    hoursVariancePercent: project.hours_variance_percent,
+    forecastAtCompletionPercent: project.forecast_at_completion_percent,
+    risk: deriveRisk(project),
+    riskReason: project.risk_reason,
+  }
 }
 
 export function formatDate(value: string | null | undefined) {

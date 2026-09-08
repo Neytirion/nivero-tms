@@ -54,8 +54,6 @@ export function useDashboardPreview() {
   const auth = useWorkspaceAuth()
 
   const {
-    applyProjectMetricsFromTasks,
-    hydrateProjectsWithTaskMetrics,
     reloadProjectsOnly,
   } = createProjectSyncActions({ setProjects })
 
@@ -110,9 +108,9 @@ export function useDashboardPreview() {
    * metrics (progress_percent, actual_hours, risk_status) in sync.
    */
   const refreshAfterTaskChange = async (projectId: string, tasks: TaskPreview[]) => {
-    applyProjectMetricsFromTasks(projectId, tasks)
+    void projectId
+    void tasks
     await reloadProjectsOnly()
-    applyProjectMetricsFromTasks(projectId, tasks)
   }
 
   const loadDashboardPreview = async () => {
@@ -126,10 +124,9 @@ export function useDashboardPreview() {
       }
 
       const nextProjects = await getMyProjects()
-      const nextProjectsWithMetrics = await hydrateProjectsWithTaskMetrics(nextProjects)
-      setProjects(nextProjectsWithMetrics)
+      setProjects(nextProjects)
 
-      if (nextProjectsWithMetrics.length === 0) {
+      if (nextProjects.length === 0) {
         setSelectedProjectId(null)
         setStatus('No projects found. Create your first project in the database.')
         setIsLoading(false)
@@ -137,12 +134,12 @@ export function useDashboardPreview() {
       }
 
       const targetProjectId =
-        selectedProjectId && nextProjectsWithMetrics.some((project) => project.id === selectedProjectId)
+        selectedProjectId && nextProjects.some((project) => project.id === selectedProjectId)
           ? selectedProjectId
-          : nextProjectsWithMetrics[0].id
+          : nextProjects[0].id
 
       setSelectedProjectId(targetProjectId)
-      setStatus(`Loaded ${nextProjectsWithMetrics.length} project(s)`)
+      setStatus(`Loaded ${nextProjects.length} project(s)`)
     } catch (error) {
       setStatus(error instanceof Error ? `Error: ${error.message}` : 'Unknown error')
       setProjects([])

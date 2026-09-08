@@ -33,7 +33,7 @@ export function TaskBoardView({
   taskCardFieldPreferences,
 }: TaskBoardViewProps) {
   return (
-    <div className="grid gap-4 xl:grid-cols-5">
+    <div className="grid grid-flow-col auto-cols-[minmax(16rem,1fr)] gap-4 overflow-x-auto pb-2 2xl:grid-flow-row 2xl:grid-cols-5 2xl:auto-cols-auto">
         {KANBAN_COLUMNS.map((column) => {
           const columnTasks = sortTasksForBoardColumn(
             tasks.filter((task) => normalizeTaskStatus(task.status) === column.key),

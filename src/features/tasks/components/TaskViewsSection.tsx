@@ -109,8 +109,8 @@ export function TaskViewsSection({
       </div>
 
       {shouldDeferTaskViews ? (
-        <div className="grid gap-4 xl:grid-cols-6" aria-live="polite" aria-busy="true">
-          <div className="min-w-0 space-y-3 xl:col-span-5">
+        <div className="grid gap-4 2xl:grid-cols-6" aria-live="polite" aria-busy="true">
+          <div className="min-w-0 space-y-3 2xl:col-span-5">
             {[0, 1, 2].map((row) => (
               <div key={row} className="animate-pulse rounded-xl border border-slate-200 bg-white p-3">
                 <div className="h-4 w-1/3 rounded bg-slate-200" />
@@ -119,7 +119,7 @@ export function TaskViewsSection({
               </div>
             ))}
           </div>
-          <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3 xl:col-span-1">
+          <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3 2xl:col-span-1">
             <div className="animate-pulse space-y-2">
               <div className="h-4 w-2/3 rounded bg-cyan-100" />
               <div className="h-16 rounded-lg border border-cyan-200 bg-white" />
@@ -127,8 +127,8 @@ export function TaskViewsSection({
           </aside>
         </div>
       ) : taskViewMode === 'board' ? (
-        <div className="grid gap-4 xl:grid-cols-6">
-          <div className="min-w-0 xl:col-span-5">
+        <div className="grid gap-4 2xl:grid-cols-6">
+          <div className="min-w-0 2xl:col-span-5">
             <TaskBoardView
               tasks={assignedTasks}
               assigneeLabelByUserId={assigneeLabelByUserId}
@@ -145,7 +145,7 @@ export function TaskViewsSection({
             />
           </div>
 
-          <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3 xl:col-span-1">
+          <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3 2xl:col-span-1">
             <div className="mb-2">
               <h4 className="text-sm font-semibold text-cyan-900">Unassigned Tasks ({sharedQueueTasksViewModel.length})</h4>
             </div>

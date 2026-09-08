@@ -51,4 +51,30 @@ describe('ProjectOverviewTab delivery health explanations', () => {
     fireEvent.keyDown(document, { key: 'Escape' })
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
+
+  it('shows progress, duration, estimated, and actual in delivery health', () => {
+    render(
+      <ProjectOverviewTab
+        selectedProject={createProjectPreview({
+          start_date: '2026-09-01',
+          end_date: '2026-09-10',
+          baseline_hours: 100,
+          actual_hours: 38,
+          progress_percent: 40,
+          risk_status: 'green',
+        })}
+        tasks={[]}
+        teamMemberNames={[]}
+        projectMembers={[]}
+        currentUserProfile={null}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Explain Progress' })).toHaveTextContent('40.0%')
+    expect(screen.getByRole('button', { name: 'Explain Duration' })).toHaveTextContent('10d')
+    expect(screen.getByRole('button', { name: 'Explain Duration' })).toHaveTextContent('9/1/2026 → 9/10/2026')
+    expect(screen.getByRole('button', { name: 'Explain Estimated' })).toHaveTextContent('100.0h')
+    expect(screen.getByRole('button', { name: 'Explain Actual' })).toHaveTextContent('38.0h')
+    expect(screen.queryByText('Baseline')).not.toBeInTheDocument()
+  })
 })

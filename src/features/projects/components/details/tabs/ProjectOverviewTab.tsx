@@ -74,11 +74,13 @@ interface HealthMetricExplanation {
 function HealthMetricButton({
   label,
   value,
+  detail,
   valueClassName = 'text-slate-900',
   onClick,
 }: {
   label: string
   value: string
+  detail?: string
   valueClassName?: string
   onClick: () => void
 }) {
@@ -95,6 +97,7 @@ function HealthMetricButton({
         <Info aria-hidden="true" className="h-3.5 w-3.5 text-slate-400 group-hover:text-cyan-700" />
       </span>
       <span className={`mt-1 block text-lg font-semibold ${valueClassName}`}>{value}</span>
+      {detail ? <span className="mt-1 block text-xs text-slate-500">{detail}</span> : null}
     </button>
   )
 }
@@ -125,13 +128,35 @@ export function ProjectOverviewTab({
           : 'text-emerald-600'
 
   const healthMetricExplanations = {
-    baseline: {
-      title: 'Baseline',
+    progress: {
+      title: 'Progress',
+      description: 'The share of project scope completed so far.',
+      formula: selectedProject.use_estimates
+        ? 'Completed task estimate hours / Approved estimated hours × 100'
+        : 'Completed tasks / Total tasks × 100',
+      interpretation: `${health.progressPercent.toFixed(1)}% of the project scope is complete.`,
+    },
+    duration: {
+      title: 'Duration',
+      description: 'The inclusive calendar duration between the project start and end dates.',
+      formula: 'End date − Start date + 1 day',
+      interpretation: durationDays == null
+        ? 'Set valid project start and end dates to calculate duration.'
+        : `The planned project duration is ${durationDays} day${durationDays === 1 ? '' : 's'}.`,
+    },
+    estimated: {
+      title: 'Estimated',
       description: 'The total planned effort in the approved estimate. Draft estimate changes do not affect this value.',
       formula: 'Sum of estimated hours in active work packages',
       interpretation: health.baselineHours == null
-        ? 'This project does not have an approved baseline yet.'
+        ? 'This project does not have approved estimated hours yet.'
         : `The approved scope contains ${health.baselineHours.toFixed(1)} planned hours.`,
+    },
+    actual: {
+      title: 'Actual',
+      description: 'The total time recorded against this project so far.',
+      formula: 'Sum of project time entries',
+      interpretation: `${(selectedProject.actual_hours ?? 0).toFixed(1)} hours have been recorded.`,
     },
     hoursUsed: {
       title: 'Hours used',
@@ -242,46 +267,11 @@ export function ProjectOverviewTab({
 
   return (
     <div className="mt-4 grid gap-4">
-      {/* Hero stats row */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Progress</p>
-          <p className="mt-1 text-3xl font-bold text-slate-900">{health.progressPercent}<span className="text-lg text-slate-400">%</span></p>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
-            <div
-              className="h-full rounded-full bg-emerald-500 transition-all"
-              style={{ width: `${health.progressPercent}%` }}
-            />
-          </div>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Estimated</p>
-          <p className="mt-1 text-3xl font-bold text-slate-900">
-            {selectedProject.estimated_hours != null ? selectedProject.estimated_hours.toFixed(0) : '—'}
-            {selectedProject.estimated_hours != null ? <span className="ml-1 text-lg text-slate-400">h</span> : null}
-          </p>
-          <p className="mt-2 text-xs text-slate-500">Actual: {(selectedProject.actual_hours ?? 0).toFixed(1)}h</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Duration</p>
-          <p className="mt-1 text-3xl font-bold text-slate-900">
-            {durationDays !== null ? durationDays : '—'}
-            {durationDays !== null && <span className="ml-1 text-lg text-slate-400">d</span>}
-          </p>
-          <p className="mt-2 text-xs text-slate-500">{formatDate(selectedProject.start_date)} → {formatDate(selectedProject.end_date)}</p>
-        </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-400">Risk</p>
-          <p className={`mt-1 text-2xl font-bold capitalize ${riskClassName}`}>{health.risk}</p>
-          <p className="mt-2 text-xs text-slate-500">{selectedProject.status ?? 'active'}</p>
-        </div>
-      </div>
-
       <section className="rounded-xl border border-slate-200 bg-white p-4">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div>
             <h3 className="text-sm font-semibold text-slate-900">Delivery health</h3>
-            <p className="mt-1 text-xs text-slate-500">Measured against the approved estimate baseline</p>
+            <p className="mt-1 text-xs text-slate-500">Delivery progress compared with approved estimated hours</p>
           </div>
           <button
             type="button"
@@ -295,16 +285,28 @@ export function ProjectOverviewTab({
           </button>
         </div>
 
-        {health.baselineHours == null ? (
-          <p className="mt-4 text-sm text-slate-500">Approve an estimate or set planned hours to establish a baseline.</p>
-        ) : (
-          <>
-            <div className="mt-4 grid grid-cols-2 gap-x-1 gap-y-2 sm:grid-cols-5">
-              <HealthMetricButton
-                label="Baseline"
-                value={`${health.baselineHours.toFixed(1)}h`}
-                onClick={() => setSelectedHealthMetric(healthMetricExplanations.baseline)}
-              />
+        <div className="mt-4 grid grid-cols-2 gap-x-1 gap-y-2 sm:grid-cols-4 xl:grid-cols-8">
+          <HealthMetricButton
+            label="Progress"
+            value={`${health.progressPercent.toFixed(1)}%`}
+            onClick={() => setSelectedHealthMetric(healthMetricExplanations.progress)}
+          />
+          <HealthMetricButton
+            label="Duration"
+            value={durationDays == null ? '—' : `${durationDays}d`}
+            detail={`${formatDate(selectedProject.start_date)} → ${formatDate(selectedProject.end_date)}`}
+            onClick={() => setSelectedHealthMetric(healthMetricExplanations.duration)}
+          />
+          <HealthMetricButton
+            label="Estimated"
+            value={health.baselineHours == null ? '—' : `${health.baselineHours.toFixed(1)}h`}
+            onClick={() => setSelectedHealthMetric(healthMetricExplanations.estimated)}
+          />
+          <HealthMetricButton
+            label="Actual"
+            value={`${(selectedProject.actual_hours ?? 0).toFixed(1)}h`}
+            onClick={() => setSelectedHealthMetric(healthMetricExplanations.actual)}
+          />
               <HealthMetricButton
                 label="Hours used"
                 value={health.hoursConsumedPercent == null ? '—' : `${health.hoursConsumedPercent.toFixed(1)}%`}
@@ -326,12 +328,10 @@ export function ProjectOverviewTab({
                 value={health.forecastAtCompletionPercent == null ? '—' : `${health.forecastAtCompletionPercent.toFixed(1)}%`}
                 onClick={() => setSelectedHealthMetric(healthMetricExplanations.forecast)}
               />
-            </div>
-            <p className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
-              {health.riskReason ?? 'No risk explanation is available.'}
-            </p>
-          </>
-        )}
+        </div>
+        <p className="mt-4 border-t border-slate-100 pt-3 text-sm text-slate-600">
+          {health.riskReason ?? 'No risk explanation is available.'}
+        </p>
       </section>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4">

@@ -118,6 +118,9 @@ export function ProjectOverviewTab({
   const [memberDisplayRoleByUserId, setMemberDisplayRoleByUserId] = useState<Record<string, string>>({})
   const durationDays = getDurationDays(selectedProject.start_date, selectedProject.end_date)
   const health = deriveProjectHealth(selectedProject)
+  const forecastHours = health.baselineHours != null && health.forecastAtCompletionPercent != null
+    ? health.baselineHours * health.forecastAtCompletionPercent / 100
+    : null
   const riskClassName =
     health.risk === 'Red'
       ? 'text-rose-600'
@@ -193,8 +196,8 @@ export function ProjectOverviewTab({
       interpretation: health.forecastAtCompletionPercent == null
         ? 'The forecast appears after the project reaches 10% progress.'
         : health.forecastAtCompletionPercent > 100
-          ? `The project is forecast to use ${health.forecastAtCompletionPercent.toFixed(1)}% of baseline hours.`
-          : `The project is forecast to finish within ${health.forecastAtCompletionPercent.toFixed(1)}% of baseline hours.`,
+          ? `The project is forecast to use ${health.forecastAtCompletionPercent.toFixed(1)}% of estimated hours${forecastHours == null ? '.' : `, or ${forecastHours.toFixed(1)} hours.`}`
+          : `The project is forecast to finish within ${health.forecastAtCompletionPercent.toFixed(1)}% of estimated hours${forecastHours == null ? '.' : `, or ${forecastHours.toFixed(1)} hours.`}`,
     },
     risk: {
       title: 'Risk status',
@@ -340,7 +343,9 @@ export function ProjectOverviewTab({
             <div className="mt-1">
               <HealthMetricButton
                 label="Forecast at completion"
-                value={health.forecastAtCompletionPercent == null ? '—' : `${health.forecastAtCompletionPercent.toFixed(1)}%`}
+                value={health.forecastAtCompletionPercent == null
+                  ? '—'
+                  : `${health.forecastAtCompletionPercent.toFixed(1)}%${forecastHours == null ? '' : ` · ${forecastHours.toFixed(1)}h`}`}
                 onClick={() => setSelectedHealthMetric(healthMetricExplanations.forecast)}
               />
             </div>

@@ -61,6 +61,7 @@ describe('ProjectOverviewTab delivery health explanations', () => {
           baseline_hours: 100,
           actual_hours: 38,
           progress_percent: 40,
+          forecast_at_completion_percent: 110,
           risk_status: 'green',
         })}
         tasks={[]}
@@ -75,6 +76,7 @@ describe('ProjectOverviewTab delivery health explanations', () => {
     expect(screen.getByRole('button', { name: 'Explain Duration' })).toHaveTextContent('9/1/2026 → 9/10/2026')
     expect(screen.getByRole('button', { name: 'Explain Estimated' })).toHaveTextContent('100.0h')
     expect(screen.getByRole('button', { name: 'Explain Actual' })).toHaveTextContent('38.0h')
+    expect(screen.getByRole('button', { name: 'Explain Forecast at completion' })).toHaveTextContent('110.0% · 110.0h')
     expect(screen.getByRole('heading', { name: 'Schedule' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Effort' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Outlook' })).toBeInTheDocument()

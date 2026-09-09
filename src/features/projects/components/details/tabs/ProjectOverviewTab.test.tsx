@@ -82,4 +82,28 @@ describe('ProjectOverviewTab delivery health explanations', () => {
     expect(screen.getByRole('heading', { name: 'Outlook' })).toBeInTheDocument()
     expect(screen.queryByText('Baseline')).not.toBeInTheDocument()
   })
+
+  it.each([
+    [-5, 'Good'],
+    [5, 'Normal'],
+    [15, 'Bad'],
+  ])('shows %s status for %s hours variance', (variance, status) => {
+    render(
+      <ProjectOverviewTab
+        selectedProject={createProjectPreview({
+          baseline_hours: 100,
+          actual_hours: 50,
+          progress_percent: 50,
+          hours_consumed_percent: 50,
+          hours_variance_percent: variance,
+        })}
+        tasks={[]}
+        teamMemberNames={[]}
+        projectMembers={[]}
+        currentUserProfile={null}
+      />,
+    )
+
+    expect(screen.getByRole('button', { name: 'Explain Hours variance' })).toHaveTextContent(status)
+  })
 })

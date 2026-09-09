@@ -118,6 +118,13 @@ export function ProjectOverviewTab({
   const [memberDisplayRoleByUserId, setMemberDisplayRoleByUserId] = useState<Record<string, string>>({})
   const durationDays = getDurationDays(selectedProject.start_date, selectedProject.end_date)
   const health = deriveProjectHealth(selectedProject)
+  const hoursVarianceStatus = health.hoursVariancePercent == null
+    ? null
+    : health.hoursVariancePercent <= 0
+      ? { label: 'Good', className: 'text-emerald-700' }
+      : health.hoursVariancePercent <= 10
+        ? { label: 'Normal', className: 'text-amber-600' }
+        : { label: 'Bad', className: 'text-rose-600' }
   const forecastHours = health.baselineHours != null && health.forecastAtCompletionPercent != null
     ? health.baselineHours * health.forecastAtCompletionPercent / 100
     : null
@@ -332,7 +339,8 @@ export function ProjectOverviewTab({
               <HealthMetricButton
                 label="Hours variance"
                 value={health.hoursVariancePercent == null ? '—' : `${health.hoursVariancePercent > 0 ? '+' : ''}${health.hoursVariancePercent.toFixed(1)} pp`}
-                valueClassName={(health.hoursVariancePercent ?? 0) > 10 ? riskClassName : 'text-slate-900'}
+                detail={hoursVarianceStatus?.label}
+                valueClassName={hoursVarianceStatus?.className ?? 'text-slate-900'}
                 onClick={() => setSelectedHealthMetric(healthMetricExplanations.variance)}
               />
             </div>

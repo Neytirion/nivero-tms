@@ -1,4 +1,4 @@
-export type ProjectWizardStep = 'choice' | 'basic' | 'dates' | 'details' | 'estimates' | 'team' | 'review'
+export type ProjectWizardStep = 'basic' | 'dates' | 'details' | 'estimates' | 'team' | 'review'
 
 export type WorkPackageRow = {
   name: string

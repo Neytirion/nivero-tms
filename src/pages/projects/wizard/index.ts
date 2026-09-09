@@ -1,7 +1,6 @@
 export { ProjectCreationWizard } from './ProjectCreationWizard'
 export { WizardHeader } from './WizardHeader'
 export { WizardNavigation } from './WizardNavigation'
-export { CreationModeChoice } from './CreationModeChoice'
 export { BasicInfoStep } from './BasicInfoStep'
 export { DateRangeStep } from './DateRangeStep'
 export { DetailsStep } from './DetailsStep'

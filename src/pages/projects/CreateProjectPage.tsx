@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AiProjectGeneratorModal } from '../../features/projects/ai'
 import { WorkspacePageHeader } from '../../shared/components'
 import { useWorkspace } from '../../features/workspace/workspace-context.tsx'
-import type { AiProjectDraft } from '../../lib/ai'
 import { createInitialEstimateVersion } from '../../lib/pm/estimates'
 import { inviteProjectMemberByEmail } from '../../lib/pm/members'
 import { formatProjectInviteNotification, notifySlackPilot } from '../../lib/slack-notifications'
@@ -21,7 +19,6 @@ export function CreateProjectPage() {
     reloadProjectData,
   } = useWorkspace()
   const [isLoading, setIsLoading] = useState(false)
-  const [showAIMode, setShowAIMode] = useState(false)
 
   const customerSuggestions = useMemo(
     () =>
@@ -142,57 +139,6 @@ export function CreateProjectPage() {
     }
   }
 
-  const handleSelectAI = () => {
-    setShowAIMode(true)
-  }
-
-  const handleCreateFromAiDraft = async (draft: AiProjectDraft) => {
-    setIsLoading(true)
-    try {
-      const projectId = await addProject({
-        name: draft.project.name,
-        description: draft.project.description || undefined,
-        customerName: draft.project.customer_name || undefined,
-        startDate: draft.project.start_date || undefined,
-        endDate: draft.project.end_date || undefined,
-        useEstimates: true,
-      })
-      if (projectId) {
-        navigate(`/app/projects/${projectId}`)
-      } else {
-        navigate('/app/projects')
-      }
-    } catch (error) {
-      setStatus(
-        error instanceof Error
-          ? `Project creation error: ${error.message}`
-          : 'Project creation error',
-      )
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  if (showAIMode) {
-    return (
-      <div className="min-h-screen bg-slate-50 py-8 px-4">
-        <div className="mx-auto max-w-2xl">
-          <WorkspacePageHeader
-            eyebrow="Projects"
-            title="Create Project with AI"
-            backButton={{ label: '← Back to Mode Selection', onClick: () => setShowAIMode(false) }}
-          />
-          <AiProjectGeneratorModal
-            isOpen
-            variant="inline"
-            onClose={() => setShowAIMode(false)}
-            onConfirm={handleCreateFromAiDraft}
-          />
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 py-8 px-4">
       <div className="mx-auto max-w-3xl space-y-5">
@@ -207,7 +153,6 @@ export function CreateProjectPage() {
           workspaceProjects={projects}
           isLoading={isLoading}
           onCreateProject={handleCreateProject}
-          onSelectAI={handleSelectAI}
         />
       </div>
     </div>

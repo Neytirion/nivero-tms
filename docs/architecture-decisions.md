@@ -2,34 +2,7 @@
 
 This document outlines key architectural decisions made in the Nivero PM Tool project.
 
-## 1. Atomic Project Creation from AI Draft
-
-**Decision**: Implement atomic transaction for creating project + estimate + work packages + tasks from AI-generated draft.
-
-**Problem Solved**:
-- Previous implementation created resources sequentially (7+ separate API calls)
-- Any failure left database in inconsistent state (partial project, orphaned estimates, etc.)
-- No rollback mechanism
-
-**Solution** (Phase 21):
-- Single PostgreSQL RPC function `create_project_from_ai_draft()` handles entire workflow
-- Entire transaction succeeds or rolls back completely
-- All work packages, task-to-work-package links, and metadata created in single operation
-
-**Benefits**:
-- ✓ Data consistency guaranteed
-- ✓ Atomic guarantee at database level
-- ✓ Simplified error handling (all-or-nothing semantics)
-- ✓ Reduced round-trip latency (1 request vs 7+)
-
-**Files**:
-- Backend: [supabase/mvp_phase21_atomic_project_creation.sql](../supabase/mvp_phase21_atomic_project_creation.sql)
-- Client: [src/lib/ai/ai-mapper.ts](../src/lib/ai/ai-mapper.ts)
-- Tests: [src/lib/pm.ai-draft.test.ts](../src/lib/pm.ai-draft.test.ts)
-
----
-
-## 2. Centralized Workspace State Management
+## 1. Centralized Workspace State Management
 
 **Current Pattern**:
 - [useDashboardPreview](../src/features/dashboard/useDashboardPreview.ts) provides global workspace state

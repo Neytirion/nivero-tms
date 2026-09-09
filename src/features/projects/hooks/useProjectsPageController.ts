@@ -141,7 +141,6 @@ export function useProjectsPageController(options: ProjectsPageControllerOptions
     inviteMemberToSelectedProjectByEmail,
     changeSelectedProjectMemberRole,
     removeProjectMember: (_projectId, userId, options) => removeSelectedProjectMember(userId, true, options),
-    loadDashboardPreview,
     onCreateModalClose: () => setIsCreateModalOpen(false),
     onCompleteConfirmClose: () => setIsCompleteConfirmOpen(false),
     onSaveSettingsConfirmClose: () => setIsSaveSettingsConfirmOpen(false),
@@ -150,7 +149,6 @@ export function useProjectsPageController(options: ProjectsPageControllerOptions
 
   const {
     createProjectHandler,
-    createProjectFromAiDraftHandler,
     inviteMemberHandler: inviteMemberHandlerRaw,
     completeProjectHandler,
     saveProjectSettings,
@@ -285,7 +283,6 @@ export function useProjectsPageController(options: ProjectsPageControllerOptions
 
     // Actions
     createProjectHandler,
-    createProjectFromAiDraftHandler,
     inviteMemberHandler,
     inviteMemberByEmailAndRoleHandler,
     completeProjectHandler,

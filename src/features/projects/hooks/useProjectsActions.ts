@@ -1,5 +1,3 @@
-import type { AiProjectDraft } from '../../../lib/ai'
-import { createProjectFromAiDraft } from '../../../lib/ai/ai-mapper'
 import type { ProjectPreview } from '../../../lib/pm'
 
 export interface UseProjectsActionsInput {
@@ -61,7 +59,6 @@ export interface UseProjectsActionsInput {
     userId: string,
     options?: { suppressGlobalLoading?: boolean },
   ) => Promise<void>
-  loadDashboardPreview: () => Promise<void>
   onCreateModalClose: () => void
   onCompleteConfirmClose: () => void
   onSaveSettingsConfirmClose: () => void
@@ -70,7 +67,6 @@ export interface UseProjectsActionsInput {
 
 export interface UseProjectsActionsReturn {
   createProjectHandler: () => Promise<void>
-  createProjectFromAiDraftHandler: (draft: AiProjectDraft) => Promise<void>
   inviteMemberHandler: (
     email: string,
     role: string,
@@ -113,7 +109,6 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
     inviteMemberToSelectedProjectByEmail,
     changeSelectedProjectMemberRole,
     removeProjectMember,
-    loadDashboardPreview,
     onCreateModalClose,
     onCompleteConfirmClose,
     onSaveSettingsConfirmClose,
@@ -140,31 +135,6 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
           ? `Project creation error: ${error.message}`
           : 'Project creation error',
       )
-    }
-  }
-
-  const createProjectFromAiDraftHandler = async (draft: AiProjectDraft) => {
-    try {
-      setStatus('Creating project from AI draft (atomic operation)...')
-
-      // The createProjectFromAiDraft now uses a single database transaction:
-      // entire project (with estimate, work packages, and tasks) is created
-      // or rolled back as a single unit, preventing partial data states.
-      const result = await createProjectFromAiDraft(draft)
-
-      setStatus(
-        `✓ Project created: "${result.projectId.slice(0, 8)}..." with ${result.taskCount} tasks`,
-      )
-      reset()
-      onCreateModalClose()
-
-      // Refresh projects to show newly created one
-      await loadDashboardPreview()
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to create project from AI draft'
-      setStatus(`✗ Error: ${errorMessage}`)
-      console.error('Error creating project from AI draft:', error)
     }
   }
 
@@ -347,7 +317,6 @@ export function useProjectsActions(input: UseProjectsActionsInput): UseProjectsA
 
   return {
     createProjectHandler,
-    createProjectFromAiDraftHandler,
     inviteMemberHandler,
     completeProjectHandler,
     saveProjectSettings,

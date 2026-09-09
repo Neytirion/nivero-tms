@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import type { ProjectWizardData, ProjectWizardStep } from './types'
 import { WizardHeader } from './WizardHeader'
 import { WizardNavigation } from './WizardNavigation'
-import { CreationModeChoice } from './CreationModeChoice'
 import { BasicInfoStep } from './BasicInfoStep'
 import { DateRangeStep } from './DateRangeStep'
 import { DetailsStep } from './DetailsStep'
@@ -20,7 +19,6 @@ interface ProjectCreationWizardProps {
   workspaceProjects: ProjectPreview[]
   isLoading: boolean
   onCreateProject: (data: ProjectWizardData) => Promise<void>
-  onSelectAI: () => void
 }
 
 export function ProjectCreationWizard({
@@ -29,9 +27,8 @@ export function ProjectCreationWizard({
   workspaceProjects,
   isLoading,
   onCreateProject,
-  onSelectAI,
 }: ProjectCreationWizardProps) {
-  const [currentStep, setCurrentStep] = useState<ProjectWizardStep>('choice')
+  const [currentStep, setCurrentStep] = useState<ProjectWizardStep>('basic')
   const [wizardData, setWizardData] = useState<ProjectWizardData>({
     projectName: '',
     companyName: '',
@@ -64,8 +61,6 @@ export function ProjectCreationWizard({
   // Validation logic
   const canGoToNextStep = useMemo(() => {
     switch (currentStep) {
-      case 'choice':
-        return true
       case 'basic':
         return wizardData.projectName.trim().length > 0
       case 'dates':
@@ -91,7 +86,7 @@ export function ProjectCreationWizard({
   }, [currentStep, hasDuplicateWorkPackageNames, wizardData])
 
   const handlePrevious = () => {
-    const steps: ProjectWizardStep[] = ['choice', ...FLOW_STEPS]
+    const steps = FLOW_STEPS
     const currentIndex = steps.indexOf(currentStep)
     if (currentIndex > 0) {
       setCurrentStep(steps[currentIndex - 1])
@@ -99,18 +94,10 @@ export function ProjectCreationWizard({
   }
 
   const handleNext = () => {
-    const steps: ProjectWizardStep[] = ['choice', ...FLOW_STEPS]
+    const steps = FLOW_STEPS
     const currentIndex = steps.indexOf(currentStep)
     if (currentIndex < steps.length - 1) {
       setCurrentStep(steps[currentIndex + 1])
-    }
-  }
-
-  const handleSelectMode = (mode: 'manual' | 'ai') => {
-    if (mode === 'ai') {
-      onSelectAI()
-    } else {
-      setCurrentStep('basic')
     }
   }
 
@@ -121,10 +108,6 @@ export function ProjectCreationWizard({
     value: ProjectWizardData[K],
   ) => {
     setWizardData((prev) => ({ ...prev, [key]: value }))
-  }
-
-  if (currentStep === 'choice') {
-    return <CreationModeChoice onSelectMode={handleSelectMode} />
   }
 
   const currentStepNumber = FLOW_STEPS.indexOf(currentStep) + 1

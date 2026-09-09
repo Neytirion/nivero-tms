@@ -15,14 +15,6 @@ vi.mock('../../features/workspace/workspace-context', () => ({
   useWorkspace: vi.fn(),
 }))
 
-vi.mock('../../features/projects/ai', () => ({
-  AiProjectGeneratorModal: ({ variant }: { variant?: 'modal' | 'inline' }) => (
-    <div data-testid="ai-generator" data-variant={variant ?? 'modal'}>
-      AI Generator Mock
-    </div>
-  ),
-}))
-
 vi.mock('../../lib/pm/members', () => ({
   getProjectMembers: vi.fn(async () => []),
   inviteProjectMemberByEmail: vi.fn(async () => undefined),
@@ -82,10 +74,6 @@ function renderPage() {
   )
 }
 
-function goToManualWizard() {
-  fireEvent.click(screen.getByRole('button', { name: /manual entry/i }))
-}
-
 function completeWizardUntilReview() {
   fireEvent.click(screen.getByRole('button', { name: /next/i }))
   fireEvent.click(screen.getByRole('button', { name: /next/i }))
@@ -116,8 +104,6 @@ describe('CreateProjectPage', () => {
     mockUseWorkspace.mockReturnValue(workspace)
 
     renderPage()
-
-    goToManualWizard()
 
     fireEvent.change(screen.getByLabelText(/project name/i), { target: { value: '  Apollo  ' } })
     fireEvent.change(screen.getByLabelText(/company name/i), { target: { value: '  ACME  ' } })
@@ -151,24 +137,11 @@ describe('CreateProjectPage', () => {
 
     renderPage()
 
-    goToManualWizard()
-
     const options = Array.from(document.querySelectorAll('#company-suggestions option')).map((option) =>
       option.getAttribute('value'),
     )
 
     expect(options).toEqual(['ACME', 'Beta Corp'])
-  })
-
-  it('renders inline AI generator in AI tab', () => {
-    const workspace = buildWorkspace()
-    mockUseWorkspace.mockReturnValue(workspace)
-
-    renderPage()
-
-    fireEvent.click(screen.getByRole('button', { name: /ai generator/i }))
-
-    expect(screen.getByTestId('ai-generator')).toHaveAttribute('data-variant', 'inline')
   })
 
   it('skips self invitation during wizard project creation', async () => {
@@ -190,8 +163,6 @@ describe('CreateProjectPage', () => {
     mockUseWorkspace.mockReturnValue(workspace)
 
     renderPage()
-    goToManualWizard()
-
     fireEvent.change(screen.getByLabelText(/project name/i), { target: { value: 'Project Alpha' } })
     fireEvent.click(screen.getByRole('button', { name: /next/i }))
     fireEvent.change(screen.getByLabelText(/start date/i), { target: { value: '2026-08-01' } })
@@ -229,8 +200,6 @@ describe('CreateProjectPage', () => {
     mockUseWorkspace.mockReturnValue(workspace)
 
     renderPage()
-    goToManualWizard()
-
     fireEvent.change(screen.getByLabelText(/project name/i), { target: { value: 'Project Alpha' } })
     fireEvent.click(screen.getByRole('button', { name: /next/i }))
     fireEvent.change(screen.getByLabelText(/start date/i), { target: { value: '2026-08-01' } })
@@ -273,7 +242,6 @@ describe('CreateProjectPage', () => {
     mockGetUserProfileByEmail.mockResolvedValueOnce(null)
 
     renderPage()
-    goToManualWizard()
 
     fireEvent.change(screen.getByLabelText(/project name/i), { target: { value: 'Project Alpha' } })
     fireEvent.click(screen.getByRole('button', { name: /next/i }))

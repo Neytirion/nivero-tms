@@ -15,7 +15,24 @@ const MAX_CLIENT_NAME_LENGTH = 50
 const MAX_CLIENT_EMAIL_LENGTH = 50
 const MAX_ATTACHMENTS = 10
 const MAX_ATTACHMENT_BYTES = 5 * 1024 * 1024
+const MAX_ATTACHMENT_BASE64_LENGTH = Math.ceil(MAX_ATTACHMENT_BYTES / 3) * 4
+const MAX_TOTAL_ATTACHMENT_BYTES = 20 * 1024 * 1024
+const MAX_REQUEST_BODY_BYTES = 30 * 1024 * 1024
 const GENERATED_TITLE_MAX_LENGTH = 120
+const ALLOWED_ATTACHMENT_MIME_TYPES = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/zip',
+  'image/gif',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'text/csv',
+  'text/plain',
+])
 
 function isLikelyEmail(value: string): boolean {
   if (value.length === 0) {
@@ -103,6 +120,11 @@ Deno.serve(async (req: Request) => {
     return json(req, { success: false, error: 'Missing Supabase environment variables' }, 500)
   }
 
+  const contentLength = Number(req.headers.get('content-length') ?? 0)
+  if (contentLength > MAX_REQUEST_BODY_BYTES) {
+    return json(req, { success: false, error: 'Request payload is too large' }, 413)
+  }
+
   let payload: IntakePayload
 
   try {
@@ -111,11 +133,19 @@ Deno.serve(async (req: Request) => {
     return json(req, { success: false, error: 'Invalid JSON payload' }, 400)
   }
 
-  const token = payload.token?.trim() ?? ''
-  const clientName = payload.clientName?.trim() ?? ''
-  const clientEmail = payload.clientEmail?.trim() ?? ''
-  const message = payload.message?.trim() ?? ''
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return json(req, { success: false, error: 'Invalid request payload' }, 400)
+  }
+
+  const token = typeof payload.token === 'string' ? payload.token.trim() : ''
+  const clientName = typeof payload.clientName === 'string' ? payload.clientName.trim() : ''
+  const clientEmail = typeof payload.clientEmail === 'string' ? payload.clientEmail.trim() : ''
+  const message = typeof payload.message === 'string' ? payload.message.trim() : ''
   const attachments = payload.attachments ?? []
+
+  if (!Array.isArray(attachments)) {
+    return json(req, { success: false, error: 'Attachments must be an array' }, 400)
+  }
 
   if (!isUuid(token)) {
     return json(req, { success: false, error: 'Invalid project link token' }, 400)
@@ -139,6 +169,29 @@ Deno.serve(async (req: Request) => {
 
   if (attachments.length > MAX_ATTACHMENTS) {
     return json(req, { success: false, error: `You can upload up to ${MAX_ATTACHMENTS} files` }, 400)
+  }
+
+  if (attachments.some((attachment) => !attachment || typeof attachment !== 'object' || Array.isArray(attachment))) {
+    return json(req, { success: false, error: 'Attachment payload is invalid' }, 400)
+  }
+
+  const rateLimitResponse = await fetch(`${SUPABASE_URL}/rest/v1/rpc/consume_client_intake_rate_limit`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ p_token: token }),
+  })
+
+  if (!rateLimitResponse.ok) {
+    return json(req, { success: false, error: 'Unable to validate request limit' }, 503)
+  }
+
+  const isWithinRateLimit = (await rateLimitResponse.json()) as boolean
+  if (!isWithinRateLimit) {
+    return json(req, { success: false, error: 'Too many requests. Please try again in a few minutes.' }, 429)
   }
 
   const projectLookupUrl = `${SUPABASE_URL}/rest/v1/projects?select=id,name,owner_id,project_manager_id&client_intake_token=eq.${encodeURIComponent(token)}&limit=1`
@@ -169,10 +222,12 @@ Deno.serve(async (req: Request) => {
   }
 
   const attachmentPublicEntries: Array<{ name: string; url: string }> = []
+  let totalAttachmentBytes = 0
 
   for (const attachment of attachments) {
-    const fileName = attachment.name?.trim() ?? ''
-    const contentBase64 = attachment.contentBase64?.trim() ?? ''
+    const fileName = typeof attachment.name === 'string' ? attachment.name.trim() : ''
+    const contentBase64 = typeof attachment.contentBase64 === 'string' ? attachment.contentBase64.trim() : ''
+    const mimeType = typeof attachment.mimeType === 'string' ? attachment.mimeType.trim().toLowerCase() : ''
 
     if (!fileName) {
       return json(req, { success: false, error: 'Attachment name is required' }, 400)
@@ -180,6 +235,14 @@ Deno.serve(async (req: Request) => {
 
     if (!contentBase64) {
       return json(req, { success: false, error: `Attachment ${fileName} has empty content` }, 400)
+    }
+
+    if (contentBase64.length > MAX_ATTACHMENT_BASE64_LENGTH) {
+      return json(req, { success: false, error: `Attachment ${fileName} exceeds 5MB` }, 400)
+    }
+
+    if (!ALLOWED_ATTACHMENT_MIME_TYPES.has(mimeType)) {
+      return json(req, { success: false, error: `Attachment ${fileName} has an unsupported file type` }, 400)
     }
 
     let arrayBuffer: ArrayBuffer
@@ -193,6 +256,11 @@ Deno.serve(async (req: Request) => {
       return json(req, { success: false, error: `Attachment ${fileName} exceeds 5MB` }, 400)
     }
 
+    totalAttachmentBytes += arrayBuffer.byteLength
+    if (totalAttachmentBytes > MAX_TOTAL_ATTACHMENT_BYTES) {
+      return json(req, { success: false, error: 'Total attachment size exceeds 20MB' }, 413)
+    }
+
     const extension = safeFileName(fileName || 'attachment')
     const path = `${project.id}/${Date.now()}-${crypto.randomUUID()}-${extension}`
     const uploadUrl = `${SUPABASE_URL}/storage/v1/object/client-intake-images/${encodeURIComponent(path)}`
@@ -202,7 +270,7 @@ Deno.serve(async (req: Request) => {
       headers: {
         apikey: SUPABASE_SERVICE_ROLE_KEY,
         Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': attachment.mimeType || 'application/octet-stream',
+        'Content-Type': mimeType,
         'x-upsert': 'false',
       },
       body: arrayBuffer,

@@ -10,6 +10,8 @@ interface ProjectSettingsTabProps {
   settingsDeadline: string
   onSettingsDeadlineChange: (value: string) => void
   selectedProjectClientIntakeToken: string | null
+  canRotateClientIntakeLink: boolean
+  onRotateClientIntakeLink: () => void | Promise<void>
   canEditSelectedProject: boolean
   canDeleteSelectedProject?: boolean
   canCompleteSelectedProject?: boolean
@@ -63,6 +65,8 @@ export function ProjectSettingsTab({
   settingsDeadline,
   onSettingsDeadlineChange,
   selectedProjectClientIntakeToken,
+  canRotateClientIntakeLink,
+  onRotateClientIntakeLink,
   canEditSelectedProject,
   canDeleteSelectedProject,
   canCompleteSelectedProject,
@@ -196,7 +200,16 @@ export function ProjectSettingsTab({
             >
               Copy
             </button>
+            <button
+              type="button"
+              onClick={() => void onRotateClientIntakeLink()}
+              disabled={!canRotateClientIntakeLink || isLoading}
+              className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              Regenerate
+            </button>
             </div>
+            <p className="mt-2 text-xs text-slate-500">Regenerating immediately invalidates the previous link.</p>
           </section>
         </div>
       </div>

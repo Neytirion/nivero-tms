@@ -893,6 +893,18 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+      rotate_client_intake_token: {
+        Args: {
+          p_project_id: string
+        }
+        Returns: string
+      }
+      consume_client_intake_rate_limit: {
+        Args: {
+          p_token: string
+        }
+        Returns: boolean
+      }
       recalc_project_health: {
         Args: {
           p_project_id: string

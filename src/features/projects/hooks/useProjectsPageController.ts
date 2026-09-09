@@ -208,6 +208,7 @@ export function useProjectsPageController(options: ProjectsPageControllerOptions
   return {
     // Data from workspace
     status,
+    setStatus,
     isLoading,
     projects,
     tasks,

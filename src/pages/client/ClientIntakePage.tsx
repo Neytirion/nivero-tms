@@ -220,6 +220,7 @@ export function ClientIntakePage() {
             <input
               type="file"
               multiple
+              accept=".csv,.doc,.docx,.gif,.jpeg,.jpg,.pdf,.png,.txt,.webp,.xls,.xlsx,.zip"
               onChange={(event) => {
                 handleAttachmentsChange(event.target.files)
                 event.currentTarget.value = ''

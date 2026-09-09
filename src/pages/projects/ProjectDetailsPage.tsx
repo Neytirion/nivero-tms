@@ -4,6 +4,7 @@ import { ProjectDetailsSection } from '../../features/projects/components'
 import type { DetailsTab } from '../../features/projects/components'
 import { ConfirmDialog, WorkspacePageHeader } from '../../shared/components'
 import { useProjectsPageController } from '../../features/projects/hooks/useProjectsPageController'
+import { rotateClientIntakeToken } from '../../lib/pm'
 
 const detailsTabs: DetailsTab[] = ['overview', 'collaboration', 'tasks', 'estimates', 'team', 'settings']
 
@@ -72,6 +73,8 @@ export function ProjectDetailsPage() {
     updateMemberRoleHandler,
     removeMemberHandler,
     selectProject,
+    loadDashboardPreview,
+    setStatus,
   } = useProjectsPageController()
 
   useEffect(() => {
@@ -99,6 +102,25 @@ export function ProjectDetailsPage() {
   }, [searchParams, setActiveTab])
 
   const canEditSelectedProject = selectedProject ? canManageProject(selectedProject.id) : false
+  const canRotateClientIntakeLink = myRoleInSelectedProject === 'owner' || myRoleInSelectedProject === 'admin'
+
+  const handleRotateClientIntakeLink = async () => {
+    if (!selectedProject || !canRotateClientIntakeLink) {
+      return
+    }
+
+    if (!window.confirm('Regenerate the client intake link? The previous link will stop working immediately.')) {
+      return
+    }
+
+    try {
+      await rotateClientIntakeToken(selectedProject.id)
+      await loadDashboardPreview()
+      setStatus('Client intake link regenerated. The previous link is no longer valid.')
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Failed to regenerate client intake link')
+    }
+  }
 
   const handleDeleteProjectConfirm = async () => {
     const wasDeleted = await deleteSelectedProjectHandler()
@@ -151,6 +173,8 @@ export function ProjectDetailsPage() {
             settingsDeadline={currentSettingsDraft.deadline}
             onSettingsDeadlineChange={(value) => updateSettingsDraft({ deadline: value })}
             selectedProjectClientIntakeToken={selectedProject?.client_intake_token ?? null}
+            canRotateClientIntakeLink={canRotateClientIntakeLink}
+            onRotateClientIntakeLink={handleRotateClientIntakeLink}
             canEditSelectedProject={canEditSelectedProject}
             canDeleteSelectedProject={canDeleteSelectedProject}
             canManageMemberRoles={canManageMemberRoles}

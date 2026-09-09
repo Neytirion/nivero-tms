@@ -32,6 +32,18 @@ export async function getMyProjects() {
   return data satisfies ProjectPreview[]
 }
 
+export async function rotateClientIntakeToken(projectId: string) {
+  const { data, error } = await supabase.rpc('rotate_client_intake_token', {
+    p_project_id: projectId,
+  })
+
+  if (error) {
+    throw permissionDenied(error.message)
+  }
+
+  return data
+}
+
 export async function getMyProjectMemberships() {
   const { data: userData, error: userError } = await supabase.auth.getUser()
 

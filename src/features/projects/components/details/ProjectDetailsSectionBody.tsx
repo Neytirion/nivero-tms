@@ -28,6 +28,8 @@ interface ProjectDetailsSectionBodyProps {
   settingsDeadline: string
   onSettingsDeadlineChange: (value: string) => void
   selectedProjectClientIntakeToken: string | null
+  canRotateClientIntakeLink: boolean
+  onRotateClientIntakeLink: () => void | Promise<void>
   canEditSelectedProject: boolean
   canDeleteSelectedProject?: boolean
   canManageMemberRoles?: boolean
@@ -72,6 +74,8 @@ export function ProjectDetailsSectionBody({
   settingsDeadline,
   onSettingsDeadlineChange,
   selectedProjectClientIntakeToken,
+  canRotateClientIntakeLink,
+  onRotateClientIntakeLink,
   canEditSelectedProject,
   canDeleteSelectedProject,
   canManageMemberRoles,
@@ -191,6 +195,8 @@ export function ProjectDetailsSectionBody({
           settingsDeadline={settingsDeadline}
           onSettingsDeadlineChange={onSettingsDeadlineChange}
           selectedProjectClientIntakeToken={selectedProjectClientIntakeToken}
+          canRotateClientIntakeLink={canRotateClientIntakeLink}
+          onRotateClientIntakeLink={onRotateClientIntakeLink}
           canEditSelectedProject={canEditSelectedProject}
           canDeleteSelectedProject={canDeleteSelectedProject}
           canCompleteSelectedProject={selectedProjectId ? canManageProject(selectedProjectId) : false}

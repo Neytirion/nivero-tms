@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ProjectDetailsSection } from '../../features/projects/components'
 import type { DetailsTab } from '../../features/projects/components'
@@ -27,6 +27,7 @@ export function ProjectDetailsPage() {
   const location = useLocation()
   const { projectId } = useParams<{ projectId: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [isRotateClientIntakeConfirmOpen, setIsRotateClientIntakeConfirmOpen] = useState(false)
   const requestedBackTo = (location.state as { backTo?: unknown } | null)?.backTo
   const projectsBackTo =
     typeof requestedBackTo === 'string' && requestedBackTo.startsWith('/app/projects')
@@ -104,12 +105,18 @@ export function ProjectDetailsPage() {
   const canEditSelectedProject = selectedProject ? canManageProject(selectedProject.id) : false
   const canRotateClientIntakeLink = myRoleInSelectedProject === 'owner' || myRoleInSelectedProject === 'admin'
 
-  const handleRotateClientIntakeLink = async () => {
+  const handleRotateClientIntakeLink = () => {
     if (!selectedProject || !canRotateClientIntakeLink) {
       return
     }
 
-    if (!window.confirm('Regenerate the client intake link? The previous link will stop working immediately.')) {
+    setIsRotateClientIntakeConfirmOpen(true)
+  }
+
+  const confirmRotateClientIntakeLink = async () => {
+    setIsRotateClientIntakeConfirmOpen(false)
+
+    if (!selectedProject || !canRotateClientIntakeLink) {
       return
     }
 
@@ -265,6 +272,15 @@ export function ProjectDetailsPage() {
         tone="danger"
         onCancel={() => setIsDeleteConfirmOpen(false)}
         onConfirm={handleDeleteProjectConfirm}
+      />
+      <ConfirmDialog
+        isOpen={isRotateClientIntakeConfirmOpen}
+        title="Regenerate client intake link"
+        description="The previous link will stop working immediately. Anyone using it will need the new link."
+        confirmText="Regenerate link"
+        tone="danger"
+        onCancel={() => setIsRotateClientIntakeConfirmOpen(false)}
+        onConfirm={confirmRotateClientIntakeLink}
       />
     </div>
   )

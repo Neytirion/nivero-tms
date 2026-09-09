@@ -82,6 +82,27 @@ function base64ToArrayBuffer(base64: string): ArrayBuffer {
   return bytes.buffer
 }
 
+async function cleanupUploadedFiles(paths: string[]) {
+  await Promise.allSettled(
+    paths.map(async (path) => {
+      const response = await fetch(
+        `${SUPABASE_URL}/storage/v1/object/client-intake-images/${encodeURIComponent(path)}`,
+        {
+          method: 'DELETE',
+          headers: {
+            apikey: SUPABASE_SERVICE_ROLE_KEY ?? '',
+            Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY ?? ''}`,
+          },
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(`Failed to clean up uploaded attachment ${path}`)
+      }
+    }),
+  )
+}
+
 interface AttachmentInput {
   name: string
   mimeType: string
@@ -222,6 +243,7 @@ Deno.serve(async (req: Request) => {
   }
 
   const attachmentPublicEntries: Array<{ name: string; url: string }> = []
+  const uploadedPaths: string[] = []
   let totalAttachmentBytes = 0
 
   for (const attachment of attachments) {
@@ -265,21 +287,29 @@ Deno.serve(async (req: Request) => {
     const path = `${project.id}/${Date.now()}-${crypto.randomUUID()}-${extension}`
     const uploadUrl = `${SUPABASE_URL}/storage/v1/object/client-intake-images/${encodeURIComponent(path)}`
 
-    const uploadResponse = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: {
-        apikey: SUPABASE_SERVICE_ROLE_KEY,
-        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': mimeType,
-        'x-upsert': 'false',
-      },
-      body: arrayBuffer,
-    })
+    let uploadResponse: Response
+    try {
+      uploadResponse = await fetch(uploadUrl, {
+        method: 'POST',
+        headers: {
+          apikey: SUPABASE_SERVICE_ROLE_KEY,
+          Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+          'Content-Type': mimeType,
+          'x-upsert': 'false',
+        },
+        body: arrayBuffer,
+      })
+    } catch {
+      await cleanupUploadedFiles(uploadedPaths)
+      return json(req, { success: false, error: `Failed to upload attachment ${fileName}` }, 502)
+    }
 
     if (!uploadResponse.ok) {
+      await cleanupUploadedFiles(uploadedPaths)
       return json(req, { success: false, error: `Failed to upload attachment ${fileName}` }, 500)
     }
 
+    uploadedPaths.push(path)
     attachmentPublicEntries.push({
       name: fileName,
       url: `${SUPABASE_URL}/storage/v1/object/public/client-intake-images/${path}`,
@@ -305,39 +335,52 @@ Deno.serve(async (req: Request) => {
 
   const generatedTitle = buildGeneratedTaskTitle(clientName, clientEmail)
 
-  const taskInsertResponse = await fetch(`${SUPABASE_URL}/rest/v1/tasks`, {
-    method: 'POST',
-    headers: {
-      apikey: SUPABASE_SERVICE_ROLE_KEY,
-      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json',
-      Prefer: 'return=representation',
-    },
-    body: JSON.stringify({
-      project_id: project.id,
-      title: generatedTitle,
-      description: descriptionParts.join('\n'),
-      status: 'todo',
-      priority: 'medium',
-      assigned_to: null,
-      created_by: createdByUserId,
-      estimate_hours: null,
-      actual_hours: 0,
-      work_package_id: null,
-      blocked_by_task_id: null,
-      due_date: null,
-    }),
-  })
-
-  if (!taskInsertResponse.ok) {
-    const body = await taskInsertResponse.text()
-    return json(req, { success: false, error: `Failed to create task: ${body}` }, 500)
+  let taskInsertResponse: Response
+  try {
+    taskInsertResponse = await fetch(`${SUPABASE_URL}/rest/v1/tasks`, {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation',
+      },
+      body: JSON.stringify({
+        project_id: project.id,
+        title: generatedTitle,
+        description: descriptionParts.join('\n'),
+        status: 'todo',
+        priority: 'medium',
+        assigned_to: null,
+        created_by: createdByUserId,
+        estimate_hours: null,
+        actual_hours: 0,
+        work_package_id: null,
+        blocked_by_task_id: null,
+        due_date: null,
+      }),
+    })
+  } catch {
+    await cleanupUploadedFiles(uploadedPaths)
+    return json(req, { success: false, error: 'Failed to create client request' }, 502)
   }
 
-  const createdTasks = (await taskInsertResponse.json()) as Array<{ id: string }>
+  if (!taskInsertResponse.ok) {
+    await cleanupUploadedFiles(uploadedPaths)
+    return json(req, { success: false, error: 'Failed to create client request' }, 500)
+  }
+
+  let createdTasks: Array<{ id: string }>
+  try {
+    createdTasks = (await taskInsertResponse.json()) as Array<{ id: string }>
+  } catch {
+    await cleanupUploadedFiles(uploadedPaths)
+    return json(req, { success: false, error: 'Failed to create client request' }, 502)
+  }
   const createdTask = createdTasks[0]
 
   if (!createdTask?.id) {
+    await cleanupUploadedFiles(uploadedPaths)
     return json(req, { success: false, error: 'Task created without ID' }, 500)
   }
 

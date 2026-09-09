@@ -73,10 +73,24 @@ code {
 
 .page-section {
   border: 1px solid var(--border);
-  border-radius: 14px;
+  border-radius: 0;
   background: var(--surface);
   padding: 16px;
   box-shadow: 0 1px 0 rgba(15, 23, 42, 0.03), 0 8px 24px -20px rgba(15, 23, 42, 0.35);
+}
+
+/* Keep avatars and circular status indicators round, but make UI surfaces and controls angular. */
+[class~='rounded-xs'],
+[class~='rounded-sm'],
+[class~='rounded-md'],
+[class~='rounded-lg'],
+[class~='rounded-xl'],
+[class~='rounded-2xl'],
+[class~='rounded-3xl'],
+[class~='rounded-l-lg'],
+[class~='rounded-r-lg'],
+[class~='rounded-t-2xl'] {
+  border-radius: 0 !important;
 }
 
 .section-title {

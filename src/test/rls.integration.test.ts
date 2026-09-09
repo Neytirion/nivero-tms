@@ -233,6 +233,20 @@ describeRls('Supabase RLS integration', () => {
     })
   })
 
+  it('rejects a time entry whose task belongs to another project', async () => {
+    const { error } = await ownerClient.from('time_entries').insert({
+      user_id: ownerId,
+      project_id: hiddenProjectId,
+      task_id: taskId,
+      entry_date: new Date().toISOString().slice(0, 10),
+      minutes_spent: 30,
+      is_billable: true,
+    })
+
+    expect(error).not.toBeNull()
+    expect(error?.message).toContain('Task and project mismatch in time entry')
+  })
+
   it('prevents project admin from updating member roles at DB level', async () => {
     // After our security fix, only the project owner should be able to update roles.
     // An admin updating their own membership role directly via DB should be blocked by RLS.

@@ -35,6 +35,7 @@ export interface Database {
           completed_at: string | null
           deadline_at: string | null
           use_estimates: boolean
+          health_calculated_at: string | null
           created_at: string | null
           updated_at: string
         }
@@ -63,6 +64,7 @@ export interface Database {
           completed_at?: string | null
           deadline_at?: string | null
           use_estimates?: boolean
+          health_calculated_at?: string | null
           created_at?: string | null
           updated_at?: string
         }
@@ -91,6 +93,7 @@ export interface Database {
           completed_at?: string | null
           deadline_at?: string | null
           use_estimates?: boolean
+          health_calculated_at?: string | null
           created_at?: string | null
           updated_at?: string
         }

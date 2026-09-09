@@ -301,6 +301,30 @@ describeRls('Supabase RLS integration', () => {
       .eq('user_id', projectAdminId)
   })
 
+  it('blocks direct updates to project ownership and intake token', async () => {
+    const { data: project, error: readError } = await ownerClient
+      .from('projects')
+      .select('owner_id,client_intake_token')
+      .eq('id', visibleProjectId)
+      .single()
+
+    expect(readError).toBeNull()
+    expect(project).not.toBeNull()
+
+    const { error: ownerError } = await projectAdminClient
+      .from('projects')
+      .update({ owner_id: projectAdminId })
+      .eq('id', visibleProjectId)
+
+    const { error: tokenError } = await projectAdminClient
+      .from('projects')
+      .update({ client_intake_token: crypto.randomUUID() })
+      .eq('id', visibleProjectId)
+
+    expect(ownerError).not.toBeNull()
+    expect(tokenError).not.toBeNull()
+  })
+
   it('recalculates baseline progress, consumption, variance, and forecast', async () => {
     const suffix = Date.now()
     const { data: project, error: projectError } = await adminClient

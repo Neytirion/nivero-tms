@@ -209,7 +209,7 @@ export function ProjectDetailsPage() {
             onOpenSaveSettingsConfirm={() => setIsSaveSettingsConfirmOpen(true)}
             onNavigateToTasks={() => navigate(`/app/tasks?projectId=${projectId}`)}
             onTaskClick={(taskId) =>
-              navigate(`/app/tasks/${taskId}`, {
+              navigate(`/app/tasks/${taskId}?projectId=${projectId}`, {
                 state: { backTo: `/app/projects/${projectId}?tab=tasks` },
               })
             }

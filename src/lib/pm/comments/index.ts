@@ -249,6 +249,7 @@ export async function createTaskComment(input: { projectId: string; taskId: stri
                 taskTitle,
                 message,
                 taskId: input.taskId,
+                projectId: input.projectId,
               }),
             })
           })

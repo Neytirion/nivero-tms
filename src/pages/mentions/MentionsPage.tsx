@@ -142,7 +142,7 @@ export function MentionsPage() {
           .maybeSingle()
 
         if (!taskError && taskRow) {
-          navigate(`/app/tasks/${taskRow.id}`, {
+          navigate(`/app/tasks/${taskRow.id}?projectId=${commentRow.project_id}`, {
             state: { backTo: `/app/projects/${commentRow.project_id}?tab=collaboration` },
           })
           return

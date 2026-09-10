@@ -81,7 +81,34 @@ describe('TaskDetailsPage', () => {
       updateTaskDueDateHandler: vi.fn(async () => undefined),
       removeTask: vi.fn(async () => undefined),
       editTask: editTaskMock,
+      selectProject: vi.fn(),
     } as unknown as ReturnType<typeof useTasksPageController>)
+  })
+
+  it('keeps a project-aware link open while the requested project task loads', () => {
+    mockUseTasksPageController.mockReturnValueOnce({
+      tasks: [],
+      isLoading: false,
+      canAssignAssignee: false,
+      canTakeUnassignedTasks: false,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+      selectProject: vi.fn(),
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1?projectId=p2')
+
+    expect(screen.getByTestId('location').textContent).toBe('/app/tasks/t1?projectId=p2')
   })
 
   it('navigates back to passed origin path', async () => {

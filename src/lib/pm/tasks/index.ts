@@ -89,7 +89,12 @@ export async function createTask(input: CreateTaskInput) {
     notifySlackPilot({
       recipientEmail,
       actorEmail: userData.user.email,
-      text: formatTaskAssignmentNotification({ taskTitle: createdTask.title, projectName, taskId: createdTask.id }),
+      text: formatTaskAssignmentNotification({
+        taskTitle: createdTask.title,
+        projectName,
+        taskId: createdTask.id,
+        projectId: input.projectId,
+      }),
     })
   }
 
@@ -210,7 +215,12 @@ export async function updateTask(taskId: string, patch: UpdateTaskInput) {
     notifySlackPilot({
       recipientEmail,
       actorEmail: userData.user.email,
-      text: formatTaskUpdateNotification({ taskTitle: updatedTask.title, lines: notificationLines, taskId: updatedTask.id }),
+      text: formatTaskUpdateNotification({
+        taskTitle: updatedTask.title,
+        lines: notificationLines,
+        taskId: updatedTask.id,
+        projectId: updatedTask.project_id,
+      }),
     })
   }
 

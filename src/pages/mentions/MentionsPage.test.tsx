@@ -170,7 +170,7 @@ describe('MentionsPage', () => {
     fireEvent.click(screen.getByText('Please check this update'))
 
     await waitFor(() => {
-      expect(screen.getByTestId('location').textContent).toBe('/app/tasks/t1')
+      expect(screen.getByTestId('location').textContent).toBe('/app/tasks/t1?projectId=p1')
     })
   })
 

@@ -61,8 +61,9 @@ export async function getProjectName(projectId: string) {
   }
 }
 
-function taskUrl(taskId: string) {
-  return `${window.location.origin}/app/tasks/${taskId}`
+function taskUrl(taskId: string, projectId: string) {
+  const params = new URLSearchParams({ projectId })
+  return `${window.location.origin}/app/tasks/${taskId}?${params.toString()}`
 }
 
 function projectDiscussionUrl(projectId: string) {
@@ -88,20 +89,20 @@ export function getActorName(user: { email?: string | null; user_metadata?: Reco
       : user.email ?? 'A teammate'
 }
 
-export function formatTaskAssignmentNotification(input: { taskTitle: string; projectName: string; taskId: string }) {
-  return `*Task assigned to you*\n*${input.taskTitle}*\nProject: ${input.projectName}\n${slackLink(taskUrl(input.taskId), 'Open task')}`
+export function formatTaskAssignmentNotification(input: { taskTitle: string; projectName: string; taskId: string; projectId: string }) {
+  return `*Task assigned to you*\n*${input.taskTitle}*\nProject: ${input.projectName}\n${slackLink(taskUrl(input.taskId, input.projectId), 'Open task')}`
 }
 
-export function formatTaskMentionNotification(input: { actorName: string; taskTitle: string; message: string; taskId: string }) {
-  return `*You were mentioned in a task comment*\n${input.actorName} mentioned you on *${input.taskTitle}*\n>${input.message.slice(0, 300)}\n${slackLink(taskUrl(input.taskId), 'Open task')}`
+export function formatTaskMentionNotification(input: { actorName: string; taskTitle: string; message: string; taskId: string; projectId: string }) {
+  return `*You were mentioned in a task comment*\n${input.actorName} mentioned you on *${input.taskTitle}*\n>${input.message.slice(0, 300)}\n${slackLink(taskUrl(input.taskId, input.projectId), 'Open task')}`
 }
 
 export function formatProjectMentionNotification(input: { actorName: string; projectName: string; message: string; projectId: string }) {
   return `*You were mentioned in a project comment*\n${input.actorName} mentioned you in *${input.projectName}*\n>${input.message.slice(0, 300)}\n${slackLink(projectDiscussionUrl(input.projectId), 'Open discussion')}`
 }
 
-export function formatTaskUpdateNotification(input: { taskTitle: string; lines: string[]; taskId: string }) {
-  return `*Task update*\n*${input.taskTitle}*\n${input.lines.join('\n')}\n${slackLink(taskUrl(input.taskId), 'Open task')}`
+export function formatTaskUpdateNotification(input: { taskTitle: string; lines: string[]; taskId: string; projectId: string }) {
+  return `*Task update*\n*${input.taskTitle}*\n${input.lines.join('\n')}\n${slackLink(taskUrl(input.taskId, input.projectId), 'Open task')}`
 }
 
 export function formatProjectInviteNotification(projectId: string) {

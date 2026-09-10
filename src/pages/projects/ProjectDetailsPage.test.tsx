@@ -191,7 +191,7 @@ describe('ProjectDetailsPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/app/tasks?projectId=p1')
 
     fireEvent.click(screen.getByRole('button', { name: 'section-open-task' }))
-    expect(mockNavigate).toHaveBeenCalledWith('/app/tasks/t1', {
+    expect(mockNavigate).toHaveBeenCalledWith('/app/tasks/t1?projectId=p1', {
       state: { backTo: '/app/projects/p1?tab=tasks' },
     })
 

@@ -1,4 +1,4 @@
-﻿import { useLocation, useNavigate, useParams } from 'react-router-dom'
+﻿import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useTasksPageController } from '../../features/tasks/hooks/useTasksPageController'
 import { useTaskDetailsEditState } from '../../features/tasks/hooks/useTaskDetailsEditState'
 import { useEffect, useMemo, useState } from 'react'
@@ -25,6 +25,7 @@ import {
 export function TaskDetailsPage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const [searchParams] = useSearchParams()
   const { taskId } = useParams<{ taskId: string }>()
   const [isLogTimeModalOpen, setIsLogTimeModalOpen] = useState(false)
   const [isManualLogging, setIsManualLogging] = useState(false)
@@ -65,9 +66,17 @@ export function TaskDetailsPage() {
     currentUserProfile,
     removeTask,
     editTask,
+    selectProject,
   } = useTasksPageController()
 
   const { startTimerForTask, timerTaskId, isRunning: isGlobalTimerRunning, lastSavedAt } = useGlobalTaskTimer()
+
+  useEffect(() => {
+    const projectId = searchParams.get('projectId')
+    if (projectId) {
+      void selectProject(projectId)
+    }
+  }, [searchParams, selectProject])
 
   const task = tasks.find((t) => t.id === taskId)
 
@@ -115,10 +124,11 @@ export function TaskDetailsPage() {
   })
 
   useEffect(() => {
-    if (!task && taskId) {
+    const requestedProjectId = searchParams.get('projectId')
+    if (!requestedProjectId && !isLoading && !task && taskId) {
       navigate(backTo, { replace: true })
     }
-  }, [task, taskId, navigate, backTo])
+  }, [isLoading, searchParams, task, taskId, navigate, backTo])
 
   useEffect(() => {
     if (!previewAttachment) return

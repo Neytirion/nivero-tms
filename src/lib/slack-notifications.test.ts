@@ -60,14 +60,22 @@ describe('notifySlackPilot', () => {
       taskTitle: 'Prepare estimate',
       projectName: 'Website redesign',
       taskId: 'task-1',
+      projectId: 'project-1',
     })).toContain('Project: Website redesign')
+    expect(formatTaskAssignmentNotification({
+      taskTitle: 'Prepare estimate',
+      projectName: 'Website redesign',
+      taskId: 'task-1',
+      projectId: 'project-2',
+    })).toContain('<http://localhost:3000/app/tasks/task-1?projectId=project-2|Open task>')
 
     expect(formatTaskMentionNotification({
       actorName: 'Alex Smith',
       taskTitle: 'Prepare estimate',
       message: 'Please review this.',
       taskId: 'task-1',
-    })).toContain('Alex Smith mentioned you on *Prepare estimate*')
+      projectId: 'project-1',
+    })).toContain('<http://localhost:3000/app/tasks/task-1?projectId=project-1|Open task>')
 
     expect(formatProjectMentionNotification({
       actorName: 'Alex Smith',

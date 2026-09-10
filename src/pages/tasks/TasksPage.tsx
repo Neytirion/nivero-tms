@@ -113,7 +113,7 @@ export function TasksPage() {
         onMoveTaskToStatus={(taskId: string, status: TaskStatus) => {
           void moveTaskToStatus(taskId, status)
         }}
-        onTaskClick={(taskId: string) => navigate(`/app/tasks/${taskId}`, { state: { backTo: `/app/tasks?projectId=${selectedProjectId}` } })}
+        onTaskClick={(taskId: string) => navigate(`/app/tasks/${taskId}?projectId=${selectedProjectId}`, { state: { backTo: `/app/tasks?projectId=${selectedProjectId}` } })}
         canManageTask={canManageTask}
         taskCardFieldPreferences={taskCardFieldPreferences}
       />

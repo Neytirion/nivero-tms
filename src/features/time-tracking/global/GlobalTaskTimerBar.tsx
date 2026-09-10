@@ -95,7 +95,7 @@ export function GlobalTaskTimerBar() {
             </Link>
             <span aria-hidden="true">•</span>
             <Link
-              to={`/app/tasks/${activeTask.taskId}`}
+              to={`/app/tasks/${activeTask.taskId}?projectId=${activeTask.projectId}`}
               className="truncate text-slate-900 underline decoration-slate-300 underline-offset-2 hover:text-slate-700"
               title={`Open task: ${activeTask.taskTitle}`}
             >

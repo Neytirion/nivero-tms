@@ -70,14 +70,13 @@ export function TaskCardSettingsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [settings, setSettings] = useState<ProjectTaskCardColorSetting[]>([])
   const [draftColorByKey, setDraftColorByKey] = useState<Record<string, string>>({})
-  const [savingColorKey, setSavingColorKey] = useState<string | null>(null)
   const [fieldPreferences, setFieldPreferences] = useState<ProjectTaskCardFieldPreferences>(
     DEFAULT_TASK_CARD_FIELD_PREFERENCES,
   )
   const [draftFieldPreferences, setDraftFieldPreferences] = useState<ProjectTaskCardFieldPreferences>(
     DEFAULT_TASK_CARD_FIELD_PREFERENCES,
   )
-  const [isSavingFields, setIsSavingFields] = useState(false)
+  const [isApplyingSettings, setIsApplyingSettings] = useState(false)
 
   useEffect(() => {
     if (projectIdFromQuery && projectIdFromQuery !== selectedProjectId) {
@@ -136,19 +135,38 @@ export function TaskCardSettingsPage() {
     void loadSettings()
   }, [activeProjectId, setStatus])
 
-  const saveColor = async (setting: ProjectTaskCardColorSetting) => {
-    if (!activeProjectId || !canManageCardSettings) {
+  const hasFieldChanges = useMemo(() => (
+    JSON.stringify(draftFieldPreferences) !== JSON.stringify(fieldPreferences)
+  ), [draftFieldPreferences, fieldPreferences])
+  const hasColorChanges = useMemo(() => (
+    settings.some((setting) => (draftColorByKey[setting.settingKey] ?? setting.color) !== setting.color)
+  ), [draftColorByKey, settings])
+
+  const hasChanges = hasFieldChanges || hasColorChanges
+
+  const applySettings = async () => {
+    if (!activeProjectId || !canManageCardSettings || !hasChanges) {
       return
     }
 
-    const nextColor = draftColorByKey[setting.settingKey] ?? setting.color
-    if (nextColor === setting.color) {
-      return
-    }
-
-    setSavingColorKey(setting.settingKey)
+    setIsApplyingSettings(true)
     try {
-      await updateProjectTaskCardColor(activeProjectId, setting.settingKey, nextColor)
+      const colorUpdates = settings
+        .map((setting) => ({
+          setting,
+          color: draftColorByKey[setting.settingKey] ?? setting.color,
+        }))
+        .filter(({ setting, color }) => color !== setting.color)
+
+      await Promise.all([
+        hasFieldChanges
+          ? updateProjectTaskCardFieldPreferences(activeProjectId, draftFieldPreferences)
+          : Promise.resolve(),
+        ...colorUpdates.map(({ setting, color }) => (
+          updateProjectTaskCardColor(activeProjectId, setting.settingKey, color)
+        )),
+      ])
+
       const refreshedSettings = await getProjectTaskCardColorSettings(activeProjectId)
       setSettings(refreshedSettings)
       setDraftColorByKey(
@@ -157,34 +175,13 @@ export function TaskCardSettingsPage() {
           return acc
         }, {}),
       )
-      await reloadCurrentTasks()
-      setStatus(`Updated card color for ${setting.displayName}`)
-    } catch (error) {
-      setStatus(error instanceof Error ? `Error updating color: ${error.message}` : 'Error updating color')
-    } finally {
-      setSavingColorKey(null)
-    }
-  }
-
-  const hasFieldChanges = useMemo(() => (
-    JSON.stringify(draftFieldPreferences) !== JSON.stringify(fieldPreferences)
-  ), [draftFieldPreferences, fieldPreferences])
-
-  const saveFieldPreferences = async () => {
-    if (!activeProjectId || !canManageCardSettings || !hasFieldChanges) {
-      return
-    }
-
-    setIsSavingFields(true)
-    try {
-      await updateProjectTaskCardFieldPreferences(activeProjectId, draftFieldPreferences)
       setFieldPreferences(draftFieldPreferences)
       await reloadCurrentTasks()
-      setStatus('Updated card field visibility settings')
+      setStatus('Updated card settings')
     } catch (error) {
-      setStatus(error instanceof Error ? `Error updating field settings: ${error.message}` : 'Error updating field settings')
+      setStatus(error instanceof Error ? `Error updating card settings: ${error.message}` : 'Error updating card settings')
     } finally {
-      setIsSavingFields(false)
+      setIsApplyingSettings(false)
     }
   }
 
@@ -244,12 +241,11 @@ export function TaskCardSettingsPage() {
               <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
                 <div>
                   <h3 className="text-sm font-semibold text-slate-900">Field Visibility</h3>
-                  <p className="text-xs text-slate-600">Control which card parts are shown in this project.</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    disabled={!canManageCardSettings || isSavingFields}
+                    disabled={!canManageCardSettings || isApplyingSettings}
                     onClick={() => setDraftFieldPreferences(PRESET_COMPACT)}
                     className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -257,7 +253,7 @@ export function TaskCardSettingsPage() {
                   </button>
                   <button
                     type="button"
-                    disabled={!canManageCardSettings || isSavingFields}
+                    disabled={!canManageCardSettings || isApplyingSettings}
                     onClick={() => setDraftFieldPreferences(PRESET_DETAILED)}
                     className="rounded-md border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -272,7 +268,7 @@ export function TaskCardSettingsPage() {
                     <input
                       type="checkbox"
                       checked={draftFieldPreferences[item.key]}
-                      disabled={!canManageCardSettings || isSavingFields}
+                      disabled={!canManageCardSettings || isApplyingSettings}
                       onChange={(event) => {
                         const checked = event.target.checked
                         setDraftFieldPreferences((prev) => ({
@@ -288,27 +284,6 @@ export function TaskCardSettingsPage() {
                     </span>
                   </label>
                 ))}
-              </div>
-
-              <div className="mt-4 flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={!canManageCardSettings || !hasFieldChanges || isSavingFields}
-                  onClick={() => {
-                    void saveFieldPreferences()
-                  }}
-                  className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSavingFields ? 'Saving...' : 'Save field settings'}
-                </button>
-                <button
-                  type="button"
-                  disabled={!canManageCardSettings || isSavingFields || !hasFieldChanges}
-                  onClick={() => setDraftFieldPreferences(fieldPreferences)}
-                  className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  Reset draft
-                </button>
               </div>
 
               <div className="mt-4 rounded-lg border border-slate-200 bg-white p-3">
@@ -329,9 +304,6 @@ export function TaskCardSettingsPage() {
 
             <section className="rounded-xl border border-slate-200 bg-slate-50/50 p-4">
               <h3 className="text-sm font-semibold text-slate-900">Work Package Colors</h3>
-              <p className="mb-3 text-xs text-slate-600">
-                Changing a color here applies to all matching work packages across estimate versions.
-              </p>
 
               {settings.length === 0 ? (
                 <p className="text-sm text-slate-600">No work packages found for this project.</p>
@@ -339,7 +311,6 @@ export function TaskCardSettingsPage() {
                 <div className="space-y-3">
                   {settings.map((setting) => {
                     const draftColor = draftColorByKey[setting.settingKey] ?? setting.color
-                    const isSaving = savingColorKey === setting.settingKey
 
                     return (
                       <article key={setting.settingKey} className="rounded-lg border border-slate-200 bg-white p-3">
@@ -358,7 +329,7 @@ export function TaskCardSettingsPage() {
                             <input
                               type="color"
                               value={draftColor}
-                              disabled={!canManageCardSettings || isSaving}
+                              disabled={!canManageCardSettings || isApplyingSettings}
                               onChange={(event) => {
                                 const nextColor = event.target.value
                                 setDraftColorByKey((prev) => ({
@@ -369,16 +340,6 @@ export function TaskCardSettingsPage() {
                               className="h-9 w-12 cursor-pointer rounded border border-slate-300 bg-white p-1 disabled:cursor-not-allowed disabled:opacity-60"
                               aria-label={`Color for ${setting.displayName}`}
                             />
-                            <button
-                              type="button"
-                              disabled={!canManageCardSettings || isSaving || draftColor === setting.color}
-                              onClick={() => {
-                                void saveColor(setting)
-                              }}
-                              className="rounded-md bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                              {isSaving ? 'Applying...' : 'Apply'}
-                            </button>
                           </div>
                         </div>
                       </article>
@@ -387,6 +348,19 @@ export function TaskCardSettingsPage() {
                 </div>
               )}
             </section>
+
+            <div className="flex justify-end border-t border-slate-200 pt-4">
+              <button
+                type="button"
+                disabled={!canManageCardSettings || !hasChanges || isApplyingSettings}
+                onClick={() => {
+                  void applySettings()
+                }}
+                className="rounded-lg bg-sky-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-sky-700 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isApplyingSettings ? 'Applying...' : 'Apply'}
+              </button>
+            </div>
           </div>
         ) : null}
       </section>

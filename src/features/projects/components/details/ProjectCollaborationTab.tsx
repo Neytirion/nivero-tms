@@ -47,6 +47,7 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
   )
   const [currentActivityPage, setCurrentActivityPage] = useState(1)
   const commentsEndRef = useRef<HTMLDivElement>(null)
+  const loadRequestIdRef = useRef(0)
   const activityItemsPerPage = 10
 
   const markAsRead = useCallback(() => {
@@ -63,7 +64,9 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
     [members],
   )
 
-  const loadData = async () => {
+  const loadData = async (requestId: number) => {
+    const isCurrentRequest = () => loadRequestIdRef.current === requestId
+
     setIsLoading(true)
     try {
       const storedLastReadAt = localStorage.getItem(`collab_lastRead_${projectId}`)
@@ -78,6 +81,8 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
         getProjectMembers(projectId),
         getProjectComments(projectId),
       ])
+      if (!isCurrentRequest()) return
+
       setCurrentUserId(authData.user?.id ?? null)
       setEvents(activityEvents)
       setMembers(projectMembers)
@@ -90,6 +95,7 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
           userId: authUserId,
           commentIds: projectComments.map((comment) => comment.id),
         })
+        if (!isCurrentRequest()) return
 
         const mentionMap = mentionStates.reduce<Record<string, { id: string; readAt: string | null }>>((acc, item) => {
           acc[item.comment_id] = { id: item.id, readAt: item.read_at }
@@ -122,9 +128,11 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
           window.dispatchEvent(new Event('mentions:changed'))
         }
       } else {
+        if (!isCurrentRequest()) return
         setMentionStateByCommentId({})
       }
 
+      if (!isCurrentRequest()) return
       if (wiki) { setWikiTitle(wiki.title); setWikiContent(wiki.content); setWikiDraft(wiki.content) }
       else { setWikiTitle('Project Wiki'); setWikiContent(''); setWikiDraft('') }
 
@@ -136,14 +144,19 @@ export function ProjectCollaborationTab({ projectId, canEdit }: ProjectCollabora
         markAsRead()
       }
     } catch (error) {
-      console.error('Collaboration load error:', error)
+      if (isCurrentRequest()) {
+        console.error('Collaboration load error:', error)
+      }
+    } finally {
+      if (isCurrentRequest()) {
+        setIsLoading(false)
+      }
     }
-    setIsLoading(false)
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadData()
+    const requestId = ++loadRequestIdRef.current
+    void loadData(requestId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId])
 

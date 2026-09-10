@@ -57,6 +57,7 @@ export function TaskDetailsPage() {
     canManageTask,
     canDeleteTaskInView,
     isWorkPackagesLoading,
+    workPackages,
     projectStartDate,
     projectEndDate,
     assigneeLabelByUserId,
@@ -398,6 +399,7 @@ export function TaskDetailsPage() {
               assigneeLabel={assigneeLabel}
               hasWorkPackageLink={hasWorkPackageLink}
               workPackageLabel={workPackageLabel}
+              workPackages={workPackages}
               isWorkPackagesLoading={isWorkPackagesLoading}
               blockedByLabel={blockedByLabel}
               projectStartDate={projectStartDate}
@@ -407,6 +409,8 @@ export function TaskDetailsPage() {
               setTaskStatusDraft={editState.setTaskStatusDraft}
               taskPriorityDraft={editState.taskPriorityDraft}
               setTaskPriorityDraft={editState.setTaskPriorityDraft}
+              taskWorkPackageIdDraft={editState.taskWorkPackageIdDraft}
+              setTaskWorkPackageIdDraft={editState.setTaskWorkPackageIdDraft}
               taskDueDateDraft={editState.taskDueDateDraft}
               setTaskDueDateDraft={editState.setTaskDueDateDraft}
               onOpenUserProfile={openUserProfile}

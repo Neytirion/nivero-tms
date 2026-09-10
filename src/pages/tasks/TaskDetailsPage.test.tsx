@@ -800,4 +800,45 @@ describe('TaskDetailsPage', () => {
       expect(editTaskMock).toHaveBeenCalledWith('t1', { title: 'Task A renamed by member' })
     })
   })
+
+  it('allows assigning a work package when the task has no work package', async () => {
+    mockUseTasksPageController.mockReturnValue({
+      tasks: [
+        createTaskPreview({
+          id: 't1',
+          title: 'Task A',
+          project_id: 'p1',
+          assigned_to: 'u1',
+          work_package_id: null,
+        }),
+      ],
+      myRoleInSelectedProject: 'member',
+      canAssignAssignee: false,
+      canTakeUnassignedTasks: false,
+      canManageTask: vi.fn(() => true),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: {},
+      workPackageLabelById: {},
+      workPackages: [{ id: 'wp1', name: 'Backend' }],
+      dependencyLabelByTaskId: {},
+      assigneeOptions: [],
+      updateTaskDueDateHandler: vi.fn(async () => undefined),
+      removeTask: vi.fn(async () => undefined),
+      editTask: editTaskMock,
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1')
+
+    fireEvent.click(screen.getByRole('button', { name: /^edit$/i }))
+    const selects = screen.getAllByRole('combobox')
+    fireEvent.change(selects[selects.length - 1], { target: { value: 'wp1' } })
+    fireEvent.click(screen.getByRole('button', { name: /^save$/i }))
+
+    await waitFor(() => {
+      expect(editTaskMock).toHaveBeenCalledWith('t1', { workPackageId: 'wp1' })
+    })
+  })
 })

@@ -10,6 +10,7 @@ interface TaskInfoSectionProps {
   assigneeLabel: string
   hasWorkPackageLink: boolean
   workPackageLabel: string | null
+  workPackages?: Array<{ id: string; name: string }>
   isWorkPackagesLoading: boolean
   blockedByLabel: string | undefined
   projectStartDate: string
@@ -19,6 +20,8 @@ interface TaskInfoSectionProps {
   setTaskStatusDraft: (v: string) => void
   taskPriorityDraft: string
   setTaskPriorityDraft: (v: string) => void
+  taskWorkPackageIdDraft: string
+  setTaskWorkPackageIdDraft: (v: string) => void
   taskDueDateDraft: string
   setTaskDueDateDraft: (v: string) => void
   onOpenUserProfile: (userId: string) => void
@@ -41,6 +44,7 @@ export function TaskInfoSection({
   assigneeLabel,
   hasWorkPackageLink,
   workPackageLabel,
+  workPackages = [],
   isWorkPackagesLoading,
   blockedByLabel,
   projectStartDate,
@@ -50,6 +54,8 @@ export function TaskInfoSection({
   setTaskStatusDraft,
   taskPriorityDraft,
   setTaskPriorityDraft,
+  taskWorkPackageIdDraft,
+  setTaskWorkPackageIdDraft,
   taskDueDateDraft,
   setTaskDueDateDraft,
   onOpenUserProfile,
@@ -169,13 +175,27 @@ export function TaskInfoSection({
           </div>
         </div>
 
-        {hasWorkPackageLink ? (
+        {hasWorkPackageLink || isTaskEditing ? (
           <div className="flex items-center justify-between gap-3 border-t border-slate-100 py-3">
             <label className="text-sm text-slate-500">Work package</label>
             <div className="min-w-0 text-right">
-              <p className="truncate text-sm font-medium text-slate-800">
-                {workPackageLabel ?? (isWorkPackagesLoading ? 'Loading work package...' : 'Not linked')}
-              </p>
+              {isTaskEditing && !hasWorkPackageLink ? (
+                <select
+                  value={taskWorkPackageIdDraft}
+                  onChange={(event) => setTaskWorkPackageIdDraft(event.target.value)}
+                  disabled={isWorkPackagesLoading}
+                  className="max-w-[190px] rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <option value="">No work package</option>
+                  {workPackages.map((workPackage) => (
+                    <option key={workPackage.id} value={workPackage.id}>{workPackage.name}</option>
+                  ))}
+                </select>
+              ) : (
+                <p className="truncate text-sm font-medium text-slate-800">
+                  {workPackageLabel ?? (isWorkPackagesLoading ? 'Loading work package...' : 'Not linked')}
+                </p>
+              )}
             </div>
           </div>
         ) : null}

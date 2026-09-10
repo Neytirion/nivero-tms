@@ -10,6 +10,7 @@ interface TaskEditPatch {
   description?: string
   status?: string
   priority?: string
+  workPackageId?: string
   estimateHours?: number
   dueDate?: string
 }
@@ -20,6 +21,7 @@ interface TaskSnapshot {
   description?: string | null
   status?: string | null
   priority?: string | null
+  work_package_id?: string | null
   due_date?: string | null
   estimate_hours?: number | null
 }
@@ -51,6 +53,7 @@ export function useTaskDetailsEditState({
   const [descriptionDraft, setDescriptionDraft] = useState(descriptionText)
   const [taskStatusDraft, setTaskStatusDraft] = useState(task.status ?? 'todo')
   const [taskPriorityDraft, setTaskPriorityDraft] = useState(task.priority ?? 'medium')
+  const [taskWorkPackageIdDraft, setTaskWorkPackageIdDraft] = useState(task.work_package_id ?? '')
   const [taskDueDateDraft, setTaskDueDateDraft] = useState(task.due_date?.slice(0, 10) ?? '')
   const [estimateHoursDraft, setEstimateHoursDraft] = useState(String(task.estimate_hours ?? 0))
   const [clientNameDraft, setClientNameDraft] = useState(clientIntakePayload?.clientName ?? '')
@@ -65,6 +68,7 @@ export function useTaskDetailsEditState({
     setDescriptionDraft(descriptionText)
     setTaskStatusDraft(task.status ?? 'todo')
     setTaskPriorityDraft(task.priority ?? 'medium')
+    setTaskWorkPackageIdDraft(task.work_package_id ?? '')
     setTaskDueDateDraft(task.due_date?.slice(0, 10) ?? '')
     setEstimateHoursDraft(String(task.estimate_hours ?? 0))
     setClientNameDraft(clientIntakePayload?.clientName ?? '')
@@ -118,6 +122,7 @@ export function useTaskDetailsEditState({
 
     if (taskStatusDraft !== (task.status ?? 'todo')) patch.status = taskStatusDraft
     if (taskPriorityDraft !== (task.priority ?? 'medium')) patch.priority = taskPriorityDraft
+    if (!task.work_package_id && taskWorkPackageIdDraft) patch.workPackageId = taskWorkPackageIdDraft
 
     const currentDueDate = task.due_date?.slice(0, 10) ?? ''
     if (taskDueDateDraft !== currentDueDate) patch.dueDate = taskDueDateDraft || undefined
@@ -157,6 +162,8 @@ export function useTaskDetailsEditState({
     setTaskStatusDraft,
     taskPriorityDraft,
     setTaskPriorityDraft,
+    taskWorkPackageIdDraft,
+    setTaskWorkPackageIdDraft,
     taskDueDateDraft,
     setTaskDueDateDraft,
     estimateHoursDraft,

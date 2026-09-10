@@ -147,7 +147,7 @@ export function TaskViewsSection({
 
           <aside className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3 2xl:col-span-1">
             <div className="mb-2">
-              <h4 className="text-sm font-semibold text-cyan-900">Unassigned Tasks ({sharedQueueTasksViewModel.length})</h4>
+              <h4 className="text-sm font-semibold text-cyan-900">Unassigned ({sharedQueueTasksViewModel.length})</h4>
             </div>
 
             {sharedQueueTasksViewModel.length === 0 ? (
@@ -212,7 +212,7 @@ export function TaskViewsSection({
 
           <section className="rounded-xl border border-cyan-200 bg-cyan-50/60 p-3">
             <div className="mb-2">
-              <h4 className="text-sm font-semibold text-cyan-900">Unassigned Tasks ({sharedQueueTasksViewModel.length})</h4>
+              <h4 className="text-sm font-semibold text-cyan-900">Unassigned ({sharedQueueTasksViewModel.length})</h4>
             </div>
 
             {sharedQueueTasksViewModel.length === 0 ? (

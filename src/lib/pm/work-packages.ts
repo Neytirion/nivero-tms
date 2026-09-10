@@ -33,7 +33,7 @@ export interface ProjectTaskCardFieldPreferences {
 }
 
 export const DEFAULT_TASK_CARD_FIELD_PREFERENCES: ProjectTaskCardFieldPreferences = {
-  showDescription: true,
+  showDescription: false,
   showPriority: true,
   showDueState: true,
   showDueDate: true,

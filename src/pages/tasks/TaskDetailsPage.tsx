@@ -369,7 +369,7 @@ export function TaskDetailsPage() {
             />
 
             {task.project_id ? (
-              <TaskCommentsPanel projectId={task.project_id} taskId={task.id} readOnly={isLocked} />
+              <TaskCommentsPanel projectId={task.project_id} taskId={task.id} />
             ) : null}
 
             {canDelete ? (

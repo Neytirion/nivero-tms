@@ -12,7 +12,9 @@ vi.mock('../../features/tasks/hooks/useTasksPageController', () => ({
 }))
 
 vi.mock('../../features/tasks/components/comments', () => ({
-  TaskCommentsPanel: () => <div>comments</div>,
+  TaskCommentsPanel: (props: { readOnly?: boolean }) => (
+    <div data-testid="task-comments" data-read-only={String(props.readOnly ?? false)}>comments</div>
+  ),
 }))
 
 vi.mock('../../lib/pm', () => ({
@@ -109,6 +111,32 @@ describe('TaskDetailsPage', () => {
     renderTaskDetails('/app/tasks/t1?projectId=p2')
 
     expect(screen.getByTestId('location').textContent).toBe('/app/tasks/t1?projectId=p2')
+  })
+
+  it('keeps comments writable when the task is assigned to another user', () => {
+    mockUseTasksPageController.mockReturnValueOnce({
+      tasks: [createTaskPreview({ id: 't1', project_id: 'p1', assigned_to: 'u2' })],
+      isLoading: false,
+      myRoleInSelectedProject: 'member',
+      canAssignAssignee: false,
+      canTakeUnassignedTasks: false,
+      canManageTask: vi.fn(() => false),
+      canDeleteTaskInView: vi.fn(() => false),
+      projectStartDate: '',
+      projectEndDate: '',
+      currentUserProfile: { userId: 'u1', fullName: 'Alice' },
+      assigneeLabelByUserId: { u2: 'Bob' },
+      workPackageLabelById: {},
+      dependencyLabelByTaskId: {},
+      projectMembers: [],
+      editTask: editTaskMock,
+      removeTask: vi.fn(async () => undefined),
+      selectProject: vi.fn(),
+    } as unknown as ReturnType<typeof useTasksPageController>)
+
+    renderTaskDetails('/app/tasks/t1?projectId=p1')
+
+    expect(screen.getByTestId('task-comments')).toHaveAttribute('data-read-only', 'false')
   })
 
   it('navigates back to passed origin path', async () => {

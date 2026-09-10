@@ -116,9 +116,9 @@ export function TaskCard({
     .map((part) => part[0]?.toUpperCase() ?? '')
     .join('') || 'U'
   const cardToneClass = isLocked
-    ? 'border-2 border-dashed border-slate-400 bg-slate-200/80 text-slate-600 opacity-90 hover:border-slate-500 hover:bg-slate-100 hover:shadow-sm'
+    ? 'border border-solid border-slate-300 bg-slate-200/80 text-slate-600 opacity-90 hover:border-slate-400 hover:bg-slate-100 hover:shadow-sm'
     : 'border border-l-4 border-sky-200 border-l-sky-400 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] shadow-sm hover:border-sky-400 hover:border-l-sky-500 hover:shadow-md'
-  const cardStyle = !isLocked && workPackageColor
+  const cardStyle = workPackageColor
     ? {
         borderLeftColor: workPackageColor,
         borderLeftWidth: '6px',

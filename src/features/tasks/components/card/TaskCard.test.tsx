@@ -101,7 +101,7 @@ describe('TaskCard', () => {
     expect(card).toHaveStyle({ borderLeftWidth: '6px' })
   })
 
-  it('does not apply work package accent style for locked card', () => {
+  it('applies work package accent style to locked cards', () => {
     render(
       <TaskCard
         task={baseTask}
@@ -114,6 +114,23 @@ describe('TaskCard', () => {
 
     const card = screen.getByText('Implement API').closest('article')
     expect(card).not.toBeNull()
-    expect(card).not.toHaveStyle({ borderLeftWidth: '6px' })
+    expect(card).toHaveStyle({ borderLeftColor: '#3b82f6' })
+    expect(card).toHaveStyle({ borderLeftWidth: '6px' })
+  })
+
+  it('uses a solid gray border for locked cards', () => {
+    render(
+      <TaskCard
+        task={baseTask}
+        assigneeLabel="Alice"
+        isLocked
+      />,
+    )
+
+    const card = screen.getByText('Implement API').closest('article')
+    expect(card).not.toBeNull()
+    expect(card).toHaveClass('border-solid')
+    expect(card).toHaveClass('border-slate-300')
+    expect(card).not.toHaveClass('border-dashed')
   })
 })

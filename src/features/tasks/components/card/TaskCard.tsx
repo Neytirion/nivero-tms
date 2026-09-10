@@ -16,6 +16,7 @@ interface TaskCardProps {
   workPackageColor?: string | null
   assigneeUserId?: string | null
   assigneeLabel: string
+  assigneeDisplayRole?: string | null
   assigneeAvatarUrl?: string | null
   onTaskClick?: (taskId: string) => void
   onOpenUserProfile?: (userId: string) => void
@@ -101,13 +102,13 @@ export function TaskCard({
   workPackageColor,
   assigneeUserId,
   assigneeLabel,
+  assigneeDisplayRole,
   assigneeAvatarUrl,
   onTaskClick,
   onOpenUserProfile,
   isLocked,
   fieldPreferences = DEFAULT_TASK_CARD_FIELD_PREFERENCES,
 }: TaskCardProps) {
-  const dueDate = task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'
   const dueMeta = getDueDateMeta(task.due_date)
   const titleInitials = assigneeLabel
     .split(' ')
@@ -148,7 +149,7 @@ export function TaskCard({
         </div>
       ) : null}
 
-      {fieldPreferences.showPriority || fieldPreferences.showDueState || fieldPreferences.showDueDate ? (
+      {fieldPreferences.showPriority || (fieldPreferences.showDueState && task.due_date) || (fieldPreferences.showDueDate && task.due_date) ? (
         <div className="mt-3 flex flex-wrap items-center gap-1.5 [@media(max-height:900px)]:mt-2 [@media(max-height:900px)]:gap-1">
           {fieldPreferences.showPriority ? (
             <span
@@ -160,14 +161,14 @@ export function TaskCard({
               {task.priority ?? 'medium'}
             </span>
           ) : null}
-          {fieldPreferences.showDueState ? (
+          {fieldPreferences.showDueState && task.due_date ? (
             <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${dueMeta.toneClass}`}>
               {dueMeta.label}
             </span>
           ) : null}
-          {fieldPreferences.showDueDate ? (
+          {fieldPreferences.showDueDate && task.due_date ? (
             <span className="rounded-full border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-700">
-              {dueDate}
+              {new Date(task.due_date).toLocaleDateString()}
             </span>
           ) : null}
         </div>
@@ -190,7 +191,7 @@ export function TaskCard({
                   {titleInitials}
                 </span>
               )}
-              <p className={`truncate text-xs ${isLocked ? 'text-slate-600' : 'text-slate-600'}`}>
+              <p className={`flex min-w-0 items-center gap-1 truncate text-xs ${isLocked ? 'text-slate-600' : 'text-slate-600'}`}>
                 {assigneeUserId && onOpenUserProfile ? (
                   <button
                     type="button"
@@ -205,6 +206,7 @@ export function TaskCard({
                 ) : (
                   assigneeLabel
                 )}
+                {assigneeDisplayRole ? <span className="truncate text-[10px] text-slate-500">({assigneeDisplayRole})</span> : null}
               </p>
             </div>
           ) : <div />}

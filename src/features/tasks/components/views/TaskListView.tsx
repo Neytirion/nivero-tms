@@ -5,6 +5,7 @@ import { getTaskPriorityBadgeClass } from '../../utils/tasks-page.utils'
 interface TaskListViewProps {
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
+  memberDisplayRoleByUserId?: Record<string, string>
   workPackageLabelById: Record<string, string>
   workPackageColorById: Record<string, string>
   dependencyLabelByTaskId: Record<string, string>
@@ -24,6 +25,7 @@ export function TaskListView({
   onTaskClick,
   canManageTask,
   showFilters = true,
+  memberDisplayRoleByUserId = {},
 }: TaskListViewProps) {
   const [priorityFilter, setPriorityFilter] = useState<'all' | 'high' | 'medium' | 'low'>('all')
   const [statusFilter, setStatusFilter] = useState<'all' | 'backlog' | 'todo' | 'in_progress' | 'review' | 'done'>('all')
@@ -179,6 +181,7 @@ export function TaskListView({
                         className="text-cyan-700 underline-offset-2 hover:underline"
                       >
                         {assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to}
+                        {memberDisplayRoleByUserId[task.assigned_to] ? ` (${memberDisplayRoleByUserId[task.assigned_to]})` : ''}
                       </button>
                     ) : task.created_by ? (
                       <button
@@ -190,6 +193,7 @@ export function TaskListView({
                         className="text-cyan-700 underline-offset-2 hover:underline"
                       >
                         {(assigneeLabelByUserId[task.created_by] ?? task.created_by)} (creator)
+                        {memberDisplayRoleByUserId[task.created_by] ? ` (${memberDisplayRoleByUserId[task.created_by]})` : ''}
                       </button>
                     ) : 'Unassigned'}
                   </td>
@@ -199,7 +203,7 @@ export function TaskListView({
                       : 'None'}
                   </td>
                   <td className="px-3 py-2 text-slate-600">
-                    {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
+                    {task.due_date ? new Date(task.due_date).toLocaleDateString() : null}
                   </td>
                 </tr>
               )

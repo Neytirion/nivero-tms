@@ -23,6 +23,7 @@ export function TasksPage() {
     isWorkPackagesLoading,
     isTaskCardPreferencesLoading,
     assigneeLabelByUserId,
+    memberDisplayRoleByUserId,
     assigneeAvatarUrlByUserId,
     dependencyLabelByTaskId,
     workPackageLabelById,
@@ -103,6 +104,7 @@ export function TasksPage() {
         isTaskCardPreferencesLoading={isTaskCardPreferencesLoading}
         tasks={tasks}
         assigneeLabelByUserId={assigneeLabelByUserId}
+        memberDisplayRoleByUserId={memberDisplayRoleByUserId}
         assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}
         workPackageLabelById={workPackageLabelById}
         workPackageColorById={workPackageColorById}

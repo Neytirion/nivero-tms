@@ -6,6 +6,7 @@ import { normalizeTaskStatus, sortTasksForBoardColumn } from '../../utils/tasks-
 interface TaskBoardViewProps {
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
+  memberDisplayRoleByUserId?: Record<string, string>
   assigneeAvatarUrlByUserId: Record<string, string>
   workPackageLabelById: Record<string, string>
   workPackageColorById: Record<string, string>
@@ -31,6 +32,7 @@ export function TaskBoardView({
   onTaskClick,
   canManageTask,
   taskCardFieldPreferences,
+  memberDisplayRoleByUserId = {},
 }: TaskBoardViewProps) {
   return (
     <div className="grid grid-flow-col auto-cols-[minmax(16rem,1fr)] gap-4 overflow-x-auto pb-2 2xl:grid-flow-row 2xl:grid-cols-5 2xl:auto-cols-auto">
@@ -47,6 +49,7 @@ export function TaskBoardView({
               label={column.label}
               tasks={columnTasks}
               assigneeLabelByUserId={assigneeLabelByUserId}
+              memberDisplayRoleByUserId={memberDisplayRoleByUserId}
               assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}
               workPackageLabelById={workPackageLabelById}
               workPackageColorById={workPackageColorById}

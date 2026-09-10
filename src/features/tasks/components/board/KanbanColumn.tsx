@@ -9,6 +9,7 @@ interface KanbanColumnProps {
   label: string
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
+  memberDisplayRoleByUserId?: Record<string, string>
   assigneeAvatarUrlByUserId: Record<string, string>
   workPackageLabelById: Record<string, string>
   workPackageColorById: Record<string, string>
@@ -36,6 +37,7 @@ export function KanbanColumn({
   onTaskClick,
   canManageTask,
   taskCardFieldPreferences,
+  memberDisplayRoleByUserId = {},
 }: KanbanColumnProps) {
   return (
     <div
@@ -74,6 +76,11 @@ export function KanbanColumn({
                   : (task.work_package?.color ?? null)
               }
               assigneeUserId={task.assigned_to ?? task.created_by}
+              assigneeDisplayRole={
+                (task.assigned_to ?? task.created_by)
+                  ? memberDisplayRoleByUserId[(task.assigned_to ?? task.created_by) as string] ?? null
+                  : null
+              }
               assigneeLabel={
                 task.assigned_to
                   ? assigneeLabelByUserId[task.assigned_to] ?? task.assigned_to

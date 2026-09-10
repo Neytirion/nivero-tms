@@ -25,6 +25,7 @@ type TaskViewsSectionProps = {
   isTaskCardPreferencesLoading?: boolean
   tasks: TaskPreview[]
   assigneeLabelByUserId: Record<string, string>
+  memberDisplayRoleByUserId: Record<string, string>
   assigneeAvatarUrlByUserId: Record<string, string>
   workPackageLabelById: Record<string, string>
   workPackageColorById: Record<string, string>
@@ -45,6 +46,7 @@ export function TaskViewsSection({
   isTaskCardPreferencesLoading = false,
   tasks,
   assigneeLabelByUserId,
+  memberDisplayRoleByUserId,
   assigneeAvatarUrlByUserId,
   workPackageLabelById,
   workPackageColorById,
@@ -132,6 +134,7 @@ export function TaskViewsSection({
             <TaskBoardView
               tasks={assignedTasks}
               assigneeLabelByUserId={assigneeLabelByUserId}
+              memberDisplayRoleByUserId={memberDisplayRoleByUserId}
               assigneeAvatarUrlByUserId={assigneeAvatarUrlByUserId}
               workPackageLabelById={workPackageLabelById}
               workPackageColorById={workPackageColorById}
@@ -174,6 +177,7 @@ export function TaskViewsSection({
                           : (task.work_package?.color ?? null)
                       }
                       assigneeUserId={clientIntakeTask ? null : task.created_by}
+                      assigneeDisplayRole={task.created_by ? memberDisplayRoleByUserId[task.created_by] ?? null : null}
                       assigneeLabel={
                         clientIntakeTask
                           ? 'Client'
@@ -202,6 +206,7 @@ export function TaskViewsSection({
           <TaskListView
             tasks={assignedTasks}
             assigneeLabelByUserId={assigneeLabelByUserId}
+            memberDisplayRoleByUserId={memberDisplayRoleByUserId}
             workPackageLabelById={workPackageLabelById}
             workPackageColorById={workPackageColorById}
             dependencyLabelByTaskId={dependencyLabelByTaskId}

@@ -25,6 +25,7 @@ import {
   completeProject,
   createProject,
   deleteProject,
+  getProjectTasks,
   getMyProjects,
   updateProject,
 } from '../projects'
@@ -49,6 +50,20 @@ describe('pm.projects', () => {
 
     await expect(getMyProjects()).resolves.toEqual([{ id: 'p1', name: 'Apollo' }])
     expect(mocks.rpc).toHaveBeenCalledWith('refresh_my_project_health')
+  })
+
+  it('loads task billable state with project tasks', async () => {
+    const limit = vi.fn().mockResolvedValue({
+      data: [{ id: 't1', is_billable: true }],
+      error: null,
+    })
+    const order = vi.fn().mockReturnValue({ limit })
+    const eq = vi.fn().mockReturnValue({ order })
+    const select = vi.fn().mockReturnValue({ eq })
+    mocks.from.mockReturnValue({ select })
+
+    await expect(getProjectTasks('p1')).resolves.toEqual([{ id: 't1', is_billable: true }])
+    expect(select).toHaveBeenCalledWith(expect.stringContaining('is_billable'))
   })
 
   it('rejects project creation when dates are invalid', async () => {

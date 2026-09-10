@@ -87,13 +87,13 @@ export function TaskInfoSection({
       </div>
 
       <div className="divide-y divide-slate-100">
-        <div className="flex items-center justify-between gap-3 py-3 first:pt-0">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] items-center gap-3 py-3 first:pt-0">
           <label className="text-sm text-slate-500">Status</label>
           {isTaskEditing ? (
             <select
               value={taskStatusDraft}
               onChange={(event) => setTaskStatusDraft(event.target.value)}
-              className="max-w-[155px] rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+              className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
             >
               <option value="backlog">Backlog</option>
               <option value="todo">To Do</option>
@@ -106,13 +106,13 @@ export function TaskInfoSection({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-3 py-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] items-center gap-3 py-3">
           <label className="text-sm text-slate-500">Priority</label>
           {isTaskEditing ? (
             <select
               value={taskPriorityDraft}
               onChange={(event) => setTaskPriorityDraft(event.target.value)}
-              className="max-w-[155px] rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+              className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>
@@ -123,12 +123,12 @@ export function TaskInfoSection({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-3 py-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] items-center gap-3 py-3">
           <label className="text-sm text-slate-500">Billing</label>
-          <span className="text-sm font-medium text-slate-800">{isBillable ? 'Billable' : 'Non-billable'}</span>
+          <span className="text-right text-sm font-medium text-slate-800">{isBillable ? 'Billable' : 'Non-billable'}</span>
         </div>
 
-        <div className="flex items-start justify-between gap-3 border-t border-slate-100 py-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] items-start gap-3 border-t border-slate-100 py-3">
           <label className="pt-1 text-sm text-slate-500">Due date</label>
           {isTaskEditing ? (
             <div className="flex min-w-0 flex-col items-end gap-2">
@@ -138,7 +138,7 @@ export function TaskInfoSection({
                 min={projectStartDate || undefined}
                 max={projectEndDate || undefined}
                 onChange={(event) => setTaskDueDateDraft(event.target.value)}
-                className="w-full max-w-[155px] rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
+                className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400"
               />
               {daysUntilDue !== null && dueLabel ? (
                 <p className={`text-xs px-3 py-1.5 rounded-md inline-flex w-fit ${dueBadgeClass}`}>
@@ -158,7 +158,7 @@ export function TaskInfoSection({
           )}
         </div>
 
-        <div className="flex items-center justify-between gap-3 border-t border-slate-100 py-3">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] items-center gap-3 border-t border-slate-100 py-3">
           <label className="text-sm text-slate-500">Assignee</label>
           <div className="min-w-0 text-right">
             {assigneeUserId ? (
@@ -176,7 +176,7 @@ export function TaskInfoSection({
         </div>
 
         {hasWorkPackageLink || isTaskEditing ? (
-          <div className="flex items-center justify-between gap-3 border-t border-slate-100 py-3">
+          <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] items-center gap-3 border-t border-slate-100 py-3">
             <label className="text-sm text-slate-500">Work package</label>
             <div className="min-w-0 text-right">
               {isTaskEditing && !hasWorkPackageLink ? (
@@ -184,7 +184,7 @@ export function TaskInfoSection({
                   value={taskWorkPackageIdDraft}
                   onChange={(event) => setTaskWorkPackageIdDraft(event.target.value)}
                   disabled={isWorkPackagesLoading}
-                  className="max-w-[190px] rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-right text-sm text-slate-900 outline-none transition focus:border-sky-400 focus:ring-1 focus:ring-sky-400 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <option value="">No work package</option>
                   {workPackages.map((workPackage) => (
@@ -200,9 +200,9 @@ export function TaskInfoSection({
           </div>
         ) : null}
 
-        <div className="flex items-center justify-between gap-3 border-t border-slate-100 py-3 last:pb-0">
+        <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)] items-center gap-3 border-t border-slate-100 py-3 last:pb-0">
           <label className="text-sm text-slate-500">Blocked by</label>
-          <p className="text-right text-sm font-medium text-slate-800">{blockedByLabel ?? 'None'}</p>
+          <p className="truncate text-right text-sm font-medium text-slate-800">{blockedByLabel ?? 'None'}</p>
         </div>
       </div>
     </section>

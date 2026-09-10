@@ -91,7 +91,7 @@ export function TaskTimeTrackingSection({
         <div className="py-3 sm:pr-4">
           <p className="text-xs font-medium text-slate-500">Estimate</p>
           {canEditEstimateHours && isTaskEditing ? (
-            <div className="mt-2 flex items-center gap-2">
+            <div className="mt-2 flex max-w-[190px] items-center gap-2">
               <label htmlFor="task-estimate-hours" className="sr-only">Estimate hours</label>
               <input
                 id="task-estimate-hours"

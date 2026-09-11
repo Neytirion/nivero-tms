@@ -115,25 +115,6 @@ describe('useAuthForm', () => {
     expect(result.current.status).toBe('Passwords do not match')
   })
 
-  it('rejects sign-up when the password is not strong enough', async () => {
-    const { result } = renderHook(() => useAuthForm())
-
-    act(() => {
-      result.current.setMode('sign-up')
-      result.current.setFullName('New User')
-      result.current.setEmail('new@nivero.dev')
-      result.current.setPassword('password123')
-      result.current.setConfirmPassword('password123')
-    })
-
-    await act(async () => {
-      await result.current.submit(createSubmitEvent())
-    })
-
-    expect(mocks.signUp).not.toHaveBeenCalled()
-    expect(result.current.status).toContain('Password must be at least 8 characters')
-  })
-
   it('prevents duplicate sign-in requests while a submit is in-flight', async () => {
     let resolveSignIn: ((value: { error: null }) => void) | undefined
     mocks.signInWithPassword.mockReturnValue(

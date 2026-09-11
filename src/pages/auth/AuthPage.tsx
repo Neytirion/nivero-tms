@@ -88,7 +88,7 @@ export function AuthPage() {
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Password"
               autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'}
-              minLength={mode === 'sign-up' ? 8 : 6}
+              minLength={6}
               required
               className="w-full rounded-lg border border-slate-300 px-3 py-2 pr-11 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
             />
@@ -104,7 +104,6 @@ export function AuthPage() {
 
           {mode === 'sign-up' ? (
             <>
-              <p className="text-xs text-slate-500">Use at least 8 characters with uppercase, lowercase, a number, and a special character.</p>
               <div className="relative">
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
@@ -112,7 +111,7 @@ export function AuthPage() {
                   onChange={(event) => setConfirmPassword(event.target.value)}
                   placeholder="Confirm password"
                   autoComplete="new-password"
-                  minLength={8}
+                  minLength={6}
                   required
                   className="w-full rounded-lg border border-slate-300 px-3 py-2 pr-11 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
                 />

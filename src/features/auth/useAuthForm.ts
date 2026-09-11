@@ -5,16 +5,6 @@ import { PROFILE_NAME_MAX_LENGTH } from '../../shared/utils/user-profile'
 
 export type AuthMode = 'sign-in' | 'sign-up'
 
-const PASSWORD_REQUIREMENTS_MESSAGE = 'Password must be at least 8 characters and include uppercase, lowercase, number, and special character'
-
-function hasStrongPassword(password: string) {
-  return password.length >= 8 &&
-    /[A-Z]/.test(password) &&
-    /[a-z]/.test(password) &&
-    /\d/.test(password) &&
-    /[^A-Za-z0-9]/.test(password)
-}
-
 export function useAuthForm() {
   const [mode, setMode] = useState<AuthMode>('sign-in')
   const [email, setEmail] = useState('')
@@ -52,11 +42,6 @@ export function useAuthForm() {
     const normalizedFullName = fullName.trim().slice(0, PROFILE_NAME_MAX_LENGTH)
     if (mode === 'sign-up' && !normalizedFullName) {
       setStatus('Please provide your full name')
-      return
-    }
-
-    if (mode === 'sign-up' && !hasStrongPassword(password)) {
-      setStatus(PASSWORD_REQUIREMENTS_MESSAGE)
       return
     }
 

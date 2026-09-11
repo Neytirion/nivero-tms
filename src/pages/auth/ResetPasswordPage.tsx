@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import type { FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 
 export function ResetPasswordPage() {
+  const navigate = useNavigate()
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [status, setStatus] = useState('Validating recovery link...')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isReady, setIsReady] = useState(false)
@@ -63,11 +67,6 @@ export function ResetPasswordPage() {
       return
     }
 
-    if (!password || password.length < 6) {
-      setStatus('Password must be at least 6 characters long.')
-      return
-    }
-
     if (password !== confirmPassword) {
       setStatus('Passwords do not match.')
       return
@@ -94,9 +93,7 @@ export function ResetPasswordPage() {
 
     setPassword('')
     setConfirmPassword('')
-    setStatus('Password updated successfully. You can now sign in with your new password.')
-    setIsSubmitting(false)
-    setIsReady(false)
+    navigate('/auth', { replace: true })
   }
 
   return (
@@ -110,29 +107,49 @@ export function ResetPasswordPage() {
         <p className="mt-2 text-sm text-slate-600">{status}</p>
 
         <form onSubmit={submit} className="mt-4 space-y-3">
-          <input
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="New password"
-            autoComplete="new-password"
-            minLength={6}
-            required
-            disabled={!isReady || isSubmitting}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-          />
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="New password"
+              autoComplete="new-password"
+              minLength={6}
+              required
+              disabled={!isReady || isSubmitting}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 pr-11 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? 'Hide new password' : 'Show new password'}
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500 hover:text-slate-800"
+            >
+              {showPassword ? <EyeOff aria-hidden="true" className="h-4 w-4" /> : <Eye aria-hidden="true" className="h-4 w-4" />}
+            </button>
+          </div>
 
-          <input
-            type="password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            placeholder="Confirm new password"
-            autoComplete="new-password"
-            minLength={6}
-            required
-            disabled={!isReady || isSubmitting}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
-          />
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              placeholder="Confirm new password"
+              autoComplete="new-password"
+              minLength={6}
+              required
+              disabled={!isReady || isSubmitting}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 pr-11 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500 disabled:cursor-not-allowed disabled:bg-slate-100"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword((visible) => !visible)}
+              aria-label={showConfirmPassword ? 'Hide password confirmation' : 'Show password confirmation'}
+              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500 hover:text-slate-800"
+            >
+              {showConfirmPassword ? <EyeOff aria-hidden="true" className="h-4 w-4" /> : <Eye aria-hidden="true" className="h-4 w-4" />}
+            </button>
+          </div>
 
           <button
             type="submit"

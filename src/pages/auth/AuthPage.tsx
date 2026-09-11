@@ -88,7 +88,7 @@ export function AuthPage() {
               onChange={(event) => setPassword(event.target.value)}
               placeholder="Password"
               autoComplete={mode === 'sign-up' ? 'new-password' : 'current-password'}
-              minLength={6}
+              minLength={mode === 'sign-up' ? 8 : 6}
               required
               className="w-full rounded-lg border border-slate-300 px-3 py-2 pr-11 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
             />
@@ -103,26 +103,29 @@ export function AuthPage() {
           </div>
 
           {mode === 'sign-up' ? (
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                placeholder="Confirm password"
-                autoComplete="new-password"
-                minLength={6}
-                required
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 pr-11 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword((visible) => !visible)}
-                aria-label={showConfirmPassword ? 'Hide password confirmation' : 'Show password confirmation'}
-                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500 hover:text-slate-800"
-              >
-                {showConfirmPassword ? <EyeOff aria-hidden="true" className="h-4 w-4" /> : <Eye aria-hidden="true" className="h-4 w-4" />}
-              </button>
-            </div>
+            <>
+              <p className="text-xs text-slate-500">Use at least 8 characters with uppercase, lowercase, a number, and a special character.</p>
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder="Confirm password"
+                  autoComplete="new-password"
+                  minLength={8}
+                  required
+                  className="w-full rounded-lg border border-slate-300 px-3 py-2 pr-11 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:border-slate-500"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword((visible) => !visible)}
+                  aria-label={showConfirmPassword ? 'Hide password confirmation' : 'Show password confirmation'}
+                  className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-slate-500 hover:text-slate-800"
+                >
+                  {showConfirmPassword ? <EyeOff aria-hidden="true" className="h-4 w-4" /> : <Eye aria-hidden="true" className="h-4 w-4" />}
+                </button>
+              </div>
+            </>
           ) : null}
 
           {mode === 'sign-in' ? (

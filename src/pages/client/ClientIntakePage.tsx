@@ -54,9 +54,10 @@ function buildLegacyCompatibleTitle(clientName: string, clientEmail: string) {
 
 interface ClientIntakePageProps {
   onSubmitted?: () => void
+  embedded?: boolean
 }
 
-export function ClientIntakePage({ onSubmitted }: ClientIntakePageProps) {
+export function ClientIntakePage({ onSubmitted, embedded = false }: ClientIntakePageProps) {
   const { token } = useParams<{ token: string }>()
   const [clientName, setClientName] = useState('')
   const [clientEmail, setClientEmail] = useState('')
@@ -178,8 +179,8 @@ export function ClientIntakePage({ onSubmitted }: ClientIntakePageProps) {
   }
 
   return (
-    <main className="min-h-screen bg-slate-100 px-4 py-8">
-      <section className="mx-auto w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+    <main className={embedded ? 'w-full' : 'min-h-screen bg-slate-100 px-4 py-8'}>
+      <section className={`w-full rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6 ${embedded ? '' : 'mx-auto max-w-2xl'}`}>
         <h1 className="text-xl font-bold text-slate-900">Project Request Form</h1>
         <p className="mt-1 text-sm text-slate-600">
           Send tasks, bug reports, comments, or change requests directly to this project.

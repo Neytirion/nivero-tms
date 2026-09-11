@@ -67,6 +67,7 @@ export interface ClientIntakeRequestPreview {
   created_at: string | null
   updated_at: string | null
   submitted_at: string
+  assignee_name: string | null
   request_details: string
   attachments: Array<{ name: string; url: string; is_image: boolean }>
 }

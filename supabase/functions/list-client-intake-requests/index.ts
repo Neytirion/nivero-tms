@@ -109,7 +109,7 @@ Deno.serve(async (req: Request) => {
 
   const taskIds = requests.map((request) => request.task_id).join(',')
   const tasksResponse = await supabaseFetch(
-    `/rest/v1/tasks?select=id,title,status,description,created_at,updated_at&id=in.(${encodeURIComponent(taskIds)})`,
+    `/rest/v1/tasks?select=id,title,status,assigned_to,description,created_at,updated_at&id=in.(${encodeURIComponent(taskIds)})`,
   )
   if (!tasksResponse.ok) return json(req, { error: 'Failed to load request statuses' }, 500)
 
@@ -117,11 +117,22 @@ Deno.serve(async (req: Request) => {
     id: string
     title: string
     status: string | null
+    assigned_to: string | null
     description: string | null
     created_at: string | null
     updated_at: string | null
   }>
   const taskById = new Map(tasks.map((task) => [task.id, task]))
+
+  const assigneeProfilesResponse = await supabaseFetch('/rest/v1/rpc/get_client_intake_assignee_profiles', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ p_project_id: project.id }),
+  })
+  const assigneeProfiles = assigneeProfilesResponse.ok
+    ? await assigneeProfilesResponse.json() as Array<{ user_id: string; display_name: string }>
+    : []
+  const assigneeNameByUserId = new Map(assigneeProfiles.map((profile) => [profile.user_id, profile.display_name]))
 
   return json(req, {
     project: { id: project.id, name: project.name },
@@ -136,6 +147,7 @@ Deno.serve(async (req: Request) => {
         created_at: task.created_at,
         updated_at: task.updated_at,
         submitted_at: request.created_at,
+        assignee_name: task.assigned_to ? assigneeNameByUserId.get(task.assigned_to) ?? 'Assigned' : null,
         ...details,
       }]
     }),

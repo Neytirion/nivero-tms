@@ -6,10 +6,10 @@ import { getClientIntakeHistory, type ClientIntakeRequestPreview } from '../../l
 function statusLabel(status: string | null) {
   const labels: Record<string, string> = {
     backlog: 'Backlog',
-    todo: 'Submitted',
-    in_progress: 'In progress',
-    review: 'In review',
-    done: 'Completed',
+    todo: 'To Do',
+    in_progress: 'In Progress',
+    review: 'Review',
+    done: 'Done',
   }
 
   return status ? (labels[status] ?? status.replaceAll('_', ' ')) : 'Submitted'
@@ -66,7 +66,7 @@ export function ClientPortalPage() {
 
         <div className="grid items-start gap-6 lg:grid-cols-2">
           <div className="order-1 min-w-0">
-            <ClientIntakePage onSubmitted={() => void loadHistory()} />
+            <ClientIntakePage embedded onSubmitted={() => void loadHistory()} />
           </div>
 
           <section className="order-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
@@ -101,7 +101,9 @@ export function ClientPortalPage() {
                   >
                     <div className="min-w-0">
                       <h3 className="truncate text-sm font-semibold text-slate-900">{request.title}</h3>
-                      <p className="mt-1 text-xs text-slate-500">Submitted {formatDate(request.submitted_at)} · {selectedRequestId === request.id ? 'Hide details' : 'View details'}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Submitted {formatDate(request.submitted_at)} · {request.assignee_name ?? 'Unassigned'} · {selectedRequestId === request.id ? 'Hide details' : 'View details'}
+                      </p>
                     </div>
                     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(request.status)}`}>
                       {statusLabel(request.status)}

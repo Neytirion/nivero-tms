@@ -21,6 +21,7 @@ import { ClientPortalPage } from './pages/client/ClientPortalPage.tsx'
 
 function App() {
   const { user, isAuthLoading } = useAuthSession()
+  const isRecoveryCallback = window.location.hash.includes('type=recovery')
 
   if (isAuthLoading) {
     return (
@@ -36,6 +37,10 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/client/:token" element={<ClientPortalPage />} />
+        <Route
+          path="/"
+          element={isRecoveryCallback ? <ResetPasswordPage /> : <Navigate to={user ? '/app/projects' : '/auth'} replace />}
+        />
         <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route

@@ -64,10 +64,15 @@ export function ClientPortalPage() {
           <p className="mt-1 text-sm text-slate-600">Send a request and follow its progress in one place.</p>
         </header>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+        <div className="grid items-start gap-6 lg:grid-cols-2">
+          <div className="order-1 min-w-0">
+            <ClientIntakePage onSubmitted={() => void loadHistory()} />
+          </div>
+
+          <section className="order-2 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-lg font-semibold text-slate-900">Your requests</h2>
+              <h2 className="text-lg font-semibold text-slate-900">Requests history</h2>
               <p className="mt-1 text-sm text-slate-500">Status updates from the project team appear here.</p>
             </div>
             <button
@@ -132,9 +137,8 @@ export function ClientPortalPage() {
               ))}
             </div>
           ) : null}
-        </section>
-
-        <ClientIntakePage onSubmitted={() => void loadHistory()} />
+          </section>
+        </div>
       </div>
     </main>
   )

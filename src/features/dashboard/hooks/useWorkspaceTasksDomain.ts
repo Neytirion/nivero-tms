@@ -28,6 +28,7 @@ export interface WorkspaceTasksDeps {
 export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
   const [tasks, setTasks] = useState<TaskPreview[]>([])
   const [projectMembers, setProjectMembers] = useState<ProjectMemberListItem[]>([])
+  const [projectMembersProjectId, setProjectMembersProjectId] = useState<string | null>(null)
   const [isTasksLoading, setIsTasksLoading] = useState(false)
   const [tasksTotalCount, setTasksTotalCount] = useState(0)
   const [tasksPage, setTasksPage] = useState(0)
@@ -48,6 +49,7 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
     ])
     setTasks(nextTasks)
     setProjectMembers(nextMembers)
+    setProjectMembersProjectId(projectId)
     setTasksTotalCount(totalCount)
     setTasksPage(0)
     await depsRef.current.refreshAfterTaskChange(projectId, nextTasks)
@@ -77,6 +79,7 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTasks([])
       setProjectMembers([])
+      setProjectMembersProjectId(null)
       setTasksTotalCount(0)
       setTasksPage(0)
       return
@@ -94,6 +97,7 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
         if (!cancelled) {
           setTasks(nextTasks)
           setProjectMembers(nextMembers)
+          setProjectMembersProjectId(deps.selectedProjectId!)
           setTasksTotalCount(totalCount)
           setTasksPage(0)
         }
@@ -115,6 +119,22 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
       cancelled = true
     }
   }, [deps.selectedProjectId])
+
+  const visibleProjectMembers = projectMembersProjectId === deps.selectedProjectId
+    ? projectMembers
+    : []
+
+  const setCurrentProjectMembers = (
+    value: ProjectMemberListItem[] | ((prev: ProjectMemberListItem[]) => ProjectMemberListItem[]),
+  ) => {
+    const currentProjectId = depsRef.current.selectedProjectId
+    if (!currentProjectId) {
+      return
+    }
+
+    setProjectMembersProjectId(currentProjectId)
+    setProjectMembers(value)
+  }
 
   useEffect(() => {
     const projectId = deps.selectedProjectId
@@ -166,10 +186,10 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
   } = useMemberActions({
     selectedProjectId: deps.selectedProjectId,
     currentUserId: deps.currentUserId,
-    projectMembers,
+    projectMembers: visibleProjectMembers,
     setStatus: deps.setStatus,
     setIsLoading: deps.setIsLoading,
-    setProjectMembers,
+    setProjectMembers: setCurrentProjectMembers,
     ensureProjectEditable: deps.ensureProjectEditable,
     canInviteToProject: deps.canInviteToProject,
     canUpdateProjectMemberRoles: deps.canUpdateProjectMemberRoles,
@@ -179,7 +199,7 @@ export function useWorkspaceTasksDomain(deps: WorkspaceTasksDeps) {
 
   return {
     tasks,
-    projectMembers,
+    projectMembers: visibleProjectMembers,
     isTasksLoading,
     tasksTotalCount,
     hasMoreTasks,

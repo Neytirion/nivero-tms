@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { submitClientIntake } from '../../lib/pm/client-intake'
 
@@ -66,6 +66,25 @@ export function ClientIntakePage({ onSubmitted }: ClientIntakePageProps) {
   const [status, setStatus] = useState('')
   const [isSuccess, setIsSuccess] = useState(false)
   const [detailsError, setDetailsError] = useState('')
+  const imagePreviewUrls = useMemo(() => {
+    if (typeof URL.createObjectURL !== 'function') {
+      return {}
+    }
+
+    const nextPreviewUrls: Record<string, string> = {}
+    for (const file of attachments) {
+      if (file.type.startsWith('image/')) {
+        nextPreviewUrls[getFileKey(file)] = URL.createObjectURL(file)
+      }
+    }
+    return nextPreviewUrls
+  }, [attachments])
+
+  useEffect(() => {
+    return () => {
+      Object.values(imagePreviewUrls).forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [imagePreviewUrls])
 
   const clientNameTrimmed = clientName.trim()
   const clientEmailTrimmed = clientEmail.trim()
@@ -238,15 +257,20 @@ export function ClientIntakePage({ onSubmitted }: ClientIntakePageProps) {
                 <ul className="space-y-1">
                   {attachments.map((file) => (
                     <li key={getFileKey(file)} className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5">
-                      <span className="truncate text-xs text-slate-700">{file.name}</span>
+                      <div className="flex min-w-0 items-center gap-2">
+                        {imagePreviewUrls[getFileKey(file)] ? (
+                          <img src={imagePreviewUrls[getFileKey(file)]} alt="" className="h-10 w-10 rounded object-cover" />
+                        ) : null}
+                        <span className="truncate text-xs text-slate-700">{file.name}</span>
+                      </div>
                       <button
-                        type="button"
-                        onClick={() => removeAttachment(file)}
-                        className="shrink-0 rounded border border-rose-200 bg-white px-1.5 py-0.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
-                        aria-label={`Remove ${file.name}`}
-                      >
-                        x
-                      </button>
+                          type="button"
+                          onClick={() => removeAttachment(file)}
+                          className="shrink-0 rounded border border-rose-200 bg-white px-1.5 py-0.5 text-xs font-semibold text-rose-700 hover:bg-rose-50"
+                          aria-label={`Remove ${file.name}`}
+                        >
+                          x
+                        </button>
                     </li>
                   ))}
                 </ul>

@@ -40,6 +40,32 @@ async function supabaseFetch(path: string, init?: RequestInit) {
   })
 }
 
+function parseClientRequestDescription(description: string | null) {
+  if (!description) return { request_details: '', attachments: [] as Array<{ name: string; url: string; is_image: boolean }> }
+
+  const normalized = description.replace(/\r\n/g, '\n')
+  const detailsMatch = normalized.match(/Request details:\s*\n([\s\S]*?)(?:\n\s*Attachments:\s*\n|\n\s*Internal description:\s*\n|$)/i)
+  const attachmentsMatch = normalized.match(/\n\s*Attachments:\s*\n([\s\S]*?)(?:\n\s*Internal description:\s*\n|$)/i)
+  const attachments: Array<{ name: string; url: string; is_image: boolean }> = []
+
+  for (const line of (attachmentsMatch?.[1] ?? '').split('\n')) {
+    const match = line.match(/^\s*(?:\d+\.\s*)?(.+?)\s*\|\s*(https?:\/\/\S+)\s*$/i)
+    if (!match) continue
+    const url = match[2].trim().replace(/[),.;]+$/g, '')
+    if (!url) continue
+    attachments.push({
+      name: match[1].trim() || 'Attachment',
+      url,
+      is_image: /\.(png|jpe?g|gif|webp|bmp|svg|avif|heic|heif)(?:\?|$)/i.test(url),
+    })
+  }
+
+  return {
+    request_details: (detailsMatch?.[1] ?? '').trim(),
+    attachments: Array.from(new Map(attachments.map((attachment) => [attachment.url, attachment])).values()),
+  }
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders(req) })
   if (req.method !== 'POST') return json(req, { error: 'Method not allowed' }, 405)
@@ -83,7 +109,7 @@ Deno.serve(async (req: Request) => {
 
   const taskIds = requests.map((request) => request.task_id).join(',')
   const tasksResponse = await supabaseFetch(
-    `/rest/v1/tasks?select=id,title,status,created_at,updated_at&id=in.(${encodeURIComponent(taskIds)})`,
+    `/rest/v1/tasks?select=id,title,status,description,created_at,updated_at&id=in.(${encodeURIComponent(taskIds)})`,
   )
   if (!tasksResponse.ok) return json(req, { error: 'Failed to load request statuses' }, 500)
 
@@ -91,6 +117,7 @@ Deno.serve(async (req: Request) => {
     id: string
     title: string
     status: string | null
+    description: string | null
     created_at: string | null
     updated_at: string | null
   }>
@@ -100,7 +127,17 @@ Deno.serve(async (req: Request) => {
     project: { id: project.id, name: project.name },
     requests: requests.flatMap((request) => {
       const task = taskById.get(request.task_id)
-      return task ? [{ ...task, submitted_at: request.created_at }] : []
+      if (!task) return []
+      const details = parseClientRequestDescription(task.description)
+      return [{
+        id: task.id,
+        title: task.title,
+        status: task.status,
+        created_at: task.created_at,
+        updated_at: task.updated_at,
+        submitted_at: request.created_at,
+        ...details,
+      }]
     }),
   })
 })

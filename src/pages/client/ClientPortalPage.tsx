@@ -30,6 +30,7 @@ export function ClientPortalPage() {
   const { token } = useParams<{ token: string }>()
   const [projectName, setProjectName] = useState('Project portal')
   const [requests, setRequests] = useState<ClientIntakeRequestPreview[]>([])
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -41,6 +42,7 @@ export function ClientPortalPage() {
       const history = await getClientIntakeHistory(token)
       setProjectName(history.project.name)
       setRequests(history.requests)
+      setSelectedRequestId((currentId) => currentId && history.requests.some((request) => request.id === currentId) ? currentId : null)
     } catch (loadError) {
       setError(loadError instanceof Error ? loadError.message : 'Could not load request history')
     } finally {
@@ -85,15 +87,48 @@ export function ClientPortalPage() {
           {!isLoading && !error && requests.length > 0 ? (
             <div className="mt-5 divide-y divide-slate-200 rounded-xl border border-slate-200">
               {requests.map((request) => (
-                <article key={request.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
-                  <div className="min-w-0">
-                    <h3 className="truncate text-sm font-semibold text-slate-900">{request.title}</h3>
-                    <p className="mt-1 text-xs text-slate-500">Submitted {formatDate(request.submitted_at)}</p>
-                  </div>
-                  <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(request.status)}`}>
-                    {statusLabel(request.status)}
-                  </span>
-                </article>
+                <div key={request.id}>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRequestId((currentId) => currentId === request.id ? null : request.id)}
+                    className="flex w-full flex-wrap items-center justify-between gap-3 p-4 text-left hover:bg-slate-50"
+                    aria-expanded={selectedRequestId === request.id}
+                  >
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-semibold text-slate-900">{request.title}</h3>
+                      <p className="mt-1 text-xs text-slate-500">Submitted {formatDate(request.submitted_at)} · {selectedRequestId === request.id ? 'Hide details' : 'View details'}</p>
+                    </div>
+                    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusClass(request.status)}`}>
+                      {statusLabel(request.status)}
+                    </span>
+                  </button>
+                  {selectedRequestId === request.id ? (
+                    <div className="border-t border-slate-100 bg-slate-50/70 px-4 pb-5 pt-4">
+                      <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">{request.request_details || 'No details provided.'}</p>
+                      {request.attachments.length > 0 ? (
+                        <div className="mt-5">
+                          <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Attachments</h4>
+                          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                            {request.attachments.map((attachment) => (
+                              <a
+                                key={attachment.url}
+                                href={attachment.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="overflow-hidden rounded-lg border border-slate-200 bg-white text-sm text-cyan-700 hover:border-cyan-300"
+                              >
+                                {attachment.is_image ? (
+                                  <img src={attachment.url} alt={attachment.name} className="max-h-64 w-full object-contain bg-slate-100" />
+                                ) : null}
+                                <span className="block truncate px-3 py-2 font-medium">{attachment.name}</span>
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
               ))}
             </div>
           ) : null}

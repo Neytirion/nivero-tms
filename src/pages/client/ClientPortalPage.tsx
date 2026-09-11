@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { FileText } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { ClientIntakePage } from './ClientIntakePage'
 import { getClientIntakeHistory, type ClientIntakeRequestPreview } from '../../lib/pm/client-intake'
@@ -24,6 +25,24 @@ function statusClass(status: string | null) {
 function formatDate(value: string | null) {
   if (!value) return 'Unknown date'
   return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(new Date(value))
+}
+
+function AttachmentLink({ attachment }: { attachment: ClientIntakeRequestPreview['attachments'][number] }) {
+  return (
+    <a
+      href={attachment.url}
+      target="_blank"
+      rel="noreferrer"
+      className={`block overflow-hidden rounded-lg border border-slate-200 bg-white text-sm text-cyan-700 hover:border-cyan-300 ${attachment.is_image ? '' : 'flex min-h-16 items-center gap-3 px-3 py-3'}`}
+    >
+      {attachment.is_image ? (
+        <img src={attachment.url} alt={attachment.name} className="h-64 w-full object-contain bg-slate-100" />
+      ) : (
+        <FileText aria-hidden="true" className="h-5 w-5 shrink-0 text-slate-500" />
+      )}
+      <span className={attachment.is_image ? 'block truncate px-3 py-2 font-medium' : 'min-w-0 truncate font-medium'}>{attachment.name}</span>
+    </a>
+  )
 }
 
 export function ClientPortalPage() {
@@ -115,21 +134,21 @@ export function ClientPortalPage() {
                       {request.attachments.length > 0 ? (
                         <div className="mt-5">
                           <h4 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Attachments</h4>
-                          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                            {request.attachments.map((attachment) => (
-                              <a
-                                key={attachment.url}
-                                href={attachment.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="overflow-hidden rounded-lg border border-slate-200 bg-white text-sm text-cyan-700 hover:border-cyan-300"
-                              >
-                                {attachment.is_image ? (
-                                  <img src={attachment.url} alt={attachment.name} className="max-h-64 w-full object-contain bg-slate-100" />
-                                ) : null}
-                                <span className="block truncate px-3 py-2 font-medium">{attachment.name}</span>
-                              </a>
-                            ))}
+                          <div className="mt-3 space-y-3">
+                            {request.attachments.some((attachment) => !attachment.is_image) ? (
+                              <div className="grid items-start gap-3 sm:grid-cols-2">
+                                {request.attachments.filter((attachment) => !attachment.is_image).map((attachment) => (
+                                  <AttachmentLink key={attachment.url} attachment={attachment} />
+                                ))}
+                              </div>
+                            ) : null}
+                            {request.attachments.some((attachment) => attachment.is_image) ? (
+                              <div className="grid items-start gap-3 sm:grid-cols-2">
+                                {request.attachments.filter((attachment) => attachment.is_image).map((attachment) => (
+                                  <AttachmentLink key={attachment.url} attachment={attachment} />
+                                ))}
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                       ) : null}

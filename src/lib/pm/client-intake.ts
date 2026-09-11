@@ -20,46 +20,87 @@ interface SubmitClientIntakeResponse {
   taskId: string
 }
 
+async function getFunctionErrorMessage(error: { message: string; context?: unknown }) {
+  const context = error.context
+  if (!context || typeof context !== 'object') {
+    return error.message
+  }
+
+  const response = context as {
+    json?: () => Promise<unknown>
+    text?: () => Promise<string>
+    clone?: () => { json?: () => Promise<unknown>; text?: () => Promise<string> }
+  }
+  const jsonResponse = typeof response.clone === 'function' ? response.clone() : response
+
+  if (typeof jsonResponse.json === 'function') {
+    try {
+      const payload = await jsonResponse.json() as { error?: string; message?: string }
+      const message = payload.error ?? payload.message
+      if (message?.trim()) {
+        return message
+      }
+    } catch {
+      // Fall back to the generic Supabase error message.
+    }
+  }
+
+  const textResponse = typeof response.clone === 'function' ? response.clone() : response
+  if (typeof textResponse.text === 'function') {
+    try {
+      const message = await textResponse.text()
+      if (message.trim()) {
+        return message
+      }
+    } catch {
+      // Fall back to the generic Supabase error message.
+    }
+  }
+
+  return error.message
+}
+
+export interface ClientIntakeRequestPreview {
+  id: string
+  title: string
+  status: string | null
+  created_at: string | null
+  updated_at: string | null
+  submitted_at: string
+}
+
+export interface ClientIntakeHistoryResponse {
+  project: { id: string; name: string }
+  requests: ClientIntakeRequestPreview[]
+}
+
 export async function submitClientIntake(input: SubmitClientIntakeInput) {
   const { data, error } = await supabase.functions.invoke<SubmitClientIntakeResponse>('submit-client-intake', {
     body: input,
   })
 
   if (error) {
-    const response = (error as { context?: Response }).context
-
-    if (response) {
-      const responseClone = response.clone()
-      let parsedMessage = ''
-
-      try {
-        const payload = (await response.json()) as { error?: string; message?: string }
-        parsedMessage = payload.error ?? payload.message ?? ''
-      } catch {
-        // Ignore JSON parse errors; we'll try plain text below.
-      }
-
-      if (parsedMessage.trim().length > 0) {
-        throw new Error(parsedMessage)
-      }
-
-      let responseText = ''
-      try {
-        responseText = await responseClone.text()
-      } catch {
-        // Fall through to generic message.
-      }
-
-      if (responseText.trim().length > 0) {
-        throw new Error(responseText)
-      }
-    }
-
-    throw new Error(error.message)
+    throw new Error(await getFunctionErrorMessage(error))
   }
 
   if (!data?.success || !data.taskId) {
     throw new Error('Failed to submit client request')
+  }
+
+  return data
+}
+
+export async function getClientIntakeHistory(token: string) {
+  const { data, error } = await supabase.functions.invoke<ClientIntakeHistoryResponse>('list-client-intake-requests', {
+    body: { token },
+  })
+
+  if (error) {
+    throw new Error(await getFunctionErrorMessage(error))
+  }
+
+  if (!data?.project || !Array.isArray(data.requests)) {
+    throw new Error('Failed to load client request history')
   }
 
   return data

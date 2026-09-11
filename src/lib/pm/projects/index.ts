@@ -5,7 +5,7 @@ import { isTaskClosedStatus } from '../../../shared/utils/task-status.ts'
 import { authRequired, databaseError, notFound, permissionDenied, validationError } from '../../errors'
 
 const PROJECT_FIELDS =
-  'id,name,description,client_intake_token,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,baseline_hours,hours_consumed_percent,expected_progress_percent,hours_variance_percent,forecast_at_completion_percent,budget_amount,progress_percent,risk_status,risk_reason,status,completed_at,deadline_at,use_estimates,created_at,updated_at'
+  'id,name,description,client_intake_token,client_intake_enabled,client_intake_expires_at,owner_id,customer_name,project_manager_id,start_date,end_date,estimated_hours,actual_hours,baseline_hours,hours_consumed_percent,expected_progress_percent,hours_variance_percent,forecast_at_completion_percent,budget_amount,progress_percent,risk_status,risk_reason,status,completed_at,deadline_at,use_estimates,created_at,updated_at'
 
 const TASK_FIELDS =
   'id,work_package_id,title,description,status,priority,assigned_to,created_by,estimate_hours,actual_hours,blocked_by_task_id,due_date,project_id,created_at,is_billable,work_package:work_packages(name,color)'
@@ -35,6 +35,19 @@ export async function getMyProjects() {
 export async function rotateClientIntakeToken(projectId: string) {
   const { data, error } = await supabase.rpc('rotate_client_intake_token', {
     p_project_id: projectId,
+  })
+
+  if (error) {
+    throw permissionDenied(error.message)
+  }
+
+  return data
+}
+
+export async function setClientIntakeEnabled(projectId: string, enabled: boolean) {
+  const { data, error } = await supabase.rpc('set_client_intake_enabled', {
+    p_project_id: projectId,
+    p_enabled: enabled,
   })
 
   if (error) {

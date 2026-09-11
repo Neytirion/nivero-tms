@@ -1,5 +1,8 @@
 [functions.submit-client-intake]
 verify_jwt = false
 
+[functions.list-client-intake-requests]
+verify_jwt = false
+
 [functions.slack-notify]
 verify_jwt = true

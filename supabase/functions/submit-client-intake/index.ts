@@ -215,7 +215,7 @@ Deno.serve(async (req: Request) => {
     return json(req, { success: false, error: 'Too many requests. Please try again in a few minutes.' }, 429)
   }
 
-  const projectLookupUrl = `${SUPABASE_URL}/rest/v1/projects?select=id,name,owner_id,project_manager_id&client_intake_token=eq.${encodeURIComponent(token)}&limit=1`
+  const projectLookupUrl = `${SUPABASE_URL}/rest/v1/projects?select=id,name,owner_id,project_manager_id,client_intake_enabled,client_intake_expires_at&client_intake_token=eq.${encodeURIComponent(token)}&limit=1`
 
   const projectLookupResponse = await fetch(projectLookupUrl, {
     method: 'GET',
@@ -229,10 +229,17 @@ Deno.serve(async (req: Request) => {
     return json(req, { success: false, error: 'Failed to resolve project by link token' }, 500)
   }
 
-  const projects = (await projectLookupResponse.json()) as Array<{ id: string; name: string; owner_id: string | null; project_manager_id: string | null }>
+  const projects = (await projectLookupResponse.json()) as Array<{
+    id: string
+    name: string
+    owner_id: string | null
+    project_manager_id: string | null
+    client_intake_enabled: boolean
+    client_intake_expires_at: string
+  }>
   const project = projects[0]
 
-  if (!project) {
+  if (!project || !project.client_intake_enabled || new Date(project.client_intake_expires_at).getTime() <= Date.now()) {
     return json(req, { success: false, error: 'Project link is invalid or expired' }, 404)
   }
 
@@ -382,6 +389,20 @@ Deno.serve(async (req: Request) => {
   if (!createdTask?.id) {
     await cleanupUploadedFiles(uploadedPaths)
     return json(req, { success: false, error: 'Task created without ID' }, 500)
+  }
+
+  const requestRegistrationResponse = await fetch(`${SUPABASE_URL}/rest/v1/client_intake_requests`, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ task_id: createdTask.id, project_id: project.id }),
+  })
+
+  if (!requestRegistrationResponse.ok) {
+    return json(req, { success: false, error: 'Failed to register client request' }, 500)
   }
 
   return json(req, { success: true, taskId: createdTask.id })

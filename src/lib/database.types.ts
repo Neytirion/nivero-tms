@@ -15,6 +15,8 @@ export interface Database {
           name: string
           description: string | null
           client_intake_token: string
+          client_intake_enabled: boolean
+          client_intake_expires_at: string
           owner_id: string
           customer_name: string | null
           project_manager_id: string | null
@@ -44,6 +46,8 @@ export interface Database {
           name: string
           description?: string | null
           client_intake_token?: string
+          client_intake_enabled?: boolean
+          client_intake_expires_at?: string
           owner_id: string
           customer_name?: string | null
           project_manager_id?: string | null
@@ -73,6 +77,8 @@ export interface Database {
           name?: string
           description?: string | null
           client_intake_token?: string
+          client_intake_enabled?: boolean
+          client_intake_expires_at?: string
           owner_id?: string
           customer_name?: string | null
           project_manager_id?: string | null
@@ -896,6 +902,10 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
+        set_client_intake_enabled: {
+          Args: { p_enabled: boolean; p_project_id: string }
+          Returns: boolean
+        }
       rotate_client_intake_token: {
         Args: {
           p_project_id: string

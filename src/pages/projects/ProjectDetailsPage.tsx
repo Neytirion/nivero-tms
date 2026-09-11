@@ -4,7 +4,7 @@ import { ProjectDetailsSection } from '../../features/projects/components'
 import type { DetailsTab } from '../../features/projects/components'
 import { ConfirmDialog, WorkspacePageHeader } from '../../shared/components'
 import { useProjectsPageController } from '../../features/projects/hooks/useProjectsPageController'
-import { rotateClientIntakeToken } from '../../lib/pm'
+import { rotateClientIntakeToken, setClientIntakeEnabled } from '../../lib/pm'
 
 const detailsTabs: DetailsTab[] = ['overview', 'collaboration', 'tasks', 'estimates', 'team', 'settings']
 
@@ -105,6 +105,20 @@ export function ProjectDetailsPage() {
   const canEditSelectedProject = selectedProject ? canManageProject(selectedProject.id) : false
   const canRotateClientIntakeLink = myRoleInSelectedProject === 'owner' || myRoleInSelectedProject === 'admin'
 
+  const handleToggleClientIntakeLink = async () => {
+    if (!selectedProject || !canRotateClientIntakeLink) {
+      return
+    }
+
+    try {
+      await setClientIntakeEnabled(selectedProject.id, !selectedProject.client_intake_enabled)
+      await loadDashboardPreview()
+      setStatus(selectedProject.client_intake_enabled ? 'Client intake link disabled.' : 'Client intake link enabled.')
+    } catch (error) {
+      setStatus(error instanceof Error ? error.message : 'Failed to update client intake link')
+    }
+  }
+
   const handleRotateClientIntakeLink = () => {
     if (!selectedProject || !canRotateClientIntakeLink) {
       return
@@ -180,8 +194,11 @@ export function ProjectDetailsPage() {
             settingsDeadline={currentSettingsDraft.deadline}
             onSettingsDeadlineChange={(value) => updateSettingsDraft({ deadline: value })}
             selectedProjectClientIntakeToken={selectedProject?.client_intake_token ?? null}
+            selectedProjectClientIntakeEnabled={selectedProject?.client_intake_enabled ?? true}
+            selectedProjectClientIntakeExpiresAt={selectedProject?.client_intake_expires_at ?? null}
             canRotateClientIntakeLink={canRotateClientIntakeLink}
             onRotateClientIntakeLink={handleRotateClientIntakeLink}
+            onToggleClientIntakeLink={handleToggleClientIntakeLink}
             canEditSelectedProject={canEditSelectedProject}
             canDeleteSelectedProject={canDeleteSelectedProject}
             canManageMemberRoles={canManageMemberRoles}

@@ -17,7 +17,7 @@ import { MentionsPage } from './pages/mentions/MentionsPage.tsx'
 import { NotificationSettingsPage } from './pages/mentions/NotificationSettingsPage.tsx'
 import { ReportsPage } from './pages/reports/ReportsPage.tsx'
 import { useAuthSession } from './features/auth/useAuthSession.ts'
-import { ClientIntakePage } from './pages/client/ClientIntakePage.tsx'
+import { ClientPortalPage } from './pages/client/ClientPortalPage.tsx'
 
 function App() {
   const { user, isAuthLoading } = useAuthSession()
@@ -35,7 +35,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/client/:token" element={<ClientIntakePage />} />
+        <Route path="/client/:token" element={<ClientPortalPage />} />
         <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route

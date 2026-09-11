@@ -10,8 +10,11 @@ interface ProjectSettingsTabProps {
   settingsDeadline: string
   onSettingsDeadlineChange: (value: string) => void
   selectedProjectClientIntakeToken: string | null
+  selectedProjectClientIntakeEnabled: boolean
+  selectedProjectClientIntakeExpiresAt: string | null
   canRotateClientIntakeLink: boolean
   onRotateClientIntakeLink: () => void | Promise<void>
+  onToggleClientIntakeLink: () => void | Promise<void>
   canEditSelectedProject: boolean
   canDeleteSelectedProject?: boolean
   canCompleteSelectedProject?: boolean
@@ -65,8 +68,11 @@ export function ProjectSettingsTab({
   settingsDeadline,
   onSettingsDeadlineChange,
   selectedProjectClientIntakeToken,
+  selectedProjectClientIntakeEnabled,
+  selectedProjectClientIntakeExpiresAt,
   canRotateClientIntakeLink,
   onRotateClientIntakeLink,
+  onToggleClientIntakeLink,
   canEditSelectedProject,
   canDeleteSelectedProject,
   canCompleteSelectedProject,
@@ -184,7 +190,7 @@ export function ProjectSettingsTab({
 
           <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <h3 className="text-base font-semibold text-slate-900">Client intake</h3>
-            <p className="mt-1 text-sm text-slate-500">Share this link so clients can submit requests directly to the project.</p>
+            <p className="mt-1 text-sm text-slate-500">Share this link so clients can submit requests and follow their status.</p>
             <div className="mt-4 flex flex-wrap items-center gap-2">
             <input
               type="text"
@@ -209,7 +215,21 @@ export function ProjectSettingsTab({
               Regenerate
             </button>
             </div>
-            <p className="mt-2 text-xs text-slate-500">Regenerating immediately invalidates the previous link.</p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+              <span>
+                {selectedProjectClientIntakeEnabled ? 'Active' : 'Disabled'}
+                {selectedProjectClientIntakeExpiresAt ? ` · Expires ${new Date(selectedProjectClientIntakeExpiresAt).toLocaleDateString()}` : ''}
+              </span>
+              <button
+                type="button"
+                onClick={() => void onToggleClientIntakeLink()}
+                disabled={!canRotateClientIntakeLink || isLoading}
+                className="font-semibold text-cyan-700 hover:text-cyan-900 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {selectedProjectClientIntakeEnabled ? 'Disable link' : 'Enable link'}
+              </button>
+            </div>
+            <p className="mt-2 text-xs text-slate-500">The link expires after 30 days. Regenerating immediately invalidates the previous link.</p>
           </section>
         </div>
       </div>

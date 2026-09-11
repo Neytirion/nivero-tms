@@ -41,7 +41,7 @@ export type ProjectPreview = Pick<
   | 'use_estimates'
   | 'created_at'
   | 'updated_at'
->
+> & Partial<Pick<Project, 'client_intake_enabled' | 'client_intake_expires_at'>>
 
 export type TaskPreview = Pick<
   Task,

@@ -52,7 +52,11 @@ function buildLegacyCompatibleTitle(clientName: string, clientEmail: string) {
   return `Client request from ${sender}`
 }
 
-export function ClientIntakePage() {
+interface ClientIntakePageProps {
+  onSubmitted?: () => void
+}
+
+export function ClientIntakePage({ onSubmitted }: ClientIntakePageProps) {
   const { token } = useParams<{ token: string }>()
   const [clientName, setClientName] = useState('')
   const [clientEmail, setClientEmail] = useState('')
@@ -145,6 +149,7 @@ export function ClientIntakePage() {
       setStatus('Thanks. Your request has been sent to the project team.')
       setMessage('')
       setAttachments([])
+      onSubmitted?.()
     } catch (error) {
       setStatus(error instanceof Error ? error.message : 'Could not submit your request')
       setIsSuccess(false)

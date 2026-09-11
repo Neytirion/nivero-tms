@@ -28,8 +28,11 @@ interface ProjectDetailsSectionBodyProps {
   settingsDeadline: string
   onSettingsDeadlineChange: (value: string) => void
   selectedProjectClientIntakeToken: string | null
+  selectedProjectClientIntakeEnabled: boolean
+  selectedProjectClientIntakeExpiresAt: string | null
   canRotateClientIntakeLink: boolean
   onRotateClientIntakeLink: () => void | Promise<void>
+  onToggleClientIntakeLink: () => void | Promise<void>
   canEditSelectedProject: boolean
   canDeleteSelectedProject?: boolean
   canManageMemberRoles?: boolean
@@ -74,8 +77,11 @@ export function ProjectDetailsSectionBody({
   settingsDeadline,
   onSettingsDeadlineChange,
   selectedProjectClientIntakeToken,
+  selectedProjectClientIntakeEnabled,
+  selectedProjectClientIntakeExpiresAt,
   canRotateClientIntakeLink,
   onRotateClientIntakeLink,
+  onToggleClientIntakeLink,
   canEditSelectedProject,
   canDeleteSelectedProject,
   canManageMemberRoles,
@@ -195,8 +201,11 @@ export function ProjectDetailsSectionBody({
           settingsDeadline={settingsDeadline}
           onSettingsDeadlineChange={onSettingsDeadlineChange}
           selectedProjectClientIntakeToken={selectedProjectClientIntakeToken}
+          selectedProjectClientIntakeEnabled={selectedProjectClientIntakeEnabled}
+          selectedProjectClientIntakeExpiresAt={selectedProjectClientIntakeExpiresAt}
           canRotateClientIntakeLink={canRotateClientIntakeLink}
           onRotateClientIntakeLink={onRotateClientIntakeLink}
+          onToggleClientIntakeLink={onToggleClientIntakeLink}
           canEditSelectedProject={canEditSelectedProject}
           canDeleteSelectedProject={canDeleteSelectedProject}
           canCompleteSelectedProject={selectedProjectId ? canManageProject(selectedProjectId) : false}

@@ -9,6 +9,7 @@ export function useAuthForm() {
   const [mode, setMode] = useState<AuthMode>('sign-in')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [status, setStatus] = useState('Sign in or create a new account')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -44,6 +45,11 @@ export function useAuthForm() {
       return
     }
 
+    if (mode === 'sign-up' && password !== confirmPassword) {
+      setStatus('Passwords do not match')
+      return
+    }
+
     isSubmittingRef.current = true
     setIsSubmitting(true)
 
@@ -74,6 +80,7 @@ export function useAuthForm() {
         }
 
         setPassword('')
+        setConfirmPassword('')
 
         if (data.session) {
           setStatus(`Account created for ${data.user?.email ?? 'user'}. Redirecting...`)
@@ -207,6 +214,8 @@ export function useAuthForm() {
     setEmail,
     password,
     setPassword,
+    confirmPassword,
+    setConfirmPassword,
     fullName,
     setFullName,
     status,
